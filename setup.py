@@ -1,0 +1,54 @@
+from distutils.core import setup, Extension
+import re
+import subprocess
+args = ['xml2-config','--cflags']
+xxxx= subprocess.check_output(args).decode().rstrip()
+xmlhead = re.sub(r'^-I','',xxxx)
+
+module1 = Extension('_nysolshell_core',
+                    sources = ['nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
+                    						'src/kgmod/kgArgFld.cpp',
+																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
+																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',
+																'src/kgmod/kgEnv.cpp','src/kgmod/kgError.cpp',
+																'src/kgmod/kgFldBuffer.cpp','src/kgmod/kgFldHash.cpp',
+																'src/kgmod/kgFunction.cpp','src/kgmod/kgMessage.cpp',
+																'src/kgmod/kgMethod.cpp','src/kgmod/kgRange.cpp',
+																'src/kgmod/kgTempfile.cpp','src/kgmod/kgVal.cpp',
+																'src/kgmod/kgWildcard.cpp','src/kgmod/kgmod.cpp',
+																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp',
+																'src/mod/kgcal.cpp','src/mod/kgcut.cpp','src/mod/kgsum.cpp','src/mod/kgjoin.cpp',
+																'src/mod/kg2cross.cpp','src/mod/kgaccum.cpp','src/mod/kgavg.cpp',
+																'src/mod/kgbest.cpp','src/mod/kgbucket.cpp','src/mod/kgchgnum.cpp',
+																'src/mod/kgchgstr.cpp','src/mod/kgcombi.cpp','src/mod/kgcommon.cpp',
+																'src/mod/kgcount.cpp','src/mod/kgcross.cpp','src/mod/kgdelnull.cpp',
+																'src/mod/kgdformat.cpp','src/mod/kgduprec.cpp','src/mod/kgfldname.cpp',
+																'src/mod/kgfsort.cpp','src/mod/kghashavg.cpp','src/mod/kghashsum.cpp',
+																'src/mod/kgkeybreak.cpp','src/mod/kgmbucket.cpp','src/mod/kgmvavg.cpp',
+																'src/mod/kgmvsim.cpp','src/mod/kgmvstats.cpp','src/mod/kgnewnumber.cpp',
+																'src/mod/kgnewrand.cpp','src/mod/kgnewstr.cpp','src/mod/kgnjoin.cpp',
+																'src/mod/kgnormalize.cpp','src/mod/kgnrcommon.cpp','src/mod/kgnrjoin.cpp',
+																'src/mod/kgnullto.cpp','src/mod/kgnumber.cpp','src/mod/kgpadding.cpp',
+																'src/mod/kgpaste.cpp','src/mod/kgproduct.cpp','src/mod/kgrand.cpp',
+																'src/mod/kgrjoin.cpp','src/mod/kgsed.cpp','src/mod/kgsel.cpp',
+																'src/mod/kgselnum.cpp','src/mod/kgselrand.cpp','src/mod/kgselstr.cpp',
+																'src/mod/kgsetstr.cpp','src/mod/kgshare.cpp','src/mod/kgsim.cpp',
+																'src/mod/kgslide.cpp','src/mod/kgsplit.cpp','src/mod/kgstats.cpp',
+																'src/mod/kgsummary.cpp','src/mod/kgtonull.cpp','src/mod/kgtra.cpp',
+																'src/mod/kgtraflg.cpp','src/mod/kguniq.cpp',
+																'src/mod/kgvcat.cpp','src/mod/kgvcommon.cpp','src/mod/kgvcount.cpp',
+																'src/mod/kgvdelim.cpp','src/mod/kgvdelnull.cpp','src/mod/kgvjoin.cpp',
+																'src/mod/kgvnullto.cpp','src/mod/kgvreplace.cpp','src/mod/kgvsort.cpp',
+																'src/mod/kgvuniq.cpp','src/mod/kgwindow.cpp',
+																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp',
+																'src/mod/kgfifo.cpp'
+                    	],
+										include_dirs=['src','src/kgmod','src/mod',xmlhead.strip()],
+										libraries=['pthread','boost_filesystem','boost_regex','boost_system','boost_thread','xml2']
+										)
+setup (name = 'nysolshell_core',
+      packages=['nysolmod','nysolmod/submod','nysolmod/nysollib'],
+       version = '0.1',
+       description = 'This is a demo package',
+       ext_modules = [module1])
+       

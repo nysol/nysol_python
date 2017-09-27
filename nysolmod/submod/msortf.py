@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+import _nysolshell_core as n_core
+from nysolmod.nysollib.nysolmodcore import NysolMOD_CORE
+import nysolmod.nysollib.nysolutil as nutil
+
+class Nysol_Msortf(NysolMOD_CORE):
+	kwd = n_core.getparalist("msortf")
+	def __init__(self,*args, **kw_args) :
+		super(Nysol_Msortf,self).__init__("msortf",nutil.args2dict(args,kw_args,Nysol_Msortf.kwd))
+
