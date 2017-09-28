@@ -6,10 +6,8 @@ xxxxs= subprocess.check_output(args).decode().rstrip().split()
 
 hedears = ['src','src/kgmod','src/mod']
 for xxx in xxxxs:
-	print(xxx)
 	hedears.append(re.sub(r'^-I','',xxx))
 
-print(hedears)
 module1 = Extension('_nysolshell_core',
                     sources = ['nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
                     						'src/kgmod/kgArgFld.cpp',
