@@ -2,9 +2,14 @@ from distutils.core import setup, Extension
 import re
 import subprocess
 args = ['xml2-config','--cflags']
-xxxx= subprocess.check_output(args).decode().rstrip()
-xmlhead = re.sub(r'^-I','',xxxx)
+xxxxs= subprocess.check_output(args).decode().rstrip().split()
 
+hedears = ['src','src/kgmod','src/mod']
+for xxx in xxxxs:
+	print(xxx)
+	hedears.append(re.sub(r'^-I','',xxx))
+
+print(hedears)
 module1 = Extension('_nysolshell_core',
                     sources = ['nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
                     						'src/kgmod/kgArgFld.cpp',
@@ -43,7 +48,7 @@ module1 = Extension('_nysolshell_core',
 																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp',
 																'src/mod/kgfifo.cpp'
                     	],
-										include_dirs=['src','src/kgmod','src/mod',xmlhead.strip()],
+										include_dirs=hedears,
 										libraries=['pthread','boost_filesystem','boost_regex','boost_system','boost_thread','xml2']
 										)
 setup (name = 'nysolshell_core',

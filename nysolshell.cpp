@@ -15,13 +15,12 @@
 using namespace kgmod;
 using namespace kglib;
 
-#if PY_MAJOR_VERSION > 3
+#if PY_MAJOR_VERSION >= 3
 extern "C" {
-	PyMODINIT_FUNC PyInit__nysolshell_core(void)
+	PyMODINIT_FUNC PyInit__nysolshell_core(void);
 }
 #else
 #define PyBytes_AsString PyString_AsString
-
 extern "C" {
 	void init_nysolshell_core(void);
 }
@@ -29,6 +28,7 @@ extern "C" {
 
 
 static bool strCHECK(PyObject* data){
+
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_Check(data);
 #else		
