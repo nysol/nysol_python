@@ -29,7 +29,7 @@
 #include <kgEnv.h>
 #include <kgError.h>
 #include <kgmod.h>
-#include <kgcsv.h>
+#include <kgCSV.h>
 #include <kgshellfunc.h>
 #include <vector>
 #include <map>
