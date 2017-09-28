@@ -66,6 +66,7 @@ from .submod.mvuniq import Nysol_Mvuniq as mvuniq
 from .submod.mwindow import Nysol_Mwindow as mwindow
 from .submod.mcal import Nysol_Mcal as mcal
 from .submod.mcut import Nysol_Mcut as mcut
+from .submod.mcat import Nysol_Mcat as mcat
 from .submod.msum import Nysol_Msum as msum
 from .submod.marff2csv import Nysol_Marff2csv as marff2csv
 from .submod.mtab2csv import Nysol_Mtab2csv as mtab2csv

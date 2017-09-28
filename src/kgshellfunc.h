@@ -20,6 +20,7 @@
 #include <kgcut.h>
 #include <kgsum.h>
 #include <kgcal.h>
+#include <kgcat.h>
 #include <kgjoin.h>
 #include <kgload.h>
 #include <kgfifo.h>

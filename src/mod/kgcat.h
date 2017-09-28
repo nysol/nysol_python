@@ -60,7 +60,7 @@ class kgCat : public kgMod
 	
 	// 引数セット
 	void setArgs(void);
-
+	void setArgs(int i_p,int o_p);
 	// 処理ファイルセット&アンセット
 	int readFile_set(kgstr_t fname);
 	void readFile_unset(void);
@@ -75,6 +75,7 @@ public:
 
 	// 実行メソッド
 	int run(void);
+	int run(int i_p,int o_p);
 
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iCnt; }

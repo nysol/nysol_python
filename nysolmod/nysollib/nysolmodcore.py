@@ -51,11 +51,15 @@ class NysolMOD_CORE(object):
 		rtnStr = ""
 		#print self.kwd
 		for k, v in self.kwd.items():
-			if isinstance(v,str) :
-				rtnStr += k + "=" + v + " "
 			if isinstance(v,bool) :
 				if v==True:
 					rtnStr += "-" + k + " "
+			elif isinstance(v,str) :
+				rtnStr += k + "=" + v + " "
+			elif isinstance(v,float) :
+				rtnStr += k + "=" + str(v) + " "
+			elif isinstance(v,int) :
+				rtnStr += k + "=" + str(v) + " "
 				
 		return rtnStr
 	
@@ -356,6 +360,9 @@ class NysolMOD_CORE(object):
 
 	def mcal(self,*args, **kw_args):
 		return nsub.mcal(nutil.args2dict(args,kw_args,nsub.mcal.kwd)).addPre(self)
+
+	def mcat(self,*args, **kw_args):
+		return nsub.mcat(nutil.args2dict(args,kw_args,nsub.mcat.kwd)).addPre(self)
 
 	def mcut(self,*args, **kw_args):
 		return nsub.mcut(nutil.args2dict(args,kw_args,nsub.mcut.kwd)).addPre(self)
