@@ -9,7 +9,7 @@
 //#undef isalnum
 #include <kgEnv.h>
 #include <kgMethod.h>
-#include <kgcsv.h>
+#include <kgCSV.h>
 #include <kgshell.h>
 
 using namespace kgmod;
