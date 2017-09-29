@@ -28,6 +28,15 @@ using namespace std;
 using namespace kglib;
 using namespace kgmod;
 
+static char* strGET(PyObject* data){
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_AsUTF8(data);
+#else		
+	return PyString_AsString(data);
+#endif
+
+}
+
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
@@ -215,7 +224,7 @@ int kgLoad::run(PyObject* i_p,int o_p) try
 				PyObject* head = PyList_GetItem(i_p, nowlin);
 				fldsize = PyList_Size(head);
 				for(Py_ssize_t i=0 ; i<fldsize;i++){
-					headdata.push_back(PyBytes_AsString(PyList_GetItem(head,i)));
+					headdata.push_back(strGET(PyList_GetItem(head,i)));
 				}		
 				nowlin++;
 			}
@@ -232,7 +241,7 @@ int kgLoad::run(PyObject* i_p,int o_p) try
 					kgError err("unmatch fld size" );	
 				}
 				for(Py_ssize_t i=0 ; i<fldsize;i++){
-					vals[i] = PyBytes_AsString(PyList_GetItem(ddata,i));
+					vals[i] = strGET(PyList_GetItem(ddata,i));
 				}
 				_oFile.writeFld(fldsize,vals);
 				nowlin++;

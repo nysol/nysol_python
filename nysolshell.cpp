@@ -20,11 +20,20 @@ extern "C" {
 	PyMODINIT_FUNC PyInit__nysolshell_core(void);
 }
 #else
-#define PyBytes_AsString PyString_AsString
 extern "C" {
 	void init_nysolshell_core(void);
 }
 #endif
+
+
+static char* strGET(PyObject* data){
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_AsUTF8(data);
+#else		
+	return PyString_AsString(data);
+#endif
+
+}
 
 
 static bool strCHECK(PyObject* data){
@@ -48,11 +57,12 @@ int run_sub(PyObject* tlist,
 	int mpos = -1;
 
 	cmdCapselST cmpcaplocal;
-	cmpcaplocal.cmdname = PyBytes_AsString(PyList_GetItem(tlist, 0));
+
+	cmpcaplocal.cmdname = strGET(PyList_GetItem(tlist, 0));
 
 	kgstr_t para_part = "";
 	if(strCHECK(PyList_GetItem(tlist, 1))){
-		para_part = PyBytes_AsString(PyList_GetItem(tlist, 1));
+		para_part = strGET(PyList_GetItem(tlist, 1));
 	}
 	cmpcaplocal.paralist=kglib::splitToken(para_part, ' ',true);
 
@@ -61,7 +71,7 @@ int run_sub(PyObject* tlist,
 	PyObject *mlink = PyList_GetItem(tlist, 3);
 
 	if(strCHECK(ilink)){
-		cmpcaplocal.paralist.push_back( kgstr_t("i=")+ PyBytes_AsString(ilink) );
+		cmpcaplocal.paralist.push_back( kgstr_t("i=")+ strGET(ilink) );
 		cmdcap.push_back(cmpcaplocal);
 	}
 	else if(PyList_Check(ilink)){
@@ -96,7 +106,7 @@ int run_sub(PyObject* tlist,
 	}
 
 	if(strCHECK(mlink)){
-		cmdcap[pos].paralist.push_back( kgstr_t("m=")+ PyBytes_AsString(mlink) );
+		cmdcap[pos].paralist.push_back( kgstr_t("m=")+ strGET(mlink) );
 	}
 	else if(PyList_Check(mlink)){
 		if(PyList_Check(PyList_GetItem(mlink, 0))){
@@ -124,7 +134,7 @@ int run_sub(PyObject* tlist,
 			p_list.push_back(pno_o);
 		}
 	}
-	
+
 	if(ilink==Py_None &&mlink==Py_None ){
 		cmdcap.push_back(cmpcaplocal);
 	}
@@ -132,11 +142,11 @@ int run_sub(PyObject* tlist,
 	return lcnt;
 }
 
-PyObject* run(PyObject* self, PyObject* args)
+PyObject* run(PyObject* self, PyObject* args)try
 {
-
 	PyObject *sh;
 	PyObject *list;
+
 	int tp;
 	if (!PyArg_ParseTuple(args, "OOi", &sh , &list ,&tp)){
     return NULL;
@@ -152,7 +162,6 @@ PyObject* run(PyObject* self, PyObject* args)
 	// list [ cmd para ilink mlink]
 	vector< vector<int> > p_list;
 	vector< cmdCapselST > cmdCapsel;
-
 
 	int  lsize = run_sub(list,cmdCapsel,p_list,1);
 
@@ -173,9 +182,11 @@ PyObject* run(PyObject* self, PyObject* args)
 	if(tp){
 		return rlist;
 	}else{
-		return Py_BuildValue("");
+		return PyLong_FromLong(0);
 	}	
-
+}catch(...){
+	cerr << "exceptipn" << endl;
+	return PyLong_FromLong(1);;
 }
 
 

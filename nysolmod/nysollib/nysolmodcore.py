@@ -87,6 +87,7 @@ class NysolMOD_CORE(object):
 		return [self.name,self.para2str(),i0,i1]
 
 	def run(self):
+
 		listd = []
 		runA = False
 		outf = self.outp
@@ -430,7 +431,13 @@ class Nysol_MeachIter(object):
 		line = n_core.readline(self.csvin)
 		if line: 
 			return line
+		raise StopIteration()
 
+
+	def __next__(self):
+		line = n_core.readline(self.csvin)
+		if line: 
+			return line
 		raise StopIteration()
 
 #class Nysol_Meach(NysolMOD_CORE):
