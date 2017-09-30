@@ -35,7 +35,6 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["mjoin"] = boost::lambda::bind(boost::lambda::new_ptr<kgJoin>());
 		_kgmod_map["mload"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["msave"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
-		_kgmod_map["mbuffer"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
 		_kgmod_map["m2cross"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Cross>());
 		_kgmod_map["maccum"] = boost::lambda::bind(boost::lambda::new_ptr<kgAccum>());
 		_kgmod_map["mavg"] = boost::lambda::bind(boost::lambda::new_ptr<kgAvg>());

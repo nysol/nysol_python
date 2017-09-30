@@ -23,7 +23,6 @@
 #include <kgcat.h>
 #include <kgjoin.h>
 #include <kgload.h>
-#include <kgfifo.h>
 #include <kg2cross.h>
 #include <kgaccum.h>
 #include <kgavg.h>

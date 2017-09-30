@@ -43,11 +43,10 @@ module1 = Extension('_nysolshell_core',
 																'src/mod/kgvdelim.cpp','src/mod/kgvdelnull.cpp','src/mod/kgvjoin.cpp',
 																'src/mod/kgvnullto.cpp','src/mod/kgvreplace.cpp','src/mod/kgvsort.cpp',
 																'src/mod/kgvuniq.cpp','src/mod/kgwindow.cpp',
-																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp',
-																'src/mod/kgfifo.cpp'
+																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp'
                     	],
 										include_dirs=hedears,
-										libraries=['pthread','boost_filesystem','boost_regex','boost_system','boost_thread','xml2']
+										libraries=['pthread','boost_filesystem','boost_regex','boost_system','xml2']
 										)
 setup (name = 'nysolshell_core',
       packages=['nysolmod','nysolmod/submod','nysolmod/nysollib'],
