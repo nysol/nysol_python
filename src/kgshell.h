@@ -86,7 +86,7 @@ class kgshell{
 
 public:
 	// コンストラクタ
-	kgshell(void);
+	kgshell(int mflg=false);
 	~kgshell(void){
 		if(_th_st_pp){
 			vector<int> chk(_clen);
@@ -107,7 +107,6 @@ public:
 				delete _modlist[i];
 			}
 			delete[] _modlist;
-			
 		}
 		if(_iterrtn){
 			delete _iterrtn;

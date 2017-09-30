@@ -85,7 +85,7 @@ class kgMod
 	void AssertWarnig(void);
 
 	// 初期設定
-	void init(void);
+	virtual void init(void);
 	void signalset(void);
 	void signalreset(void);
 	
@@ -95,8 +95,8 @@ class kgMod
 		signalreset();
 	}
 	
-	void init(kgArgs args, kgEnv* env);
-	void init(size_t argc, const char* argv[], kgEnv* env);
+	virtual void init(kgArgs args, kgEnv* env);
+	virtual void init(size_t argc, const char* argv[], kgEnv* env);
 
 
 	// accessor

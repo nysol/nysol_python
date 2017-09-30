@@ -106,7 +106,7 @@ int run_sub(PyObject* tlist,
 	}
 
 	if(strCHECK(mlink)){
-		cmdcap[pos].paralist.push_back( kgstr_t("m=")+ strGET(mlink) );
+		cmdcap[pos-1].paralist.push_back( kgstr_t("m=")+ strGET(mlink) );
 	}
 	else if(PyList_Check(mlink)){
 		if(PyList_Check(PyList_GetItem(mlink, 0))){
@@ -273,9 +273,12 @@ PyObject* getparams(PyObject* self, PyObject* args){
 
 
 PyObject* start(PyObject* self, PyObject* args){
-	
-	return PyCapsule_New(new kgshell,"kgshellP",py_kgshell_free);
-	
+	int mflg;
+	if (!PyArg_ParseTuple(args, "i", &mflg)){
+		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
+  }else{
+		return PyCapsule_New(new kgshell(mflg),"kgshellP",py_kgshell_free);
+  }
 }
 
 static PyMethodDef hellomethods[] = {

@@ -11,7 +11,7 @@ import os, sys
 
 
 def mulit_run(val):
-	cc = n_core.init()
+	cc = n_core.init(False)
 	return n_core.run(cc,val[0],val[1])
 
 class NysolMOD_CORE(object):
@@ -86,7 +86,11 @@ class NysolMOD_CORE(object):
 
 		return [self.name,self.para2str(),i0,i1]
 
-	def run(self):
+	def run(self,**kw_args):
+		msgFlg = False
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on" :
+				msgFlg = True
 
 		listd = []
 		runA = False
@@ -96,8 +100,7 @@ class NysolMOD_CORE(object):
 			runA = True 
 
 		listd = self.make_modlist()
-
-		shobj = n_core.init()
+		shobj = n_core.init(msgFlg)
 
 		if runA:
 			return n_core.run(shobj,listd,runA)
@@ -118,7 +121,7 @@ class NysolMOD_CORE(object):
 		print(listd)
 
 
-	def parallelrun(self,ilist,olist=None,num=2):
+	def parallelrun(self,ilist,olist=None,num=2,**kw_args):
 		listd = []
 		runA = False
 
@@ -419,7 +422,7 @@ class Nysol_MeachIter(object):
 
 		listd = [obj.name,obj.para2str(),i0,i1]
 		#print list
-		self.shobj = n_core.init()
+		self.shobj = n_core.init(False)
 		if runA:
 			self.csvin = n_core.runiter(self.shobj,listd,runA)
 		else:

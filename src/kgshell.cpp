@@ -27,7 +27,7 @@ using namespace kgmod;
 using namespace kglib;
 
 
-kgshell::kgshell(void){
+kgshell::kgshell(int mflg){
 		_kgmod_map["mcut"] = boost::lambda::bind(boost::lambda::new_ptr<kgCut>());
 		_kgmod_map["mcat"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
 		_kgmod_map["msum"] = boost::lambda::bind(boost::lambda::new_ptr<kgSum>());
@@ -187,7 +187,7 @@ kgshell::kgshell(void){
 		_th_st_pp = NULL;
 		_clen = 0;
 		_modlist=NULL;
-	
+		if(!mflg){  _env.verblvl(2);	}
 
 }
 
@@ -409,9 +409,6 @@ kgCSVfld* kgshell::runiter(
 
 		if(_th_rtn[i]){ throw kgError("cant't create thread onxx kgModIncludeSort");}
 	}
-	
-	
-
 	// データ出力
 	_iterrtn = new kgCSVfld;
 
