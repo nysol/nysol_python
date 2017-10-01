@@ -6,6 +6,7 @@ class NysolShellSequence(object):
 
 	def __init__(self) :
 		self.cmdlist=None
+		self.msgFlg=False
 
 	def add(self,obj) :
 		if self.cmdlist==None:
@@ -14,14 +15,21 @@ class NysolShellSequence(object):
 			obj.inp = self.cmdlist
 			self.cmdlist = obj
 
+	def msgOn(self):
+		self.msgFlg=True
+
+	def msgOff(self):
+		self.msgFlg=False
 
 	def show(self) :
 		self.cmdlist.show()
 		
 	def run(self,**kwd) :
-		msgFlg = False
 		if "msg" in kwd:
 			if kwd["msg"] == "on" :
-				return self.cmdlist.run(msg="on")
+				self.msgFlg=True
 
-		return self.cmdlist.run()
+		if self.msgFlg :
+			return self.cmdlist.run(msg="on")
+		else:
+			return self.cmdlist.run()

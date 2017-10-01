@@ -96,10 +96,10 @@ class NysolMOD_CORE(object):
 		return [self.name,self.para2str(),i0,i1]
 
 	def run(self,**kw_args):
-		msgFlg = False
+
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
-				msgFlg = True
+				self.msg = True
 
 		listd = []
 		runA = False
@@ -109,7 +109,7 @@ class NysolMOD_CORE(object):
 			runA = True 
 
 		listd = self.make_modlist()
-		shobj = n_core.init(msgFlg)
+		shobj = n_core.init(self.msg)
 
 		if runA:
 			return n_core.run(shobj,listd,runA)
@@ -132,10 +132,9 @@ class NysolMOD_CORE(object):
 
 	def parallelrun(self,ilist,olist=None,num=2,**kw_args):
 
-		msgFlg = False
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
-				msgFlg = True
+				self.msg = True
 
 
 		listd = []
@@ -163,7 +162,7 @@ class NysolMOD_CORE(object):
 				else:
 					alist[1]   = chagVALi + " i=" + fn 
 					listd[1] = chagVALo + " o=" + olist[i]
-			runlist.append([copy.deepcopy(listd),rtnA,msgFlg])	
+			runlist.append([copy.deepcopy(listd),rtnA,self.msg])	
 
 		p = Pool(num)
 		output = p.map(mulit_run, runlist)
