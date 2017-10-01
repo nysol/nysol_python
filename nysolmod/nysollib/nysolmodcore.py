@@ -11,7 +11,7 @@ import os, sys
 
 
 def mulit_run(val):
-	cc = n_core.init(False)
+	cc = n_core.init(val[2])
 	return n_core.run(cc,val[0],val[1])
 
 class NysolMOD_CORE(object):
@@ -34,12 +34,21 @@ class NysolMOD_CORE(object):
 		if "m" in self.kwd :
 			del self.kwd["m"]
 
+		self.msg=False
 		#self.unp = kwd.get("u",None)
 		#if "u" in self.kwd :
 		#	del self.kwd["u"]
 
 	def __iter__(self):
 		return Nysol_MeachIter(self)
+
+	def msgOn(self):
+		self.msg=True
+		return self
+
+	def msgOff(self):
+		self.msg=False
+		return self
 
 
 	def addPre(self,pre):
@@ -122,9 +131,15 @@ class NysolMOD_CORE(object):
 
 
 	def parallelrun(self,ilist,olist=None,num=2,**kw_args):
+
+		msgFlg = False
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on" :
+				msgFlg = True
+
+
 		listd = []
 		runA = False
-
 		listd = self.make_modlist()
 
 		runlist = []
@@ -148,7 +163,7 @@ class NysolMOD_CORE(object):
 				else:
 					alist[1]   = chagVALi + " i=" + fn 
 					listd[1] = chagVALo + " o=" + olist[i]
-			runlist.append([copy.deepcopy(listd),rtnA])	
+			runlist.append([copy.deepcopy(listd),rtnA,msgFlg])	
 
 		p = Pool(num)
 		output = p.map(mulit_run, runlist)
@@ -422,7 +437,7 @@ class Nysol_MeachIter(object):
 
 		listd = [obj.name,obj.para2str(),i0,i1]
 		#print list
-		self.shobj = n_core.init(False)
+		self.shobj = n_core.init(obj.msg)
 		if runA:
 			self.csvin = n_core.runiter(self.shobj,listd,runA)
 		else:

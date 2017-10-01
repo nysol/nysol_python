@@ -18,7 +18,10 @@ class NysolShellSequence(object):
 	def show(self) :
 		self.cmdlist.show()
 		
-	def run(self) :
+	def run(self,**kwd) :
+		msgFlg = False
+		if "msg" in kwd:
+			if kwd["msg"] == "on" :
+				return self.cmdlist.run(msg="on")
+
 		return self.cmdlist.run()
-		
-		
