@@ -55,7 +55,9 @@ protected:
 	
 	public:
 
-	~kgModIncludeSort(void){}
+	~kgModIncludeSort(void){
+		signalreset();
+	}
 
 	static void* run_noargs_pth(void *obj);
 

@@ -179,6 +179,7 @@ PyObject* run(PyObject* self, PyObject* args)try
 	//kgshell kgshell;
 	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
 	ksh->run(cmdCapsel,p_list,tp,rlist);
+
 	if(tp){
 		return rlist;
 	}else{

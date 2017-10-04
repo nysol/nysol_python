@@ -274,11 +274,11 @@ int kgshell::run(
 
 	makePipeList(plist,tp);
 	
-	size_t clen = cmds.size();
+	_clen = cmds.size();
 
-	_modlist = new kgMod*[clen];
+	_modlist = new kgMod*[_clen];
 	
-	for(size_t i=0;i<clen;i++){
+	for(size_t i=0;i<_clen;i++){
 		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
 			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
 			return 1;
@@ -292,10 +292,10 @@ int kgshell::run(
 	}
 
 	int dmy = -1;	
-	pthread_t _th_st_p[clen];
-	int _th_rtn[clen];
-	argST argst[clen];
-	for(int i=clen-1;i>=0;i--){
+	pthread_t _th_st_p[_clen];
+	int _th_rtn[_clen];
+	argST argst[_clen];
+	for(int i=_clen-1;i>=0;i--){
 	// データ出力
 		argst[i].mobj= _modlist[i];
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ argst[i].i_p= dmy; }
@@ -340,9 +340,17 @@ int kgshell::run(
 			PyList_Append(list,tlist);
 		}
 	}
-	for(int i=clen;i>0;i--){
+	for(int i=_clen;i>0;i--){
 		pthread_join(_th_st_p[i-1],NULL);
 	}
+	if(_modlist){
+		for(size_t i=0 ;i<_clen;i++){
+			delete _modlist[i];
+		}
+		delete[] _modlist;
+	}
+	_modlist = NULL;
+
 	return 0;
 }catch(...){
 	return 1;
@@ -354,13 +362,13 @@ kgCSVfld* kgshell::runiter(
 	bool tp,
 	PyObject* list)try{
 
-	size_t clen = cmds.size();
+	_clen = cmds.size();
 
 	makePipeList(plist,tp);
 
-	_modlist = new kgMod*[clen];
+	_modlist = new kgMod*[_clen];
 	
-	for(size_t i=0;i<clen;i++){
+	for(size_t i=0;i<_clen;i++){
 		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
 			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
 			return NULL;
@@ -374,10 +382,10 @@ kgCSVfld* kgshell::runiter(
 	}
 
 	int dmy = -1;	
-	pthread_t _th_st_p[clen];
-	int _th_rtn[clen];
-	argST argst[clen];
-	for(int i=clen-1;i>=0;i--){
+	pthread_t _th_st_p[_clen];
+	int _th_rtn[_clen];
+	argST argst[_clen];
+	for(int i=_clen-1;i>=0;i--){
 	// データ出力
 		argst[i].mobj= _modlist[i];
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ argst[i].i_p= dmy; }
