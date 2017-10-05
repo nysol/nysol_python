@@ -64,7 +64,7 @@ int run_sub(PyObject* tlist,
 	if(strCHECK(PyList_GetItem(tlist, 1))){
 		para_part = strGET(PyList_GetItem(tlist, 1));
 	}
-	cmpcaplocal.paralist=kglib::splitToken(para_part, ' ',true);
+	cmpcaplocal.paralist=kglib::splitTokenQ(para_part, ' ',true);
 
 
 	PyObject *ilink = PyList_GetItem(tlist, 2);

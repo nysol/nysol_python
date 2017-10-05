@@ -52,3 +52,43 @@ def args2dict(args, kw_args,klist,uk=None):
 
 
 
+def arg2dict(args, kw_args,klist,uk=None):
+
+	if len(args)>1:
+		print("args only one")
+		return None
+
+	if len(args)==1:
+		if isinstance(args[0],str) :
+			kw_args["cmdstr"] = "'" + args[0] + "'" 
+
+		elif isinstance(args[0],dict):
+			kw_args.update(args[0])
+		elif isinstance(args[0],tuple):
+			pass
+
+		else :
+			print("args type str or dict")
+			return None
+
+	# check parameter
+	exval = []
+	for k,v in kw_args.items():
+		if k in klist[0] and isinstance(v,str):
+			pass
+		elif k in klist[0] :
+			pass
+		elif k in klist[1] and v== True:
+			pass
+		else:
+			exval.append(k)
+			print ( k + " is not keyword")
+			
+	for k in exval:
+		del kw_args[k]
+
+	return kw_args
+
+
+
+

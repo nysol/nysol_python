@@ -18,6 +18,7 @@
  ////////// LICENSE INFO ////////////////////*/
 #pragma once
 #include <kgcut.h>
+#include <kgexcmd.h>
 #include <kgsum.h>
 #include <kgcal.h>
 #include <kgcat.h>

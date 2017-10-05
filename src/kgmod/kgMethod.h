@@ -56,6 +56,9 @@ char* sepFldTokenNdq(char **pnt, size_t fldCnt, char *str);
 vector<char*> splitToken(char* str, char delim,bool skip=false);
 vector<string> splitToken(string& str, char delim,bool skip=false);
 vector<wstring> splitToken(wstring& str, wchar_t delim);
+
+vector<string> splitTokenQ(string& str, char delim,bool skip=false);
+
 vector<vector <kgstr_t> > splitToken2(kgstr_t& str, kgchr_t delim1, kgchr_t delim2);
 vector<vector <kgstr_t> > splitToken2(kgstr_t& str, kgchr_t delim1, kgstr_t delim2);
 vector<vector <kgstr_t> > transVector(const vector<vector <kgstr_t> >& vvs, unsigned int rowSize);

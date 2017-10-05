@@ -58,7 +58,6 @@ class NysolMOD_CORE(object):
 	# PRIVATEにする？
 	def para2str(self):
 		rtnStr = ""
-		#print self.kwd
 		for k, v in self.kwd.items():
 			if isinstance(v,bool) :
 				if v==True:
@@ -183,9 +182,13 @@ class NysolMOD_CORE(object):
 	def msave(self,*args, **kw_args):
 		return nsub.msave(nutil.args2dict(args,kw_args,nsub.msave.kwd)).addPre(self)
 
+	def cmd(self,*args, **kw_args):
+		return nsub.cmd(nutil.arg2dict(args,kw_args,nsub.cmd.kwd)).addPre(self)
+
 	# 子クラス生成
 	def m2cross(self,*args, **kw_args):
 		return nsub.m2cross(nutil.args2dict(args,kw_args,nsub.m2cross.kwd)).addPre(self)
+
 
 	def maccum(self,*args, **kw_args):
 		return nsub.maccum(nutil.args2dict(args,kw_args,nsub.maccum.kwd)).addPre(self)

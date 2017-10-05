@@ -9,7 +9,7 @@ for xxx in xxxxs:
 	hedears.append(re.sub(r'^-I','',xxx))
 
 module1 = Extension('_nysolshell_core',
-                    sources = ['nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
+                    sources = ['src/kgexcmd.cpp','nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
                     						'src/kgmod/kgArgFld.cpp',
 																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
 																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',

@@ -29,6 +29,7 @@ using namespace kglib;
 
 kgshell::kgshell(int mflg){
 		_kgmod_map["mcut"] = boost::lambda::bind(boost::lambda::new_ptr<kgCut>());
+		_kgmod_map["cmd"] = boost::lambda::bind(boost::lambda::new_ptr<kgExcmd>());
 		_kgmod_map["mcat"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
 		_kgmod_map["msum"] = boost::lambda::bind(boost::lambda::new_ptr<kgSum>());
 		_kgmod_map["mcal"] = boost::lambda::bind(boost::lambda::new_ptr<kgCal>());
@@ -105,6 +106,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["mtab2csv"]  = boost::lambda::bind(boost::lambda::new_ptr<kgTab2csv>());
 
 		_kgmod_run["mcut"] = 1;
+		_kgmod_run["cmd"] = 1;
 		_kgmod_run["mcat"] = 1;
 		_kgmod_run["msum"] = 1;
 		_kgmod_run["mcal"] = 1;
