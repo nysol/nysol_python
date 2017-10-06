@@ -153,6 +153,7 @@ int kgExcmd::run(int i_p,int o_p) try
 		int ret = waitpid(pid, &status, 0);
 		if(i_p>0){ close(i_p);}
 		if(o_p>0){ close(o_p);}
+		successEnd();
 		return status;
 	}
 	else {//err

@@ -1010,6 +1010,10 @@ void kgSortf::run_noargs() try
 	// thread cleanup 解除
   pthread_cleanup_pop(0);
   
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	tempFile_.remove_all();
+
 }catch(kgError& err){
 	tempFile_.remove_all();
 	errorEnd(err);

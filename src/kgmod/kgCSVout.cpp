@@ -216,6 +216,7 @@ void kgCSVout::flush(void)
 			if(32==errno){ // pipe broken
 				ostringstream ss;
 				ss << "pipe broken(" << strerror(errno) << "):" << fname_;
+				opened_ = false;
 				throw kgOPipeBreakError(ss.str());
 				//close();
 				wsize=0;
