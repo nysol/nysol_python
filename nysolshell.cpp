@@ -146,9 +146,9 @@ PyObject* run(PyObject* self, PyObject* args)try
 {
 	PyObject *sh;
 	PyObject *list;
-
+	PyObject *rlist;
 	int tp;
-	if (!PyArg_ParseTuple(args, "OOi", &sh , &list ,&tp)){
+	if (!PyArg_ParseTuple(args, "OOiO", &sh , &list ,&tp ,&rlist)){
     return NULL;
   }
 
@@ -175,19 +175,19 @@ PyObject* run(PyObject* self, PyObject* args)try
 	//for(int i=0;i<p_list.size();i++){
 	//	cerr << i << " i:" << p_list[i][0] << "<<o:" << p_list[i][1]<< endl;
 	//}
-	PyObject* rlist = PyList_New(0);
 	//kgshell kgshell;
 	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
+
 	ksh->run(cmdCapsel,p_list,tp,rlist);
 
 	if(tp){
-		return rlist;
+		return PyLong_FromLong(0);
 	}else{
 		return PyLong_FromLong(0);
 	}	
 }catch(...){
 	cerr << "exceptipn" << endl;
-	return PyLong_FromLong(1);;
+	return PyLong_FromLong(1);
 }
 
 

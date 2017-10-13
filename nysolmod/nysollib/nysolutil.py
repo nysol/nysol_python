@@ -25,6 +25,8 @@ def args2dict(args, kw_args,klist,uk=None):
 					print("unkonwn parameter")
 		elif isinstance(args[0],dict):
 			kw_args.update(args[0])
+		elif isinstance(args[0],list) and uk!=None:
+			kw_args[uk] = args[0]
 		elif isinstance(args[0],tuple):
 			pass
 

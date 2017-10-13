@@ -60,6 +60,8 @@ public:
 	//実行メソッド
 	int run(int i,int o);
 	int run(PyObject* i_p,int o_p);
+	int run(int i_p,PyObject* o_p);
+
 };
 
 }

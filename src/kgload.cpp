@@ -272,4 +272,56 @@ int kgLoad::run(PyObject* i_p,int o_p) try
 }
 
 
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgLoad::run(int i_p,PyObject* o_p) try 
+{
+	size_t fcnt=0;
+
+	// パラメータチェック
+	_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
+
+	if(PyList_Check(o_p)){
+		// データ出力
+		kgCSVfld rls;
+		// 入出力ファイルオープン
+		if(i_p>0){
+			rls.popen(i_p, _env,_nfn_i);
+		}
+		else{
+			// 入出力ファイルオープン
+			rls.open(_args.toString("i=",false), _env,_nfn_i);
+		}
+		rls.read_header();	
+		while( EOF != rls.read() ){
+			PyObject* tlist = PyList_New(0);
+			for(size_t j=0 ;j<rls.fldSize();j++){
+				PyList_Append(tlist,Py_BuildValue("s",rls.getVal(j)));
+			}
+			PyList_Append(o_p,tlist);
+		}
+		rls.close();
+	}
+	successEnd();
+	return 0;
+
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
 

@@ -34,8 +34,11 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msum"] = boost::lambda::bind(boost::lambda::new_ptr<kgSum>());
 		_kgmod_map["mcal"] = boost::lambda::bind(boost::lambda::new_ptr<kgCal>());
 		_kgmod_map["mjoin"] = boost::lambda::bind(boost::lambda::new_ptr<kgJoin>());
+		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
 		_kgmod_map["mload"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["msave"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["m2cross"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Cross>());
 		_kgmod_map["maccum"] = boost::lambda::bind(boost::lambda::new_ptr<kgAccum>());
 		_kgmod_map["mavg"] = boost::lambda::bind(boost::lambda::new_ptr<kgAvg>());
@@ -112,7 +115,10 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mcal"] = 1;
 		_kgmod_run["mjoin"] = 2;
 		_kgmod_run["mload"] = 3;
+		_kgmod_run["readcsv"] = 1;
 		_kgmod_run["msave"] = 1;
+		_kgmod_run["writecsv"] = 1;
+		_kgmod_run["writelist"] = 1;
 		_kgmod_run["mbuffer"] = 1;
 		_kgmod_run["m2cross"] = 1;
 		_kgmod_run["maccum"] = 1;
@@ -214,6 +220,8 @@ void *kgshell::run_noargs_pthsp(void *arg)try{
 	if(a->o_p>0){ ::close(a->o_p);}
 	return NULL;
 }
+
+
 void *kgshell::run_noargs_pthsm(void *arg)try{
 	argST *a =(argST*)arg; 
 	a->mobj->run(a->i_p,a->o_p,a->m_p);
@@ -322,6 +330,11 @@ int kgshell::run(
 			argst[i].list=cmds[i].iobj;
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp ,(void*)&argst[i]);
 		}
+/*		else if(typ==4){
+			argst[i].list=cmds[i].iobj;
+			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp2 ,(void*)&argst[i]);
+		}
+*/
 		else if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pths1 ,(void*)&argst[i]);
 		}
@@ -438,7 +451,7 @@ int kgshell::getparams(
 
 	kgMod *mod =NULL;
 	if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
-			cerr << "not kgmod " << endl;
+			cerr << "not kgmod " << cmdname << endl;
 			return 1;	
 	}
 	kgArgs newArgs;

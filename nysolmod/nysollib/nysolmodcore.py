@@ -15,7 +15,7 @@ def mulit_run(val):
 	return n_core.run(cc,val[0],val[1])
 
 class NysolMOD_CORE(object):
-	# i,o,m,uは別処理
+	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
 	def __init__(self,name=None,kwd=None) :
 		if kwd == None:
 			kwd = {}
@@ -35,9 +35,9 @@ class NysolMOD_CORE(object):
 			del self.kwd["m"]
 
 		self.msg=False
-		#self.unp = kwd.get("u",None)
-		#if "u" in self.kwd :
-		#	del self.kwd["u"]
+		self.unp = kwd.get("u",None)
+		if "u" in self.kwd :
+			del self.kwd["u"]
 
 	def __iter__(self):
 		return Nysol_MeachIter(self)
@@ -102,19 +102,31 @@ class NysolMOD_CORE(object):
 
 		listd = []
 		runA = False
+		rtnflg = True
 		outf = self.outp
-		if not isinstance(outf,str):
-			outf = None
-			runA = True 
+		rtnlist = list()
+		if isinstance(outf,str):
+			pass
+		elif isinstance(outf,list):
+			rtnlist = outf
+			runA = True
+			rtnflg = False
+		else:
+			runA = True
 
 		listd = self.make_modlist()
+		
 		shobj = n_core.init(self.msg)
 
 		if runA:
-			return n_core.run(shobj,listd,runA)
+			n_core.run(shobj,listd,runA,rtnlist)
+			if rtnflg:
+				return rtnlist
+			else:
+				return None
 		else:
 			listd[1] += " o=" + outf 
-			n_core.run(shobj,listd,runA)
+			n_core.run(shobj,listd,runA,rtnlist)
 			return outf
 
 
@@ -179,8 +191,15 @@ class NysolMOD_CORE(object):
 	def mload(self,*args, **kw_args):
 		return nsub.mload(nutil.args2dict(args,kw_args,nsub.mload.kwd)).addPre(self)
 
+
 	def msave(self,*args, **kw_args):
 		return nsub.msave(nutil.args2dict(args,kw_args,nsub.msave.kwd)).addPre(self)
+
+	def writecsv(self,*args, **kw_args):
+		return nsub.writecsv(nutil.args2dict(args,kw_args,nsub.writecsv.kwd,uk="o")).addPre(self)
+
+	def writelist(self,*args, **kw_args):
+		return nsub.writelist(nutil.args2dict(args,kw_args,nsub.writelist.kwd,uk="o")).addPre(self)
 
 	def cmd(self,*args, **kw_args):
 		return nsub.cmd(nutil.arg2dict(args,kw_args,nsub.cmd.kwd)).addPre(self)
