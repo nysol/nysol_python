@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import shlex
 import re
+import copy
 
 class NysolShellSequence(object):
 
@@ -29,28 +30,90 @@ class NysolShellSequence(object):
 		print(self.cmdlist)
 		
 	def makeNetwork(self):
-		runcmd = None
-		ioflg =False
+		conectLIST={}
 
-		for cmd in self.cmdlist:
+		#iolist抽出
+		for linno ,cmd  in enumerate(self.cmdlist):
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
-			print cmd[0].name
-			if cmd[0].name = "readcsv" 
+			# コマンド毎にチェックし方を変えれるようにする
+			for k ,v in cmdio.items():
+
+				if k == 'o' or k == 'u':
+					if not v in conectLIST:
+						conectLIST[v] =[[],[]]
+					conectLIST[v][0].append([k,linno])
+				else:
+					if not v in conectLIST:
+						print( key + " model err before output")
+					conectLIST[v][1].append([k,linno])
+
+		for key ,val in conectLIST.items():
+			if len(val[0]) != 1 or len(val[1]) == 0 :
+				print( key + " model err")
+
+		#print conectLIST
+
+		#print self.cmdlist
+		#cmd作成
+		newcmdlist = []
+		interobj = {}
+		newruncmd = None
+		#ioflg =False
+		for linno ,cmd  in enumerate(self.cmdlist):
+			cmdptn = cmd[0]
+			cmdio = cmd[1]
+
+			if newruncmd == None :
+
+				if not "i" in cmdio and cmdptn.inp==None:
+					print(cmdptn.name + " model err (" + str(linno)  + ")"    )
+
+				newruncmd = copy.deepcopy(cmdptn)
+				if "i" in cmdio:
+					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
+				if "m" in cmdio:
+					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
+			else:
+
+				tmpptn  = copy.deepcopy(cmdptn)
+				tmpptn.inp  = newruncmd
+				newruncmd = tmpptn
+				if "i" in cmdio:
+					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
+				if "m" in cmdio:
+					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
+
+			if "u" in cmdio:
+				interobj[cmdio['u']] = newruncmd
+
+			if "o" in cmdio:
+				interobj[cmdio['o']] = newruncmd
+				newruncmd =None
+			
+
+			#writescv ,writelistで終了
+			print cmdptn.name
+			if cmdptn.name == "writecsv" or cmdptn.name=="writelist"  :
+				newcmdlist.append(newruncmd)
+				newruncmd = None
+
+
+		return newcmdlist
+#			if cmd[0].name = "readcsv"
 			#if ioflg==False and 
-	
 
-
-
+		
+		
 	def run(self,**kwd) :
-		runcmd = self.makeNetwork()
-		return None
+		runcmds = self.makeNetwork()
 		if "msg" in kwd:
 			if kwd["msg"] == "on" :
 				self.msgFlg=True
 
 		if self.msgFlg :
-			return runcmd.run(msg="on")
+			for runcmd in runcmds:
+				runcmd.run(msg="on")
 		else:
 			return runcmd.run()
 

@@ -73,6 +73,42 @@ class NysolMOD_CORE(object):
 	
 	def params(self,*args, **kw_args):
 		self.kwd.update(nutil.args2dict(args,kw_args,self.kwd))
+		if "i" in self.kwd :
+			self.inp   = kwd.get("i",None)
+			del self.kwd["i"]
+
+		self.outp  = kwd.get("o",None)
+		if "o" in self.kwd :
+			del self.kwd["o"]
+		
+		self.refp  = kwd.get("m",None)
+		if "m" in self.kwd :
+			del self.kwd["m"]
+
+		self.unp = kwd.get("u",None)
+		if "u" in self.kwd :
+			del self.kwd["u"]
+
+	def paraUpdate(self,kw):
+		self.kwd.update(kw)
+		if "i" in self.kwd :
+			self.inp   = self.kwd.get("i",None)
+			del self.kwd["i"]
+
+		if "o" in self.kwd :
+			self.outp = self.kwd.get("o",None)
+			del self.kwd["o"]
+		
+		if "m" in self.kwd :
+			self.refp  = self.kwd.get("m",None)
+			del self.kwd["m"]
+
+		if "u" in self.kwd :
+			self.unp = self.kwd.get("u",None)
+			del self.kwd["u"]
+
+
+
 
 	def make_modlist(self):
 		i0 = None
