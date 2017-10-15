@@ -22,6 +22,8 @@
 #include <kgError.h>
 #include <kgshell.h>
 #include <pthread.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 using namespace kgmod;
 using namespace kglib;
@@ -246,6 +248,16 @@ void *kgshell::run_noargs_pths1(void *arg)try{
 
 void kgshell::makePipeList(vector< vector<int> >& plist,bool tp)
 {
+	rlimit rlim;
+	int chfFlg;
+	chfFlg = getrlimit(RLIMIT_NOFILE, &rlim);
+	size_t pfilecnt = plist.size() * 32 ;
+	if(rlim.rlim_cur < pfilecnt ){
+		rlim.rlim_cur = pfilecnt;
+		chfFlg = setrlimit(RLIMIT_NOFILE, &rlim);
+		if (chfFlg <0 ) { throw kgError("change file limit on kgshell"); } 
+	}
+
 	for(size_t i=0;i<plist.size();i++){
 		int piped[2];
 		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell");}
