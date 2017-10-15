@@ -93,7 +93,6 @@ class NysolShellSequence(object):
 			
 
 			#writescv ,writelistで終了
-			print cmdptn.name
 			if cmdptn.name == "writecsv" or cmdptn.name=="writelist"  :
 				newcmdlist.append(newruncmd)
 				newruncmd = None
@@ -115,7 +114,8 @@ class NysolShellSequence(object):
 			for runcmd in runcmds:
 				runcmd.run(msg="on")
 		else:
-			return runcmd.run()
+			for runcmd in runcmds:
+				return runcmd.run()
 
 	def __lshift__(self,obj):
 		self.add(obj)
