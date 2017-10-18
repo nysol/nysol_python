@@ -70,14 +70,16 @@ class script(object):
 				if not "i" in cmdio and cmdptn.inp==None:
 					print(cmdptn.name + " model err (" + str(linno)  + ")"    )
 
-				newruncmd = copy.deepcopy(cmdptn)
+				#newruncmd = copy.deepcopy(cmdptn)
+				newruncmd = cmdptn
 				if "i" in cmdio:
 					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
 				if "m" in cmdio:
 					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
 			else:
 
-				tmpptn  = copy.deepcopy(cmdptn)
+				#tmpptn  = copy.deepcopy(cmdptn)
+				tmpptn  = cmdptn
 				tmpptn.inp  = newruncmd
 				newruncmd = tmpptn
 				if "i" in cmdio:
@@ -106,6 +108,8 @@ class script(object):
 		
 		
 	def run(self,**kwd) :
+		#必要なら戻す処理を追加する
+		oldenv = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork()
 		if "msg" in kwd:
 			if kwd["msg"] == "on" :
