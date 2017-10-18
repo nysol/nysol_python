@@ -8,7 +8,7 @@ hedears = ['src','src/kgmod','src/mod']
 for xxx in xxxxs:
 	hedears.append(re.sub(r'^-I','',xxx))
 
-module1 = Extension('_nysolshell_core',
+module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/kgexcmd.cpp','nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
                     						'src/kgmod/kgArgFld.cpp',
 																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
@@ -48,8 +48,8 @@ module1 = Extension('_nysolshell_core',
 										include_dirs=hedears,
 										libraries=['pthread','boost_filesystem','boost_regex','boost_system','xml2']
 										)
-setup (name = 'nysolshell_core',
-      packages=['nysolmod','nysolmod/submod','nysolmod/nysollib'],
+setup (name = 'nysol',
+      packages=['nysol','nysol/mod','nysol/mod/submod','nysol/mod/nysollib'],
        version = '0.1',
        description = 'This is a demo package',
        ext_modules = [module1])
