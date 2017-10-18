@@ -45,8 +45,9 @@ class script(object):
 					conectLIST[v][0].append([k,linno])
 				else:
 					if not v in conectLIST:
-						print( key + " model err before output")
+						print( k + " model err before output")
 					conectLIST[v][1].append([k,linno])
+
 
 		for key ,val in conectLIST.items():
 			if len(val[0]) != 1 or len(val[1]) == 0 :
