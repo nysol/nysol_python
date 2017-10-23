@@ -66,7 +66,7 @@ void kgExcmd::setArgs(void)
 
 	// 入出力ファイルオープン
 	string cv = _args.toString("cmdstr=",true);
-	if(cv.front() =='\''&&cv.back()=='\''){
+	if(cv.size()!=0&&cv[0] =='\''&&cv[cv.size()-1]=='\''){
 		cv = cv.substr(1,cv.size()-2);
 	}
 	

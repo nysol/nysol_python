@@ -31,6 +31,8 @@
 #include <kgmod.h>
 #include <kgArgFld.h>
 #include <kgMethod.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 using namespace kglib;
 
 namespace kgmod { ////////////////////////////////////////////// start namespace
