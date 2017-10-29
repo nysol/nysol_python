@@ -527,6 +527,73 @@ namespace kgsummary_ {//////////////////////////////////////////////////////////
 	}
 
 } /////////namespace kgsummary_///////////////////////////////////////////
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSummary::setArgsMain(void)
+{
+  _oFile.setPrecision(_precision);
+	_iFile.read_header();
+
+	// a=　新項目名セット
+	_vField = _args.toString("a=",false);
+	if(_vField.empty()){ _vField="fld"; }
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vs_f = _args.toStringVecVec("f=",':',2,true,true);
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+
+	// c= 計算方法のセット
+	_c_types = _args.toStringVecVec("c=", ':', 2, true);
+
+	PreCal1=false; PreCal2=false; PreCal3=false;
+	for(std::size_t i=0; i<_c_types.at(0).size();i++){
+		kgstr_t kw=_c_types.at(0).at(i);
+	     	 if(kw=="sum"   ){_functions.push_back(&kgsummary_::sum)    ; PreCal1=true; }
+	  else if(kw=="mean"  ){_functions.push_back(&kgsummary_::mean)   ; PreCal1=true; }
+		else if(kw=="count" ){_functions.push_back(&kgsummary_::count)  ; PreCal1=true; }
+		else if(kw=="devsq" ){_functions.push_back(&kgsummary_::devsq)  ; PreCal1=true; }
+		else if(kw=="var"   ){_functions.push_back(&kgsummary_::var)    ; PreCal1=true; }
+		else if(kw=="uvar"  ){_functions.push_back(&kgsummary_::uvar)   ; PreCal1=true; }
+		else if(kw=="sd"    ){_functions.push_back(&kgsummary_::sd)     ; PreCal1=true; }
+		else if(kw=="usd"   ){_functions.push_back(&kgsummary_::usd)    ; PreCal1=true; }
+		else if(kw=="cv"    ){_functions.push_back(&kgsummary_::cv)     ; PreCal1=true; }
+		else if(kw=="min"   ){_functions.push_back(&kgsummary_::minimum); PreCal1=true; }
+		else if(kw=="qtile1"){_functions.push_back(&kgsummary_::qtile1) ; PreCal2=true; }
+		else if(kw=="median"){_functions.push_back(&kgsummary_::median) ; PreCal2=true; }
+		else if(kw=="qtile3"){_functions.push_back(&kgsummary_::qtile3) ; PreCal2=true; }
+		else if(kw=="max"   ){_functions.push_back(&kgsummary_::maximum); PreCal1=true; }
+		else if(kw=="range" ){_functions.push_back(&kgsummary_::range)  ; PreCal1=true; }
+		else if(kw=="qrange"){_functions.push_back(&kgsummary_::qrange) ; PreCal2=true; }
+		else if(kw=="mode"  ){_functions.push_back(&kgsummary_::mode)   ; PreCal2=true; }
+		else if(kw=="ucount"){_functions.push_back(&kgsummary_::ucount) ; PreCal2=true; }
+		else if(kw=="skew"  ){_functions.push_back(&kgsummary_::skew)   ; PreCal3=true; }
+		else if(kw=="kurt"  ){_functions.push_back(&kgsummary_::kurt)   ; PreCal3=true; }
+		else if(kw=="uskew" ){_functions.push_back(&kgsummary_::uskew)  ; PreCal3=true; }
+		else if(kw=="ukurt" ){_functions.push_back(&kgsummary_::ukurt)  ; PreCal3=true; }
+		else {
+			ostringstream ss;
+			ss << "unknown keyword: " << kw << ": c=sum|mean|count|ucount|devsq|var|uvar|sd|usd|cv|min|qtile1|median|qtile3|max|range|qrange|mode|skew|kurt|uskew|ukurt" << _c_type;
+			throw kgError(ss.str());	
+		}
+	}
+
+	for(std::size_t i=0; i<_c_types.at(1).size(); i++){
+		kgstr_t str=_c_types.at(1).at(i);
+		if(str.empty()) _names.push_back(_c_types.at(0).at(i));
+		else            _names.push_back(str);
+	}
+	_null = _args.toBool("-n");
+
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
+	_kField.set(vs,  &_iFile,_fldByNum);
+	_fField.set(vs_f, &_iFile,_fldByNum);
+
+}
 
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
@@ -534,71 +601,13 @@ namespace kgsummary_ {//////////////////////////////////////////////////////////
 void kgSummary::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("a=,f=,i=,o=,k=,c=,-q,-n",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
 
-	// a=　新項目名セット
-	_vField = _args.toString("a=",false);
-	if(_vField.empty()){ _vField="fld"; }
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vs_f = _args.toStringVecVec("f=",':',2,true,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// c= 計算方法のセット
-	_c_types = _args.toStringVecVec("c=", ':', 2, true);
-
-	PreCal1=false; PreCal2=false; PreCal3=false;
-	for(std::size_t i=0; i<_c_types.at(0).size();i++){
-		kgstr_t kw=_c_types.at(0).at(i);
-	     	 if(kw=="sum"   ){_functions.push_back(&kgsummary_::sum)    ; PreCal1=true; }
-	  else if(kw=="mean"  ){_functions.push_back(&kgsummary_::mean)   ; PreCal1=true; }
-		else if(kw=="count" ){_functions.push_back(&kgsummary_::count)  ; PreCal1=true; }
-		else if(kw=="devsq" ){_functions.push_back(&kgsummary_::devsq)  ; PreCal1=true; }
-		else if(kw=="var"   ){_functions.push_back(&kgsummary_::var)    ; PreCal1=true; }
-		else if(kw=="uvar"  ){_functions.push_back(&kgsummary_::uvar)   ; PreCal1=true; }
-		else if(kw=="sd"    ){_functions.push_back(&kgsummary_::sd)     ; PreCal1=true; }
-		else if(kw=="usd"   ){_functions.push_back(&kgsummary_::usd)    ; PreCal1=true; }
-		else if(kw=="cv"    ){_functions.push_back(&kgsummary_::cv)     ; PreCal1=true; }
-		else if(kw=="min"   ){_functions.push_back(&kgsummary_::minimum); PreCal1=true; }
-		else if(kw=="qtile1"){_functions.push_back(&kgsummary_::qtile1) ; PreCal2=true; }
-		else if(kw=="median"){_functions.push_back(&kgsummary_::median) ; PreCal2=true; }
-		else if(kw=="qtile3"){_functions.push_back(&kgsummary_::qtile3) ; PreCal2=true; }
-		else if(kw=="max"   ){_functions.push_back(&kgsummary_::maximum); PreCal1=true; }
-		else if(kw=="range" ){_functions.push_back(&kgsummary_::range)  ; PreCal1=true; }
-		else if(kw=="qrange"){_functions.push_back(&kgsummary_::qrange) ; PreCal2=true; }
-		else if(kw=="mode"  ){_functions.push_back(&kgsummary_::mode)   ; PreCal2=true; }
-		else if(kw=="ucount"){_functions.push_back(&kgsummary_::ucount) ; PreCal2=true; }
-		else if(kw=="skew"  ){_functions.push_back(&kgsummary_::skew)   ; PreCal3=true; }
-		else if(kw=="kurt"  ){_functions.push_back(&kgsummary_::kurt)   ; PreCal3=true; }
-		else if(kw=="uskew" ){_functions.push_back(&kgsummary_::uskew)  ; PreCal3=true; }
-		else if(kw=="ukurt" ){_functions.push_back(&kgsummary_::ukurt)  ; PreCal3=true; }
-		else {
-			ostringstream ss;
-			ss << "unknown keyword: " << kw << ": c=sum|mean|count|ucount|devsq|var|uvar|sd|usd|cv|min|qtile1|median|qtile3|max|range|qrange|mode|skew|kurt|uskew|ukurt" << _c_type;
-			throw kgError(ss.str());	
-		}
-	}
-
-	for(std::size_t i=0; i<_c_types.at(1).size(); i++){
-		kgstr_t str=_c_types.at(1).at(i);
-		if(str.empty()) _names.push_back(_c_types.at(0).at(i));
-		else            _names.push_back(str);
-	}
-	_null = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 
@@ -606,326 +615,153 @@ void kgSummary::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSummary::setArgs(int i_p,int o_p)
+void kgSummary::setArgs(int inum,int *i_p,int onum, int* o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("a=,f=,i=,o=,k=,c=,-q,-n",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// a=　新項目名セット
-	_vField = _args.toString("a=",false);
-	if(_vField.empty()){ _vField="fld"; }
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vs_f = _args.toStringVecVec("f=",':',2,true,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// c= 計算方法のセット
-	_c_types = _args.toStringVecVec("c=", ':', 2, true);
-
-	PreCal1=false; PreCal2=false; PreCal3=false;
-	for(std::size_t i=0; i<_c_types.at(0).size();i++){
-		kgstr_t kw=_c_types.at(0).at(i);
-	     	 if(kw=="sum"   ){_functions.push_back(&kgsummary_::sum)    ; PreCal1=true; }
-	  else if(kw=="mean"  ){_functions.push_back(&kgsummary_::mean)   ; PreCal1=true; }
-		else if(kw=="count" ){_functions.push_back(&kgsummary_::count)  ; PreCal1=true; }
-		else if(kw=="devsq" ){_functions.push_back(&kgsummary_::devsq)  ; PreCal1=true; }
-		else if(kw=="var"   ){_functions.push_back(&kgsummary_::var)    ; PreCal1=true; }
-		else if(kw=="uvar"  ){_functions.push_back(&kgsummary_::uvar)   ; PreCal1=true; }
-		else if(kw=="sd"    ){_functions.push_back(&kgsummary_::sd)     ; PreCal1=true; }
-		else if(kw=="usd"   ){_functions.push_back(&kgsummary_::usd)    ; PreCal1=true; }
-		else if(kw=="cv"    ){_functions.push_back(&kgsummary_::cv)     ; PreCal1=true; }
-		else if(kw=="min"   ){_functions.push_back(&kgsummary_::minimum); PreCal1=true; }
-		else if(kw=="qtile1"){_functions.push_back(&kgsummary_::qtile1) ; PreCal2=true; }
-		else if(kw=="median"){_functions.push_back(&kgsummary_::median) ; PreCal2=true; }
-		else if(kw=="qtile3"){_functions.push_back(&kgsummary_::qtile3) ; PreCal2=true; }
-		else if(kw=="max"   ){_functions.push_back(&kgsummary_::maximum); PreCal1=true; }
-		else if(kw=="range" ){_functions.push_back(&kgsummary_::range)  ; PreCal1=true; }
-		else if(kw=="qrange"){_functions.push_back(&kgsummary_::qrange) ; PreCal2=true; }
-		else if(kw=="mode"  ){_functions.push_back(&kgsummary_::mode)   ; PreCal2=true; }
-		else if(kw=="ucount"){_functions.push_back(&kgsummary_::ucount) ; PreCal2=true; }
-		else if(kw=="skew"  ){_functions.push_back(&kgsummary_::skew)   ; PreCal3=true; }
-		else if(kw=="kurt"  ){_functions.push_back(&kgsummary_::kurt)   ; PreCal3=true; }
-		else if(kw=="uskew" ){_functions.push_back(&kgsummary_::uskew)  ; PreCal3=true; }
-		else if(kw=="ukurt" ){_functions.push_back(&kgsummary_::ukurt)  ; PreCal3=true; }
-		else {
-			ostringstream ss;
-			ss << "unknown keyword: " << kw << ": c=sum|mean|count|ucount|devsq|var|uvar|sd|usd|cv|min|qtile1|median|qtile3|max|range|qrange|mode|skew|kurt|uskew|ukurt" << _c_type;
-			throw kgError(ss.str());	
-		}
-	}
-
-	for(std::size_t i=0; i<_c_types.at(1).size(); i++){
-		kgstr_t str=_c_types.at(1).at(i);
-		if(str.empty()) _names.push_back(_c_types.at(0).at(i));
-		else            _names.push_back(str);
-	}
-	_null = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
 
-int kgSummary::run(void) try 
+int kgSummary::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+	if(!_oFile.noFldName()){
+		vector<kgstr_t> outfld;
+		for(size_t k=0; k < _kField.size(); k++){
+			outfld.push_back(_iFile.fldName(_kField.num(k),true));
+		}
+		outfld.push_back(_vField);
+		for(size_t k=0; k<_names.size(); k++){
+			outfld.push_back(_names.at(k));
+		}
+		_oFile.writeFldNameCHK(outfld);
+	}
+
+	// グローバル変数(計算部品)の初期化
+	int fldSize=_fField.size();
+	Cnt.resize(fldSize,0);
+	Uct.resize(fldSize,0);
+	Sum.resize(fldSize,0);
+	Dv2.resize(fldSize,0);
+	Dv3.resize(fldSize,0);
+	Dv4.resize(fldSize,0);
+	Min.resize(fldSize,0);
+	Max.resize(fldSize,0);
+	Qt1.resize(fldSize,0);
+	Qt2.resize(fldSize,0);
+	Qt3.resize(fldSize,0);
+	Mod.resize(fldSize,0);
+	Mdc.resize(fldSize,0);
+	NulF.resize(fldSize,0);
+
+	// 結果格納変数の領域確保
+	vector<vector<kgVal> > result;
+	result.resize(_functions.size());
+	for(std::size_t i=0; i<_functions.size(); i++){
+		result.at(i).resize(fldSize);
+		for(int j=0; j<fldSize; j++){
+			result.at(i).at(j).type('N');
+		}
+	}
+
+	while(_iFile.blkset()!=EOF){
+
+		// 前計算(sum,mean等)
+		if(PreCal1) kgsummary_::preCal1(_iFile, _fField,_null);
+
+		// 前計算(median,qtile1等)
+		if(PreCal2) kgsummary_::preCal2(_iFile, _fField,_null);
+
+		// 前計算(偏差の３乗和，４乗和)
+		if(PreCal3) kgsummary_::preCal3(_iFile, _fField,_null);
+
+		// 計算の実行本体
+		for(std::size_t k=0; k<_functions.size(); k++){
+			_functions.at(k)(result.at(k),_null );
+		}
+
+		// 結果出力
+		for(int i=0; i<fldSize; i++){
+			if(_assertNullIN && NulF.at(i) ) { _existNullIN  = true;}
+			// k=項目出力
+			for(std::size_t j=0; j<_kField.size(); j++){
+				_oFile.writeStr(_iFile.getOldVal(_kField.num(j)),false);
+			}
+			// 対象項目名
+			kgstr_t oName=_fField.attr(i);
+			if( oName.empty()) oName=_fField.name(i);
+			_oFile.writeStr(oName.c_str(),false);
+			for(std::size_t j=0; j<_functions.size(); j++){
+				bool retFlg=false;
+				if(j==_functions.size()-1) retFlg=true;
+				_oFile.writeVal(result.at(j).at(i),retFlg);
+				if(_assertNullOUT && result.at(j).at(i).null() ) { _existNullOUT  = true;}
+			}
+		}
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgSummary::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-	if(!_oFile.noFldName()){
-		vector<kgstr_t> outfld;
-		for(size_t k=0; k < _kField.size(); k++){
-			outfld.push_back(_iFile.fldName(_kField.num(k),true));
-		}
-		outfld.push_back(_vField);
-		for(size_t k=0; k<_names.size(); k++){
-			outfld.push_back(_names.at(k));
-		}
-		_oFile.writeFldNameCHK(outfld);
-	}
-
-	// グローバル変数(計算部品)の初期化
-	int fldSize=_fField.size();
-	Cnt.resize(fldSize,0);
-	Uct.resize(fldSize,0);
-	Sum.resize(fldSize,0);
-	Dv2.resize(fldSize,0);
-	Dv3.resize(fldSize,0);
-	Dv4.resize(fldSize,0);
-	Min.resize(fldSize,0);
-	Max.resize(fldSize,0);
-	Qt1.resize(fldSize,0);
-	Qt2.resize(fldSize,0);
-	Qt3.resize(fldSize,0);
-	Mod.resize(fldSize,0);
-	Mdc.resize(fldSize,0);
-	NulF.resize(fldSize,0);
-
-	// 結果格納変数の領域確保
-	vector<vector<kgVal> > result;
-	result.resize(_functions.size());
-	for(std::size_t i=0; i<_functions.size(); i++){
-		result.at(i).resize(fldSize);
-		for(int j=0; j<fldSize; j++){
-			result.at(i).at(j).type('N');
-		}
-	}
-
-	while(_iFile.blkset()!=EOF){
-
-		// 前計算(sum,mean等)
-		if(PreCal1) kgsummary_::preCal1(_iFile, _fField,_null);
-
-		// 前計算(median,qtile1等)
-		if(PreCal2) kgsummary_::preCal2(_iFile, _fField,_null);
-
-		// 前計算(偏差の３乗和，４乗和)
-		if(PreCal3) kgsummary_::preCal3(_iFile, _fField,_null);
-
-		// 計算の実行本体
-		for(std::size_t k=0; k<_functions.size(); k++){
-			_functions.at(k)(result.at(k),_null );
-		}
-
-		// 結果出力
-		for(int i=0; i<fldSize; i++){
-			if(_assertNullIN && NulF.at(i) ) { _existNullIN  = true;}
-			// k=項目出力
-			for(std::size_t j=0; j<_kField.size(); j++){
-				_oFile.writeStr(_iFile.getOldVal(_kField.num(j)),false);
-			}
-			// 対象項目名
-			kgstr_t oName=_fField.attr(i);
-			if( oName.empty()) oName=_fField.name(i);
-			_oFile.writeStr(oName.c_str(),false);
-			for(std::size_t j=0; j<_functions.size(); j++){
-				bool retFlg=false;
-				if(j==_functions.size()-1) retFlg=true;
-				_oFile.writeVal(result.at(j).at(i),retFlg);
-				if(_assertNullOUT && result.at(j).at(i).null() ) { _existNullOUT  = true;}
-			}
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-
-int kgSummary::run(int i_p,int o_p) try 
+int kgSummary::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-	if(!_oFile.noFldName()){
-		vector<kgstr_t> outfld;
-		for(size_t k=0; k < _kField.size(); k++){
-			outfld.push_back(_iFile.fldName(_kField.num(k),true));
-		}
-		outfld.push_back(_vField);
-		for(size_t k=0; k<_names.size(); k++){
-			outfld.push_back(_names.at(k));
-		}
-		_oFile.writeFldNameCHK(outfld);
-	}
-
-	// グローバル変数(計算部品)の初期化
-	int fldSize=_fField.size();
-	Cnt.resize(fldSize,0);
-	Uct.resize(fldSize,0);
-	Sum.resize(fldSize,0);
-	Dv2.resize(fldSize,0);
-	Dv3.resize(fldSize,0);
-	Dv4.resize(fldSize,0);
-	Min.resize(fldSize,0);
-	Max.resize(fldSize,0);
-	Qt1.resize(fldSize,0);
-	Qt2.resize(fldSize,0);
-	Qt3.resize(fldSize,0);
-	Mod.resize(fldSize,0);
-	Mdc.resize(fldSize,0);
-	NulF.resize(fldSize,0);
-
-	// 結果格納変数の領域確保
-	vector<vector<kgVal> > result;
-	result.resize(_functions.size());
-	for(std::size_t i=0; i<_functions.size(); i++){
-		result.at(i).resize(fldSize);
-		for(int j=0; j<fldSize; j++){
-			result.at(i).at(j).type('N');
-		}
-	}
-
-	while(_iFile.blkset()!=EOF){
-
-		// 前計算(sum,mean等)
-		if(PreCal1) kgsummary_::preCal1(_iFile, _fField,_null);
-
-		// 前計算(median,qtile1等)
-		if(PreCal2) kgsummary_::preCal2(_iFile, _fField,_null);
-
-		// 前計算(偏差の３乗和，４乗和)
-		if(PreCal3) kgsummary_::preCal3(_iFile, _fField,_null);
-
-		// 計算の実行本体
-		for(std::size_t k=0; k<_functions.size(); k++){
-			_functions.at(k)(result.at(k),_null );
-		}
-
-		// 結果出力
-		for(int i=0; i<fldSize; i++){
-			if(_assertNullIN && NulF.at(i) ) { _existNullIN  = true;}
-			// k=項目出力
-			for(std::size_t j=0; j<_kField.size(); j++){
-				_oFile.writeStr(_iFile.getOldVal(_kField.num(j)),false);
-			}
-			// 対象項目名
-			kgstr_t oName=_fField.attr(i);
-			if( oName.empty()) oName=_fField.name(i);
-			_oFile.writeStr(oName.c_str(),false);
-			for(std::size_t j=0; j<_functions.size(); j++){
-				bool retFlg=false;
-				if(j==_functions.size()-1) retFlg=true;
-				_oFile.writeVal(result.at(j).at(i),retFlg);
-				if(_assertNullOUT && result.at(j).at(i).null() ) { _existNullOUT  = true;}
-			}
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

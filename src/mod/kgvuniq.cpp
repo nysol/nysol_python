@@ -67,14 +67,8 @@ kgVuniq::kgVuniq(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVuniq::setArgs(void)
+void kgVuniq::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,-n,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 	_iFile.read_header();
 
 	// vf= 項目引数のセット
@@ -103,56 +97,38 @@ void kgVuniq::setArgs(void)
 	_delimstr[0] =_delim;
 	_delimstr[1] ='\0';
 
+}
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgVuniq::setArgs(void)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+
+	// ファイルオープン
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVuniq::setArgs(int i_p,int o_p)
+void kgVuniq::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,-n,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// vf= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("vf=","%:",2,true,true);
-	_vfField.set(vvs, &_iFile,_fldByNum);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// -n フラグ
-	_seq  = _args.toBool("-n");
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// delim= 項目引数のセット
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
-
-	// -A（追加）フラグセット
-	_add_flg 		= _args.toBool("-A");
-
-	//文字列生成用領域
-	_delimstr[0] =_delim;
-	_delimstr[1] ='\0';
+	setArgsMain();
 
 
 }
@@ -249,132 +225,79 @@ void kgVuniq::output_n(char *str,bool eol)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgVuniq::run(void) try 
+int kgVuniq::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	//出力項目名出力 追加 or 置換
+	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
+	else				 { _oFile.writeFldName(_vfField, true);}
+	int outsize = _iFile.fldSize();
+	if(_add_flg) { outsize += _vfField.size(); }	
+
+
+	while(EOF != _iFile.read() ){
+		int outcnt=0;
+		for(size_t i=0; i<_iFile.fldSize(); i++){
+			outcnt++;
+			char* str=_iFile.getVal(i);
+
+			if(_add_flg||_vfField.flg(i)==-1){
+				_oFile.writeStr(str,outcnt==outsize);
+			}
+			else{
+				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
+				output_n(str,outcnt==outsize);
+			}
+		}
+		if(_add_flg){
+			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
+				outcnt++;
+				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
+				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
+			}
+		}		
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgVuniq::run(void) 
+{
 	setArgs();
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-
-	while(EOF != _iFile.read() ){
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			outcnt++;
-			char* str=_iFile.getVal(i);
-
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}		
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgVuniq::run(int i_p,int o_p) try 
+int kgVuniq::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-
-	while(EOF != _iFile.read() ){
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			outcnt++;
-			char* str=_iFile.getVal(i);
-
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}		
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+

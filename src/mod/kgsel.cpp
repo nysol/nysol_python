@@ -63,55 +63,29 @@ kgSel::kgSel(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSel::setArgs(void)
+void kgSel::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("c=,i=,o=,u=,-r",kgArgs::COMMON|kgArgs::IODIFF);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_iFile.read_header();
-	kgstr_t str = _args.toString("u=",false);
-	if(str.empty()){
-		_uFlg=false;
-	}else{
-		_uFlg=true;
-		_uFile.open(str, _env, _nfn_o);
-	}
 
 	// -r 反転フラグ
 	_reverse = _args.toBool("-r");
-	// u= unmatch出力ファイルオープン
 
 	// c= 式を文字列として取得
 	_expr    = _args.toString("c=",true);
 
 }
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSel::setArgs(int i_p,int o_p)
+void kgSel::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("c=,i=,o=,u=,-r",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-
-	_iFile.read_header();
+	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	kgstr_t str = _args.toString("u=",false);
 	if(str.empty()){
 		_uFlg=false;
@@ -119,14 +93,41 @@ void kgSel::setArgs(int i_p,int o_p)
 		_uFlg=true;
 		_uFile.open(str, _env, _nfn_o);
 	}
+	setArgsMain();
 
-	// -r 反転フラグ
-	_reverse = _args.toBool("-r");
-	// u= unmatch出力ファイルオープン
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSel::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// c= 式を文字列として取得
-	_expr    = _args.toString("c=",true);
+	if(inum>1 || onum>2){ throw kgError("no match IO");}
 
+	// 入出力ファイルオープン
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	kgstr_t ufile = _args.toString("u=",false);
+
+	if(onum>1 && *(o_p+1)>0){ 
+		_uFile.popen(*(o_p+1), _env,_nfn_o); 
+		_uFlg=true;
+	}
+	else if(ufile.empty()){
+		_uFlg=false;
+	}
+	else{
+		_uFile.open(ufile,_env,_nfn_o);
+		_uFlg=true;
+	}
+	setArgsMain();
 }
 // -----------------------------------------------------------------------------
 //	各行の計算の実行
@@ -259,10 +260,8 @@ char kgSel::setFuncType( tree_node_iter_t const &iter )
 // -----------------------------------------------------------------------------
 // kgsel起動部分
 // -----------------------------------------------------------------------------
-int kgSel::run(void) try 
+int kgSel::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
 
 	// 項目名を展開する(ワイルドカードと番号指定)
 	_expr=evalCalFldName(_expr, _iFile,_fldByNum);
@@ -357,103 +356,18 @@ int kgSel::run(void) try
 	return 1;
 }
 
+
 // -----------------------------------------------------------------------------
-// kgsel起動部分
+// 実行 
 // -----------------------------------------------------------------------------
-int kgSel::run(int i_p,int o_p) try 
+int kgSel::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 項目名を展開する(ワイルドカードと番号指定)
-	_expr=evalCalFldName(_expr, _iFile,_fldByNum);
-
-	// パーサーのインスタンス化
-	kgCalParser parser;
-
-	// ast_parse : BOOSTライブラリの構文木を生成する関数
-	//	引数 : 解析する対象文字列, パーサー, スキップするパーサー
-	tree_parse_info< std::string::const_iterator ,node_val_data_factory<void *> >
-		info = ast_parse< node_val_data_factory<void *>,std::string::const_iterator >
-				( _expr.begin(),_expr.end(),parser,nothing_p);
-
-	// 構文木作成失敗
-	if(!info.full){
-		ostringstream ss;
-		ss << "parse error in "  << _expr;
-		ss << " (KGLIB)";
-		throw kgError(ss.str());
-		return 1;
-	}
-
-	// 関数,演算子,定数,項目値のクラスを実体化して各ノードにセットする
-	setFuncType(info.trees.begin());
-
-	// 各関数,演算子のとる引数をそれぞれの子ノードの_resultに紐づける
-	setFuncArg(info.trees.begin());
-
-	// 関数の引数の数のチェック
-	chkFuncArgc(info.trees.begin());
-
-	// 引数が定まってから可能となる前処理(正規表現コンパイルなど)
-	runPreProcess(info.trees.begin());
-
-	// 最終結果_resultのアドレスは静的に決まる(topノードの_result)
-	kgVal* result =
- 		&static_cast<kgFunction*>(info.trees.begin()->value.value())->_result;
-
-	if(result->type()!='B'){
-		throw kgError("data type of the result must be bool");
-	}
-
-	// 前行結果の初期値はNull
-	_prvRsl.null(true);
-
-	// 項目名の出力
-	_oFile.writeFldName(_iFile);
-	if(_uFlg) _uFile.writeFldName(_iFile);
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		if((_iFile.status() & kgCSV::End )) break;
-
-		// 計算の実行(トップノード関数の_resultの値が最終結果)
-		calculate(info.trees.begin());
-		if(result->b()!=_reverse && !result->null()){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
-		}
-		else if(_uFlg){
-			_uFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
-		}
-		// 前行結果をセット
-		_prvRsl=*result;
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_iFile.close();
-	_oFile.close();
-	if(_uFlg){ _uFile.close();}
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgSel::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

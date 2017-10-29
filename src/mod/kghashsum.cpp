@@ -52,6 +52,37 @@ kgHashsum::kgHashsum(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
+void kgHashsum::setArgsMain(void)
+{
+
+	_iFile.read_header();
+	_oFile.setPrecision(_precision);
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+	_fField.set(vvs, &_iFile,_fldByNum);
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+	_kField.set(vs,  &_iFile,_fldByNum);
+
+	// -n オプションのセット
+	_null=_args.toBool("-n");
+
+	// hv= ハッシュ値のセット
+	kgstr_t s = _args.toString("hs=",false);
+	if(!s.empty()){
+		_hashSize=atoi(s.c_str());
+		if(_hashSize<=100)     _hashSize=101;
+		if(_hashSize>=2000000) _hashSize=1999999;
+	}else{
+		_hashSize=199999;
+	}
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
 void kgHashsum::setArgs(void)
 {
 	// パラメータセット＆入出力ファイルオープン
@@ -60,228 +91,116 @@ void kgHashsum::setArgs(void)
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
 	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
-	_oFile.setPrecision(_precision);
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile,_fldByNum);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-	_kField.set(vs,  &_iFile,_fldByNum);
-
-	// -n オプションのセット
-	_null=_args.toBool("-n");
-
-	// hv= ハッシュ値のセット
-	kgstr_t s = _args.toString("hs=",false);
-	if(!s.empty()){
-		_hashSize=atoi(s.c_str());
-		if(_hashSize<=100)     _hashSize=101;
-		if(_hashSize>=2000000) _hashSize=1999999;
-	}else{
-		_hashSize=199999;
-	}
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgHashsum::setArgs(int i_p,int o_p)
+void kgHashsum::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	_args.paramcheck("f=,i=,o=,k=,hs=,-n",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
-	_oFile.setPrecision(_precision);
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile,_fldByNum);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-	_kField.set(vs,  &_iFile,_fldByNum);
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// -n オプションのセット
-	_null=_args.toBool("-n");
+	setArgsMain();
 
-	// hv= ハッシュ値のセット
-	kgstr_t s = _args.toString("hs=",false);
-	if(!s.empty()){
-		_hashSize=atoi(s.c_str());
-		if(_hashSize<=100)     _hashSize=101;
-		if(_hashSize>=2000000) _hashSize=1999999;
-	}else{
-		_hashSize=199999;
-	}
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgHashsum::run(void) try 
+int kgHashsum::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 項目名の出力
+  _oFile.writeFldName(_fField, true,false);
+	// ハッシュセット
+	kgFldHash hash(_hashSize, &_iFile, &_kField, &_fField);
+	while( EOF != _iFile.read() ){
+		kgFldHashNode* hn = hash.insert(const_cast<const char**>(_iFile.getFld()));
+		for(int i=0; i<hash.fldSize() ; i++){
+			char* str=_iFile.getVal(_fField.num(i));
+			if(*str != '\0'){
+				hn->cnt(i,1);
+				hn->sum(i,atof(str));
+			}else{
+				if(_assertNullIN) { _existNullIN  = true;}
+				hn->nul(i,true);
+			}
+		}
+	}
+	//データ出力
+	for(int i=0;i<hash.hashVal();i++){
+		kgFldHashNode* node=hash.node(i);
+		if(node==NULL){ continue;}
+		while(node!=NULL){
+			const vector<int>* flg=_fField.getFlg_p();
+			for(std::size_t j=0; j<flg->size(); j++){ // csvの項目数で回す
+				bool eol=false;
+				if(j==flg->size()-1){ eol=true; }
+				int num=flg->at(j);                  // 対応するval位置
+				if(num == -1){ _oFile.writeStr( node->idx(j)  ,eol );}
+				else{
+					if(node->cnt(num)!=0 && (!_null || !node->nul(num)) ){
+						_oFile.writeDbl( node->sum(num),eol );
+					}else{
+						if(_assertNullOUT){ _existNullOUT = true;}
+						_oFile.writeStr( ""            ,eol );
+					}
+				}
+			}
+			node=node->next();
+		}
+	}
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY =hash.keynull(); }
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+	
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgHashsum::run(void) 
+{
 	setArgs();
-
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true,false);
-	// ハッシュセット
-	kgFldHash hash(_hashSize, &_iFile, &_kField, &_fField);
-	while( EOF != _iFile.read() ){
-		kgFldHashNode* hn = hash.insert(const_cast<const char**>(_iFile.getFld()));
-		for(int i=0; i<hash.fldSize() ; i++){
-			char* str=_iFile.getVal(_fField.num(i));
-			if(*str != '\0'){
-				hn->cnt(i,1);
-				hn->sum(i,atof(str));
-			}else{
-				if(_assertNullIN) { _existNullIN  = true;}
-				hn->nul(i,true);
-			}
-		}
-	}
-	//データ出力
-	for(int i=0;i<hash.hashVal();i++){
-		kgFldHashNode* node=hash.node(i);
-		if(node==NULL){ continue;}
-		while(node!=NULL){
-			const vector<int>* flg=_fField.getFlg_p();
-			for(std::size_t j=0; j<flg->size(); j++){ // csvの項目数で回す
-				bool eol=false;
-				if(j==flg->size()-1){ eol=true; }
-				int num=flg->at(j);                  // 対応するval位置
-				if(num == -1){ _oFile.writeStr( node->idx(j)  ,eol );}
-				else{
-					if(node->cnt(num)!=0 && (!_null || !node->nul(num)) ){
-						_oFile.writeDbl( node->sum(num),eol );
-					}else{
-						if(_assertNullOUT){ _existNullOUT = true;}
-						_oFile.writeStr( ""            ,eol );
-					}
-				}
-			}
-			node=node->next();
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY =hash.keynull(); }
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-	
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgHashsum::run(int i_p,int o_p) try 
+int kgHashsum::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true,false);
-	// ハッシュセット
-	kgFldHash hash(_hashSize, &_iFile, &_kField, &_fField);
-	while( EOF != _iFile.read() ){
-		kgFldHashNode* hn = hash.insert(const_cast<const char**>(_iFile.getFld()));
-		for(int i=0; i<hash.fldSize() ; i++){
-			char* str=_iFile.getVal(_fField.num(i));
-			if(*str != '\0'){
-				hn->cnt(i,1);
-				hn->sum(i,atof(str));
-			}else{
-				if(_assertNullIN) { _existNullIN  = true;}
-				hn->nul(i,true);
-			}
-		}
-	}
-	//データ出力
-	for(int i=0;i<hash.hashVal();i++){
-		kgFldHashNode* node=hash.node(i);
-		if(node==NULL){ continue;}
-		while(node!=NULL){
-			const vector<int>* flg=_fField.getFlg_p();
-			for(std::size_t j=0; j<flg->size(); j++){ // csvの項目数で回す
-				bool eol=false;
-				if(j==flg->size()-1){ eol=true; }
-				int num=flg->at(j);                  // 対応するval位置
-				if(num == -1){ _oFile.writeStr( node->idx(j)  ,eol );}
-				else{
-					if(node->cnt(num)!=0 && (!_null || !node->nul(num)) ){
-						_oFile.writeDbl( node->sum(num),eol );
-					}else{
-						if(_assertNullOUT){ _existNullOUT = true;}
-						_oFile.writeStr( ""            ,eol );
-					}
-				}
-			}
-			node=node->next();
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY =hash.keynull(); }
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-	
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

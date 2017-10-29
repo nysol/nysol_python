@@ -145,31 +145,12 @@ void kgCross::setFldName(string tName)
 	//	項目名出力
 	if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
 
-
 }
-
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgCross::setArgs(int i_p,int o_p)
+void kgCross::setArgsMain(void)
 {
-
-	// パラメータチェック
-	_args.paramcheck("f=,s=,i=,o=,k=,a=,v=,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
 	_iFile.read_header();
 
 	// k= 項目引数のセット
@@ -204,6 +185,25 @@ void kgCross::setArgs(int i_p,int o_p)
 	//比較タイプセット(nがあるとtrueをセット(数字ソートになる)r)
 	_reverse = _sField.attr(0).find("r") != kgstr_t::npos ;
 	_numsort = _sField.attr(0).find("n") != kgstr_t::npos ;
+
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgCross::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
 
 }
 
@@ -212,226 +212,113 @@ void kgCross::setArgs(int i_p,int o_p)
 // -----------------------------------------------------------------------------
 void kgCross::setArgs(void)
 {
+	_args.paramcheck(_paralist,_paraflg);
 
-	// パラメータチェック
-	_args.paramcheck("f=,s=,i=,o=,k=,a=,v=,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-
-	// s= 項目引数のセット	
-	vector< vector<kgstr_t> >  vvs_s = _args.toStringVecVec("s=","%:",2,true);
-
-	// a= 項目引数のセット
-	_a_str = _args.toString("a=",false);
-	if(_a_str.size()==0){ _a_str = "fld";}
-
-	// v= null値変換文字列セット
-	_v_str = _args.toString("v=",false);
-	if(_v_str.size()==0) { _n_flg=false; }
-	else								 { _n_flg=true;	 }
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg&&!vs.empty()){ sortingRun(&_iFile,vs);}
-
-	_kField.set(vs, &_iFile, _fldByNum);
-	_fField.set(vvs, &_iFile, _fldByNum);
-	_sField.set(vvs_s, &_iFile, _fldByNum);
-
-	if(_sField.size()!=1){
-		throw kgError("s= takes just one field name.");
-	}
-	//比較タイプセット(nがあるとtrueをセット(数字ソートになる)r)
-	_reverse = _sField.attr(0).find("r") != kgstr_t::npos ;
-	_numsort = _sField.attr(0).find("n") != kgstr_t::npos ;
+	setArgsMain();
 
 }
 
-int kgCross::run(void) try 
+int kgCross::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// データ複製、項目名=>出力位置リスト生成、項目名出力
+	kgTempfile tempFile(_env);
+	string tName = tempFile.create();
+	setFldName(tName);
+
+	// データファイルオープン
+	kgCSVkey tiFile;
+	tiFile.open(tName, _env, _nfn_i);
+	tiFile.read_header();
+	tiFile.setKey(_kField.getNum());
+
+	
+	size_t outValCount=_newFldMap.size()*_fField.size();
+	vector<string> fldVals(outValCount);
+
+	while( EOF != tiFile.read() ){
+		if( tiFile.keybreak() ){
+			// keybreak時にデータを出力する
+			for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
+				for(size_t i=0; i<_kField.size(); i++){
+					_oFile.writeStr( tiFile.getOldVal( _kField.num(i) ), false);
+				}
+				_oFile.writeStr( _fField.name(fldNo).c_str(),false);
+				for(size_t sno=0; sno<_newFldMap.size(); sno++){
+					size_t no = sno * _fField.size() +fldNo;
+					string o_str;
+					if (!strcmp(fldVals.at(no).c_str(),"")){
+						if( _n_flg ){ o_str = _v_str; }
+						else{
+							o_str = fldVals.at(no);
+							if(_assertNullOUT){ _existNullOUT = true;}
+						}
+					}else{
+						o_str = fldVals.at(no);
+					}
+					if(sno==_newFldMap.size()-1) _oFile.writeStr( o_str.c_str(), true );
+					else                         _oFile.writeStr( o_str.c_str(), false);
+				}
+			}
+			fldVals.clear();
+			fldVals.resize(outValCount);
+		}
+
+		char *ck_str = tiFile.getNewVal(_sField.num(0));
+		if(*ck_str == '\0') continue;
+		int sno = _newFldMap[ck_str];
+		for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
+			size_t no = sno * _fField.size() +fldNo;
+			fldVals.at(no) = tiFile.getNewVal(_fField.num(fldNo));
+			if(_assertNullIN && fldVals.at(no).size()==0) { _existNullIN  = true;}
+
+		}
+	}
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
+	// 終了処理
+	th_cancel();
+	tiFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error");
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgCross::run(void) 
+{
 	setArgs();
-
-	// データ複製、項目名=>出力位置リスト生成、項目名出力
-	kgTempfile tempFile(_env);
-	string tName = tempFile.create();
-	setFldName(tName);
-
-	// データファイルオープン
-	kgCSVkey tiFile;
-	tiFile.open(tName, _env, _nfn_i);
-	tiFile.read_header();
-	tiFile.setKey(_kField.getNum());
-
-	
-	size_t outValCount=_newFldMap.size()*_fField.size();
-	vector<string> fldVals(outValCount);
-
-	while( EOF != tiFile.read() ){
-		if( tiFile.keybreak() ){
-			// keybreak時にデータを出力する
-			for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
-				for(size_t i=0; i<_kField.size(); i++){
-					_oFile.writeStr( tiFile.getOldVal( _kField.num(i) ), false);
-				}
-				_oFile.writeStr( _fField.name(fldNo).c_str(),false);
-				for(size_t sno=0; sno<_newFldMap.size(); sno++){
-					size_t no = sno * _fField.size() +fldNo;
-					string o_str;
-					if (!strcmp(fldVals.at(no).c_str(),"")){
-						if( _n_flg ){ o_str = _v_str; }
-						else{
-							o_str = fldVals.at(no);
-							if(_assertNullOUT){ _existNullOUT = true;}
-						}
-					}else{
-						o_str = fldVals.at(no);
-					}
-					if(sno==_newFldMap.size()-1) _oFile.writeStr( o_str.c_str(), true );
-					else                         _oFile.writeStr( o_str.c_str(), false);
-				}
-			}
-			fldVals.clear();
-			fldVals.resize(outValCount);
-		}
-
-		char *ck_str = tiFile.getNewVal(_sField.num(0));
-		if(*ck_str == '\0') continue;
-		int sno = _newFldMap[ck_str];
-		for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
-			size_t no = sno * _fField.size() +fldNo;
-			fldVals.at(no) = tiFile.getNewVal(_fField.num(fldNo));
-			if(_assertNullIN && fldVals.at(no).size()==0) { _existNullIN  = true;}
-
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
-	// 終了処理
-	th_cancel();
-	tiFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error");
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-int kgCross::run(int i_p,int o_p) try 
+int kgCross::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// データ複製、項目名=>出力位置リスト生成、項目名出力
-	kgTempfile tempFile(_env);
-	string tName = tempFile.create();
-	setFldName(tName);
-
-	// データファイルオープン
-	kgCSVkey tiFile;
-	tiFile.open(tName, _env, _nfn_i);
-	tiFile.read_header();
-	tiFile.setKey(_kField.getNum());
-
-	
-	size_t outValCount=_newFldMap.size()*_fField.size();
-	vector<string> fldVals(outValCount);
-
-	while( EOF != tiFile.read() ){
-		if( tiFile.keybreak() ){
-			// keybreak時にデータを出力する
-			for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
-				for(size_t i=0; i<_kField.size(); i++){
-					_oFile.writeStr( tiFile.getOldVal( _kField.num(i) ), false);
-				}
-				_oFile.writeStr( _fField.name(fldNo).c_str(),false);
-				for(size_t sno=0; sno<_newFldMap.size(); sno++){
-					size_t no = sno * _fField.size() +fldNo;
-					string o_str;
-					if (!strcmp(fldVals.at(no).c_str(),"")){
-						if( _n_flg ){ o_str = _v_str; }
-						else{
-							o_str = fldVals.at(no);
-							if(_assertNullOUT){ _existNullOUT = true;}
-						}
-					}else{
-						o_str = fldVals.at(no);
-					}
-					if(sno==_newFldMap.size()-1) _oFile.writeStr( o_str.c_str(), true );
-					else                         _oFile.writeStr( o_str.c_str(), false);
-				}
-			}
-			fldVals.clear();
-			fldVals.resize(outValCount);
-		}
-
-		char *ck_str = tiFile.getNewVal(_sField.num(0));
-		if(*ck_str == '\0') continue;
-		int sno = _newFldMap[ck_str];
-		for(size_t fldNo=0; fldNo<_fField.size(); fldNo++){
-			size_t no = sno * _fField.size() +fldNo;
-			fldVals.at(no) = tiFile.getNewVal(_fField.num(fldNo));
-			if(_assertNullIN && fldVals.at(no).size()==0) { _existNullIN  = true;}
-
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
-	// 終了処理
-	th_cancel();
-	tiFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error");
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

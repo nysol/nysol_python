@@ -50,14 +50,8 @@ kgNewnumber::kgNewnumber(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNewnumber::setArgs(void)
+void kgNewnumber::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("a=,o=,S=,I=,l=");
-
-	// 出力ファイルオープン
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-
 	// a= 追加項目名
 	_addstr = _args.toString("a=",false);
 	if(_addstr.empty()&& _nfn_o==false){
@@ -110,150 +104,86 @@ void kgNewnumber::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNewnumber::setArgs(int o_p)
+void kgNewnumber::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("a=,o=,S=,I=,l=");
+	_args.paramcheck(_paralist);
 
-	// 出力ファイルオープン
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	// a= 追加項目名
-	_addstr = _args.toString("a=",false);
-	if(_addstr.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-
-	// S= 開始番号
-	_alpha_flg=false;			
-	string str_S = _args.toString("S=",false);
-	if(str_S.empty()){ _start=0; }
-	else{	
-		string digits("-0123456789");
-		string alpha("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-		if(str_S.find_first_not_of(digits)==kgstr_t::npos){//数値のみ
-			_start=atoi(str_S.c_str());
-		}
-		else if(str_S.find_first_not_of(alpha)==kgstr_t::npos){//アルファベット
-			_alpha_flg=true;			
-			_start=0;
-			for(string::size_type i=0;i<str_S.size();i++){
-				_start = (_start*26)+str_S[i]-'A'+1;
-			}					
-		}
-		else{
-			ostringstream ss;
-			ss << "S= is digits or alpha" << str_S.c_str();	
-			throw kgError(ss.str());
-		}
-	}
-
-	// I= 間隔
-	string str_I = _args.toString("I=",false);
-	_interval=atoi(str_I.c_str());
-	if(_interval==0){ _interval=1;}
-	if(_alpha_flg&&_interval<0){
-		ostringstream ss;
-		ss << "when S= is alpha, 0 or more can be specified with I=" << str_S.c_str();	
-		throw kgError(ss.str());
-	}
-
-	kgstr_t s_l =  _args.toString("l=",false);
-	if(s_l.empty()){
-		_line = 10;
-	}else{
-		_line = aToSizeT(s_l.c_str()) ; 
-	}
+	setArgsMain();
 	
 }
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgNewnumber::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist);
+
+	if(inum>0 || onum>1){ throw kgError("no match IO");}
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
+
+
+}
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNewnumber::run(void) try 
+int kgNewnumber::runMain(void) try 
 {
-	// パラメータセット＆出力ファイルオープン
+
+	// 項目名の出力
+	_oFile.writeFldName(_addstr);
+
+	// データ出力
+	size_t cnt = _start;
+	for(size_t i=0;i<_line;i++){	
+		_oFile.writeFld(NULL,0,cnt,_alpha_flg);
+		cnt = cnt + _interval; 
+	}
+
+	// 終了処理(メッセージ出力,thread pipe終了通知)
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgNewnumber::run(void) 
+{
 	setArgs();
-
-	// 項目名の出力
-	_oFile.writeFldName(_addstr);
-
-	// データ出力
-	size_t cnt = _start;
-	for(size_t i=0;i<_line;i++){	
-		_oFile.writeFld(NULL,0,cnt,_alpha_flg);
-		cnt = cnt + _interval; 
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgNewnumber::run(int o_p) try 
+int kgNewnumber::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆出力ファイルオープン
-	setArgs(o_p);
-
-	// 項目名の出力
-	_oFile.writeFldName(_addstr);
-
-	// データ出力
-	size_t cnt = _start;
-	for(size_t i=0;i<_line;i++){	
-		_oFile.writeFld(NULL,0,cnt,_alpha_flg);
-		cnt = cnt + _interval; 
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+

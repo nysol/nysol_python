@@ -20,23 +20,33 @@ class NysolMOD_CORE(object):
 			kwd = {}
 		self.name = name
 		self.kwd   = kwd
+		self.inplist ={"i":[],"m":[]}
+		self.outlist ={"o":[],"u":[]}
 
-		self.inp   = kwd.get("i",None)
+		self.inp   = None
+		self.outp  = None
+		self.refp  = None
+		self.unp   = None
+
 		if "i" in self.kwd :
+			self.inplist["i"].append(self.kwd["i"])
 			del self.kwd["i"]
 
-		self.outp  = kwd.get("o",None)
 		if "o" in self.kwd :
+			self.outlist["o"].append(self.kwd["o"])
 			del self.kwd["o"]
 		
-		self.refp  = kwd.get("m",None)
 		if "m" in self.kwd :
+			self.inplist["m"].append(self.kwd["m"])
 			del self.kwd["m"]
 
-		self.msg=False
-		self.unp = kwd.get("u",None)
 		if "u" in self.kwd :
+			self.outlist["u"].append(self.kwd["u"])
 			del self.kwd["u"]
+
+		self.msg=False
+
+
 
 	def __iter__(self):
 		return Nysol_MeachIter(self)
@@ -51,7 +61,10 @@ class NysolMOD_CORE(object):
 
 
 	def addPre(self,pre):
-		self.inp = pre
+		self.inplist["i"].append(pre) 
+		pre.outlist["o"].append(self)
+		if len(self.inplist["m"]) != 0 and isinstance(self.inplist["m"][0],NysolMOD_CORE):			
+			self.inplist["m"][0].outlist["o"].append(self)
 		return self
 
 	# PRIVATEにする？
@@ -70,65 +83,191 @@ class NysolMOD_CORE(object):
 				
 		return rtnStr
 	
-	def params(self,*args, **kw_args):
-		self.kwd.update(nutil.args2dict(args,kw_args,self.kwd))
-		if "i" in self.kwd :
-			self.inp   = kwd.get("i",None)
-			del self.kwd["i"]
-
-		self.outp  = kwd.get("o",None)
-		if "o" in self.kwd :
-			del self.kwd["o"]
-		
-		self.refp  = kwd.get("m",None)
-		if "m" in self.kwd :
-			del self.kwd["m"]
-
-		self.unp = kwd.get("u",None)
-		if "u" in self.kwd :
-			del self.kwd["u"]
-
+	# f.w キーワードチェック入れる
 	def paraUpdate(self,kw):
 		self.kwd.update(kw)
+
 		if "i" in self.kwd :
-			self.inp   = self.kwd.get("i",None)
+			self.inplist["i"].append(self.kwd["i"])
 			del self.kwd["i"]
 
 		if "o" in self.kwd :
-			self.outp = self.kwd.get("o",None)
+			self.outlist["o"].append(self.kwd["o"])
 			del self.kwd["o"]
 		
 		if "m" in self.kwd :
-			self.refp  = self.kwd.get("m",None)
+			self.inplist["m"].append(self.kwd["m"])
 			del self.kwd["m"]
 
 		if "u" in self.kwd :
-			self.unp = self.kwd.get("u",None)
+			self.outlist["u"].append(self.kwd["u"])
 			del self.kwd["u"]
 
+	
+	def check_dupObjSub(self,sumiobj,dupobj,obj):
+		if obj in sumiobj:
+			if obj in dupobj:
+				dupobj[obj] += 1
+			else:
+				dupobj[obj] = 2
+			return True 
+		else:
+			sumiobj.add(obj)
+			return False
+	
+
+	def check_dupObj(self,sumiobj,dupobj):
+
+		if self.check_dupObjSub(sumiobj,dupobj,self) ==True :
+			return
+
+		if len(self.inplist["i"]) != 0 :
+			if isinstance(self.inplist["i"][0],NysolMOD_CORE):
+				self.inplist["i"][0].check_dupObj(sumiobj,dupobj)
+			elif isinstance(self.inplist["i"][0],str):
+				self.check_dupObjSub(sumiobj,dupobj,self.inplist["i"][0])
+
+		if len(self.inplist["m"]) != 0 :
+			if isinstance(self.inplist["m"][0],NysolMOD_CORE):
+				self.inplist["m"][0].check_dupObj(sumiobj,dupobj) 
+			elif isinstance(self.inplist["m"][0],str):
+				self.check_dupObjSub(sumiobj,dupobj,self.inplist["m"][0])
+
+		return			
+ 
+	def addTee(self,dupobj):
+		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
+		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
+
+		for obj in dupobj:
+			outll = obj.outlist["o"]
+			teexxx = m2tee(i=obj)
+			obj.outlist["o"]= [teexxx]
+			teexxx.outlist["o"] = []
+			for outin in outll:
+				if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
+					fifoxxx=mfifo(i=teexxx)
+					teexxx.outlist["o"].append(fifoxxx)
+					fifoxxx.outlist["o"]=[outin]
+					outin.inplist["i"] = [fifoxxx]
+				if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
+					fifoxxx=mfifo(i=teexxx)
+					teexxx.outlist["o"].append(fifoxxx)
+					fifoxxx.outlist["o"]=[outin]
+					outin.inplist["m"] = [fifoxxx]
+
+		# no buffer Version
+		#for obj in dupobj:
+		#	outll = obj.outlist["o"]
+		#	teexxx = m2tee(i=obj)
+		#	obj.outlist["o"]= [teexxx]
+		#	teexxx.outlist["o"] = outll
+		#	for outin in outll:
+		#		if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
+		#			outin.inplist["i"] = [teexxx]
+		#		if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
+		#			outin.inplist["m"] = [teexxx]
 
 
 
-	def make_modlist(self):
-		i0 = None
-		i1 = None
-		if isinstance(self.inp,NysolMOD_CORE):
-			i0 = self.inp.make_modlist() 
-		elif isinstance(self.inp,list):
-			i0 = self.inp
-		elif isinstance(self.inp,str):
-			i0 = self.inp
+	def change_modNetwork(self):
+		sumiobj=set([])
+		dupobj={}
+		self.check_dupObj(sumiobj,dupobj)
+		#print dupobj
+		if len(dupobj)!=0:
+			self.addTee(dupobj)
+
+			
+	def selectUniqMod(self,sumiobj,modlist):
+		if self in sumiobj:
+			return None
+
+		pos = len(sumiobj)
+		sumiobj.add(self)
+		modlist[self]=pos
+
+		for obj in self.inplist["i"]:
+			if isinstance(obj,NysolMOD_CORE):
+				obj.selectUniqMod(sumiobj,modlist)
+
+		for obj in self.inplist["m"]:
+			if isinstance(obj,NysolMOD_CORE):
+				obj.selectUniqMod(sumiobj,modlist)
+			
+
+	def makeModList(self,uniqmod,modlist,iolist):
+
+		for obj,no in uniqmod.items():
+
+			modlist[no]= [obj.name,obj.para2str(),{}]
+			iolist[no]=[[],[],[],[]]
+
+			for ioobj in obj.inplist["i"]:
+				if isinstance(ioobj,NysolMOD_CORE):
+					iolist[no][0].append(uniqmod[ioobj])
+				elif isinstance(ioobj,list):
+					modlist[no][2]["i"]=ioobj
+				elif isinstance(ioobj,str):
+					modlist[no][2]["i"]=ioobj
+
+			for ioobj in obj.inplist["m"]:
+				if isinstance(ioobj,NysolMOD_CORE):
+					iolist[no][1].append(uniqmod[ioobj])
+				elif isinstance(ioobj,list):
+					modlist[no][2]["m"]=ioobj
+				elif isinstance(ioobj,str):
+					modlist[no][2]["m"]=ioobj
 
 
-		if isinstance(self.refp,NysolMOD_CORE):
-			i1 = self.refp.make_modlist() 
-		elif isinstance(self.refp,list):
-			i1 = self.refp
-		elif isinstance(self.refp,str):
-			i1 = self.refp
+			for ioobj in obj.outlist["o"]:
+				if isinstance(ioobj,NysolMOD_CORE):
+					iolist[no][2].append(uniqmod[ioobj])
+				elif isinstance(ioobj,list):
+					modlist[no][2]["o"]=ioobj
+				elif isinstance(ioobj,str):
+					modlist[no][2]["o"]=ioobj
 
-		return [self.name,self.para2str(),i0,i1]
+			for ioobj in obj.outlist["u"]:
+				if isinstance(ioobj,NysolMOD_CORE):
+					iolist[no][3].append(uniqmod[ioobj])
+				elif isinstance(ioobj,list):
+					modlist[no][2]["u"]=ioobj
+				elif isinstance(ioobj,str):
+					modlist[no][2]["u"]=ioobj
 
+
+	def getLink(self,iolist,base,to):
+
+		for v in iolist[base][2]:
+			if v == to:
+				return "o"  
+
+		for v in iolist[base][3]:
+			if v == to:
+				return "u"
+		
+		return None
+	
+
+
+	def makeLinkList(self,iolist,linklist):
+
+		for idx, val in enumerate(iolist):
+			rtn = None
+			for v in val[0]:
+				if isinstance(v, (int, long)):
+					rtn = self.getLink(iolist,v,idx)
+					if rtn != None:
+						linklist.append([[rtn,v],["i",idx]])
+
+			for v in val[1]:
+				if isinstance(v, (int, long)):
+					rtn = self.getLink(iolist,v,idx)
+					if rtn != None:
+						linklist.append([[rtn,v],["m",idx]])
+			
+			
 	def run(self,**kw_args):
 
 		if "msg" in kw_args:
@@ -138,7 +277,11 @@ class NysolMOD_CORE(object):
 		listd = []
 		runA = False
 		rtnflg = True
-		outf = self.outp
+		if len(self.outlist["o"])==0:
+			outf =None
+		else:
+			outf = self.outlist["o"][0]
+		
 		rtnlist = list()
 		if isinstance(outf,str):
 			pass
@@ -149,19 +292,41 @@ class NysolMOD_CORE(object):
 		else:
 			runA = True
 
-		listd = self.make_modlist()
-		
+		listdx = self.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+
+		self.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		self.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+
+		self.makeLinkList(iolist,linklist)
+
+		#print modlist
+		#print iolist
+		#print linklist
+		#print runA
 		shobj = n_core.init(self.msg)
 
+
 		if runA:
-			n_core.run(shobj,listd,runA,rtnlist)
+			
+			n_core.runL(shobj,listd,iolist,linklist,rtnlist)
 			if rtnflg:
 				return rtnlist
 			else:
 				return None
 		else:
-			listd[1] += " o=" + outf 
-			n_core.run(shobj,listd,runA,rtnlist)
+			#listd[1] += " o=" + outf 
+			#n_core.run(shobj,listd,runA,rtnlist)
+
+			n_core.runL(shobj,modlist,iolist,linklist,rtnlist)
+
 			return outf
 
 
@@ -172,7 +337,9 @@ class NysolMOD_CORE(object):
 		if not isinstance(outf,str):
 			outf = None
 			runA = True 
-		listd = self.make_modlist()
+
+		sumiobj=set([])
+		listd = self.make_modlist(sumiobj)
 		print(listd)
 
 
@@ -185,7 +352,8 @@ class NysolMOD_CORE(object):
 
 		listd = []
 		runA = False
-		listd = self.make_modlist()
+		sumiobj=set([])
+		listd = self.make_modlist(sumiobj)
 
 		runlist = []
 		alist = listd
@@ -223,6 +391,11 @@ class NysolMOD_CORE(object):
 	#	return obj
 
 	# 子クラス生成
+	def mfifo(self,*args, **kw_args):
+		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
+		return mfifo(nutil.args2dict(args,kw_args,mload.kwd)).addPre(self)
+
+
 	def mload(self,*args, **kw_args):
 		from nysol.mod.submod.mload import Nysol_Mload as mload
 		return mload(nutil.args2dict(args,kw_args,mload.kwd)).addPre(self)
@@ -553,9 +726,10 @@ class Nysol_MeachIter(object):
 
 		i0 = None
 		i1 = None
+		sumiobj=set([])
 
 		if isinstance(obj.inp,NysolMOD_CORE):
-			i0 = obj.inp.make_modlist() 
+			i0 = obj.inp.make_modlist(sumiobj) 
 		elif isinstance(obj.inp,list):
 			i0 = obj.inp
 		elif isinstance(obj.inp,str):
@@ -563,7 +737,7 @@ class Nysol_MeachIter(object):
 
 
 		if isinstance(obj.refp,NysolMOD_CORE):
-			i1 = obj.refp.make_modlist() 
+			i1 = obj.refp.make_modlist(sumiobj) 
 		elif isinstance(obj.refp,list):
 			i1 = obj.refp
 		elif isinstance(obj.refp,str):

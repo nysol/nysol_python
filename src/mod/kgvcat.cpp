@@ -55,88 +55,68 @@ kgVcat::kgVcat(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
+void kgVcat::setArgsMain(void)
+{
+	_iFile.read_header();
+
+	// vf= 項目引数のセット
+	vector<kgstr_t>  vs = _args.toStringVector("vf=",true);
+	_vfField.set(vs, &_iFile,_fldByNum);
+
+	// a = 新規項目名
+	_newname = _args.toString("a=",true);
+
+	// 追加項目フラグ
+	_add  = _args.toBool("-A");
+	
+	kgstr_t s_d = _args.toString("delim=",false);
+	if(s_d.empty()){	
+		_delim=' ';
+	}else if(s_d.size()!=1){
+		ostringstream ss;
+		ss << "delim= takes 1 byte charactor (" << s_d << ")";
+		throw kgError(ss.str());
+	}else{
+		_delim=*(s_d.c_str());
+	}
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
 void kgVcat::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,a=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
 	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
-	_iFile.read_header();
 
-	// vf= 項目引数のセット
-	vector<kgstr_t>  vs = _args.toStringVector("vf=",true);
-	_vfField.set(vs, &_iFile,_fldByNum);
+	setArgsMain();
 
-	// a = 新規項目名
-	_newname = _args.toString("a=",true);
-
-	// 追加項目フラグ
-	_add  = _args.toBool("-A");
-	
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVcat::setArgs(int i_p,int o_p)
+void kgVcat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,a=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// vf= 項目引数のセット
-	vector<kgstr_t>  vs = _args.toStringVector("vf=",true);
-	_vfField.set(vs, &_iFile,_fldByNum);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// a = 新規項目名
-	_newname = _args.toString("a=",true);
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// 追加項目フラグ
-	_add  = _args.toBool("-A");
-	
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
-}// -----------------------------------------------------------------------------
+	setArgsMain();
+}
+// -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgVcat::run(void) try 
+int kgVcat::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 項目名出力 -Aの指定がない場合にはvf=で指定した項目は出力しない
 	if(!_nfn_o){
 		vector<kgstr_t> outfld;
@@ -211,82 +191,16 @@ int kgVcat::run(void) try
 }
 
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgVcat::run(int i_p,int o_p) try 
+int kgVcat::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 項目名出力 -Aの指定がない場合にはvf=で指定した項目は出力しない
-	if(!_nfn_o){
-		vector<kgstr_t> outfld;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			if( _vfField.flg(i)==-1 || _add) {
-				outfld.push_back(_iFile.fldName(i,true));
-			}
-		}
-		outfld.push_back(_newname);
-		_oFile.writeFldNameCHK(outfld);
-	}
-
-	//文字列生成用領域
-	char delimchar[2];
-	delimchar[0] =_delim;
-	delimchar[1] ='\0';
-	char buf[KG_MAX_STR_LEN];
-
-	while(EOF != _iFile.read() ){
-		*buf = '\0'; 
-		int len=0;
-
-		//-Aの指定がない場合にはvf=で指定した項目は出力しない
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			if( _vfField.flg(i)==-1||_add){
-				_oFile.writeStr( _iFile.getVal(i), false);
-			}
-		}
-
-		for(size_t i=0; i<_vfField.size(); i++){
-			char* str=_iFile.getVal(_vfField.num(i));
-			if(*str=='\0'){ 
-				if(_assertNullIN) { _existNullIN  = true;}
-				continue;
-			}
-			len += ( strlen(str) + 1);
-			if(len>=KG_MAX_STR_LEN){ throw kgError("exceed max record length");}
-			if(*buf != '\0') strcat( buf,delimchar );
-			strcat( buf,str );
-		}
-		if(_assertNullOUT && *buf=='\0'){ _existNullOUT = true;}
-		_oFile.writeStr(buf,true);
-
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgVcat::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

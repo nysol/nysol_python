@@ -49,158 +49,114 @@ kgSetstr::kgSetstr(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
+void kgSetstr::setArgsMain(void)
+{
+	_iFile.read_header();
+
+	// a=,v= 項目引数のセット
+	_aField = _args.toStringVector("a=",false);
+	if(_aField.empty()&& _nfn_o==false){
+		throw kgError("parameter a= is mandatory");
+	}
+
+	_vField = _args.toStringVector("v=",true);
+	// _vFieldのサイズが0でエラーになっていない場合は
+	// "v="と指定しているはず。
+	if(_vField.size()==0){ _vField.push_back("");}
+
+	// k=とK=の数があっている化チェック
+	if((_aField.size()!=_vField.size())&& _nfn_o==false){
+		throw kgError("item size of parameters a= and v= must be same");
+	}
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
 void kgSetstr::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("v=,a=,i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
-	_iFile.read_header();
 
-	// a=,v= 項目引数のセット
-	_aField = _args.toStringVector("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
+	setArgsMain();
 
-	_vField = _args.toStringVector("v=",true);
-	// _vFieldのサイズが0でエラーになっていない場合は
-	// "v="と指定しているはず。
-	if(_vField.size()==0){ _vField.push_back("");}
-
-	// k=とK=の数があっている化チェック
-	if((_aField.size()!=_vField.size())&& _nfn_o==false){
-		throw kgError("item size of parameters a= and v= must be same");
-	}
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSetstr::setArgs(int i_p,int o_p)
+void kgSetstr::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("v=,a=,i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	_iFile.read_header();
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// a=,v= 項目引数のセット
-	_aField = _args.toStringVector("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_vField = _args.toStringVector("v=",true);
-	// _vFieldのサイズが0でエラーになっていない場合は
-	// "v="と指定しているはず。
-	if(_vField.size()==0){ _vField.push_back("");}
+	setArgsMain();
 
-	// k=とK=の数があっている化チェック
-	if((_aField.size()!=_vField.size())&& _nfn_o==false){
-		throw kgError("item size of parameters a= and v= must be same");
-	}
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSetstr::run(void) try 
+int kgSetstr::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 項目名の出力
+	_oFile.writeFldName(_iFile, _aField);
+
+	// データ出力
+	while( EOF != _iFile.read() ){
+		_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&_vField);
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgSetstr::run(void) 
+{
 	setArgs();
-
-	// 項目名の出力
-	_oFile.writeFldName(_iFile, _aField);
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&_vField);
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgSetstr::run(int i_p,int o_p) try 
+int kgSetstr::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 項目名の出力
-	_oFile.writeFldName(_iFile, _aField);
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&_vField);
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 
 

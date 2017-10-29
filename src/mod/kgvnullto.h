@@ -45,8 +45,12 @@ class kgVnullto:public kgMod {
 	bool _add_flg;		// 項目追加
 	bool _prv_flg; 		// 前行値で置換
 
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+
 	void output_n(char *str,bool eol);
 	
 public:
@@ -61,7 +65,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

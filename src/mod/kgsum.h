@@ -43,7 +43,10 @@ class kgSum : public kgModIncludeSort
 
 	// 引数セット
   void setArgs(void);
-	void setArgs(int i,int o);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 public:
   // コンストラクタ
@@ -56,7 +59,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i,int o);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

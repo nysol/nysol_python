@@ -138,18 +138,11 @@ kgFsort::kgFsort(void)
 	#endif
 
 }
-
 // -----------------------------------------------------------------------------
-// 入出力ファイルオープン
+// パラメータセット
 // -----------------------------------------------------------------------------
-void kgFsort::setArgs(void)
+void kgFsort::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,-n,-r",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -163,39 +156,39 @@ void kgFsort::setArgs(void)
 	_numsort = _args.toBool("-n");
 
 }
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgFsort::setArgs(int i_p,int o_p)
+void kgFsort::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,-n,-r",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 
-	_iFile.read_header();
+	setArgsMain();
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile, _fldByNum);
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgFsort::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// -r 逆順フラグ
-	_reverse = _args.toBool("-r");
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// -n 数値ソートフラグ
-	_numsort = _args.toBool("-n");
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
@@ -219,11 +212,8 @@ void kgFsort::writeFld(char** fld, const vector<int>* flg, vector<char*>& val)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgFsort::run(void) try 
+int kgFsort::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 項目名出力
   _oFile.writeFldName(_fField, true);
 
@@ -272,58 +262,17 @@ int kgFsort::run(void) try
 	return 1;
 }
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgFsort::run(int i_p,int o_p) try 
+int kgFsort::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 項目名出力
-  _oFile.writeFldName(_fField, true);
-
-	// ソート情報セット
-	int flg=0;
-	if(_numsort) { flg |= 1;}
-	if(_reverse) { flg |= 2;}
-	kgfsort_local::itmComp icomp(flg);
-	
-
-	while(EOF != _iFile.read() ){
-		vector<char*> eachItem;
-		for(size_t i=0; i<_fField.size(); i++){
-			if(_assertNullIN && *_iFile.getVal(_fField.num(i))=='\0'){  _existNullIN  = true; }
-			eachItem.push_back(_iFile.getVal(_fField.num(i)));
-		}
-		sort(eachItem.begin(),eachItem.end(),icomp);
-		writeFld(_iFile.getFld(),_fField.getFlg_p(),eachItem);
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgFsort::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

@@ -37,8 +37,12 @@ class kgNewstr:public kgMod
 	kgCSVout  _oFile;  			 // o=
 	size_t 		_line; 				 //l
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+
 public:
 	// コンストラクタ
 	kgNewstr(void);
@@ -49,7 +53,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

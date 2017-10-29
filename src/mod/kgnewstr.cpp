@@ -47,149 +47,112 @@ kgNewstr::kgNewstr(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
+void kgNewstr::setArgsMain(void)
+{
+
+	// a=,v= 項目引数のセット
+	_aField = _args.toStringVector("a=",false);
+	if(_aField.empty()&& _nfn_o==false){
+		throw kgError("parameter a= is mandatory");
+	}
+	_vField = _args.toStringVector("v=",true);
+	if(_aField.size()!=_vField.size()&& _nfn_o==false){
+		throw kgError("item size of parameters a= and v= must be same");
+	}
+
+	kgstr_t s_l =  _args.toString("l=",false);
+	if(s_l.empty()){
+		_line = 10;
+	}else{
+		_line = aToSizeT(s_l.c_str()) ; 
+	}
+}
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
 void kgNewstr::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("v=,o=,a=,l=");
+	_args.paramcheck(_paralist);
 
 	// 出力ファイルオープン
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 
-	// a=,v= 項目引数のセット
-	_aField = _args.toStringVector("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-	_vField = _args.toStringVector("v=",true);
-	if(_aField.size()!=_vField.size()&& _nfn_o==false){
-		throw kgError("item size of parameters a= and v= must be same");
-	}
+	setArgsMain();
 
-	kgstr_t s_l =  _args.toString("l=",false);
-	if(s_l.empty()){
-		_line = 10;
-	}else{
-		_line = aToSizeT(s_l.c_str()) ; 
-	}
 }
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNewstr::setArgs(int o_p)
+void kgNewstr::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("v=,o=,a=,l=");
+	_args.paramcheck(_paralist);
 
-	// 出力ファイルオープン
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-	  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>0 || onum>1){ throw kgError("no match IO");}
 
-	// a=,v= 項目引数のセット
-	_aField = _args.toStringVector("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-	_vField = _args.toStringVector("v=",true);
-	if(_aField.size()!=_vField.size()&& _nfn_o==false){
-		throw kgError("item size of parameters a= and v= must be same");
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	kgstr_t s_l =  _args.toString("l=",false);
-	if(s_l.empty()){
-		_line = 10;
-	}else{
-		_line = aToSizeT(s_l.c_str()) ; 
-	}
+	setArgsMain();
+
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNewstr::run(void) try 
+int kgNewstr::runMain(void) try 
 {
-	// パラメータセット＆出力ファイルオープン
+
+	// 項目名の出力
+	_oFile.writeFldName(_aField);
+
+	// データ出力
+	vector<kgstr_t>::size_type size=_vField.size();
+	for(size_t i=0;i<_line;i++){	
+		for(vector<string>::size_type j=0;j<size;j++){	
+			if(j==size-1) _oFile.writeStr(_vField.at(j).c_str(),true );
+			else          _oFile.writeStr(_vField.at(j).c_str(),false);
+		}
+	}
+	// 終了処理
+	_oFile.close();
+	successEnd();
+	return 0;
+	
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgNewstr::run(void) 
+{
 	setArgs();
-
-	// 項目名の出力
-	_oFile.writeFldName(_aField);
-
-	// データ出力
-	vector<kgstr_t>::size_type size=_vField.size();
-	for(size_t i=0;i<_line;i++){	
-		for(vector<string>::size_type j=0;j<size;j++){	
-			if(j==size-1) _oFile.writeStr(_vField.at(j).c_str(),true );
-			else          _oFile.writeStr(_vField.at(j).c_str(),false);
-		}
-	}
-	// 終了処理
-	_oFile.close();
-	successEnd();
-	return 0;
-	
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgNewstr::run(int o_p) try 
+int kgNewstr::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆出力ファイルオープン
-	setArgs(o_p);
-
-	// 項目名の出力
-	_oFile.writeFldName(_aField);
-
-	// データ出力
-	vector<kgstr_t>::size_type size=_vField.size();
-	for(size_t i=0;i<_line;i++){	
-		for(vector<string>::size_type j=0;j<size;j++){	
-			if(j==size-1) _oFile.writeStr(_vField.at(j).c_str(),true );
-			else          _oFile.writeStr(_vField.at(j).c_str(),false);
-		}
-	}
-	// 終了処理
-	_oFile.close();
-	successEnd();
-	return 0;
-	
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

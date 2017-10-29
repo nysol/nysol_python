@@ -46,13 +46,27 @@ kgCut::kgCut(void)
 	#endif
 }
 
+
+void kgCut::setArgsMain(void){
+
+	_iFile.read_header();
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+	_fField.set(vvs, &_iFile, _fldByNum);
+
+	// -r 出力反転フラグ
+	_reverse = _args.toBool("-r");
+
+}
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgCut::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,-r,-nfni",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// -nfniを指定した場合、-xも指定されていることにする
 	bool nfniflg = _args.toBool("-nfni");
@@ -64,24 +78,21 @@ void kgCut::setArgs(void)
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
 	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile, _fldByNum);
+	setArgsMain();
 
-	// -r 出力反転フラグ
-	_reverse = _args.toBool("-r");
 }
-
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgCut::setArgs(int i_p,int o_p)
+void kgCut::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,-r,-nfni",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
+	if(inum>1 || onum>1){
+		throw kgError("no match IO");
+	}
 
 	// -nfniを指定した場合、-xも指定されていることにする
 	bool nfniflg = _args.toBool("-nfni");
@@ -90,26 +101,15 @@ void kgCut::setArgs(int i_p,int o_p)
 		_fldByNum = true;
 	}
 
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile, _fldByNum);
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// -r 出力反転フラグ
-	_reverse = _args.toBool("-r");
+	setArgsMain();
+
 }
 
 // -----------------------------------------------------------------------------
@@ -130,15 +130,11 @@ void kgCut::writeFldName(const vector<int>& fld,bool reverse) throw(kgError)
 	_oFile.writeFldNameCHK(outfld);
 } 
 
-
 // -----------------------------------------------------------------------------
-// 実行
+// runMain
 // -----------------------------------------------------------------------------
-int kgCut::run(void) try 
+int kgCut::runMain() try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 出力項目番号のセット
 	vector<int> oField;
 	if(! (_iFile.end() && _nfn_o) ){
@@ -195,64 +191,18 @@ catch(kgError& err){
 }
 
 
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgCut::run(int i_p,int o_p) try 
+int kgCut::run(void)
 {
-
-	setArgs(i_p,o_p);
-
-	// 出力項目番号のセット
-	vector<int> oField;
-	if(! (_iFile.end() && _nfn_o) ){
-		if(_reverse){
-			for(size_t i=0; i<_iFile.fldSize(); i++){
-				if( _fField.flg(i)==-1 ) oField.push_back(i);
-			}
-		}else{
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				oField.push_back(_fField.num(i));
-			}
-		}
-	}
-	// 項目名出力
-	writeFldName(oField,_reverse);
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		if(_assertNullIN) { 
-			if(_iFile.isNull(oField)) { _existNullIN  = true;}
-		}
-		_oFile.writeFld(_iFile.getFld(),&oField);
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs();
+	return runMain();
 }
+
+int kgCut::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
+}
+

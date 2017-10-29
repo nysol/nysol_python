@@ -74,24 +74,22 @@ void kgLoad::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgLoad::setArgs(int i_p,int o_p)
+void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 {
 	// パラメータチェック
 	_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
 
+	if(inum>1 || onum>1){
+		throw kgError("no match IO");
+	}
+
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
 	_iFile.read_header();
 	
 }
@@ -150,13 +148,12 @@ int kgLoad::run(void) try
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int i_p,int o_p) try 
+int kgLoad::run(int inum,int *i_p,int onum, int* o_p) try 
 {
-
 	size_t fcnt=0;
 
 	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs(inum, i_p,onum, o_p);
 
 	// headerがあるとき
 	if(!_nfn_i){
@@ -203,7 +200,7 @@ int kgLoad::run(int i_p,int o_p) try
 // -----------------------------------------------------------------------------
 int kgLoad::run(PyObject* i_p,int o_p) try 
 {
-	size_t fcnt=0;
+	//size_t fcnt=0;
 
 	// パラメータチェック
 	_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
@@ -278,7 +275,7 @@ int kgLoad::run(PyObject* i_p,int o_p) try
 // -----------------------------------------------------------------------------
 int kgLoad::run(int i_p,PyObject* o_p) try 
 {
-	size_t fcnt=0;
+	//size_t fcnt=0;
 
 	// パラメータチェック
 	_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);

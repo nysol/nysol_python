@@ -16,14 +16,17 @@ namespace kgmod { ////////////////////////////////////////////// start namespace
 class kgFifo : public kgMod {
 
 	// 引数
-	string iName_;   // i=
-	size_t queSize_; // n=
+	string _iName;   // i=
+	string _oName;   // i=
+	size_t _queSize; // n=
 
-	int iFD_;					//i=ファイルディスクリプタ
-	vector<int> oFD_; //o=ファイルディスクリプタ
+	int _iFD;					//i=ファイルディスクリプタ
+	int _oFD; //o=ファイルディスクリプタ
 
 	void setArgs(void);
-	void setArgs(int i,int o);
+	void setArgs(int inum,int *i_p,int onum, int* o_p);
+
+	int runMain(void);
 
 	void iClose(void) throw(kgError);
 	void oClose(void) throw(kgError);
@@ -35,7 +38,7 @@ public:
 
 	// 入出力ファイルオープン
 	int run(void);
-	int run(int i,int o);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

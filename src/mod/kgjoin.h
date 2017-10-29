@@ -44,7 +44,10 @@ class kgJoin:public kgModIncludeSort
 
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i,int o,int m);
+	void setArgs(int inum,int *i,int onum, int* o);
+
+	int runMain(void);
+	void setArgsMain(void);	
 
 public:
 	// コンストラクタ&引数セット
@@ -58,8 +61,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	//実行メソッド
-	int run(int i,int o,int m);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

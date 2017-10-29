@@ -44,8 +44,11 @@ class kgDelnull:public kgModIncludeSort
 	bool     _elsefile; // 不一致ファイルを使用するかどうか(u=の指定があればtrue)
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 	// nullがあるかチェック
 	bool nullcheck(vector<int>& cnt,char** str);
@@ -57,7 +60,7 @@ public:
 
 	// 実行
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }

@@ -49,13 +49,70 @@ kgJoin::kgJoin(void)
 	#endif
 	
 }
+
+void kgJoin::setArgsMain(void){
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
+
+	// K= 項目引数のセット
+	// K=の指定がなければk=の値をセットする
+	// k=とK=の数があっているかチェック
+	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
+	if(vs_K.empty()){ vs_K = vs_k; }
+	if(vs_K.size()!=vs_k.size()){
+		ostringstream ss;
+		ss << "unmatched key size (" << vs_k.size() << " fields on k=, but " << vs_K.size() << " fields on K=)";
+		throw kgError(ss.str());
+	}
+
+	_iFile.read_header();
+	_mFile.read_header();
+	
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+
+	if( !seqflg ){
+		vector<kgCSVfld*> csv_p;  
+		vector< vector<kgstr_t> > fld_ary;  
+		csv_p.push_back(&_iFile);
+		csv_p.push_back(&_mFile);
+		fld_ary.push_back(vs_k);
+		fld_ary.push_back(vs_K);
+		sortingRun(csv_p,fld_ary);
+	}
+	
+	_kField.set(vs_k, &_iFile,_fldByNum);
+	_KField.set(vs_K, &_mFile,_fldByNum);
+
+	// f= 項目引数のセット指定が無かった場合はk=の項目以外をセットする
+	vector< vector<kgstr_t> >  vvs = _args.toStringVecVec("f=",':',2,false);
+	if(vvs[0].empty()){
+		for(size_t i=0 ; i< _mFile.fldSize();i++){
+			int num= _KField.getFlg().at(i);
+			if(num == -1) {
+				vvs[0].push_back(toString(i));				
+				vvs[1].push_back("");				
+			}
+		}
+		_fField.set(vvs, &_mFile,true);		
+	}
+	else{
+		_fField.set(vvs, &_mFile,_fldByNum);
+	}
+	// -n:(トラにあってマスタにない場合、トラの内容を出力する)
+	// -N:(マスタにあってトラにない場合、マスタの内容を出力する)  
+	_i_outer = _args.toBool("-n");
+	_m_outer = _args.toBool("-N");
+}
+
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgJoin::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,m=,k=,K=,-n,-N,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
@@ -66,385 +123,164 @@ void kgJoin::setArgs(void)
 	_iFile.open(ifile, _env,_nfn_i);
 	_mFile.open(mfile, _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
-
-	// K= 項目引数のセット
-	// K=の指定がなければk=の値をセットする
-	// k=とK=の数があっているかチェック
-	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
-	if(vs_K.empty()){ vs_K = vs_k; }
-	if(vs_K.size()!=vs_k.size()){
-		ostringstream ss;
-		ss << "unmatched key size (" << vs_k.size() << " fields on k=, but " << vs_K.size() << " fields on K=)";
-		throw kgError(ss.str());
-	}
-
-	_iFile.read_header();
-	_mFile.read_header();
-	
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if( !seqflg ){
-		vector<kgCSVfld*> csv_p;  
-		vector< vector<kgstr_t> > fld_ary;  
-		csv_p.push_back(&_iFile);
-		csv_p.push_back(&_mFile);
-		fld_ary.push_back(vs_k);
-		fld_ary.push_back(vs_K);
-		sortingRun(csv_p,fld_ary);
-	}
-	
-	_kField.set(vs_k, &_iFile,_fldByNum);
-	_KField.set(vs_K, &_mFile,_fldByNum);
-
-	// f= 項目引数のセット指定が無かった場合はk=の項目以外をセットする
-	vector< vector<kgstr_t> >  vvs = _args.toStringVecVec("f=",':',2,false);
-	if(vvs[0].empty()){
-		for(size_t i=0 ; i< _mFile.fldSize();i++){
-			int num= _KField.getFlg().at(i);
-			if(num == -1) {
-				vvs[0].push_back(toString(i));				
-				vvs[1].push_back("");				
-			}
-		}
-		_fField.set(vvs, &_mFile,true);		
-	}
-	else{
-		_fField.set(vvs, &_mFile,_fldByNum);
-	}
-	// -n:(トラにあってマスタにない場合、トラの内容を出力する)
-	// -N:(マスタにあってトラにない場合、マスタの内容を出力する)  
-	_i_outer = _args.toBool("-n");
-	_m_outer = _args.toBool("-N");
+	setArgsMain();
 }
 
 
-// -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kgJoin::setArgs(int i_p,int o_p,int m_p)
+void kgJoin::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,m=,k=,K=,-n,-N,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>2 && onum>1){ throw kgError("no match IO"); }
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
 	kgstr_t mfile = _args.toString("m=",false);
+	
+	
+	int i_p_t = -1;
+	int m_p_t = -1;
+	if(inum>0){ i_p_t = *i_p;     }
+	if(inum>1){ m_p_t = *(i_p+1); }
 
-
-	if((ifile.empty()&&i_p<=0) && ( mfile.empty()&&m_p<=0)){
+	if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
 		throw kgError("Either i= or m= must be specified.");
 	}
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(ifile, _env,_nfn_i);
-	}
-	if(m_p>0){
-		_mFile.popen(m_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_mFile.open(mfile, _env,_nfn_i);
-	}
 
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-	  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	// k= 項目引数のセット
-	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
+	// 入出力ファイルオープン
+	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+	else       { _iFile.open(ifile, _env,_nfn_i);}
+	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+	else       { _mFile.open(mfile, _env,_nfn_i);}
 
-	// K= 項目引数のセット
-	// K=の指定がなければk=の値をセットする
-	// k=とK=の数があっているかチェック
-	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
-	if(vs_K.empty()){ vs_K = vs_k; }
-	if(vs_K.size()!=vs_k.size()){
-		ostringstream ss;
-		ss << "unmatched key size (" << vs_k.size() << " fields on k=, but " << vs_K.size() << " fields on K=)";
-		throw kgError(ss.str());
-	}
+	if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
+	else{ _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_iFile.read_header();
-	_mFile.read_header();
-	
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
+	setArgsMain();
+}
 
-	if( !seqflg ){
-		vector<kgCSVfld*> csv_p;  
-		vector< vector<kgstr_t> > fld_ary;  
-		csv_p.push_back(&_iFile);
-		csv_p.push_back(&_mFile);
-		fld_ary.push_back(vs_k);
-		fld_ary.push_back(vs_K);
-		sortingRun(csv_p,fld_ary);
-	}
-	
-	_kField.set(vs_k, &_iFile,_fldByNum);
-	_KField.set(vs_K, &_mFile,_fldByNum);
+int kgJoin::runMain() try 
+{
+	// 項目名出力
+	_oFile.writeFldName(_iFile,_fField,true);
 
-	// f= 項目引数のセット指定が無かった場合はk=の項目以外をセットする
-	vector< vector<kgstr_t> >  vvs = _args.toStringVecVec("f=",':',2,false);
-	if(vvs[0].empty()){
-		for(size_t i=0 ; i< _mFile.fldSize();i++){
-			int num= _KField.getFlg().at(i);
-			if(num == -1) {
-				vvs[0].push_back(toString(i));				
-				vvs[1].push_back("");				
+	// keyサイズとデータセット
+	int ksize = _kField.size();
+	vector<int> kField =_kField.getNum();
+	vector<int> KField =_KField.getNum();
+	vector<int> fField =_fField.getNum();
+
+	//比較結果用フラグ&出力チェックフラグ
+	int cmpflg=0;
+	bool wflg=false;
+	bool traEnd=false;
+	bool mstEnd=false;
+	bool begin=true;
+
+	// データ出力(入力ファイルあるいは参照ファイルどちらか最後まで読み込むまで)
+	while(true){
+		// traの読み込み
+		if(cmpflg<=0){
+			if(_iFile.read() == EOF){ traEnd=true;}
+		}
+
+		// mstの読み込み
+		if(cmpflg> 0 || begin){
+			if(_mFile.read() == EOF){ mstEnd=true;}
+			wflg=false;
+			begin=false;
+		}
+
+		// キーの比較 (tra - mstの演算結果)
+		if(traEnd){
+			if(mstEnd || ksize==0){ break;}
+			else                  { cmpflg=1;}
+		}else if(mstEnd){
+			cmpflg=-1;
+		} else {
+			cmpflg=0;
+			for(int i=0;i<ksize;i++){
+				if(_assertNullKEY) { 
+					if( *(_iFile.getVal(kField[i]))=='\0' || *(_mFile.getVal(KField[i]))=='\0'){
+						_existNullKEY = true;
+					}
+				}
+				cmpflg = strcmp( _iFile.getVal(kField[i]), _mFile.getVal(KField[i]) );
+				if(cmpflg!=0) break;
+				//両方共NULLならアンマッチとする
+				if( *(_iFile.getVal(kField[i]))=='\0' 
+						&& *(_mFile.getVal(KField[i]))=='\0'){
+					cmpflg=1;
+					break;
+				}
+			}
+		}		
+		if(cmpflg==0){
+			// 一致
+			if(_assertNullIN){  if(_mFile.isNull(fField)){_existNullIN  = true;} }
+			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),_mFile.getFld(),&fField);
+			wflg=true;
+		}else if( _m_outer && cmpflg>0 && !wflg ){
+			if(_assertNullOUT){ _existNullOUT = true;}
+			// mstのみ書き出す
+			_oFile.writeFld(_kField.getFlg_p(),&KField,_mFile.getFld(),&fField);
+			wflg=true;
+		}else if( cmpflg<0 ){
+			// traのみ書き出す
+			if ( _i_outer){
+				if(_assertNullOUT){ _existNullOUT = true;}
+				_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),static_cast<char**>(NULL),&fField);
 			}
 		}
-		_fField.set(vvs, &_mFile,true);		
 	}
-	else{
-		_fField.set(vvs, &_mFile,_fldByNum);
-	}
-	// -n:(トラにあってマスタにない場合、トラの内容を出力する)
-	// -N:(マスタにあってトラにない場合、マスタの内容を出力する)  
-	_i_outer = _args.toBool("-n");
-	_m_outer = _args.toBool("-N");
+	//ソートスレッドを終了させて、終了確認
+	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
+	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_mFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	_mFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgJoin::run(void) try 
+int kgJoin::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
 	setArgs();
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile,_fField,true);
-
-	// keyサイズとデータセット
-	int ksize = _kField.size();
-	vector<int> kField =_kField.getNum();
-	vector<int> KField =_KField.getNum();
-	vector<int> fField =_fField.getNum();
-
-	//比較結果用フラグ&出力チェックフラグ
-	int cmpflg=0;
-	bool wflg=false;
-	bool traEnd=false;
-	bool mstEnd=false;
-	bool begin=true;
-
-
-
-	// データ出力(入力ファイルあるいは参照ファイルどちらか最後まで読み込むまで)
-	while(true){
-		// traの読み込み
-		if(cmpflg<=0){
-			if(_iFile.read() == EOF){ traEnd=true;}
-		}
-
-		// mstの読み込み
-		if(cmpflg> 0 || begin){
-			if(_mFile.read() == EOF){ mstEnd=true;}
-			wflg=false;
-			begin=false;
-		}
-
-		// キーの比較 (tra - mstの演算結果)
-		if(traEnd){
-			if(mstEnd || ksize==0){ break;}
-			else                  { cmpflg=1;}
-		}else if(mstEnd){
-			cmpflg=-1;
-		} else {
-			cmpflg=0;
-			for(int i=0;i<ksize;i++){
-				if(_assertNullKEY) { 
-					if( *(_iFile.getVal(kField[i]))=='\0' || *(_mFile.getVal(KField[i]))=='\0'){
-						_existNullKEY = true;
-					}
-				}
-				cmpflg = strcmp( _iFile.getVal(kField[i]), _mFile.getVal(KField[i]) );
-				if(cmpflg!=0) break;
-				//両方共NULLならアンマッチとする
-				if( *(_iFile.getVal(kField[i]))=='\0' 
-						&& *(_mFile.getVal(KField[i]))=='\0'){
-					cmpflg=1;
-					break;
-				}
-			}
-		}		
-		if(cmpflg==0){
-			// 一致
-			if(_assertNullIN){  if(_mFile.isNull(fField)){_existNullIN  = true;} }
-			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),_mFile.getFld(),&fField);
-			wflg=true;
-		}else if( _m_outer && cmpflg>0 && !wflg ){
-			if(_assertNullOUT){ _existNullOUT = true;}
-			// mstのみ書き出す
-			_oFile.writeFld(_kField.getFlg_p(),&KField,_mFile.getFld(),&fField);
-			wflg=true;
-		}else if( cmpflg<0 ){
-			// traのみ書き出す
-			if ( _i_outer){
-				if(_assertNullOUT){ _existNullOUT = true;}
-				_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),static_cast<char**>(NULL),&fField);
-			}
-		}
-	}
-	//ソートスレッドを終了させて、終了確認
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-
-
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgJoin::run(int i,int o,int m) try 
+int kgJoin::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i,o,m);
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile,_fField,true);
-
-	// keyサイズとデータセット
-	int ksize = _kField.size();
-	vector<int> kField =_kField.getNum();
-	vector<int> KField =_KField.getNum();
-	vector<int> fField =_fField.getNum();
-
-	//比較結果用フラグ&出力チェックフラグ
-	int cmpflg=0;
-	bool wflg=false;
-	bool traEnd=false;
-	bool mstEnd=false;
-	bool begin=true;
-
-
-
-	// データ出力(入力ファイルあるいは参照ファイルどちらか最後まで読み込むまで)
-	while(true){
-		// traの読み込み
-		if(cmpflg<=0){
-			if(_iFile.read() == EOF){ traEnd=true;}
-		}
-
-		// mstの読み込み
-		if(cmpflg> 0 || begin){
-			if(_mFile.read() == EOF){ mstEnd=true;}
-			wflg=false;
-			begin=false;
-		}
-
-		// キーの比較 (tra - mstの演算結果)
-		if(traEnd){
-			if(mstEnd || ksize==0){ break;}
-			else                  { cmpflg=1;}
-		}else if(mstEnd){
-			cmpflg=-1;
-		} else {
-			cmpflg=0;
-			for(int i=0;i<ksize;i++){
-				if(_assertNullKEY) { 
-					if( *(_iFile.getVal(kField[i]))=='\0' || *(_mFile.getVal(KField[i]))=='\0'){
-						_existNullKEY = true;
-					}
-				}
-				cmpflg = strcmp( _iFile.getVal(kField[i]), _mFile.getVal(KField[i]) );
-				if(cmpflg!=0) break;
-				//両方共NULLならアンマッチとする
-				if( *(_iFile.getVal(kField[i]))=='\0' 
-						&& *(_mFile.getVal(KField[i]))=='\0'){
-					cmpflg=1;
-					break;
-				}
-			}
-		}		
-		if(cmpflg==0){
-			// 一致
-			if(_assertNullIN){  if(_mFile.isNull(fField)){_existNullIN  = true;} }
-			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),_mFile.getFld(),&fField);
-			wflg=true;
-		}else if( _m_outer && cmpflg>0 && !wflg ){
-			if(_assertNullOUT){ _existNullOUT = true;}
-			// mstのみ書き出す
-			_oFile.writeFld(_kField.getFlg_p(),&KField,_mFile.getFld(),&fField);
-			wflg=true;
-		}else if( cmpflg<0 ){
-			// traのみ書き出す
-			if ( _i_outer){
-				if(_assertNullOUT){ _existNullOUT = true;}
-				_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),static_cast<char**>(NULL),&fField);
-			}
-		}
-	}
-	//ソートスレッドを終了させて、終了確認
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

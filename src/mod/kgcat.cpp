@@ -56,8 +56,7 @@ kgCat::kgCat(void)
 void kgCat::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,flist=,o=,f=,-skip,-nostop,-force,-skip_fnf,-add_fname,-stdin,kv=,-skip_zero",
-				kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 項目名指定
 	_fvstr = _args.toStringVector("f=",false);
@@ -112,18 +111,14 @@ void kgCat::setArgs(void)
 			_kv.push_back(aToSizeT(vskv[i].c_str()));
 		}
 	}
-
 }
-
-
 // -----------------------------------------------------------------------------
 // 引数の設定
 // -----------------------------------------------------------------------------
-void kgCat::setArgs(int i_p,int o_p)
+void kgCat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,flist=,o=,f=,-skip,-nostop,-force,-skip_fnf,-add_fname,-stdin,kv=,-skip_zero",
-				kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 項目名指定
 	_fvstr = _args.toStringVector("f=",false);
@@ -153,7 +148,11 @@ void kgCat::setArgs(int i_p,int o_p)
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 	vector< vector<kgstr_t> > vsf = _args.toStringVecVec("flist=",':',2,false);
-	if(i_p>0){
+	
+	if(onum>1){
+		throw kgError("no match IO");
+	}	
+	if(inum!=0){
 		throw kgError("not support pipe file");	
 	}
 	else{
@@ -175,11 +174,8 @@ void kgCat::setArgs(int i_p,int o_p)
 		if(_iFilename.empty()){ throw kgError("all files on i= are not found");	}
 	}
 
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
 
 	vector<kgstr_t> vskv = _args.toStringVector("kv=",false);
@@ -307,189 +303,105 @@ void kgCat::readFile_unset()
 	}
 	return;
 }
+
+
+int kgCat::runMain() try {
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	// 出力項目名or出力項目数決定
+	// データがある最初ファイルの項目名or項目数を基準とする
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+	for( _inf_pos = 0; _inf_pos<_iFilename.size(); _inf_pos++ ){
+		if(readFile_set( _iFilename.at(_inf_pos) )){
+			readFile_unset();
+			continue;
+		}
+		if(0==_iCsv->fldSize()){ 
+			readFile_unset();
+			continue;
+		}
+		if(_is_f){
+			_fField.set(_fvstr, _iCsv, _fldByNum);
+			_fldNames = _fField.getName();
+			_fldSize  = _fField.size();
+		}else{
+			_fldNames = _iCsv->fldName();
+			_fldSize  = _iCsv->fldSize();
+		}
+		readFile_unset();
+		break;
+	}
+
+	// 項目名の出力
+	vector<kgstr_t> fldtNames = _fldNames;
+	if(_add_fn){ 
+		fldtNames.push_back("fileName"); 
+	}
+	if(_kv.size()!=0){
+		// ファイル名スプリット
+		vector<vector <kgstr_t> >  fsplit;
+		string fn = _iFilename.at(_inf_pos);
+		fsplit = splitToken2(fn, '/','_'); 
+		int endpos = fsplit.size()-1;
+		for(size_t i=0;i<_kv.size();i++){
+			int pos =  endpos - _kv[i];
+			if(pos<0){ throw kgError("kv key not found");}
+			for(size_t j=0;j<fsplit[pos].size();j+=2){
+				fldtNames.push_back(fsplit[pos][j]);
+			}
+		}
+	}
+	if(!_nfn_o){ _oFile.writeFldName(fldtNames);  }
+
+	// データの出力
+	for( ; _inf_pos<_iFilename.size(); _inf_pos++ ){
+		if(readFile_set( _iFilename.at(_inf_pos) )){
+			readFile_unset();
+			continue;
+		}
+		if(_iCsv->fldSize()!=0) { output(_iCsv); }
+		readFile_unset();
+	}
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgCat::run(void) try 
+int kgCat::run(void)
 {
-	// パラメータセット＆入出力ファイルオープン
 	setArgs();
-
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	// 出力項目名or出力項目数決定
-	// データがある最初ファイルの項目名or項目数を基準とする
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	for( _inf_pos = 0; _inf_pos<_iFilename.size(); _inf_pos++ ){
-		if(readFile_set( _iFilename.at(_inf_pos) )){
-			readFile_unset();
-			continue;
-		}
-		if(0==_iCsv->fldSize()){ 
-			readFile_unset();
-			continue;
-		}
-		if(_is_f){
-			_fField.set(_fvstr, _iCsv, _fldByNum);
-			_fldNames = _fField.getName();
-			_fldSize  = _fField.size();
-		}else{
-			_fldNames = _iCsv->fldName();
-			_fldSize  = _iCsv->fldSize();
-		}
-		readFile_unset();
-		break;
-	}
-
-	// 項目名の出力
-	vector<kgstr_t> fldtNames = _fldNames;
-	if(_add_fn){ 
-		fldtNames.push_back("fileName"); 
-	}
-	if(_kv.size()!=0){
-		// ファイル名スプリット
-		vector<vector <kgstr_t> >  fsplit;
-		string fn = _iFilename.at(_inf_pos);
-		fsplit = splitToken2(fn, '/','_'); 
-		int endpos = fsplit.size()-1;
-		for(size_t i=0;i<_kv.size();i++){
-			int pos =  endpos - _kv[i];
-			if(pos<0){ throw kgError("kv key not found");}
-			for(size_t j=0;j<fsplit[pos].size();j+=2){
-				fldtNames.push_back(fsplit[pos][j]);
-			}
-		}
-	}
-	if(!_nfn_o){ _oFile.writeFldName(fldtNames);  }
-
-	// データの出力
-	for( ; _inf_pos<_iFilename.size(); _inf_pos++ ){
-		if(readFile_set( _iFilename.at(_inf_pos) )){
-			readFile_unset();
-			continue;
-		}
-		if(_iCsv->fldSize()!=0) { output(_iCsv); }
-		readFile_unset();
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgCat::run(int i_p,int o_p) try 
+int kgCat::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	// 出力項目名or出力項目数決定
-	// データがある最初ファイルの項目名or項目数を基準とする
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-	for( _inf_pos = 0; _inf_pos<_iFilename.size(); _inf_pos++ ){
-		if(readFile_set( _iFilename.at(_inf_pos) )){
-			readFile_unset();
-			continue;
-		}
-		if(0==_iCsv->fldSize()){ 
-			readFile_unset();
-			continue;
-		}
-		if(_is_f){
-			_fField.set(_fvstr, _iCsv, _fldByNum);
-			_fldNames = _fField.getName();
-			_fldSize  = _fField.size();
-		}else{
-			_fldNames = _iCsv->fldName();
-			_fldSize  = _iCsv->fldSize();
-		}
-		readFile_unset();
-		break;
-	}
-
-	// 項目名の出力
-	vector<kgstr_t> fldtNames = _fldNames;
-	if(_add_fn){ 
-		fldtNames.push_back("fileName"); 
-	}
-	if(_kv.size()!=0){
-		// ファイル名スプリット
-		vector<vector <kgstr_t> >  fsplit;
-		string fn = _iFilename.at(_inf_pos);
-		fsplit = splitToken2(fn, '/','_'); 
-		int endpos = fsplit.size()-1;
-		for(size_t i=0;i<_kv.size();i++){
-			int pos =  endpos - _kv[i];
-			if(pos<0){ throw kgError("kv key not found");}
-			for(size_t j=0;j<fsplit[pos].size();j+=2){
-				fldtNames.push_back(fsplit[pos][j]);
-			}
-		}
-	}
-	if(!_nfn_o){ _oFile.writeFldName(fldtNames);  }
-
-	// データの出力
-	for( ; _inf_pos<_iFilename.size(); _inf_pos++ ){
-		if(readFile_set( _iFilename.at(_inf_pos) )){
-			readFile_unset();
-			continue;
-		}
-		if(_iCsv->fldSize()!=0) { output(_iCsv); }
-		readFile_unset();
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
-
 
 
 

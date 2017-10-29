@@ -48,252 +48,164 @@ kgNewrand::kgNewrand(void)
 	#endif
 
 }
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgNewrand::setArgsMain(void)
+{
+	// a= 項目引数のセット
+	_aField = _args.toString("a=",false);
+	if(_aField.empty()&& _nfn_o==false){
+		throw kgError("parameter a= is mandatory");
+	}
+
+	//乱数の種
+	kgstr_t S_s = _args.toString("S=",false);
+	if(S_s.empty())	{
+		// 乱数の種生成（時間）
+		posix_time::ptime now = posix_time::microsec_clock::local_time();
+		posix_time::time_duration nowt = now.time_of_day();
+		_seed = static_cast<unsigned long>(nowt.total_microseconds());
+	}else	{ 
+		_seed = static_cast<unsigned long>(aToSizeT(S_s.c_str()));
+	}
+
+	_int_rand = _args.toBool("-int");
+
+	//乱数の最小値(min)
+	kgstr_t min_s = _args.toString("min=",false);
+	if(min_s.empty())	{ _min = 0;}
+	else	{ _min = atoi(min_s.c_str());}
+
+	//乱数の最大値(max)
+	kgstr_t max_s = _args.toString("max=",false);
+	if(max_s.empty())	{ _max = INT_MAX;}
+	else	{ _max = atoi(max_s.c_str());}
+
+	// エラーチェック
+	if(!_int_rand&&(!min_s.empty()||!max_s.empty())){
+		throw kgError("min= or max= must be specified with -int.");	
+	}
+
+	if(!_int_rand){
+		_min=0;
+		_max=1;
+	}
+
+	//最小値最大値のチェック
+	if(_min>_max){
+		ostringstream ss;
+		ss << "min= > max= [" << _min << ">" << _max << "]" ;
+		throw kgError(ss.str());
+	}	
+
+	kgstr_t s_l =  _args.toString("l=",false);
+	if(s_l.empty()){
+		_line = 10;
+	}else{
+		_line = aToSizeT(s_l.c_str()) ; 
+	}
+
+}
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgNewrand::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("S=,min=,max=,a=,o=,l=,-int");
+	_args.paramcheck(_paralist);
 
 	// 出力ファイルオープン
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 
-	// a= 項目引数のセット
-	_aField = _args.toString("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-
-	//乱数の種
-	kgstr_t S_s = _args.toString("S=",false);
-	if(S_s.empty())	{
-		// 乱数の種生成（時間）
-		posix_time::ptime now = posix_time::microsec_clock::local_time();
-		posix_time::time_duration nowt = now.time_of_day();
-		_seed = static_cast<unsigned long>(nowt.total_microseconds());
-	}else	{ 
-		_seed = static_cast<unsigned long>(aToSizeT(S_s.c_str()));
-	}
-
-	_int_rand = _args.toBool("-int");
-
-	//乱数の最小値(min)
-	kgstr_t min_s = _args.toString("min=",false);
-	if(min_s.empty())	{ _min = 0;}
-	else	{ _min = atoi(min_s.c_str());}
-
-	//乱数の最大値(max)
-	kgstr_t max_s = _args.toString("max=",false);
-	if(max_s.empty())	{ _max = INT_MAX;}
-	else	{ _max = atoi(max_s.c_str());}
-
-	// エラーチェック
-	if(!_int_rand&&(!min_s.empty()||!max_s.empty())){
-		throw kgError("min= or max= must be specified with -int.");	
-	}
-
-	if(!_int_rand){
-		_min=0;
-		_max=1;
-	}
-
-
-	//最小値最大値のチェック
-	if(_min>_max){
-		ostringstream ss;
-		ss << "min= > max= [" << _min << ">" << _max << "]" ;
-		throw kgError(ss.str());
-	}	
-
-	kgstr_t s_l =  _args.toString("l=",false);
-	if(s_l.empty()){
-		_line = 10;
-	}else{
-		_line = aToSizeT(s_l.c_str()) ; 
-	}
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNewrand::setArgs(int o_p)
+void kgNewrand::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("S=,min=,max=,a=,o=,l=,-int");
 
-	// 出力ファイルオープン
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_args.paramcheck(_paralist);
 
-	// a= 項目引数のセット
-	_aField = _args.toString("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
+	if(inum>0 || onum>1){ throw kgError("no match IO");}
 
-	//乱数の種
-	kgstr_t S_s = _args.toString("S=",false);
-	if(S_s.empty())	{
-		// 乱数の種生成（時間）
-		posix_time::ptime now = posix_time::microsec_clock::local_time();
-		posix_time::time_duration nowt = now.time_of_day();
-		_seed = static_cast<unsigned long>(nowt.total_microseconds());
-	}else	{ 
-		_seed = static_cast<unsigned long>(aToSizeT(S_s.c_str()));
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_int_rand = _args.toBool("-int");
-
-	//乱数の最小値(min)
-	kgstr_t min_s = _args.toString("min=",false);
-	if(min_s.empty())	{ _min = 0;}
-	else	{ _min = atoi(min_s.c_str());}
-
-	//乱数の最大値(max)
-	kgstr_t max_s = _args.toString("max=",false);
-	if(max_s.empty())	{ _max = INT_MAX;}
-	else	{ _max = atoi(max_s.c_str());}
-
-	// エラーチェック
-	if(!_int_rand&&(!min_s.empty()||!max_s.empty())){
-		throw kgError("min= or max= must be specified with -int.");	
-	}
-
-	if(!_int_rand){
-		_min=0;
-		_max=1;
-	}
-
-
-	//最小値最大値のチェック
-	if(_min>_max){
-		ostringstream ss;
-		ss << "min= > max= [" << _min << ">" << _max << "]" ;
-		throw kgError(ss.str());
-	}	
-
-	kgstr_t s_l =  _args.toString("l=",false);
-	if(s_l.empty()){
-		_line = 10;
-	}else{
-		_line = aToSizeT(s_l.c_str()) ; 
-	}
+	setArgsMain();
 
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNewrand::run(void) try 
+int kgNewrand::runMain(void) try 
 {
-	// パラメータセット＆出力ファイルオープン
+
+	// 項目名の出力
+	_oFile.writeFldName(_aField);
+
+	//実数版
+	if(!_int_rand){
+		uniform_real<> dst_r(_min,_max);
+		variate_generator< mt19937,uniform_real<> > rand_r(mt19937(_seed),dst_r);
+		// データ出力
+		for(size_t i=0;i<_line;i++){	
+			_oFile.writeDbl(rand_r(),true);
+		}
+	}
+	else{
+		//乱数生成エンジン
+		uniform_int<> dst(_min,_max);
+		variate_generator< mt19937,uniform_int<> > rand_m(mt19937(_seed),dst); 
+
+		// データ出力
+		for(size_t i=0;i<_line;i++){	
+			_oFile.writeInt(rand_m(),true);
+		}
+	}
+
+	// 終了処理
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const std::exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgNewrand::run(void) 
+{
 	setArgs();
-
-	// 項目名の出力
-	_oFile.writeFldName(_aField);
-
-	//実数版
-	if(!_int_rand){
-		uniform_real<> dst_r(_min,_max);
-		variate_generator< mt19937,uniform_real<> > rand_r(mt19937(_seed),dst_r);
-		// データ出力
-		for(size_t i=0;i<_line;i++){	
-			_oFile.writeDbl(rand_r(),true);
-		}
-	}
-	else{
-		//乱数生成エンジン
-		uniform_int<> dst(_min,_max);
-		variate_generator< mt19937,uniform_int<> > rand_m(mt19937(_seed),dst); 
-
-		// データ出力
-		for(size_t i=0;i<_line;i++){	
-			_oFile.writeInt(rand_m(),true);
-		}
-	}
-
-	// 終了処理
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgNewrand::run(int o_p) try 
+int kgNewrand::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆出力ファイルオープン
-	setArgs(o_p);
-
-	// 項目名の出力
-	_oFile.writeFldName(_aField);
-
-	//実数版
-	if(!_int_rand){
-		uniform_real<> dst_r(_min,_max);
-		variate_generator< mt19937,uniform_real<> > rand_r(mt19937(_seed),dst_r);
-		// データ出力
-		for(size_t i=0;i<_line;i++){	
-			_oFile.writeDbl(rand_r(),true);
-		}
-	}
-	else{
-		//乱数生成エンジン
-		uniform_int<> dst(_min,_max);
-		variate_generator< mt19937,uniform_int<> > rand_m(mt19937(_seed),dst); 
-
-		// データ出力
-		for(size_t i=0;i<_line;i++){	
-			_oFile.writeInt(rand_m(),true);
-		}
-	}
-
-	// 終了処理
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

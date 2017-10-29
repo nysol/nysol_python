@@ -49,125 +49,88 @@ kgSlide::kgSlide(void)
 	#endif
 
 }
+
 // -----------------------------------------------------------------------------
-// 入出力ファイルオープン
+// パラメータセット
 // -----------------------------------------------------------------------------
+void kgSlide::setArgsMain(void){
+
+	_iFile.read_header();
+	// t=スライド数
+	kgstr_t s = _args.toString("t=",false);
+	if(s.empty())	{ _interval = 1; }
+	else        	{ _interval = atoi(s.c_str());}
+	if(_interval<=0)		{ _interval = 1; }	
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+
+	// -n 最終行NULL出力フラグ
+	_nulout = _args.toBool("-n");
+
+	// -r 逆順出力フラグ
+	_reverse = _args.toBool("-r");
+
+	// -l 最終行フラグ
+	_last  = _args.toBool("-l");
+
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+	vector<kgstr_t> vss = _args.toStringVector("s=",false);
+	if(!seqflg&&vss.empty()){
+		throw kgError("parameter s= is mandatory without -q , -nfn");
+	}
+	
+	if(!seqflg && (!vs.empty()||!vss.empty())){ 
+		vector<kgstr_t> vsk	= vs;
+		vsk.insert(vsk.end(),vss.begin(),vss.end());
+		sortingRun(&_iFile,vsk);
+	}
+
+	_kField.set(vs,  &_iFile,_fldByNum);
+	_fField.set(vvs, &_iFile,_fldByNum);
+
+}
+
 void kgSlide::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-n,-r,t=,-l,s=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
 	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
 
-
-
-	// t=スライド数
-	kgstr_t s = _args.toString("t=",false);
-	if(s.empty())	{ _interval = 1; }
-	else        	{ _interval = atoi(s.c_str());}
-	if(_interval<=0)		{ _interval = 1; }	
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// -n 最終行NULL出力フラグ
-	_nulout = _args.toBool("-n");
-
-	// -r 逆順出力フラグ
-	_reverse = _args.toBool("-r");
-
-	// -l 最終行フラグ
-	_last  = _args.toBool("-l");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	if(!seqflg&&vss.empty()){
-		throw kgError("parameter s= is mandatory without -q , -nfn");
-	}
-	
-	if(!seqflg && (!vs.empty()||!vss.empty())){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSlide::setArgs(int i_p,int o_p)
+void kgSlide::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-n,-r,t=,-l,s=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){
+		throw kgError("no match IO");
+	}
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_iFile.read_header();
-
-
-
-	// t=スライド数
-	kgstr_t s = _args.toString("t=",false);
-	if(s.empty())	{ _interval = 1; }
-	else        	{ _interval = atoi(s.c_str());}
-	if(_interval<=0)		{ _interval = 1; }	
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// -n 最終行NULL出力フラグ
-	_nulout = _args.toBool("-n");
-
-	// -r 逆順出力フラグ
-	_reverse = _args.toBool("-r");
-
-	// -l 最終行フラグ
-	_last  = _args.toBool("-l");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	if(!seqflg&&vss.empty()){
-		throw kgError("parameter s= is mandatory without -q , -nfn");
-	}
-	
-	if(!seqflg && (!vs.empty()||!vss.empty())){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
+
 // -----------------------------------------------------------------------------
 // 出力
 // -----------------------------------------------------------------------------
@@ -210,14 +173,12 @@ void kgSlide::output(int s_pos,int e_pos)
 	_oFile.writeFld(_o_stock_ap.get(),_iFile.fldSize(),_onew_stock_ap.get(),outfld*_fField.size());	
 
 }
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgSlide::run(void) try 
-{
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
 
+// -----------------------------------------------------------------------------
+// runMain
+// -----------------------------------------------------------------------------
+int kgSlide::runMain() try 
+{
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
 
@@ -353,140 +314,14 @@ int kgSlide::run(void) try
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSlide::run(int i_p,int o_p) try 
+int kgSlide::run(void)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	//field項目数セット
-	vector<int> fField =_fField.getNum();
-
-	// 項目名の展開
-	vector<kgstr_t> outfld;
-	for(unsigned int i=0; i<_fField.size();i++){
-
-		if(_last){
-			ostringstream os;
-			if(!_fField.attr(i).empty()){ os << _fField.attr(i) ;}
-			else 												{ os << _fField.name(i) << _interval;}
-			outfld.push_back(os.str());
-		}
-		else{
-			kgstr_t oName = _fField.attr(i);
-			if( oName.empty()) oName=_fField.name(i);
-			for(int j=0;j<_interval;j++){
-				ostringstream os;
-				if(_interval==1&&!_fField.attr(i).empty()){ os << oName ;}
-				else 																			{ os << oName << j+1;}
-				outfld.push_back(os.str());
-			}
-		}
-	}
-
-	_oFile.writeFldName(_iFile,outfld);
-
-	// データストック領域確保:項目数*(num+1)分
-	_d_stock_ap.resize(_iFile.fldSize()*(_interval+1));
-	for(unsigned int i=0;i<_iFile.fldSize()*(_interval+1);i++){
-		try {
-			_d_stock_ap.at(i).set( new char[KG_MAX_STR_LEN] );
-		} catch(...) {
-			throw kgError("memory allocation error ");
-		}
-	}	
-
-	// 既存OUTOUT領域確保:f=項目数分
-	_o_stock_ap.set( new char*[_iFile.fldSize()] );
-	// 追加OUTOUT領域確保:f=項目数*num分
-	_onew_stock_ap.set( new char*[_fField.size()*_interval] );
-
-	// データ格納位置セット
-	int pos=0;
-	bool full=false;
-
-	// データ集計＆出力
-	while(_iFile.read()!=EOF){
-
-		//一行目読み込み時は何もしない
-		if(( _iFile.status() & kgCSV::Begin )){continue;}
-
-		// oldデータをセット
-		for(unsigned int i=0;i<_iFile.fldSize();i++){
-			strcpy(_d_stock_ap.at(pos*_iFile.fldSize()+i).get(),_iFile.getOldVal(i));
-		}
-
-		pos = pos_proceed(pos);
-		if(pos==0){ full=true; }
-
-		//出力領域セット＆出力
-		if(full){
-
-			if(_reverse){
-				int tpos = pos_proceed(pos,_reverse);
-				output(tpos,tpos);
-			}
-			else{ output(pos,pos);}
-
-		}
-		else if(_nulout&&_reverse){
-
-			int spos=pos_proceed(pos,_reverse);
-			int epos =pos_proceed(0,_reverse);;
-			output(spos,epos);
-
-		}
-
-		// キーブレイク
-		if( _iFile.keybreak() ){
-			if(_nulout&&!_reverse){
-
-				int spos = pos_proceed(pos);
-				int epos = pos;
-				if(!full){spos=0;}				
-				for(;spos!=epos;spos=pos_proceed(spos)){
-					output(spos,epos);
-				}
-			}
-
-			// ENDなら終了
-			if((_iFile.status() & kgCSV::End )) break;
-
-			pos=0;
-			full=false;
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs();
+	return runMain();
+}
+int kgSlide::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

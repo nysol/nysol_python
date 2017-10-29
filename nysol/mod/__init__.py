@@ -2,6 +2,7 @@ import nysollib
 from submod.readcsv import Nysol_Readcsv as readcsv
 from submod.writecsv import Nysol_Writecsv as writecsv
 from submod.writelist import Nysol_Writelist as writelist
+from submod.mfifo import Nysol_Mfifo as mfifo
 from submod.m2cross import Nysol_M2cross as m2cross
 from submod.mload import Nysol_Mload as mload
 from submod.msave import Nysol_Msave as msave

@@ -43,7 +43,10 @@ class kgStats : public kgModIncludeSort {
 			,bool a_Nin ,bool a_Nout ,bool* e_Nin ,bool* e_Nout );
 
   void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+
+	int runMain(void);
+	void setArgsMain(void);	
 
 public:
   // コンストラクタ
@@ -56,7 +59,7 @@ public:
 	
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

@@ -60,14 +60,16 @@ class script(object):
 		newcmdlist = []
 		interobj = {}
 		newruncmd = None
+
 		#ioflg =False
 		for linno ,cmd  in enumerate(self.cmdlist):
+			print linno ,cmd ,newruncmd, interobj
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
 
 			if newruncmd == None :
 
-				if not "i" in cmdio and cmdptn.inp==None:
+				if not "i" in cmdio and len(cmdptn.inplist["i"])==0:
 					print(cmdptn.name + " model err (" + str(linno)  + ")"    )
 
 				#newruncmd = copy.deepcopy(cmdptn)
@@ -76,11 +78,11 @@ class script(object):
 					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
 				if "m" in cmdio:
 					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
-			else:
 
+			else:
 				#tmpptn  = copy.deepcopy(cmdptn)
 				tmpptn  = cmdptn
-				tmpptn.inp  = newruncmd
+				tmpptn.inplist["i"].append(newruncmd)
 				newruncmd = tmpptn
 				if "i" in cmdio:
 					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
@@ -93,13 +95,14 @@ class script(object):
 			if "o" in cmdio:
 				interobj[cmdio['o']] = newruncmd
 				newruncmd =None
-			
 
 			#writescv ,writelistで終了
 			if cmdptn.name == "writecsv" or cmdptn.name=="writelist"  :
 				newcmdlist.append(newruncmd)
 				newruncmd = None
 
+		print newcmdlist[0]
+		print newcmdlist[0].inplist
 
 		return newcmdlist
 #			if cmd[0].name = "readcsv"
@@ -108,7 +111,8 @@ class script(object):
 		
 		
 	def run(self,**kwd) :
-		#必要なら戻す処理を追加する
+		#f.w エラー時等で必要なら戻す処理を追加する
+
 		oldenv = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork()
 		if "msg" in kwd:

@@ -47,8 +47,31 @@ kgTab2csv::kgTab2csv(void)
 	#endif
 	
 }
+
 // -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
+// パラメータセット
+// -----------------------------------------------------------------------------
+void kgTab2csv::setArgsMain(void)
+{
+	_iFile.read_header();
+
+	// -r 出力反転フラグ
+	_remove = _args.toBool("-r");
+
+	kgstr_t s_d = _args.toString("d=",false);
+	if(s_d.empty()){	
+		_delim='\t';
+	}else if(s_d.size()!=1){
+		ostringstream ss;
+		ss << "delim= takes 1 byte charactor (" << s_d << ")";
+		throw kgError(ss.str());
+	}else{
+		_delim=*(s_d.c_str());
+	}
+
+}
+// -----------------------------------------------------------------------------
+// パラメータチェック＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgTab2csv::setArgs(void)
 {
@@ -58,217 +81,114 @@ void kgTab2csv::setArgs(void)
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
-	_iFile.read_header();
 
-	// -r 出力反転フラグ
-	_remove = _args.toBool("-r");
-
-	kgstr_t s_d = _args.toString("d=",false);
-	if(s_d.empty()){	
-		_delim='\t';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
+	setArgsMain();
 
 }
 
-void kgTab2csv::setArgs(int i_p,int o_p)
+void kgTab2csv::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,-r,d=",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// -r 出力反転フラグ
-	_remove = _args.toBool("-r");
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	kgstr_t s_d = _args.toString("d=",false);
-	if(s_d.empty()){	
-		_delim='\t';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	
+	setArgsMain();
+
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgTab2csv::run(void) try 
+int kgTab2csv::runMain(void) try 
 {
 	char * data;
 	size_t fcnt=0;
 
-	// パラメータセット＆入出力ファイルオープン
+	// headerがあるとき
+	if(!_nfn_i){
+		vector<string> head;
+		if(EOF != _iFile.read()){
+			char * data = _iFile.getRec();
+			if (_remove){
+				char *p = data;
+				while( *p ){ p++;}
+				if(p!=data && *(p-1)=='\r'){
+					*(p-1)='\0';
+				}
+			}
+			string hdata = data;
+			head = splitToken(hdata,_delim);
+			fcnt = head.size();
+		}
+		// headerを出力するとき
+		if(!_nfn_o){ _oFile.writeFldName(head);}
+	}
+	// 行数を取得してデータ出力
+	while( EOF != _iFile.read() ){
+		data = _iFile.getRec();
+		vector<char*> d_split = splitToken(data,_delim);
+		if(fcnt==0){ fcnt = d_split.size();}
+		if ( fcnt != d_split.size()){
+			ostringstream ss;
+			ss << "unmatch field size: ( " << fcnt << "," << d_split.size();
+			throw kgError(ss.str());
+		}
+		if (_remove){
+			char *p = d_split.back();
+			while( *p ){ p++;}
+			if(p!=d_split.back() && *(p-1)=='\r'){
+				*(p-1)='\0';
+			}
+		}
+		for(size_t i=0; i<fcnt; i++){
+			_oFile.writeStr( d_split[i], i == fcnt-1);
+		}
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgTab2csv::run(void) 
+{
 	setArgs();
-
-	// headerがあるとき
-	if(!_nfn_i){
-		vector<string> head;
-		if(EOF != _iFile.read()){
-			char * data = _iFile.getRec();
-			if (_remove){
-				char *p = data;
-				while( *p ){ p++;}
-				if(p!=data && *(p-1)=='\r'){
-					*(p-1)='\0';
-				}
-			}
-			string hdata = data;
-			head = splitToken(hdata,_delim);
-			fcnt = head.size();
-		}
-		// headerを出力するとき
-		if(!_nfn_o){ _oFile.writeFldName(head);}
-	}
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		data = _iFile.getRec();
-		vector<char*> d_split = splitToken(data,_delim);
-		if(fcnt==0){ fcnt = d_split.size();}
-		if ( fcnt != d_split.size()){
-			ostringstream ss;
-			ss << "unmatch field size: ( " << fcnt << "," << d_split.size();
-			throw kgError(ss.str());
-		}
-		if (_remove){
-			char *p = d_split.back();
-			while( *p ){ p++;}
-			if(p!=d_split.back() && *(p-1)=='\r'){
-				*(p-1)='\0';
-			}
-		}
-		for(size_t i=0; i<fcnt; i++){
-			_oFile.writeStr( d_split[i], i == fcnt-1);
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgTab2csv::run(int i_p,int o_p) try 
+int kgTab2csv::run(int inum,int *i_p,int onum, int* o_p)
 {
-	char * data;
-	size_t fcnt=0;
-
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// headerがあるとき
-	if(!_nfn_i){
-		vector<string> head;
-		if(EOF != _iFile.read()){
-			char * data = _iFile.getRec();
-			if (_remove){
-				char *p = data;
-				while( *p ){ p++;}
-				if(p!=data && *(p-1)=='\r'){
-					*(p-1)='\0';
-				}
-			}
-			string hdata = data;
-			head = splitToken(hdata,_delim);
-			fcnt = head.size();
-		}
-		// headerを出力するとき
-		if(!_nfn_o){ _oFile.writeFldName(head);}
-	}
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		data = _iFile.getRec();
-		vector<char*> d_split = splitToken(data,_delim);
-		if(fcnt==0){ fcnt = d_split.size();}
-		if ( fcnt != d_split.size()){
-			ostringstream ss;
-			ss << "unmatch field size: ( " << fcnt << "," << d_split.size();
-			throw kgError(ss.str());
-		}
-		if (_remove){
-			char *p = d_split.back();
-			while( *p ){ p++;}
-			if(p!=d_split.back() && *(p-1)=='\r'){
-				*(p-1)='\0';
-			}
-		}
-		for(size_t i=0; i<fcnt; i++){
-			_oFile.writeStr( d_split[i], i == fcnt-1);
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

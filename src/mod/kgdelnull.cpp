@@ -52,20 +52,8 @@ kgDelnull::kgDelnull(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDelnull::setArgs(void)
+void kgDelnull::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,u=,k=,f=,-F,-R,-r,bufcount=,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
-
-	// 入出力ファイルオープン&バッファ設定
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
-	kgstr_t ufile = _args.toString("u=",false);
-	if(ufile.empty()){ _elsefile=false; }
-	else {
-		_elsefile=true;
-		_uFile.open(ufile,_env,_nfn_o);
-	}			
 	kgstr_t s=_args.toString("bufcount=",false);
 	int bcnt = 10;
 	if(!s.empty()){ 
@@ -95,64 +83,52 @@ void kgDelnull::setArgs(void)
 	_fField.set(vs_f, &_iFile,_fldByNum);
 	
 }
+
 // -----------------------------------------------------------------------------
-// 入出力ファイルオープン
+// パラメータチェック入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDelnull::setArgs(int i_p,int o_p)
+void kgDelnull::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,u=,k=,f=,-F,-R,-r,bufcount=,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン&バッファ設定
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-
-
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 	kgstr_t ufile = _args.toString("u=",false);
 	if(ufile.empty()){ _elsefile=false; }
 	else {
 		_elsefile=true;
 		_uFile.open(ufile,_env,_nfn_o);
 	}			
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
+	setArgsMain();
+	
+}
+void kgDelnull::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>2){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	kgstr_t ufile = _args.toString("u=",false);
+
+	if(onum>1 && *(o_p+1)>0){ 
+		_uFile.popen(*(o_p+1), _env,_nfn_o); 
+		_elsefile=true;
 	}
-	_iFile.setbufsize(bcnt);
-	_iFile.read_header();
+	else if(ufile.empty()){
+		_elsefile=false;
+	}
+	else{
+		_uFile.open(ufile,_env,_nfn_o);
+		_elsefile=true;
+	}
+	setArgsMain();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs_k = _args.toStringVector("k=",false);
-
-	// f= 項目引数のセット
-	vector<kgstr_t>  vs_f = _args.toStringVector("f=",true);
-
-	// -r 条件反転,-Rキー単位sel、-Fselの条件
-	_reverse				= _args.toBool("-r");
-	_keysel_flg		= _args.toBool("-R");
-	_sel_flg			 	= _args.toBool("-F");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && !vs_k.empty()){ sortingRun(&_iFile,vs_k);}
-	
-	_kField.set(vs_k, &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
-	
 }
 // -----------------------------------------------------------------------------
 // 条件によるNULLcheck(当てはまればtrue)
@@ -185,14 +161,12 @@ bool kgDelnull::nullcheck(vector<int>& cnt,char** str)
 	}
 	return rtn;
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgDelnull::run(int i_p,int o_p) try 
+int kgDelnull::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
 
@@ -289,108 +263,17 @@ int kgDelnull::run(int i_p,int o_p) try
 	errorEnd(err);
 	return 1;
 }
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgDelnull::run(void) try 
+int kgDelnull::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
 	setArgs();
+	return runMain();
+}
 
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-	if(_elsefile){ _uFile.writeFldName(_iFile); }
-
-	vector<int> fieldlst= _fField.getNum();
-	// キー単位処理をするかで処理を変える
-	if(_kField.size()){//キー単位処理
-		while(_iFile.blkset()!=EOF){
-			bool finalSel=false;
-			while(_iFile.blkread() != EOF){
-				bool lineSel=nullcheck(fieldlst,_iFile.getBlkFld());
-				if(_reverse){
-					if(_keysel_flg){
-						if(lineSel){finalSel=true; continue;}
-						else       {finalSel=false; break   ;}
-					}
-					else{
-						if(lineSel){finalSel=true; break   ;}
-						else       {finalSel=false; continue;}
-					}
-				}
-				else{
-					/*and条件*/
-					if(_keysel_flg){
-						if(!lineSel){finalSel=false; continue;}
-						else      	{finalSel=true; break   ;}
-					}/*or条件*/
-					else{
-						if(!lineSel){finalSel=false; break   ;}
-						else        {finalSel=true; continue;}
-					}
-				}
-			}
-			_iFile.seekBlkTop();
-			if(finalSel){
-				while(  EOF != _iFile.blkread() ){
-					_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld());
-				}
-			}
-			else{
-				if(_elsefile){
-					while(_iFile.blkread() != EOF){
-						_uFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld());
-					}
-				}
-			}
-			/*ENDなら終了*/
-			if((_iFile.status() & kgCSV::End )) break;
-		}
-	}else{//行単位処理
-		while(_iFile.read()!=EOF){
-			if(_iFile.status() & kgCSV::End)break;
-			if(nullcheck(fieldlst,_iFile.getNewFld())){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
-			}
-			else{
-				if(_elsefile){
-					_uFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
-				}
-			}
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	if(_elsefile){ _uFile.close(); }
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgDelnull::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

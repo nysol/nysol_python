@@ -580,28 +580,16 @@ kgMbucket::kgMbucket(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgMbucket::setArgs(void)
+void kgMbucket::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,O=,n=,F=,-ms,-r,bufcount=,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン&バッファッサイズ設定
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_oFile.setPrecision(_precision);
 	kgstr_t s=_args.toString("bufcount=",false);
 	int bcnt = 10;
 	if(!s.empty()){ 
 		bcnt = atoi(s.c_str());
 		if(bcnt<=0){ bcnt=1;}
 	}
-	kgstr_t rFile = _args.toString("O=",false);
-	if(rFile.empty()){ _rangefile=false; }
-	else {
-		_rangefile=true;
-		_rFile.open(rFile,_env,_nfn_o);
-		_rFile.setPrecision(_precision);
-	}		
+
+	_oFile.setPrecision(_precision);
 	_iFile.setbufsize(bcnt);
 	_iFile.read_header();
 
@@ -655,32 +643,14 @@ void kgMbucket::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgMbucket::setArgs(int i_p,int o_p)
+void kgMbucket::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,O=,n=,F=,-ms,-r,bufcount=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン&バッファッサイズ設定
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-	_oFile.setPrecision(_precision);
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
-	}
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 	kgstr_t rFile = _args.toString("O=",false);
 	if(rFile.empty()){ _rangefile=false; }
 	else {
@@ -688,458 +658,257 @@ void kgMbucket::setArgs(int i_p,int o_p)
 		_rFile.open(rFile,_env,_nfn_o);
 		_rFile.setPrecision(_precision);
 	}		
-	_iFile.setbufsize(bcnt);
-	_iFile.read_header();
+	setArgsMain();
+}
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgMbucket::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// n= 分割数のセット(2以上)
-	vector<kgstr_t> vs_n =_args.toStringVector("n=",true);
-	for(vector<kgstr_t>::size_type i=0; i<vs_n.size();i++){
-		int cnt = atoi(vs_n[i].c_str());
-		if(cnt < 2){
-			throw kgError("the number of buckets (n=) must be greater than 2");
-		}
-		_bktSize.push_back(cnt);			
+	if(inum>1 || onum>2){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	kgstr_t rFile = _args.toString("O=",false);
+
+	if(onum>1 && *(o_p+1)>0){ 
+		_rangefile=true;
+		_rFile.popen(*(o_p+1), _env,_nfn_o); 
+  	_rFile.setPrecision(_precision);
 	}
-
-	// F=出力タイプ(0 or 1 or 2)
-	kgstr_t F_s = _args.toString("F=",false);
-	if(F_s.empty()) { _out_type=0;}
-	else						{ _out_type = atoi(F_s.c_str()); }
-	if(_out_type>2 && _out_type<0){
-		throw kgError("F= parameter must take 0,1 or 2)");
+	else if(rFile.empty()){
+		_rangefile=false;
 	}
-
-	// -r:逆順でバケット番号をふる,-ms:マルチスタート
-	_reverse = _args.toBool("-r");
-	_multiStart = _args.toBool("-ms");
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
-
-	// n=パラメータに指定された値が一つであれば，全ての項目の分割数を
-	// この値にする．
-	if(_bktSize.size()==1){
-		for(vector<kgstr_t>::size_type i=1; i<_fField.size(); i++){
-			_bktSize.push_back(_bktSize.at(0));			
-		}
+	else{
+		_rangefile=true;
+		_rFile.open(rFile,_env,_nfn_o);
+  	_rFile.setPrecision(_precision);
 	}
-	if(_fField.size() != _bktSize.size()){
-		throw kgError("the number of arguments on f= and n= must be same");
-	}
+	setArgsMain();
+
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgMbucket::run(void) try 
+int kgMbucket::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力&範囲ファイルの項目名の出力
+	// キー項目,fieldName,bucketNo,rangeFrom,rangeTo
+	// キー項目(なければ出	なし),対象項目名,バケット番号,開始範囲,終了範囲
+  _oFile.writeFldName(_iFile,_fField, true);
+	if(_rangefile){
+		if(!_rFile.noFldName()){
+			// key項目名の出力
+		  int size=_kField.size();
+  		if(size>0){
+				for(int i=0; i<size; i++){
+					kgstr_t oName=_kField.name(i); // second項目名がない時
+					_rFile.writeStr( oName.c_str(), false);
+				}
+  		}
+			// key項目以外の項目名は以下の通り固定項目名
+			_rFile.writeStr("fieldName",false);
+			_rFile.writeStr("bucketNo" ,false);
+			_rFile.writeStr("rangeFrom",false);
+			_rFile.writeStr("rangeTo"  );
+			_rFile.writeEolNC();
+		}
+	}
+
+	while(_iFile.blkset()!=EOF){
+		Cube cube(_fField.size());
+		// 指定された値ベクトルとその出現回数のCubeを作成
+		while(_iFile.blkread() != EOF){
+			vector<double> valtmp(_fField.size());
+			bool nullFlg=false;
+			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+				char* str=_iFile.getBlkVal(_fField.num(i));
+				if(*str=='\0'){ // null値判定
+					if(_assertNullIN) { _existNullIN  = true;}
+					nullFlg=true;
+					break;
+				}
+				valtmp[i]=atof(_iFile.getBlkVal(_fField.num(i)));
+			}
+			if(!nullFlg) cube.addCell(valtmp);
+		}
+		// データが一件もなかった場合はnull出力
+		if(cube.cntCell()==0){ 
+			_iFile.seekBlkTop();
+			while(_iFile.blkread() != EOF){
+				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
+				for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
+					_oFile.writeStr("", false);
+				}
+				_oFile.writeStr("", true);
+			}	
+			if(_assertNullOUT){ _existNullOUT = true;}
+		}else{
+			
+			// 指定のバケット分割数が値の種類数より少ない時は調整する
+			vector<int> adjbktSize =  cube.adjustBktSize(_bktSize);
+
+			// スライスの初期化(領域確保)
+			cube.initSlice(adjbktSize);
+
+			// バケット(結果)の初期化(領域確保)
+			Bucket bucket(adjbktSize);
+
+			// bucketのカットポイントを計算
+			bucket=calCutPoint( cube, adjbktSize, _multiStart );
+
+			// 範囲ファイルの出力
+			if(_rangefile){
+				for(int h=0; h<bucket.dimSize(); h++){
+					for(int j=0; j<bucket.bktSize(h); j++){
+						for(unsigned int k=0; k<_kField.size(); k++){
+							_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
+						}
+						_rFile.writeStr(_fField.name(h).c_str(),false);
+						if(_reverse){ _rFile.writeInt(bucket.bktSize(h)-j,false); }
+						else        { _rFile.writeInt(j+1                ,false); }
+
+						if(j==0){ // 最初のバケットのlowerは出力しない
+							_rFile.writeStr("",false);
+						}else{
+							_rFile.writeDbl(bucket.lower(h,j),false);
+						}
+
+						if(j==bucket.bktSize(h)-1){ // 最後のバケットのupperは出力しない
+							_rFile.writeStr("",true);
+						}else{
+							_rFile.writeDbl(bucket.upper(h,j),true);
+						}
+					}
+				}
+			}
+			//	出力処理
+			_iFile.seekBlkTop();
+			while(_iFile.blkread() != EOF){
+				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
+				// 各次元に一つでもnullがあるかどうかチェック
+				// (一つでもnullならばnull出力するため)
+				bool nullFlg=false;
+				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+					char* str = _iFile.getBlkVal(_fField.num(i));
+					if(*str=='\0'){
+						if(_assertNullIN) { _existNullIN  = true;}
+						nullFlg=true;
+						break;
+					}
+				}
+				// null出力の場合
+				if(nullFlg){
+					for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
+						_oFile.writeStr("", false);
+					}
+						_oFile.writeStr("", true);
+					if(_assertNullOUT){ _existNullOUT = true;}
+					continue;
+				}
+				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+					// 最終項目かどうかを判定(改行出力のため)
+					bool eol=false;
+					if(i==_fField.size()-1) eol=true;
+
+					// 次元iの対象となる値(文字列として)
+					char* str = _iFile.getBlkVal(_fField.num(i));
+
+					// 次元iの値atof(str)が属するバケット番号を検索
+					int bktNo=bucket.getNo(i, atof(str));
+
+					// ##### バケット番号で出力
+					if(_out_type==0){
+						if(_reverse) { _oFile.writeInt(bucket.bktSize(i)-bktNo,eol);}
+						else         { _oFile.writeInt(bktNo+1                ,eol);}
+					// ##### 範囲で出力
+					}else if(_out_type==1){
+						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
+							_oFile.writeDbl( bucket.lower(i,bktNo) );
+						}
+						_oFile.writeStr( "_" );
+						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
+							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
+						}else{
+							_oFile.writeStr("",eol);
+						}
+					// ##### バケット番号+範囲で出力
+					}else{
+						if(_reverse) _oFile.writeInt(bucket.bktSize(i)-bktNo);
+						else         _oFile.writeInt(bktNo+1                );
+						_oFile.writeStr( ":" );
+						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
+							_oFile.writeDbl( bucket.lower(i,bktNo) );
+						}
+						_oFile.writeStr( "_" );
+						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
+							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
+						}else{
+							_oFile.writeStr("",eol);
+						}
+					}
+				}
+			}
+		}	
+	}
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+	// 終了処理(メッセージ出力,thread pipe終了通知)
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	_rFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgMbucket::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力&範囲ファイルの項目名の出力
-	// キー項目,fieldName,bucketNo,rangeFrom,rangeTo
-	// キー項目(なければ出	なし),対象項目名,バケット番号,開始範囲,終了範囲
-  _oFile.writeFldName(_iFile,_fField, true);
-	if(_rangefile){
-		if(!_rFile.noFldName()){
-			// key項目名の出力
-		  int size=_kField.size();
-  		if(size>0){
-				for(int i=0; i<size; i++){
-					kgstr_t oName=_kField.name(i); // second項目名がない時
-					_rFile.writeStr( oName.c_str(), false);
-				}
-  		}
-			// key項目以外の項目名は以下の通り固定項目名
-			_rFile.writeStr("fieldName",false);
-			_rFile.writeStr("bucketNo" ,false);
-			_rFile.writeStr("rangeFrom",false);
-			_rFile.writeStr("rangeTo"  );
-			_rFile.writeEolNC();
-		}
-	}
-
-	while(_iFile.blkset()!=EOF){
-		Cube cube(_fField.size());
-		// 指定された値ベクトルとその出現回数のCubeを作成
-		while(_iFile.blkread() != EOF){
-			vector<double> valtmp(_fField.size());
-			bool nullFlg=false;
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0'){ // null値判定
-					if(_assertNullIN) { _existNullIN  = true;}
-					nullFlg=true;
-					break;
-				}
-				valtmp[i]=atof(_iFile.getBlkVal(_fField.num(i)));
-			}
-			if(!nullFlg) cube.addCell(valtmp);
-		}
-		// データが一件もなかった場合はnull出力
-		if(cube.cntCell()==0){ 
-			_iFile.seekBlkTop();
-			while(_iFile.blkread() != EOF){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
-					_oFile.writeStr("", false);
-				}
-				_oFile.writeStr("", true);
-			}	
-			if(_assertNullOUT){ _existNullOUT = true;}
-		}else{
-			
-			// 指定のバケット分割数が値の種類数より少ない時は調整する
-			vector<int> adjbktSize =  cube.adjustBktSize(_bktSize);
-
-			// スライスの初期化(領域確保)
-			cube.initSlice(adjbktSize);
-
-			// バケット(結果)の初期化(領域確保)
-			Bucket bucket(adjbktSize);
-
-			// bucketのカットポイントを計算
-			bucket=calCutPoint( cube, adjbktSize, _multiStart );
-
-			// 範囲ファイルの出力
-			if(_rangefile){
-				for(int h=0; h<bucket.dimSize(); h++){
-					for(int j=0; j<bucket.bktSize(h); j++){
-						for(unsigned int k=0; k<_kField.size(); k++){
-							_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-						}
-						_rFile.writeStr(_fField.name(h).c_str(),false);
-						if(_reverse){ _rFile.writeInt(bucket.bktSize(h)-j,false); }
-						else        { _rFile.writeInt(j+1                ,false); }
-
-						if(j==0){ // 最初のバケットのlowerは出力しない
-							_rFile.writeStr("",false);
-						}else{
-							_rFile.writeDbl(bucket.lower(h,j),false);
-						}
-
-						if(j==bucket.bktSize(h)-1){ // 最後のバケットのupperは出力しない
-							_rFile.writeStr("",true);
-						}else{
-							_rFile.writeDbl(bucket.upper(h,j),true);
-						}
-					}
-				}
-			}
-			//	出力処理
-			_iFile.seekBlkTop();
-			while(_iFile.blkread() != EOF){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				// 各次元に一つでもnullがあるかどうかチェック
-				// (一つでもnullならばnull出力するため)
-				bool nullFlg=false;
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					char* str = _iFile.getBlkVal(_fField.num(i));
-					if(*str=='\0'){
-						if(_assertNullIN) { _existNullIN  = true;}
-						nullFlg=true;
-						break;
-					}
-				}
-				// null出力の場合
-				if(nullFlg){
-					for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
-						_oFile.writeStr("", false);
-					}
-						_oFile.writeStr("", true);
-					if(_assertNullOUT){ _existNullOUT = true;}
-					continue;
-				}
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					// 最終項目かどうかを判定(改行出力のため)
-					bool eol=false;
-					if(i==_fField.size()-1) eol=true;
-
-					// 次元iの対象となる値(文字列として)
-					char* str = _iFile.getBlkVal(_fField.num(i));
-
-					// 次元iの値atof(str)が属するバケット番号を検索
-					int bktNo=bucket.getNo(i, atof(str));
-
-					// ##### バケット番号で出力
-					if(_out_type==0){
-						if(_reverse) { _oFile.writeInt(bucket.bktSize(i)-bktNo,eol);}
-						else         { _oFile.writeInt(bktNo+1                ,eol);}
-					// ##### 範囲で出力
-					}else if(_out_type==1){
-						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
-							_oFile.writeDbl( bucket.lower(i,bktNo) );
-						}
-						_oFile.writeStr( "_" );
-						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
-							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
-						}else{
-							_oFile.writeStr("",eol);
-						}
-					// ##### バケット番号+範囲で出力
-					}else{
-						if(_reverse) _oFile.writeInt(bucket.bktSize(i)-bktNo);
-						else         _oFile.writeInt(bktNo+1                );
-						_oFile.writeStr( ":" );
-						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
-							_oFile.writeDbl( bucket.lower(i,bktNo) );
-						}
-						_oFile.writeStr( "_" );
-						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
-							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
-						}else{
-							_oFile.writeStr("",eol);
-						}
-					}
-				}
-			}
-		}	
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	_rFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgMbucket::run(int i_p,int o_p) try 
+int kgMbucket::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力&範囲ファイルの項目名の出力
-	// キー項目,fieldName,bucketNo,rangeFrom,rangeTo
-	// キー項目(なければ出	なし),対象項目名,バケット番号,開始範囲,終了範囲
-  _oFile.writeFldName(_iFile,_fField, true);
-	if(_rangefile){
-		if(!_rFile.noFldName()){
-			// key項目名の出力
-		  int size=_kField.size();
-  		if(size>0){
-				for(int i=0; i<size; i++){
-					kgstr_t oName=_kField.name(i); // second項目名がない時
-					_rFile.writeStr( oName.c_str(), false);
-				}
-  		}
-			// key項目以外の項目名は以下の通り固定項目名
-			_rFile.writeStr("fieldName",false);
-			_rFile.writeStr("bucketNo" ,false);
-			_rFile.writeStr("rangeFrom",false);
-			_rFile.writeStr("rangeTo"  );
-			_rFile.writeEolNC();
-		}
-	}
-
-	while(_iFile.blkset()!=EOF){
-		Cube cube(_fField.size());
-		// 指定された値ベクトルとその出現回数のCubeを作成
-		while(_iFile.blkread() != EOF){
-			vector<double> valtmp(_fField.size());
-			bool nullFlg=false;
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0'){ // null値判定
-					if(_assertNullIN) { _existNullIN  = true;}
-					nullFlg=true;
-					break;
-				}
-				valtmp[i]=atof(_iFile.getBlkVal(_fField.num(i)));
-			}
-			if(!nullFlg) cube.addCell(valtmp);
-		}
-		// データが一件もなかった場合はnull出力
-		if(cube.cntCell()==0){ 
-			_iFile.seekBlkTop();
-			while(_iFile.blkread() != EOF){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
-					_oFile.writeStr("", false);
-				}
-				_oFile.writeStr("", true);
-			}	
-			if(_assertNullOUT){ _existNullOUT = true;}
-		}else{
-			
-			// 指定のバケット分割数が値の種類数より少ない時は調整する
-			vector<int> adjbktSize =  cube.adjustBktSize(_bktSize);
-
-			// スライスの初期化(領域確保)
-			cube.initSlice(adjbktSize);
-
-			// バケット(結果)の初期化(領域確保)
-			Bucket bucket(adjbktSize);
-
-			// bucketのカットポイントを計算
-			bucket=calCutPoint( cube, adjbktSize, _multiStart );
-
-			// 範囲ファイルの出力
-			if(_rangefile){
-				for(int h=0; h<bucket.dimSize(); h++){
-					for(int j=0; j<bucket.bktSize(h); j++){
-						for(unsigned int k=0; k<_kField.size(); k++){
-							_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-						}
-						_rFile.writeStr(_fField.name(h).c_str(),false);
-						if(_reverse){ _rFile.writeInt(bucket.bktSize(h)-j,false); }
-						else        { _rFile.writeInt(j+1                ,false); }
-
-						if(j==0){ // 最初のバケットのlowerは出力しない
-							_rFile.writeStr("",false);
-						}else{
-							_rFile.writeDbl(bucket.lower(h,j),false);
-						}
-
-						if(j==bucket.bktSize(h)-1){ // 最後のバケットのupperは出力しない
-							_rFile.writeStr("",true);
-						}else{
-							_rFile.writeDbl(bucket.upper(h,j),true);
-						}
-					}
-				}
-			}
-			//	出力処理
-			_iFile.seekBlkTop();
-			while(_iFile.blkread() != EOF){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				// 各次元に一つでもnullがあるかどうかチェック
-				// (一つでもnullならばnull出力するため)
-				bool nullFlg=false;
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					char* str = _iFile.getBlkVal(_fField.num(i));
-					if(*str=='\0'){
-						if(_assertNullIN) { _existNullIN  = true;}
-						nullFlg=true;
-						break;
-					}
-				}
-				// null出力の場合
-				if(nullFlg){
-					for(vector<kgstr_t>::size_type i=0; i<_fField.size()-1; i++){
-						_oFile.writeStr("", false);
-					}
-						_oFile.writeStr("", true);
-					if(_assertNullOUT){ _existNullOUT = true;}
-					continue;
-				}
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					// 最終項目かどうかを判定(改行出力のため)
-					bool eol=false;
-					if(i==_fField.size()-1) eol=true;
-
-					// 次元iの対象となる値(文字列として)
-					char* str = _iFile.getBlkVal(_fField.num(i));
-
-					// 次元iの値atof(str)が属するバケット番号を検索
-					int bktNo=bucket.getNo(i, atof(str));
-
-					// ##### バケット番号で出力
-					if(_out_type==0){
-						if(_reverse) { _oFile.writeInt(bucket.bktSize(i)-bktNo,eol);}
-						else         { _oFile.writeInt(bktNo+1                ,eol);}
-					// ##### 範囲で出力
-					}else if(_out_type==1){
-						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
-							_oFile.writeDbl( bucket.lower(i,bktNo) );
-						}
-						_oFile.writeStr( "_" );
-						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
-							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
-						}else{
-							_oFile.writeStr("",eol);
-						}
-					// ##### バケット番号+範囲で出力
-					}else{
-						if(_reverse) _oFile.writeInt(bucket.bktSize(i)-bktNo);
-						else         _oFile.writeInt(bktNo+1                );
-						_oFile.writeStr( ":" );
-						if(bktNo!=0){ // 最初のバケットのlowerは出力しない
-							_oFile.writeDbl( bucket.lower(i,bktNo) );
-						}
-						_oFile.writeStr( "_" );
-						if(bktNo!=bucket.bktSize(i)-1){ // 最後のバケットのupperは出力しない
-							_oFile.writeDbl( bucket.upper(i,bktNo), eol );
-						}else{
-							_oFile.writeStr("",eol);
-						}
-					}
-				}
-			}
-		}	
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	_rFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+

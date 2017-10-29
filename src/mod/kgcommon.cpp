@@ -48,13 +48,53 @@ kgCommon::kgCommon(void)
 	#endif
 
 }
+
+// -----------------------------------------------------------------------------
+// パラメータセット
+// -----------------------------------------------------------------------------
+void kgCommon::setArgsMain(void)
+{
+	_iFile.read_header();
+	_mFile.read_header();
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
+
+	// K= 項目引数のセット
+	// K=の指定がなければk=の値をセットする
+	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
+	if(vs_K.empty()){ vs_K =vs_k;}
+
+	// k=とK=の数があっている化チェック
+	if(vs_K.size()!=vs_k.size()){
+		ostringstream ss;
+		ss << "not match keyfield size k:" << _kField.size() << " K:" << _KField.size() ;
+		throw kgError(ss.str());
+	}
+	// -r 条件反転
+	_reverse = _args.toBool("-r");
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+
+	vector<kgCSVfld*> csv_p;  
+	vector< vector<kgstr_t> > fld_ary;  
+	csv_p.push_back(&_iFile);
+	csv_p.push_back(&_mFile);
+	fld_ary.push_back(vs_k);
+	fld_ary.push_back(vs_K);
+	if ( !seqflg ) { sortingRun(csv_p,fld_ary);}
+
+	_kField.set(vs_k, &_iFile, _fldByNum);
+	_KField.set(vs_K, &_mFile, _fldByNum);	
+	
+}
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgCommon::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,k=,K=,u=,-r,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
@@ -71,125 +111,63 @@ void kgCommon::setArgs(void)
 		_elsefile=true;
 		_uFile.open(ufile,_env,_nfn_o);
 	}		
-	_iFile.read_header();
-	_mFile.read_header();
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
-
-	// K= 項目引数のセット
-	// K=の指定がなければk=の値をセットする
-	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
-	if(vs_K.empty()){ vs_K =vs_k;}
-
-	// k=とK=の数があっている化チェック
-	if(vs_K.size()!=vs_k.size()){
-		ostringstream ss;
-		ss << "not match keyfield size k:" << _kField.size() << " K:" << _KField.size() ;
-		throw kgError(ss.str());
-	}
-	// -r 条件反転
-	_reverse = _args.toBool("-r");
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	vector<kgCSVfld*> csv_p;  
-	vector< vector<kgstr_t> > fld_ary;  
-	csv_p.push_back(&_iFile);
-	csv_p.push_back(&_mFile);
-	fld_ary.push_back(vs_k);
-	fld_ary.push_back(vs_K);
-	if ( !seqflg ) { sortingRun(csv_p,fld_ary);}
-
-	_kField.set(vs_k, &_iFile, _fldByNum);
-	_KField.set(vs_K, &_mFile, _fldByNum);	
+	setArgsMain();
 	
 }
-// -----------------------------------------------------------------------------
-// 入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kgCommon::setArgs(int i_p,int o_p,int m_p)
+void kgCommon::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,k=,K=,u=,-r,q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>2 || onum>2){ throw kgError("no match IO");}
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
 	kgstr_t mfile = _args.toString("m=",false);
 	kgstr_t ufile = _args.toString("u=",false);
+	kgstr_t ofile = _args.toString("o=",false);
 
-	if((ifile.empty()&&i_p<=0) && ( mfile.empty()&&m_p<=0)){
+	int i_p_t = -1;
+	int m_p_t = -1;
+	int o_p_t = -1;
+	int u_p_t = -1;
+	if(inum>0){ i_p_t = *i_p;     }
+	if(inum>1){ m_p_t = *(i_p+1); }
+	if(onum>0){ o_p_t = *o_p;     }
+	if(onum>1){ u_p_t = *(o_p+1); }
+
+
+	if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
 		throw kgError("Either i= or m= must be specified.");
 	}
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
+	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+	else       { _iFile.open(ifile, _env,_nfn_i);}
+	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+	else       { _mFile.open(mfile, _env,_nfn_i);}
+
+	if(o_p_t>0){ _oFile.popen(o_p_t, _env,_nfn_o);}
+	else       { _oFile.open(ofile, _env,_nfn_o);}
+
+	if(u_p_t>0){ 
+		_elsefile=true;
+		_oFile.popen(u_p_t, _env,_nfn_o);
+	}
+	else if(ufile.empty()){
+		_elsefile=false; 
 	}
 	else{
-		// 入出力ファイルオープン
-		_iFile.open(ifile, _env,_nfn_i);
-	}
-	if(m_p>0){
-		_mFile.popen(m_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_mFile.open(mfile, _env,_nfn_i);
-	}
-
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-	  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-
-
-	if(ufile.empty()){ _elsefile=false; }
-	else {
 		_elsefile=true;
 		_uFile.open(ufile,_env,_nfn_o);
 	}		
-	_iFile.read_header();
-	_mFile.read_header();
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs_k = _args.toStringVector("k=",true);
-
-	// K= 項目引数のセット
-	// K=の指定がなければk=の値をセットする
-	vector<kgstr_t> vs_K = _args.toStringVector("K=",false);
-	if(vs_K.empty()){ vs_K =vs_k;}
-
-	// k=とK=の数があっている化チェック
-	if(vs_K.size()!=vs_k.size()){
-		ostringstream ss;
-		ss << "not match keyfield size k:" << _kField.size() << " K:" << _KField.size() ;
-		throw kgError(ss.str());
-	}
-	// -r 条件反転
-	_reverse = _args.toBool("-r");
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	vector<kgCSVfld*> csv_p;  
-	vector< vector<kgstr_t> > fld_ary;  
-	csv_p.push_back(&_iFile);
-	csv_p.push_back(&_mFile);
-	fld_ary.push_back(vs_k);
-	fld_ary.push_back(vs_K);
-	if ( !seqflg ) { sortingRun(csv_p,fld_ary);}
-
-	_kField.set(vs_k, &_iFile, _fldByNum);
-	_KField.set(vs_K, &_mFile, _fldByNum);	
+	setArgsMain();
 	
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgCommon::run(void) try 
+int kgCommon::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();	
 	// 項目名出力
 	_oFile.writeFldName(_iFile);
 	if(_elsefile){ _uFile.writeFldName(_iFile); }
@@ -278,100 +256,18 @@ int kgCommon::run(void) try
 	errorEnd(err);
 	return 1;
 }
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgCommon::run(int i_p,int o_p,int m_p) try 
+int kgCommon::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p, o_p,m_p);	
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-	if(_elsefile){ _uFile.writeFldName(_iFile); }
+	setArgs();
+	return runMain();
+}
 
-	// keyサイズとデータセット
-	int ksize = _kField.size();
-	vector<int> kField =_kField.getNum();
-	vector<int> KField =_KField.getNum();
-
-	//比較結果用フラグ
-	int cmpflg=0;
-	bool mstEnd=false;
-	bool begin=true;
-
-	// データ出力(入力ファイルあるいは参照ファイルどちらか最後まで読み込むまで)
-	while(true){
-		// traの読み込み
-		if(cmpflg<=0){ if(_iFile.read() == EOF) break; }
-		// mstの読み込み
-		if(cmpflg>0 || begin){
-			if(_mFile.read() == EOF){ mstEnd=true; }
-			begin=false;
-		}
-		// traとmstのキーの比較 (tra - mstの演算結果)
-		if(mstEnd){
-			cmpflg=-1;
-		}else{
-			cmpflg=0;
-			for(int i=0;i<ksize;i++){
-				if(_assertNullKEY) { 
-					if( *(_iFile.getVal(kField[i]))=='\0' || *(_mFile.getVal(KField[i]))=='\0'){
-						_existNullKEY = true;
-					}
-				}
-				cmpflg = strcmp( _iFile.getVal(kField[i]), _mFile.getVal(KField[i]) );
-				if(cmpflg!=0) break;
-				//両方共NULLならアンマッチとする
-				if( *(_iFile.getVal(kField[i]))=='\0' && *(_mFile.getVal(KField[i]))=='\0'){
-					cmpflg=1;
-					break;
-				}
-			}
-		}
-		// 一致
-		if( (cmpflg==0 && !_reverse) || (cmpflg<0 && _reverse) ){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getFld());
-		}
-		if(_elsefile){
-			if( (cmpflg==0 && _reverse) || (cmpflg<0 && !_reverse) ){
-				_uFile.writeFld(_iFile.fldSize(),_iFile.getFld());
-			}
-		}
-	}
-	//ソートスレッドを終了させて、終了確認
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
-	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	if(_elsefile){ _uFile.close(); }
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgCommon::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

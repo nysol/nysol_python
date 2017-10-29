@@ -53,26 +53,8 @@ kgChgnum::kgChgnum(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgChgnum::setArgs(int i_p,int o_p)
+void kgChgnum::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("v=,f=,R=,O=,-F,-A,-r,i=,o=",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -121,58 +103,34 @@ void kgChgnum::setArgs(int i_p,int o_p)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
+void kgChgnum::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
 void kgChgnum::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("v=,f=,R=,O=,-F,-A,-r,i=,o=",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
-	_iFile.read_header();
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile, _fldByNum);
+	setArgsMain();
 
-	// -F,-A,-rフラグ
-	_F_flg	= _args.toBool("-F");
-	_add		= _args.toBool("-A");
-	_range	= _args.toBool("-r");
-
-	//O=の指定
-	_OField = _args.toString("O=",false);
-	if(_OField.empty())	{ _O_flg=false;}
-	else                { _O_flg=true; }
-	if(_F_flg && _O_flg){ throw kgError("O= and -F cannot be specified at the same time."); } 
-
-
-	// R=,v= 項目引数のセット
-	vector<kgstr_t> vs =_args.toStringVector("R=",true);
-	for(vector<kgstr_t>::size_type i=0; i<vs.size();i++){
-		if(vs[i]=="MIN")			{ _RField.push_back(-DBL_MAX); }		
-		else if(vs[i]=="MAX")	{ _RField.push_back(DBL_MAX);  }
-		else									{ _RField.push_back(atof(vs[i].c_str()));}
-	}
-
-	//v=の指定がなければダミーデータをセットするfrom_toの文字列をセットする
-	_vField = _args.toStringVector("v=",false);
-	if(_vField.empty()){
-		kgstr_t f,t;
-		for(vector<kgstr_t>::size_type i=0; i<vs.size()-1;i++){
-			if(vs[i]=="MIN")		{ f = "";      }
-			else 								{ f = vs[i];   }
-			if(vs[i+1]=="MAX")	{ t = "";      }
-			else 								{ t = vs[i+1]; }
-			_vField.push_back(f+"_"+t);
-		}
-	}
-	// v=とR=の数チェック(v=の数はR=の数-1,R=の数は2以上)
-	if(_RField.size()>=2 && _vField.size()+1!=_RField.size()){
-		ostringstream ss;
-		ss << "not match r= v= size " << _RField.size() << " " << _vField.size() ;
-		throw kgError(ss.str());
-	}
 }
 // -----------------------------------------------------------------------------
 // 範囲チェック
@@ -198,154 +156,93 @@ int kgChgnum::rangecheck(char *str)
 	return match_no;
 }
 
-int kgChgnum::run(void) try 
+
+int kgChgnum::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 項目名出力
+	if(_add){ _oFile.writeFldName(_iFile,_fField,true);}
+	else		{ _oFile.writeFldName(_fField, true);	}
+
+	// 領域の確保 f=項目数分
+	kgAutoPtr2<char*> ap2;
+	try {
+		ap2.set( new char*[_fField.size()] ); 
+	} catch(...) {
+		throw kgError("memory allocation error ");
+	}
+	char** constr = ap2.get();
+
+	// データ出力
+	while( EOF != _iFile.read() ){
+		for(size_t i=0;i<_fField.size();i++){
+			char *strtmp = _iFile.getVal(_fField.num(i));
+			if(*strtmp=='\0'){ 
+				*(constr+i)=const_cast<char*>(""); 
+				if(_assertNullIN) { _existNullIN  = true;}
+				if(_assertNullOUT){ _existNullOUT = true;}
+			}
+			else{
+				int range_rtn = rangecheck(strtmp);
+				if(range_rtn==-1){
+					//範囲外  O=:指定文字列,F:項目値,デフォルト:NULL
+							 if(_O_flg)	{ *(constr+i)=const_cast<char*>(_OField.c_str());}
+					else if(_F_flg)	{ *(constr+i)=strtmp;}
+					else						{ 
+						*(constr+i)=const_cast<char*>("");
+						if(_assertNullOUT){ _existNullOUT = true;}
+					}
+				}	
+				else{
+					*(constr+i)= const_cast<char*>( _vField.at(range_rtn).c_str() );
+				}
+			}
+		}
+		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),constr,_fField.size());}
+		else		 { _oFile.writeFld(_iFile.getFld(),_fField.getFlg_p(),constr);}
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgChgnum::run(void) 
+{
 	setArgs();
-	// 項目名出力
-	if(_add){ _oFile.writeFldName(_iFile,_fField,true);}
-	else		{ _oFile.writeFldName(_fField, true);	}
-
-	// 領域の確保 f=項目数分
-	kgAutoPtr2<char*> ap2;
-	try {
-		ap2.set( new char*[_fField.size()] ); 
-	} catch(...) {
-		throw kgError("memory allocation error ");
-	}
-	char** constr = ap2.get();
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		for(size_t i=0;i<_fField.size();i++){
-			char *strtmp = _iFile.getVal(_fField.num(i));
-			if(*strtmp=='\0'){ 
-				*(constr+i)=const_cast<char*>(""); 
-				if(_assertNullIN) { _existNullIN  = true;}
-				if(_assertNullOUT){ _existNullOUT = true;}
-			}
-			else{
-				int range_rtn = rangecheck(strtmp);
-				if(range_rtn==-1){
-					//範囲外  O=:指定文字列,F:項目値,デフォルト:NULL
-							 if(_O_flg)	{ *(constr+i)=const_cast<char*>(_OField.c_str());}
-					else if(_F_flg)	{ *(constr+i)=strtmp;}
-					else						{ 
-						*(constr+i)=const_cast<char*>("");
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-				}	
-				else{
-					*(constr+i)= const_cast<char*>( _vField.at(range_rtn).c_str() );
-				}
-			}
-		}
-		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),constr,_fField.size());}
-		else		 { _oFile.writeFld(_iFile.getFld(),_fField.getFlg_p(),constr);}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-int kgChgnum::run(int i_p,int o_p) try 
+int kgChgnum::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-	// 項目名出力
-	if(_add){ _oFile.writeFldName(_iFile,_fField,true);}
-	else		{ _oFile.writeFldName(_fField, true);	}
-
-	// 領域の確保 f=項目数分
-	kgAutoPtr2<char*> ap2;
-	try {
-		ap2.set( new char*[_fField.size()] ); 
-	} catch(...) {
-		throw kgError("memory allocation error ");
-	}
-	char** constr = ap2.get();
-
-	// データ出力
-	while( EOF != _iFile.read() ){
-		for(size_t i=0;i<_fField.size();i++){
-			char *strtmp = _iFile.getVal(_fField.num(i));
-			if(*strtmp=='\0'){ 
-				*(constr+i)=const_cast<char*>(""); 
-				if(_assertNullIN) { _existNullIN  = true;}
-				if(_assertNullOUT){ _existNullOUT = true;}
-			}
-			else{
-				int range_rtn = rangecheck(strtmp);
-				if(range_rtn==-1){
-					//範囲外  O=:指定文字列,F:項目値,デフォルト:NULL
-							 if(_O_flg)	{ *(constr+i)=const_cast<char*>(_OField.c_str());}
-					else if(_F_flg)	{ *(constr+i)=strtmp;}
-					else						{ 
-						*(constr+i)=const_cast<char*>("");
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-				}	
-				else{
-					*(constr+i)= const_cast<char*>( _vField.at(range_rtn).c_str() );
-				}
-			}
-		}
-		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),constr,_fField.size());}
-		else		 { _oFile.writeFld(_iFile.getFld(),_fField.getFlg_p(),constr);}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

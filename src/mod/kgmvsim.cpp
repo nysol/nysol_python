@@ -827,366 +827,220 @@ kgMvsim::kgMvsim(void){
 
 }
 // -----------------------------------------------------------------------------
+// パラメータセット
+// -----------------------------------------------------------------------------
+void kgMvsim::setArgsMain(void){
+
+  _oFile.setPrecision(_precision);
+	_iFile.read_header();
+
+	// f= 項目引数のセット
+	vector<kgstr_t> vs_f = _args.toStringVector("f=",true);
+	if(vs_f.size()!=2){
+		throw kgError("parameter f= takes two fields");	
+	}
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+
+	// t= の値をセット
+	kgstr_t strT=_args.toString("t=",true);
+	_term = aToSizeT(strT.c_str());
+
+	kgstr_t strS=_args.toString("skip=",false);
+	if(strS.empty()){
+		_skip = _term-1;
+	}else{
+		_skip = atoi(strS.c_str());
+		if(_skip>=_term){ _skip = _term -1; }
+	}
+	
+	// a= 項目名
+	_addstr = _args.toString("a=",false);
+	if(_addstr.empty()&& _nfn_o==false){
+		throw kgError("parameter a= is mandatory");
+	}
+	
+	// c= 計算方法のセット
+	_c_type = _args.toString("c=", true);
+			 if(_c_type=="covar"    ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Covar     >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="ucovar"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Ucovar    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="pearson"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Pearson   >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="spearman" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Spearman  >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="kendall"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_kendall   >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="euclid"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Euclid    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="cosine"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Cosine    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="cityblock"){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_CityBlock >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="hamming"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Hamming   >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="chi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Chi       >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="phi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Phi       >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="jaccard"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Jaccard   >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="support"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Support   >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="lift"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Lift      >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="confMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMax  >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="confMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMin  >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="yuleQ"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleQ    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="yuleY"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleY    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="kappa"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Kappa    >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="oddsRatio" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_OddsRatio>(),lambda::_1,lambda::_2); }
+	else if(_c_type=="convMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMax  >(),lambda::_1,lambda::_2); }
+	else if(_c_type=="convMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMin  >(),lambda::_1,lambda::_2); }
+	else {
+		ostringstream ss;
+		ss << "unknown keyword: " << _c_type << ": c=covar|ucovar|pearson|spearman|kendall|euclid|cosine|cityblock|hamming|chi|phi|jaccard|support|lift|confMax|confMin|yuleQ|yuleY|kappa|oddsRatio|convMax|convMin" << _c_type;
+		throw kgError(ss.str());	
+	}
+	// -n オプションのセット
+	_nullout = _args.toBool("-n");
+
+	bool seqflg = _args.toBool("-q");
+	vector<kgstr_t> vss = _args.toStringVector("s=",false);
+	if(_nfn_i) { seqflg = true; }
+
+	if(!seqflg&&vss.empty()){
+		throw kgError("parameter s= is mandatory without -q,-nfn");
+	}
+	if(!seqflg && (!vs.empty()||!vss.empty()) ){ 
+		vector<kgstr_t> vsk	= vs;
+		vsk.insert(vsk.end(),vss.begin(),vss.end());
+		sortingRun(&_iFile,vsk);
+	}
+
+	_kField.set(vs,  &_iFile,_fldByNum);
+	_fField.set(vs_f, &_iFile,_fldByNum);
+
+}
+
+// -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgMvsim::setArgs(void){
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,c=,skip=,t=,a=,-n,s=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
 
-	// f= 項目引数のセット
-	vector<kgstr_t> vs_f = _args.toStringVector("f=",true);
-	if(vs_f.size()!=2){
-		throw kgError("parameter f= takes two fields");	
-	}
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// t= の値をセット
-	kgstr_t strT=_args.toString("t=",true);
-	_term = aToSizeT(strT.c_str());
-
-	kgstr_t strS=_args.toString("skip=",false);
-	if(strS.empty()){
-		_skip = _term-1;
-	}else{
-		_skip = atoi(strS.c_str());
-		if(_skip>=_term){ _skip = _term -1; }
-	}
-	
-	// a= 項目名
-	_addstr = _args.toString("a=",false);
-	if(_addstr.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-	
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-			 if(_c_type=="covar"    ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Covar     >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="ucovar"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Ucovar    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="pearson"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Pearson   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="spearman" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Spearman  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="kendall"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_kendall   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="euclid"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Euclid    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="cosine"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Cosine    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="cityblock"){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_CityBlock >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="hamming"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Hamming   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="chi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Chi       >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="phi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Phi       >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="jaccard"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Jaccard   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="support"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Support   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="lift"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Lift      >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="confMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMax  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="confMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMin  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="yuleQ"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleQ    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="yuleY"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleY    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="kappa"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Kappa    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="oddsRatio" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_OddsRatio>(),lambda::_1,lambda::_2); }
-	else if(_c_type=="convMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMax  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="convMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMin  >(),lambda::_1,lambda::_2); }
-	else {
-		ostringstream ss;
-		ss << "unknown keyword: " << _c_type << ": c=covar|ucovar|pearson|spearman|kendall|euclid|cosine|cityblock|hamming|chi|phi|jaccard|support|lift|confMax|confMin|yuleQ|yuleY|kappa|oddsRatio|convMax|convMin" << _c_type;
-		throw kgError(ss.str());	
-	}
-	// -n オプションのセット
-	_nullout = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg&&vss.empty()){
-		throw kgError("parameter s= is mandatory without -q,-nfn");
-	}
-	if(!seqflg && (!vs.empty()||!vss.empty()) ){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
-
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgMvsim::setArgs(int i_p,int o_p){
+void kgMvsim::setArgs(int inum,int *i_p,int onum ,int *o_p){
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,c=,skip=,t=,a=,-n,s=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// f= 項目引数のセット
-	vector<kgstr_t> vs_f = _args.toStringVector("f=",true);
-	if(vs_f.size()!=2){
-		throw kgError("parameter f= takes two fields");	
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// t= の値をセット
-	kgstr_t strT=_args.toString("t=",true);
-	_term = aToSizeT(strT.c_str());
-
-	kgstr_t strS=_args.toString("skip=",false);
-	if(strS.empty()){
-		_skip = _term-1;
-	}else{
-		_skip = atoi(strS.c_str());
-		if(_skip>=_term){ _skip = _term -1; }
-	}
-	
-	// a= 項目名
-	_addstr = _args.toString("a=",false);
-	if(_addstr.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
-	
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-			 if(_c_type=="covar"    ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Covar     >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="ucovar"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Ucovar    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="pearson"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Pearson   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="spearman" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Spearman  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="kendall"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_kendall   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="euclid"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Euclid    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="cosine"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Cosine    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="cityblock"){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_CityBlock >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="hamming"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Hamming   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="chi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Chi       >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="phi"      ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Phi       >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="jaccard"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Jaccard   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="support"  ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Support   >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="lift"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Lift      >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="confMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMax  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="confMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConfMin  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="yuleQ"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleQ    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="yuleY"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_YuleY    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="kappa"     ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_Kappa    >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="oddsRatio" ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_OddsRatio>(),lambda::_1,lambda::_2); }
-	else if(_c_type=="convMax"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMax  >(),lambda::_1,lambda::_2); }
-	else if(_c_type=="convMin"   ){_function = lambda::bind(lambda::new_ptr<kgmvsim_::kgMvSimFunc_ConvMin  >(),lambda::_1,lambda::_2); }
-	else {
-		ostringstream ss;
-		ss << "unknown keyword: " << _c_type << ": c=covar|ucovar|pearson|spearman|kendall|euclid|cosine|cityblock|hamming|chi|phi|jaccard|support|lift|confMax|confMin|yuleQ|yuleY|kappa|oddsRatio|convMax|convMin" << _c_type;
-		throw kgError(ss.str());	
-	}
-	// -n オプションのセット
-	_nullout = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg&&vss.empty()){
-		throw kgError("parameter s= is mandatory without -q,-nfn");
-	}
-	if(!seqflg && (!vs.empty()||!vss.empty()) ){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgMvsim::run(void) try {
+int kgMvsim::runMain(void) try {
 
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+	
+	// 項目名の出力
+	_oFile.writeFldName(_iFile,_addstr);
+
+	size_t fldSize=_fField.size();
+
+	// 結果格納変数の領域確保
+	kgVal  result('N');
+	vector<char*> inpchar(fldSize ,0);
+	
+	// 計算クラスセット
+	kgmvsim_::kgMvSimFunc* kmvb = _function(_skip,_term);
+
+	while(_iFile.blkset()!=EOF){
+		int nullchkcnt =0;
+		while(  EOF != _iFile.blkread() ){
+			bool nuldata=false;
+			for(size_t i=0; i<fldSize; i++){
+				inpchar[i] =_iFile.getBlkVal(_fField.num(i));
+				if(*inpchar[i]=='\0'){ 
+					nuldata = true;
+					if(_assertNullIN) { _existNullIN  = true;}
+				}
+			}
+			// null値の処理
+			// 通常:skip -n有り:NULLデータを含むブロックはNULL
+			if( nuldata ){
+				if(_nullout){ nullchkcnt=_term;}
+				else				{ continue;}
+			}
+			kmvb->calc(result,inpchar);
+			if(kmvb->stocksize()>_skip){
+				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
+				if(nullchkcnt==0){ 
+					if(_assertNullOUT && result.null() ){ _existNullOUT = true; }
+					_oFile.writeVal(result,true);
+				}
+				else{
+					if(_assertNullOUT){ _existNullOUT = true; }
+					_oFile.writeEol();
+				}
+			}
+			if(nullchkcnt>0){ nullchkcnt--;}
+		}
+		kmvb->clear();
+	}
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+	// 終了処理(メッセージ出力,thread pipe終了通知)
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const std::exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgMvsim::run(void) 
+{
 	setArgs();
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-	_oFile.writeFldName(_iFile,_addstr);
-
-	size_t fldSize=_fField.size();
-
-	// 結果格納変数の領域確保
-	kgVal  result('N');
-	vector<char*> inpchar(fldSize ,0);
-	
-	// 計算クラスセット
-	kgmvsim_::kgMvSimFunc* kmvb = _function(_skip,_term);
-
-	while(_iFile.blkset()!=EOF){
-		int nullchkcnt =0;
-		while(  EOF != _iFile.blkread() ){
-			bool nuldata=false;
-			for(size_t i=0; i<fldSize; i++){
-				inpchar[i] =_iFile.getBlkVal(_fField.num(i));
-				if(*inpchar[i]=='\0'){ 
-					nuldata = true;
-					if(_assertNullIN) { _existNullIN  = true;}
-				}
-			}
-			// null値の処理
-			// 通常:skip -n有り:NULLデータを含むブロックはNULL
-			if( nuldata ){
-				if(_nullout){ nullchkcnt=_term;}
-				else				{ continue;}
-			}
-			kmvb->calc(result,inpchar);
-			if(kmvb->stocksize()>_skip){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				if(nullchkcnt==0){ 
-					if(_assertNullOUT && result.null() ){ _existNullOUT = true; }
-					_oFile.writeVal(result,true);
-				}
-				else{
-					if(_assertNullOUT){ _existNullOUT = true; }
-					_oFile.writeEol();
-				}
-			}
-			if(nullchkcnt>0){ nullchkcnt--;}
-		}
-		kmvb->clear();
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgMvsim::run(int i_p,int o_p) try {
-
-	setArgs(i_p,o_p);
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-	_oFile.writeFldName(_iFile,_addstr);
-
-	size_t fldSize=_fField.size();
-
-	// 結果格納変数の領域確保
-	kgVal  result('N');
-	vector<char*> inpchar(fldSize ,0);
-	
-	// 計算クラスセット
-	kgmvsim_::kgMvSimFunc* kmvb = _function(_skip,_term);
-
-	while(_iFile.blkset()!=EOF){
-		int nullchkcnt =0;
-		while(  EOF != _iFile.blkread() ){
-			bool nuldata=false;
-			for(size_t i=0; i<fldSize; i++){
-				inpchar[i] =_iFile.getBlkVal(_fField.num(i));
-				if(*inpchar[i]=='\0'){ 
-					nuldata = true;
-					if(_assertNullIN) { _existNullIN  = true;}
-				}
-			}
-			// null値の処理
-			// 通常:skip -n有り:NULLデータを含むブロックはNULL
-			if( nuldata ){
-				if(_nullout){ nullchkcnt=_term;}
-				else				{ continue;}
-			}
-			kmvb->calc(result,inpchar);
-			if(kmvb->stocksize()>_skip){
-				_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-				if(nullchkcnt==0){ 
-					if(_assertNullOUT && result.null() ){ _existNullOUT = true; }
-					_oFile.writeVal(result,true);
-				}
-				else{
-					if(_assertNullOUT){ _existNullOUT = true; }
-					_oFile.writeEol();
-				}
-			}
-			if(nullchkcnt>0){ nullchkcnt--;}
-		}
-		kmvb->clear();
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgMvsim::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

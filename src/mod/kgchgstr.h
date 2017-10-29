@@ -51,8 +51,11 @@ class kgChgstr:public kgMod
 	bool     _estrflg;	//O=の指定があるとセットされる
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 public:
 	// コンストラクタ&引数セット
 	kgChgstr(void);
@@ -60,7 +63,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 	
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }

@@ -42,10 +42,12 @@ using namespace kgmod;
 
 struct argST{
 	kgMod * mobj;
-	int i_p;
-	int o_p;
-	int m_p;
-	int u_p;
+	int i_cnt;
+	int o_cnt;
+//	int m_p;
+//	int u_p;
+	int *i_p;
+	int *o_p;
 	PyObject* list;
 	
 };
@@ -53,12 +55,18 @@ struct argST{
 struct cmdCapselST{
 	kgstr_t cmdname;
 	vector<kgstr_t> paralist;
-	int iotype; // 1:i,2:o,4:m,8:u
 	kgstr_t istr;
 	PyObject* iobj;
 	kgstr_t mstr;
 	PyObject* mobj;
 
+};
+
+struct linkST{
+	kgstr_t frTP;
+	int frID;
+	kgstr_t toTP;
+	int toID;
 };
 
 
@@ -76,12 +84,16 @@ class kgshell{
 	kgMod **_modlist;
 
 	// pipe LIST
-	map<int,int> _ipipe_map;
-	map<int,int> _mpipe_map;
-	map<int,int> _opipe_map;
+	//map<int,int> _ipipe_map;
+	//map<int,int> _mpipe_map;
+	//map<int,int> _opipe_map;
+
+	typedef map<int, map<string,vector<int> > > iomap_t;
+	iomap_t _ipipe_map;
+	iomap_t _opipe_map;
 	int _lastpiped[2];
 
-	void makePipeList(vector< vector<int> >& plist,bool tp);
+	void makePipeList(vector<linkST>& plist,bool tp);
 
 
 public:
@@ -117,8 +129,9 @@ public:
 	static void *run_noargs_pthsm(void *arg);
 	static void *run_noargs_pths1(void *arg);
 	static void *run_noargs_pthsp(void *arg);
+	static void *run_func(void *arg);
 
-	int run(vector< cmdCapselST > &cmdcap,	vector< vector<int> >& plist,bool tp,PyObject* list);
+	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,bool tp,PyObject* list);
 
 	kgCSVfld* runiter(vector< cmdCapselST > &cmdcap,	vector< vector<int> >& plist,bool tp,PyObject* list);
 	int getparams(kgstr_t cmdname,PyObject* list);

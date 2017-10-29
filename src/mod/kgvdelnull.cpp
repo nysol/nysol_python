@@ -54,6 +54,32 @@ kgVdelnull::kgVdelnull(void)
 	#endif
 	
 }
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgVdelnull::setArgsMain(void)
+{
+	_iFile.read_header();
+
+	// vf= 項目引数のセット
+	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("vf=",':',2,true);
+	_vfField.set(vs, &_iFile,_fldByNum);
+
+	// delim指定
+	kgstr_t s_d = _args.toString("delim=",false);
+	if(s_d.empty()){	
+		_delim=' ';
+	}else if(s_d.size()!=1){
+		ostringstream ss;
+		ss << "delim= takes 1 byte charactor (" <<  s_d << ")";
+		throw kgError(ss.str());
+	}else{
+		_delim=*(s_d.c_str());
+	}	
+	// -A（追加）フラグセット
+	_add_flg 		= _args.toBool("-A");
+
+}
 
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
@@ -61,76 +87,35 @@ kgVdelnull::kgVdelnull(void)
 void kgVdelnull::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
 	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
-	_iFile.read_header();
-
-	// vf= 項目引数のセット
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("vf=",':',2,true);
-	_vfField.set(vs, &_iFile,_fldByNum);
-
-	// delim指定
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" <<  s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}	
-	// -A（追加）フラグセット
-	_add_flg 		= _args.toBool("-A");
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVdelnull::setArgs(int i_p,int o_p)
+void kgVdelnull::setArgs(int inum,int *i_p,int onum, int* o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,vf=,delim=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	_iFile.read_header();
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// vf= 項目引数のセット
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("vf=",':',2,true);
-	_vfField.set(vs, &_iFile,_fldByNum);
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// delim指定
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" <<  s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}	
-	// -A（追加）フラグセット
-	_add_flg 		= _args.toBool("-A");
+	setArgsMain();
 
 }
+
 void kgVdelnull::output_n(char *str,bool eol){
 
 	char buf[KG_MAX_STR_LEN];
@@ -163,10 +148,8 @@ void kgVdelnull::output_n(char *str,bool eol){
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgVdelnull::run(void) try 
+int kgVdelnull::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
 
 	//出力項目名出力 追加 or 置換
 	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
@@ -224,67 +207,19 @@ int kgVdelnull::run(void) try
 	return 1;
 }
 
+
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgVdelnull::run(int i_p,int o_p) try 
+int kgVdelnull::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-	while(EOF != _iFile.read() ){
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			char* str=_iFile.getVal(i);
-			outcnt++;
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);			
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgVdelnull::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

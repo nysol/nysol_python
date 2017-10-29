@@ -41,10 +41,13 @@ class kgCut : public kgMod {
 
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i,int o);
+	void setArgs(int inum,int *i,int onum, int* o);
 
 	// CSV項目名出力
 	void writeFldName(const vector<int>& fld ,bool reverse) throw(kgError);
+
+	int runMain(void);
+	void setArgsMain(void);	
 
 public:
 	// コンストラクタ
@@ -58,7 +61,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

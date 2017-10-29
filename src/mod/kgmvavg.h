@@ -56,7 +56,10 @@ class kgMvavg : public kgModIncludeSort
 
 
   void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 	void simpleMA(void);
 	void weightedMA(void);
@@ -73,7 +76,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

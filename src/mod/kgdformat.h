@@ -216,14 +216,10 @@ class kgTimeparser
 		}
 		return p-str;
 	}
-
-
-
+	
 	public:
 	void compile(const char * cstr);
 	kgstr_t extraction(char * cstr , bool err = true);
-
-
 
 };
 
@@ -242,8 +238,12 @@ class kgDformat : public kgMod {
 	void writeFld(char** fld, const vector<int>* flg, const vector<string>* val);
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+
 public:
 	// コンストラクタ
 	kgDformat(void);
@@ -255,7 +255,7 @@ public:
 	
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

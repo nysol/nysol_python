@@ -42,8 +42,11 @@ class kgCommon:public  kgModIncludeSort {
 	bool     _reverse; // -r
 	bool     _elsefile; // 不一致ファイルを使用するかどうか(u=の指定があればtrue)
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i,int o,int m);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 public:
 
@@ -53,7 +56,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i,int o,int m);
+	int run(int inum,int *i,int onum, int* o);
 
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }

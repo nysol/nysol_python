@@ -50,14 +50,8 @@ kgUniq::kgUniq(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgUniq::setArgs(void)
+void kgUniq::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,k=,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 	_iFile.read_header();
 
 	// k= 項目引数のセット
@@ -72,145 +66,101 @@ void kgUniq::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgUniq::setArgs(int i_p,int o_p)
+void kgUniq::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,k=,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+}
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgUniq::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
 
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgUniq::run(void) try 
+int kgUniq::runMain(void) try 
 {
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
 
-	// パラメータセット＆入出力ファイルオープン
+	// 項目名出力
+	_oFile.writeFldName(_iFile);
 
+	// データ単一化＆出力
+	while(_iFile.read()!=EOF){		
+		//keybreakしたら出力
+		if( _iFile.keybreak() ){
+			_oFile.writeFld(_iFile.fldSize(),_iFile.getOldFld());
+			if((_iFile.status() & kgCSV::End )) break;
+		}
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgUniq::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-
-	// データ単一化＆出力
-	while(_iFile.read()!=EOF){		
-		//keybreakしたら出力
-		if( _iFile.keybreak() ){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getOldFld());
-			if((_iFile.status() & kgCSV::End )) break;
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgUniq::run(int i_p,int o_p) try 
+int kgUniq::run(int inum,int *i_p,int onum, int* o_p)
 {
-
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-
-	// データ単一化＆出力
-	while(_iFile.read()!=EOF){		
-		//keybreakしたら出力
-		if( _iFile.keybreak() ){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getOldFld());
-			if((_iFile.status() & kgCSV::End )) break;
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

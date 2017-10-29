@@ -56,8 +56,11 @@ class kgVcommon:public kgMod {
 	set<string> _itmSet; 
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p,int m_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 	void output_n(char *str,bool eol);
 
@@ -72,7 +75,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p,int m_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

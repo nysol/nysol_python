@@ -28,7 +28,7 @@
 using namespace std;
 using namespace kglib;
 using namespace kgmod;
-
+/*
 static char* strGET(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_AsUTF8(data);
@@ -37,7 +37,7 @@ static char* strGET(PyObject* data){
 #endif
 
 }
-
+*/
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
@@ -150,7 +150,8 @@ int kgExcmd::run(int i_p,int o_p) try
 	}
 	else if (pid>0){//parent
 		int status = 0;
-		int ret = waitpid(pid, &status, 0);
+		//int ret = 
+		waitpid(pid, &status, 0);
 		if(i_p>0){ close(i_p);}
 		if(o_p>0){ close(o_p);}
 		successEnd();

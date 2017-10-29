@@ -52,14 +52,8 @@ kgShare::kgShare(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgShare::setArgs(void)
+void kgShare::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 	_iFile.read_header();
   _oFile.setPrecision(_precision);
 
@@ -81,210 +75,130 @@ void kgShare::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgShare::setArgs(int i_p,int o_p)
+void kgShare::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
+	setArgsMain();
+}
 
-	_iFile.read_header();
-  _oFile.setPrecision(_precision);
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgShare::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_fField.set(vvs, &_iFile, _fldByNum);
-	_kField.set(vs,  &_iFile, _fldByNum);
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgShare::run(void) try 
+int kgShare::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+  _oFile.writeFldName(_iFile,_fField, true);
+
+	// 集計用変数領域確保＆初期化
+	vector<double> sum(_fField.size() ,0);
+	vector<kgVal>  share(_fField.size() ,kgVal('N'));
+	for(vector<kgVal>::size_type i=0; i<share.size(); i++){ share[i].r(0);}
+
+	while(_iFile.blkset()!=EOF){
+		//キー単位集計
+		while(  EOF != _iFile.blkread() ){
+			for(std::size_t i=0; i<_fField.size(); i++){
+				char* str=_iFile.getBlkVal(_fField.num(i));
+				if(*str){ sum[i] += atof(str);}
+				else { 
+					if(_assertNullIN){ _existNullIN  = true;} 
+				}
+			}
+		}
+		//シェア計算
+		_iFile.seekBlkTop();
+		while(  EOF != _iFile.blkread() ){
+			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
+			for(std::size_t i=0; i<_fField.size(); i++){
+				char* str=_iFile.getBlkVal(_fField.num(i));
+				if(!*str||sum[i]==0){
+					if(_assertNullOUT){ _existNullOUT = true; }
+					if(i<_fField.size()-1) _oFile.writeDlm();
+					else                   _oFile.writeEol();			
+				}
+				else{
+					double res= atof(_iFile.getBlkVal(_fField.num(i))) /sum.at(i);
+					if(i<_fField.size()-1) _oFile.writeDbl(res,false);
+					else                   _oFile.writeDbl(res,true);			
+				}
+			}
+		}
+		//初期化
+		for(std::size_t i=0; i<_fField.size(); i++){ sum[i]=0; }
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgShare::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-
-	// 集計用変数領域確保＆初期化
-	vector<double> sum(_fField.size() ,0);
-	vector<kgVal>  share(_fField.size() ,kgVal('N'));
-	for(vector<kgVal>::size_type i=0; i<share.size(); i++){ share[i].r(0);}
-
-	while(_iFile.blkset()!=EOF){
-		//キー単位集計
-		while(  EOF != _iFile.blkread() ){
-			for(std::size_t i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str){ sum[i] += atof(str);}
-				else { 
-					if(_assertNullIN){ _existNullIN  = true;} 
-				}
-			}
-		}
-		//シェア計算
-		_iFile.seekBlkTop();
-		while(  EOF != _iFile.blkread() ){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-			for(std::size_t i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(!*str||sum[i]==0){
-					if(_assertNullOUT){ _existNullOUT = true; }
-					if(i<_fField.size()-1) _oFile.writeDlm();
-					else                   _oFile.writeEol();			
-				}
-				else{
-					double res= atof(_iFile.getBlkVal(_fField.num(i))) /sum.at(i);
-					if(i<_fField.size()-1) _oFile.writeDbl(res,false);
-					else                   _oFile.writeDbl(res,true);			
-				}
-			}
-		}
-		//初期化
-		for(std::size_t i=0; i<_fField.size(); i++){ sum[i]=0; }
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgShare::run(int i_p,int o_p) try 
+int kgShare::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-
-	// 集計用変数領域確保＆初期化
-	vector<double> sum(_fField.size() ,0);
-	vector<kgVal>  share(_fField.size() ,kgVal('N'));
-	for(vector<kgVal>::size_type i=0; i<share.size(); i++){ share[i].r(0);}
-
-	while(_iFile.blkset()!=EOF){
-		//キー単位集計
-		while(  EOF != _iFile.blkread() ){
-			for(std::size_t i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str){ sum[i] += atof(str);}
-				else { 
-					if(_assertNullIN){ _existNullIN  = true;} 
-				}
-			}
-		}
-		//シェア計算
-		_iFile.seekBlkTop();
-		while(  EOF != _iFile.blkread() ){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-			for(std::size_t i=0; i<_fField.size(); i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(!*str||sum[i]==0){
-					if(_assertNullOUT){ _existNullOUT = true; }
-					if(i<_fField.size()-1) _oFile.writeDlm();
-					else                   _oFile.writeEol();			
-				}
-				else{
-					double res= atof(_iFile.getBlkVal(_fField.num(i))) /sum.at(i);
-					if(i<_fField.size()-1) _oFile.writeDbl(res,false);
-					else                   _oFile.writeDbl(res,true);			
-				}
-			}
-		}
-		//初期化
-		for(std::size_t i=0; i<_fField.size(); i++){ sum[i]=0; }
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

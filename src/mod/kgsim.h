@@ -77,8 +77,11 @@ class kgSim : public kgModIncludeSort
 	vector<kgVal (*)(kgCSVblk&,kgArgFld&,int,int,kgstr_t&,bool,bool,bool,bool*,bool*)> _functions;
 	vector<string> _names; // 出力する距離の名称(ex. euclid ユークリッド)
 
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 public:
   // コンストラクタ
@@ -91,7 +94,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

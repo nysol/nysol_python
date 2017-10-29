@@ -5,6 +5,8 @@ from nysol.mod.nysollib import nysolutil as nutil
 
 class Nysol_Mcut(NysolMOD_CORE):
 	kwd = n_core.getparalist("mcut")
+	inkwd = ["i="]
+	outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcut,self).__init__("mcut",nutil.args2dict(args,kw_args,Nysol_Mcut.kwd))
 

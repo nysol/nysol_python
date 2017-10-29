@@ -48,12 +48,67 @@ kgFldname::kgFldname(void)
 	
 }
 // -----------------------------------------------------------------------------
+// パラメータセット
+// -----------------------------------------------------------------------------
+void kgFldname::setArgsMain(void)
+{
+
+	_iFile.read_header();
+
+	_rmsinfo = _args.toBool("-q");
+
+	// 変更項目名セット f= or n=
+	if(! _nfn_o){
+		vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,false);
+		vector<kgstr_t> vssn = _args.toStringVector("n=",false);
+		_fField.set(vvs, &_iFile, _fldByNum);
+		
+		if(_fField.size()==0 &&  vssn.empty() && _nfn_i){
+			throw kgError("`-nfni' cannot be specified with `f='");		
+		}
+		if(!vssn.empty() && vssn.size() != _iFile.fldSize() ){
+			if (!_nfn_i || !_iFile.end() ){
+				throw kgError("the number of fields is different on `n=' and input data.");
+			}
+		}
+		if(!_fField.size() && vssn.empty()&& !_rmsinfo){
+			throw kgError("`f=' or `n=' or `-nfno' or '-q' must be specified.");
+		}
+		//ヘッダ情報作成
+		if(vssn.size()>0){//n=
+			if(_rmsinfo){ newFldName_ = vssn;}
+			else { 
+				for(size_t i=0;i<vssn.size();i++){
+					newFldName_.push_back(vssn.at(i));
+					newFldName_.at(i).append(_iFile.sortParaStr(i));
+				}
+			}
+		}
+		else{//f=
+			kgstr_t oName;
+			for(size_t i=0; i<_iFile.fldSize() ; i++){
+				int flg = _fField.flg(i);
+				if( flg==-1 ){ oName = _iFile.fldName(i,!_rmsinfo);}
+				else{
+					oName = _fField.attr(flg);
+					if( oName.empty()){ oName=_iFile.fldName(i,!_rmsinfo);}
+					else{
+						if(!_rmsinfo){ oName.append(_iFile.sortParaStr(i));}
+					}
+				}
+				newFldName_.push_back( oName );
+			}
+		}
+	}
+
+}
+// -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kgFldname::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,n=,-nfni,-q",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// -nfniを指定した場合、-xも指定されていることにする
 	bool nfniflg = _args.toBool("-nfni");
@@ -65,62 +120,16 @@ void kgFldname::setArgs(void)
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
 
-	_rmsinfo = _args.toBool("-q");
-
-	// 変更項目名セット f= or n=
-	if(! _nfn_o){
-		vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,false);
-		vector<kgstr_t> vssn = _args.toStringVector("n=",false);
-		_fField.set(vvs, &_iFile, _fldByNum);
-		
-		if(_fField.size()==0 &&  vssn.empty() && _nfn_i){
-			throw kgError("`-nfni' cannot be specified with `f='");		
-		}
-		if(!vssn.empty() && vssn.size() != _iFile.fldSize() ){
-			if (!_nfn_i || !_iFile.end() ){
-				throw kgError("the number of fields is different on `n=' and input data.");
-			}
-		}
-		if(!_fField.size() && vssn.empty()&& !_rmsinfo){
-			throw kgError("`f=' or `n=' or `-nfno' or '-q' must be specified.");
-		}
-		//ヘッダ情報作成
-		if(vssn.size()>0){//n=
-			if(_rmsinfo){ newFldName_ = vssn;}
-			else { 
-				for(size_t i=0;i<vssn.size();i++){
-					newFldName_.push_back(vssn.at(i));
-					newFldName_.at(i).append(_iFile.sortParaStr(i));
-				}
-			}
-		}
-		else{//f=
-			kgstr_t oName;
-			for(size_t i=0; i<_iFile.fldSize() ; i++){
-				int flg = _fField.flg(i);
-				if( flg==-1 ){ oName = _iFile.fldName(i,!_rmsinfo);}
-				else{
-					oName = _fField.attr(flg);
-					if( oName.empty()){ oName=_iFile.fldName(i,!_rmsinfo);}
-					else{
-						if(!_rmsinfo){ oName.append(_iFile.sortParaStr(i));}
-					}
-				}
-				newFldName_.push_back( oName );
-			}
-		}
-	}
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgFldname::setArgs(int i_p,int o_p)
+void kgFldname::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,n=,-nfni,-q",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// -nfniを指定した場合、-xも指定されていることにする
 	bool nfniflg = _args.toBool("-nfni");
@@ -129,157 +138,71 @@ void kgFldname::setArgs(int i_p,int o_p)
 		_fldByNum = true;
 	}
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_iFile.read_header();
-
-	_rmsinfo = _args.toBool("-q");
-
-	// 変更項目名セット f= or n=
-	if(! _nfn_o){
-		vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,false);
-		vector<kgstr_t> vssn = _args.toStringVector("n=",false);
-		_fField.set(vvs, &_iFile, _fldByNum);
-		
-		if(_fField.size()==0 &&  vssn.empty() && _nfn_i){
-			throw kgError("`-nfni' cannot be specified with `f='");		
-		}
-		if(!vssn.empty() && vssn.size() != _iFile.fldSize() ){
-			if (!_nfn_i || !_iFile.end() ){
-				throw kgError("the number of fields is different on `n=' and input data.");
-			}
-		}
-		if(!_fField.size() && vssn.empty()&& !_rmsinfo){
-			throw kgError("`f=' or `n=' or `-nfno' or '-q' must be specified.");
-		}
-		//ヘッダ情報作成
-		if(vssn.size()>0){//n=
-			if(_rmsinfo){ newFldName_ = vssn;}
-			else { 
-				for(size_t i=0;i<vssn.size();i++){
-					newFldName_.push_back(vssn.at(i));
-					newFldName_.at(i).append(_iFile.sortParaStr(i));
-				}
-			}
-		}
-		else{//f=
-			kgstr_t oName;
-			for(size_t i=0; i<_iFile.fldSize() ; i++){
-				int flg = _fField.flg(i);
-				if( flg==-1 ){ oName = _iFile.fldName(i,!_rmsinfo);}
-				else{
-					oName = _fField.attr(flg);
-					if( oName.empty()){ oName=_iFile.fldName(i,!_rmsinfo);}
-					else{
-						if(!_rmsinfo){ oName.append(_iFile.sortParaStr(i));}
-					}
-				}
-				newFldName_.push_back( oName );
-			}
-		}
-	}
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgFldname::run(void) try 
+int kgFldname::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	//項目名出力
+ 	_oFile.writeFldName(newFldName_);
+
+	// データ出力
+	while(EOF != _iFile.read()){
+  	_oFile.writeRec(_iFile.getRec());
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgFldname::run(void) 
+{
 	setArgs();
-
-	//項目名出力
- 	_oFile.writeFldName(newFldName_);
-
-	// データ出力
-	while(EOF != _iFile.read()){
-  	_oFile.writeRec(_iFile.getRec());
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgFldname::run(int i_p,int o_p) try 
+int kgFldname::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	//項目名出力
- 	_oFile.writeFldName(newFldName_);
-
-	// データ出力
-	while(EOF != _iFile.read()){
-  	_oFile.writeRec(_iFile.getRec());
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

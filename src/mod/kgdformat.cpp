@@ -183,14 +183,8 @@ kgDformat::kgDformat(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDformat::setArgs(void)
+void kgDformat::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,c=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_iFile.read_header();
 
 	// -A:追加フラグ
@@ -209,40 +203,36 @@ void kgDformat::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDformat::setArgs(int i_p,int o_p)
+void kgDformat::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,c=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 
+	setArgsMain();
 
-	_iFile.read_header();
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgDformat::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// -A:追加フラグ
-	_add 			= _args.toBool("-A");
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile,_fldByNum);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// c= 正規表現のセット
-	_regstr = _args.toString("c=",true);
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
- 	//フォーマット
- 	_parser.compile(_regstr.c_str());
+	setArgsMain();
+
 }
 // -----------------------------------------------------------------------------
 // 出力（置換用）
@@ -260,117 +250,70 @@ void kgDformat::writeFld(char** fld, const vector<int>* flg, const vector<string
 		if(num == -1) _oFile.writeStr( fld[i]      					, true  );
 		else          _oFile.writeStr( val->at(num).c_str()	, true  );
 }
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgDformat::run(void) try 
+int kgDformat::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	//出力項目名出力 追加 or 置き換
+	if(_add) { _oFile.writeFldName(_iFile,_fField,true); }
+	else		 { _oFile.writeFldName(_fField, true);}
+
+	vector<string> val;
+	// データ出力
+	while( EOF != _iFile.read() ){
+		// 変換
+		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+			if(_assertNullIN && *_iFile.getVal(_fField.num(i))=='\0'){  _existNullIN = true; }
+			string tval =	_parser.extraction( _iFile.getVal(_fField.num(i)) );
+			if(_assertNullOUT && tval.size()==0 ){  _existNullOUT = true; }
+			val.push_back( tval	);
+		}
+		// 出力　追加 or 置換 
+		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&val); }
+		else		 { writeFld(_iFile.getFld(),_fField.getFlg_p(),&val);}
+
+		val.clear();
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgDformat::run(void) 
+{
 	setArgs();
-
-	//出力項目名出力 追加 or 置き換
-	if(_add) { _oFile.writeFldName(_iFile,_fField,true); }
-	else		 { _oFile.writeFldName(_fField, true);}
-
-	vector<string> val;
-	// データ出力
-	while( EOF != _iFile.read() ){
-		// 変換
-		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-			if(_assertNullIN && *_iFile.getVal(_fField.num(i))=='\0'){  _existNullIN = true; }
-			string tval =	_parser.extraction( _iFile.getVal(_fField.num(i)) );
-			if(_assertNullOUT && tval.size()==0 ){  _existNullOUT = true; }
-			val.push_back( tval	);
-		}
-		// 出力　追加 or 置換 
-		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&val); }
-		else		 { writeFld(_iFile.getFld(),_fField.getFlg_p(),&val);}
-
-		val.clear();
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgDformat::run(int i_p,int o_p) try 
+
+int kgDformat::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	//出力項目名出力 追加 or 置き換
-	if(_add) { _oFile.writeFldName(_iFile,_fField,true); }
-	else		 { _oFile.writeFldName(_fField, true);}
-
-	vector<string> val;
-	// データ出力
-	while( EOF != _iFile.read() ){
-		// 変換
-		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-			if(_assertNullIN && *_iFile.getVal(_fField.num(i))=='\0'){  _existNullIN = true; }
-			string tval =	_parser.extraction( _iFile.getVal(_fField.num(i)) );
-			if(_assertNullOUT && tval.size()==0 ){  _existNullOUT = true; }
-			val.push_back( tval	);
-		}
-		// 出力　追加 or 置換 
-		if(_add) { _oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),&val); }
-		else		 { writeFld(_iFile.getFld(),_fField.getFlg_p(),&val);}
-
-		val.clear();
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
-

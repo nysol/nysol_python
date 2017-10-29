@@ -54,15 +54,8 @@ kgVjoin::kgVjoin(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVjoin::setArgs(void)
+void kgVjoin::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,n=,vf=,f=,K=,delim=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
-	_mFile.open(_args.toString("m=",true),_env,_nfn_i);
 	_iFile.read_header();
 	_mFile.read_header();
 
@@ -100,6 +93,59 @@ void kgVjoin::setArgs(void)
 
 	_delimstr[0] =_delim;
 	_delimstr[1] ='\0';
+
+}
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgVjoin::setArgs(void)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+	// 入出力ファイルオープン
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+	_mFile.open(_args.toString("m=",true),_env,_nfn_i);
+	setArgsMain();
+
+}
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgVjoin::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+
+
+	if(inum>2 && onum>1){ throw kgError("no match IO"); }
+
+	// 入出力ファイルオープン
+	kgstr_t ifile = _args.toString("i=",false);
+	kgstr_t mfile = _args.toString("m=",false);
+
+	int i_p_t = -1;
+	int m_p_t = -1;
+	if(inum>0){ i_p_t = *i_p;     }
+	if(inum>1){ m_p_t = *(i_p+1); }
+
+	if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
+		throw kgError("Either i= or m= must be specified.");
+	}
+
+	// 入出力ファイルオープン
+	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+	else       { _iFile.open(ifile, _env,_nfn_i);}
+	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+	else       { _mFile.open(mfile, _env,_nfn_i);}
+
+	if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
+	else{ _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
+
 
 }
 
@@ -129,253 +175,105 @@ void kgVjoin::output_n(char *str,bool eol)
 	_oFile.writeStr(_outstr,eol);
 }
 
-// -----------------------------------------------------------------------------
-// 入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kgVjoin::setArgs(int i_p,int o_p,int m_p)
-{
-	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,n=,vf=,f=,K=,delim=,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
 
-	// 入出力ファイルオープン
-	kgstr_t ifile = _args.toString("i=",false);
-	kgstr_t mfile = _args.toString("m=",false);
-
-
-	if((ifile.empty()&&i_p<=0) && ( mfile.empty()&&m_p<=0)){
-		throw kgError("Either i= or m= must be specified.");
-	}
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(ifile, _env,_nfn_i);
-	}
-	if(m_p>0){
-		_mFile.popen(m_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_mFile.open(mfile, _env,_nfn_i);
-	}
-
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-	  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-	_iFile.read_header();
-	_mFile.read_header();
-
-	// vf= 項目引数のセット
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("vf=","%:",2,true);
-	_vfField.set(vs, &_iFile,_fldByNum);
-
-	// f= 項目引数のセット
-	vector<kgstr_t>  vsf = _args.toStringVector("f=",true);
-	if(vsf.size()!=1){ throw kgError("f= takes just one item "); }
-	_fField.set(vsf, &_mFile,_fldByNum);
-
-	// n= 項目引数のセット
-	_nullVal = _args.toString("n=",false);
-
-	// delim= 項目引数のセット
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
-	
-	// K= 項目引数のセット
-	vector<kgstr_t>  vs2 = _args.toStringVector("K=",true);
-	if(vs2.size()!=1){ throw kgError("K= takes just one item "); }
-	_mkField.set(vs2, &_mFile,_fldByNum);	
-
-	// -A（追加）フラグセット
-	_add_flg 		= _args.toBool("-A");
-
-	_delimstr[0] =_delim;
-	_delimstr[1] ='\0';
-
-}
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgVjoin::run(void) try 
+int kgVjoin::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 参照ファイルからitemのhash表を作成する
+	while(EOF != _mFile.read() ){
+		const char* item = _mFile.getVal(_mkField.num(0));
+		const char* taxo = _mFile.getVal(_fField.num(0));
+		if(_assertNullKEY && *item=='\0') { _existNullKEY = true; }
+		_itmSet[item]=taxo;
+	}
+
+	//文字列生成用領域
+	vector<kgAutoPtr2<char> > rls_ap;
+	rls_ap.resize(_vfField.size());
+	for(unsigned int i=0;i<_vfField.size();i++){
+		try {
+			rls_ap.at(i).set(new char[KG_MAX_STR_LEN]);
+		} catch(...) {
+			throw kgError("memory allocation error ");
+		}
+	}	
+
+	//出力項目名出力 追加 or 置換
+	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
+	else				 { _oFile.writeFldName(_vfField, true);}
+	int outsize = _iFile.fldSize();
+	if(_add_flg) { outsize += _vfField.size(); }	
+
+	// データ出力
+	while(EOF != _iFile.read() ){
+		int outcnt=0;
+		for(size_t i=0; i<_iFile.fldSize(); i++){
+			outcnt++;
+			char* str=_iFile.getVal(i);
+			if(_add_flg||_vfField.flg(i)==-1){
+				_oFile.writeStr(str,outcnt==outsize);
+			}
+			else{
+				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
+				output_n(str,outcnt==outsize);
+			}
+		}
+		if(_add_flg){
+			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
+				outcnt++;
+				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
+				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
+			}
+		}
+	}
+
+	// 終了処理
+	_iFile.close();
+	_mFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	_mFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgVjoin::run(void) 
+{
 	setArgs();
-
-	// 参照ファイルからitemのhash表を作成する
-	while(EOF != _mFile.read() ){
-		const char* item = _mFile.getVal(_mkField.num(0));
-		const char* taxo = _mFile.getVal(_fField.num(0));
-		if(_assertNullKEY && *item=='\0') { _existNullKEY = true; }
-		_itmSet[item]=taxo;
-	}
-
-	//文字列生成用領域
-	vector<kgAutoPtr2<char> > rls_ap;
-	rls_ap.resize(_vfField.size());
-	for(unsigned int i=0;i<_vfField.size();i++){
-		try {
-			rls_ap.at(i).set(new char[KG_MAX_STR_LEN]);
-		} catch(...) {
-			throw kgError("memory allocation error ");
-		}
-	}	
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-	// データ出力
-	while(EOF != _iFile.read() ){
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			outcnt++;
-			char* str=_iFile.getVal(i);
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgVjoin::run(int i_p,int o_p,int m_p) try 
+int kgVjoin::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p, o_p,m_p);
-
-	// 参照ファイルからitemのhash表を作成する
-	while(EOF != _mFile.read() ){
-		const char* item = _mFile.getVal(_mkField.num(0));
-		const char* taxo = _mFile.getVal(_fField.num(0));
-		if(_assertNullKEY && *item=='\0') { _existNullKEY = true; }
-		_itmSet[item]=taxo;
-	}
-
-	//文字列生成用領域
-	vector<kgAutoPtr2<char> > rls_ap;
-	rls_ap.resize(_vfField.size());
-	for(unsigned int i=0;i<_vfField.size();i++){
-		try {
-			rls_ap.at(i).set(new char[KG_MAX_STR_LEN]);
-		} catch(...) {
-			throw kgError("memory allocation error ");
-		}
-	}	
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-	// データ出力
-	while(EOF != _iFile.read() ){
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			outcnt++;
-			char* str=_iFile.getVal(i);
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

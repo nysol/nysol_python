@@ -30,6 +30,8 @@ using namespace kglib;
 
 
 kgshell::kgshell(int mflg){
+		_kgmod_map["m2tee"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Tee>());
+		_kgmod_map["mfifo"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
 		_kgmod_map["mcut"] = boost::lambda::bind(boost::lambda::new_ptr<kgCut>());
 		_kgmod_map["cmd"] = boost::lambda::bind(boost::lambda::new_ptr<kgExcmd>());
 		_kgmod_map["mcat"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
@@ -110,6 +112,8 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msortf"]    = boost::lambda::bind(boost::lambda::new_ptr<kgSortf>());
 		_kgmod_map["mtab2csv"]  = boost::lambda::bind(boost::lambda::new_ptr<kgTab2csv>());
 
+		_kgmod_run["m2tee"] = 4;
+		_kgmod_run["mfifo"] = 1;
 		_kgmod_run["mcut"] = 1;
 		_kgmod_run["cmd"] = 1;
 		_kgmod_run["mcat"] = 1;
@@ -202,7 +206,19 @@ kgshell::kgshell(int mflg){
 
 
 
+void *kgshell::run_func(void *arg)try{
+	argST *a =(argST*)arg; 
+	a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p);
+	return NULL;
+}catch(...){
+//	argST *a =(argST*)arg; 
+//	if(a->i_p>0){ ::close(a->i_p);}
+//	if(a->o_p>0){ ::close(a->o_p);}
+	return NULL;
+}
 
+
+/*
 void *kgshell::run_noargs_pths(void *arg)try{
 	argST *a =(argST*)arg; 
 	a->mobj->run(a->i_p,a->o_p);
@@ -245,8 +261,8 @@ void *kgshell::run_noargs_pths1(void *arg)try{
 	return NULL;
 }
 
-
-void kgshell::makePipeList(vector< vector<int> >& plist,bool tp)
+*/
+void kgshell::makePipeList(vector<linkST> & plist,bool tp)
 {
 	rlimit rlim;
 	int chfFlg;
@@ -259,20 +275,42 @@ void kgshell::makePipeList(vector< vector<int> >& plist,bool tp)
 	}
 
 	for(size_t i=0;i<plist.size();i++){
+
 		int piped[2];
 		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell");}
 		int flags0 = fcntl(piped[0], F_GETFD);
 		int flags1 = fcntl(piped[1], F_GETFD);
 		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
 		fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
-		if(plist[i][2]==0){
-			_ipipe_map[plist[i][0]]=piped[0];
-			_opipe_map[plist[i][1]]=piped[1];
+
+		/*linkST{
+		kgstr_t frTP;
+		int frID;
+		kgstr_t toTP;
+		int toID;
+		};*/
+		//typedef map<int, map<string,vector<int> > > iomap_t;
+		
+		if ( _ipipe_map.find(plist[i].toID) == _ipipe_map.end()){
+			map< string,vector<int> > newmap;
+			_ipipe_map[plist[i].toID] = newmap; 
 		}
-		else{
-			_mpipe_map[plist[i][0]]=piped[0];
-			_opipe_map[plist[i][1]]=piped[1];		
-		}		
+		if ( _ipipe_map[plist[i].toID].find(plist[i].toTP) == _ipipe_map[plist[i].toID].end()){
+			vector<int> newvec;
+			_ipipe_map[plist[i].toID][plist[i].toTP] = newvec;
+		}
+		_ipipe_map[plist[i].toID][plist[i].toTP].push_back(piped[0]);
+
+		if ( _opipe_map.find(plist[i].frID) == _opipe_map.end()){
+			map< string,vector<int> > newmap;
+			_opipe_map[plist[i].frID] = newmap; 
+		}
+		if ( _opipe_map[plist[i].frID].find(plist[i].frTP) == _opipe_map[plist[i].frID].end()){
+			vector<int> newvec;
+			_opipe_map[plist[i].frID][plist[i].frTP] = newvec;
+		}
+		_opipe_map[plist[i].frID][plist[i].frTP].push_back(piped[1]);
+
 	}
 	if(tp){
 		if( pipe(_lastpiped) < 0){ throw kgError("pipe open error on kgshell");}
@@ -288,14 +326,39 @@ void kgshell::makePipeList(vector< vector<int> >& plist,bool tp)
 }
 
 int kgshell::run(
-	vector< cmdCapselST > &cmds,	
-	vector< vector<int> >& plist,
+	vector<cmdCapselST> &cmds,	
+	vector<linkST> & plist,
 	bool tp,
 	PyObject* list)try
 {
 
 	makePipeList(plist,tp);
-	
+
+	//typedef map<int, map<string,vector<int> > > iomap_t;
+	//iomap_t _ipipe_map;
+	//iomap_t _opipe_map;
+	//DEBUG
+	//for(iomap_t::iterator it=_ipipe_map.begin() ;it!=_ipipe_map.end();it++){
+	//		cerr << it->first << "--|" << endl;
+	//		for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+	//			cerr << " " << it2->first << ": ";
+	//			for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+	//				cerr << *it3 << " ";
+	//			}
+	//			cerr << endl;
+	//		}
+	//}
+	//for(iomap_t::iterator it=_opipe_map.begin() ;it!=_opipe_map.end();it++){
+	//		cerr << it->first << "--|" << endl;
+	//		for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+	//			cerr << " " << it2->first << ": ";
+	//			for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+	//				cerr << *it3 << " ";
+	//			}
+	//			cerr << endl;
+	//		}
+	//}
+
 	_clen = cmds.size();
 
 	_modlist = new kgMod*[_clen];
@@ -313,24 +376,113 @@ int kgshell::run(
 		_modlist[i]->init(newArgs, &_env);
 	}
 
-	int dmy = -1;	
+	//int dmy = -1;	
+
 	pthread_t _th_st_p[_clen];
 	int _th_rtn[_clen];
 	argST argst[_clen];
 	for(int i=_clen-1;i>=0;i--){
 	// データ出力
 		argst[i].mobj= _modlist[i];
-		if( _ipipe_map.find(i) == _ipipe_map.end() ){ argst[i].i_p= dmy; }
-		else{ argst[i].i_p= _ipipe_map[i]; }
-		if(i==0){ argst[i].o_p= _lastpiped[1]; } 
-		else { 
-			if( _opipe_map.find(i) == _opipe_map.end() ){ argst[i].o_p= dmy; }
-			else{ argst[i].o_p= _opipe_map[i]; }
+		//	DEBIG
+		//	cerr << "-------------------" << endl;
+		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
+
+		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
+			argst[i].i_cnt= 0;
+			argst[i].i_p= NULL;
+		}
+		else{
+			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+			size_t cnt=0;
+			if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+				cnt += _ipipe_map[i]["i"].size();
+			}
+			if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+				cnt += _ipipe_map[i]["m"].size();
+			}
+			if(cnt==0){
+				argst[i].i_cnt= 0;
+				argst[i].i_p= NULL;
+			}
+			else{
+				argst[i].i_cnt= cnt;
+				argst[i].i_p= new int[cnt];
+				size_t pos = 0;
+				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
+						argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
+						pos++;
+					}
+				}
+				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
+						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
+						pos++;
+					}
+				}
+			}
+		}
+
+		if( _opipe_map.find(i) == _opipe_map.end() ){ 
+			argst[i].o_cnt= 0;
+			argst[i].o_p= NULL;
+		}
+		else{
+			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+			size_t cnt=0;
+			if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+				cnt += _opipe_map[i]["o"].size();
+			}
+			if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
+				cnt += _opipe_map[i]["u"].size();
+			}
+			if(cnt==0){
+				argst[i].o_cnt= 0;
+				argst[i].o_p= NULL;
+			}
+			else{
+				argst[i].o_cnt= cnt;
+				argst[i].o_p= new int[cnt];
+				size_t pos = 0;
+				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
+						argst[i].o_p[pos] = _opipe_map[i]["o"][j];
+						pos++;
+					}
+				}
+				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
+					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
+						argst[i].o_p[pos] = _opipe_map[i]["u"][j];
+						pos++;
+					}
+				}
+			}
 		}
 		//debug
-		//cerr << argst[i].mobj->name() << " " <<  argst[i].i_p << " " << argst[i].o_p << endl;
+		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
+		//if ( argst[i].i_cnt > 0){
+		//	cerr << " i:" ;
+		//	for(size_t j=0; j< argst[i].i_cnt;j++){
+		//		cerr <<  *(argst[i].i_p+j) << " " ;
+		//	}
+		//}
+		//if ( argst[i].o_cnt > 0){
+		//	cerr << " o:" ;
+		//	for(size_t j=0; j< argst[i].o_cnt;j++){
+		//		cerr <<  *(argst[i].o_p+j) << " " ;
+		//	}
+		//}
+		//int typ =  
+		//_kgmod_run.find(cmds[i].cmdname)->second ;
+		//cerr << typ << endl;
+		//cerr << endl;
+		if(true){
+			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_func ,(void*)&argst[i]);
+		}
+	}
 
-		int typ =  _kgmod_run.find(cmds[i].cmdname)->second ;
+/*
 		if(typ==1){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pths ,(void*)&argst[i]);
 		}else if(typ==2){
@@ -342,17 +494,15 @@ int kgshell::run(
 			argst[i].list=cmds[i].iobj;
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp ,(void*)&argst[i]);
 		}
-/*		else if(typ==4){
+		else if(typ==4){
 			argst[i].list=cmds[i].iobj;
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp2 ,(void*)&argst[i]);
 		}
-*/
 		else if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pths1 ,(void*)&argst[i]);
 		}
-
 		if(_th_rtn[i]){ throw kgError("cant't create thread onxx kgModIncludeSort");}
-	}
+*/
 	if(tp){
 		// データ出力
 		kgCSVfld rls;
@@ -388,7 +538,7 @@ kgCSVfld* kgshell::runiter(
 	vector< vector<int> >& plist,
 	bool tp,
 	PyObject* list)try{
-
+/*
 	_clen = cmds.size();
 
 	makePipeList(plist,tp);
@@ -451,7 +601,7 @@ kgCSVfld* kgshell::runiter(
 	_iterrtn->read_header();	
 
 	return _iterrtn;
-
+*/
 }catch(...){
 	return NULL;
 }

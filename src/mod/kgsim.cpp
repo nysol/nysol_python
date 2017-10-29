@@ -1018,14 +1018,8 @@ kgSim::kgSim(void)
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
 
-void kgSim::setArgs(void)
+void kgSim::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("a=,f=,i=,o=,k=,c=,-d,bufcount=,-q,-n",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
 	kgstr_t s=_args.toString("bufcount=",false);
 	int bcnt = 10;
@@ -1116,297 +1110,142 @@ void kgSim::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSim::setArgs(int i_p,int o_p)
+
+void kgSim::setArgs(void)
 {
 	// パラメータチェック
 	_args.paramcheck("a=,f=,i=,o=,k=,c=,-d,bufcount=,-q,-n",kgArgs::ALLPARAM);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
-	}
+	setArgsMain();
 
-	_iFile.setbufsize(bcnt);
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
+}
 
-	// a=　新項目名セット
-	_vField = _args.toStringVector("a=",false);
-	if(_vField.empty()){
-		_vField.push_back("fld1");
-		_vField.push_back("fld2");
-	}else if(_vField.size()!=2){
-		throw kgError("paraeter a= takes two field names or ommit them all.");
-	}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSim::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
 
-	// f= 項目引数のセット
-	vector<kgstr_t> vs_f = _args.toStringVector("f=",true);
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// 両方向から出すかどうかフラグ
-	// 方向のある距離がしていされていれば後で強制的にtrueとなる
-	_direction = _args.toBool("-d");
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// c= 計算方法のセット
-	_c_types = _args.toStringVecVec("c=", ':', 2, true);
-	for(std::size_t i=0; i<_c_types.at(0).size();i++){
-		kgstr_t kw=_c_types.at(0).at(i);
-	     	 if(kw=="covar"    ){_functions.push_back(&covar);    }
-	  else if(kw=="ucovar"   ){_functions.push_back(&ucovar);    }
-	  else if(kw=="pearson"  ){_functions.push_back(&pearson);  }
-		else if(kw=="spearman" ){_functions.push_back(&spearman); }
-		else if(kw=="kendall"  ){_functions.push_back(&kendall);  }
-		else if(kw=="euclid"   ){_functions.push_back(&euclid);   }
-		else if(kw=="cosine"   ){_functions.push_back(&cosine);   }
-		else if(kw=="cityblock"){_functions.push_back(&cityblock);}
-		else if(kw=="hamming"  ){_functions.push_back(&hamming);  }
-		else if(kw=="support"  ){_functions.push_back(&support);  }
-		else if(kw=="lift"     ){_functions.push_back(&lift);     }
-		else if(kw=="phi"      ){_functions.push_back(&phi);      }
-		else if(kw=="chi"      ){_functions.push_back(&chi);      }
-		else if(kw=="jaccard"  ){_functions.push_back(&jaccard);  }
-		else if(kw=="confMax"  ){_functions.push_back(&confMax);  }
-		else if(kw=="confMin"  ){_functions.push_back(&confMin);  }
-		else if(kw=="yuleQ"    ){_functions.push_back(&yuleQ);    }
-		else if(kw=="yuleY"    ){_functions.push_back(&yuleY);    }
-		else if(kw=="kappa"    ){_functions.push_back(&kappa);    }
-		else if(kw=="oddsRatio"){_functions.push_back(&oddsRatio);}
-		else if(kw=="convMax"  ){_functions.push_back(&convMax);  }
-		else if(kw=="convMin"  ){_functions.push_back(&convMin);  }
-		else {
-			ostringstream ss;
-			ss << "unknown keyword: " << kw 
-				<< ": c=covar|ucovar|pearson|spearman|kendall|euclid|cosine|cityblock|hamming|chi|phi|jaccard|lift|support" 
-				<< "|confMax|confMin|yuleQ|yuleY|kappa|oddsRatio|convMax|convMin : "
-				<< _c_type;
-			throw kgError(ss.str());	
-		}
-
-	}
-
-	for(std::size_t i=0; i<_c_types.at(1).size(); i++){
-		kgstr_t str=_c_types.at(1).at(i);
-		if(str.empty()) _names.push_back(_c_types.at(0).at(i));
-		else            _names.push_back(str);
-	}
-	_null = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
-	if(_fField.size()<2){
-		throw kgError("f= takes two or more parameters");
-	}
-
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSim::run(void) try 
+int kgSim::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+  if(!_nfn_o){
+  	vector<kgstr_t> headval;
+		for(size_t k=0; k < _kField.size(); k++){
+			headval.push_back(_iFile.fldName(_kField.num(k),true));
+		}
+		for(std::size_t k=0; k<_vField.size(); k++){
+			headval.push_back(_vField.at(k));
+		}
+		for(std::size_t k=0; k<_names.size(); k++){
+			headval.push_back(_names.at(k));
+		}
+		_oFile.writeFldNameCHK(headval);
+	}
+
+	// kendall計算用ファイル名(グローバル変数)
+	kgTempfile tempFile(_env);
+	kgstr_t tmpfName2 = tempFile.create();
+
+	// データ集計＆出力
+	while(	_iFile.blkset()!=EOF){
+
+		for(std::size_t i=0; i<_fField.size(); i++){
+
+			int st= _direction ? 0 : i+1; // 方向のある類似度であれば正方行列を求める
+			for(std::size_t j=st; j<_fField.size(); j++){
+
+				// 結果出力
+				for(std::size_t k=0; k<_kField.size(); k++){ // k=項目出力
+					_oFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
+				}
+
+				// 対象項目名xとy
+				_oFile.writeStr(_fField.name(i).c_str(),false);
+				_oFile.writeStr(_fField.name(j).c_str(),false);
+
+				// 計算の実行本体
+				for(std::size_t k=0; k<_functions.size(); k++){
+
+					bool retFlg=false;
+					if(k==_functions.size()-1) retFlg=true;
+					kgVal result = _functions.at(k)(_iFile,_fField,i,j,tmpfName2,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
+
+					_oFile.writeVal(result,retFlg);
+					_iFile.seekBlkTop();
+
+				}
+
+			}
+		}
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgSim::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  if(!_nfn_o){
-  	vector<kgstr_t> headval;
-		for(size_t k=0; k < _kField.size(); k++){
-			headval.push_back(_iFile.fldName(_kField.num(k),true));
-		}
-		for(std::size_t k=0; k<_vField.size(); k++){
-			headval.push_back(_vField.at(k));
-		}
-		for(std::size_t k=0; k<_names.size(); k++){
-			headval.push_back(_names.at(k));
-		}
-		_oFile.writeFldNameCHK(headval);
-	}
-
-	// kendall計算用ファイル名(グローバル変数)
-	kgTempfile tempFile(_env);
-	kgstr_t tmpfName2 = tempFile.create();
-
-	// データ集計＆出力
-	while(	_iFile.blkset()!=EOF){
-
-		for(std::size_t i=0; i<_fField.size(); i++){
-
-			int st= _direction ? 0 : i+1; // 方向のある類似度であれば正方行列を求める
-			for(std::size_t j=st; j<_fField.size(); j++){
-
-				// 結果出力
-				for(std::size_t k=0; k<_kField.size(); k++){ // k=項目出力
-					_oFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-				}
-
-				// 対象項目名xとy
-				_oFile.writeStr(_fField.name(i).c_str(),false);
-				_oFile.writeStr(_fField.name(j).c_str(),false);
-
-				// 計算の実行本体
-				for(std::size_t k=0; k<_functions.size(); k++){
-
-					bool retFlg=false;
-					if(k==_functions.size()-1) retFlg=true;
-					kgVal result = _functions.at(k)(_iFile,_fField,i,j,tmpfName2,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-
-					_oFile.writeVal(result,retFlg);
-					_iFile.seekBlkTop();
-
-				}
-
-			}
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgSim::run(int i_p,int o_p) try 
+int kgSim::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  if(!_nfn_o){
-  	vector<kgstr_t> headval;
-		for(size_t k=0; k < _kField.size(); k++){
-			headval.push_back(_iFile.fldName(_kField.num(k),true));
-		}
-		for(std::size_t k=0; k<_vField.size(); k++){
-			headval.push_back(_vField.at(k));
-		}
-		for(std::size_t k=0; k<_names.size(); k++){
-			headval.push_back(_names.at(k));
-		}
-		_oFile.writeFldNameCHK(headval);
-	}
-
-	// kendall計算用ファイル名(グローバル変数)
-	kgTempfile tempFile(_env);
-	kgstr_t tmpfName2 = tempFile.create();
-
-	// データ集計＆出力
-	while(	_iFile.blkset()!=EOF){
-
-		for(std::size_t i=0; i<_fField.size(); i++){
-
-			int st= _direction ? 0 : i+1; // 方向のある類似度であれば正方行列を求める
-			for(std::size_t j=st; j<_fField.size(); j++){
-
-				// 結果出力
-				for(std::size_t k=0; k<_kField.size(); k++){ // k=項目出力
-					_oFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-				}
-
-				// 対象項目名xとy
-				_oFile.writeStr(_fField.name(i).c_str(),false);
-				_oFile.writeStr(_fField.name(j).c_str(),false);
-
-				// 計算の実行本体
-				for(std::size_t k=0; k<_functions.size(); k++){
-
-					bool retFlg=false;
-					if(k==_functions.size()-1) retFlg=true;
-					kgVal result = _functions.at(k)(_iFile,_fField,i,j,tmpfName2,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-
-					_oFile.writeVal(result,retFlg);
-					_iFile.seekBlkTop();
-
-				}
-
-			}
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

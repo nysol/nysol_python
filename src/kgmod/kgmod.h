@@ -158,11 +158,19 @@ class kgMod
 	// ----------------------------------------------------------------
 	virtual int run(void)=0;
 	vector< vector<string> > params(void);
+
+	// ----------------------------------------------------------------
+	// run仮想関数
+	// ----------------------------------------------------------------
 	virtual int run(int i){ return 0;};
 	virtual int run(int i,int o){return 0;};
 	virtual int run(int i,int o,int m){return 0;}
 	virtual int run(PyObject* i,int o){return 0;};
 	virtual int run(int i,PyObject* o){return 0;};
+	virtual int run(int i,int olim,int* o){return 0;}
+	virtual int run(int inum,int *i,int onum, int* o){return 0;}
+
+
 
 };
 

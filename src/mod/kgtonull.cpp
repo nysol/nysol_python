@@ -82,14 +82,8 @@ kgTonull::kgTonull(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgTonull::setArgs(void)
+void kgTonull::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,v=,-sub,-W",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
-
-	// ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -107,186 +101,122 @@ void kgTonull::setArgs(void)
 			_vFieldw.push_back(toWcs(_vField[i]));
 		}
 	}
+
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgTonull::setArgs(void)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+	// ファイルオープン
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgTonull::setArgs(int i_p,int o_p)
+void kgTonull::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,v=,-sub,-W",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// f= 項目引数のセット
-	vector<kgstr_t>  vs_f = _args.toStringVector("f=",true);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// -sub 部分マッチフラグ
-	_substr     = _args.toBool("-sub");
-	_widechr    = _args.toBool("-W");
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// v= 項目引数のセット
-	_vField = _args.toStringVector("v=",true);
-	for(vector<kgstr_t>::size_type i=0;i<_vField.size();i++){
-		if(_substr && _widechr){
-			_vFieldw.push_back(toWcs(_vField[i]));
-		}
-	}
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgTonull::run(void) try 
+int kgTonull::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 項目名出力
+	_oFile.writeFldName(_iFile);
+
+	while( EOF != _iFile.read() ){
+		const vector<int>* flg=_fField.getFlg_p();
+		for(vector<int>::size_type i=0; i<flg->size(); i++){
+
+			bool eol= (i==flg->size()-1);	// 改行出力フラグ
+			int   num = flg->at(i);       // f=で指定されたかどうか
+			char* str = _iFile.getVal(i); // 項目の値
+
+			// f=で指定された項目以外の場合はそのまま出力
+			if(num == -1){
+				_oFile.writeStr(str, eol);
+			}else{
+				// f=で指定された項目の場合
+				if(_assertNullIN && *str=='\0') { _existNullIN  = true;}
+				if(_substr){ // 部分マッチの比較
+					if(_widechr){
+						if( strCompSub(str, _vFieldw) ) _oFile.writeStr("" ,eol);
+						else                            _oFile.writeStr(str,eol);
+					}else{
+						if( strCompSub(str, _vField ) ) _oFile.writeStr("" ,eol);
+						else                            _oFile.writeStr(str,eol);
+					}
+				}else{// 完全一致の比較
+					if( strComp(str, _vField) ) _oFile.writeStr("" ,eol);
+					else                        _oFile.writeStr(str,eol);
+				}
+			}
+  	} 
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgTonull::run(void) 
+{
 	setArgs();
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-
-	while( EOF != _iFile.read() ){
-		const vector<int>* flg=_fField.getFlg_p();
-		for(vector<int>::size_type i=0; i<flg->size(); i++){
-
-			bool eol= (i==flg->size()-1);	// 改行出力フラグ
-			int   num = flg->at(i);       // f=で指定されたかどうか
-			char* str = _iFile.getVal(i); // 項目の値
-
-			// f=で指定された項目以外の場合はそのまま出力
-			if(num == -1){
-				_oFile.writeStr(str, eol);
-			}else{
-				// f=で指定された項目の場合
-				if(_assertNullIN && *str=='\0') { _existNullIN  = true;}
-				if(_substr){ // 部分マッチの比較
-					if(_widechr){
-						if( strCompSub(str, _vFieldw) ) _oFile.writeStr("" ,eol);
-						else                            _oFile.writeStr(str,eol);
-					}else{
-						if( strCompSub(str, _vField ) ) _oFile.writeStr("" ,eol);
-						else                            _oFile.writeStr(str,eol);
-					}
-				}else{// 完全一致の比較
-					if( strComp(str, _vField) ) _oFile.writeStr("" ,eol);
-					else                        _oFile.writeStr(str,eol);
-				}
-			}
-  	} 
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgTonull::run(int i_p,int o_p) try 
+int kgTonull::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 項目名出力
-	_oFile.writeFldName(_iFile);
-
-	while( EOF != _iFile.read() ){
-		const vector<int>* flg=_fField.getFlg_p();
-		for(vector<int>::size_type i=0; i<flg->size(); i++){
-
-			bool eol= (i==flg->size()-1);	// 改行出力フラグ
-			int   num = flg->at(i);       // f=で指定されたかどうか
-			char* str = _iFile.getVal(i); // 項目の値
-
-			// f=で指定された項目以外の場合はそのまま出力
-			if(num == -1){
-				_oFile.writeStr(str, eol);
-			}else{
-				// f=で指定された項目の場合
-				if(_assertNullIN && *str=='\0') { _existNullIN  = true;}
-				if(_substr){ // 部分マッチの比較
-					if(_widechr){
-						if( strCompSub(str, _vFieldw) ) _oFile.writeStr("" ,eol);
-						else                            _oFile.writeStr(str,eol);
-					}else{
-						if( strCompSub(str, _vField ) ) _oFile.writeStr("" ,eol);
-						else                            _oFile.writeStr(str,eol);
-					}
-				}else{// 完全一致の比較
-					if( strComp(str, _vField) ) _oFile.writeStr("" ,eol);
-					else                        _oFile.writeStr(str,eol);
-				}
-			}
-  	} 
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

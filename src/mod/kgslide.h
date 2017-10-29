@@ -59,7 +59,10 @@ class kgSlide : public kgModIncludeSort
 
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i_p,int onum, int* o_p);
+
+	int runMain(void);
+	void setArgsMain(void);	
 
 public:
   // コンストラクタ
@@ -72,7 +75,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

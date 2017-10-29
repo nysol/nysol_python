@@ -446,13 +446,8 @@ kgMvstats::kgMvstats(void){
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgMvstats::setArgs(void){
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,c=,skip=,t=,s=,-q,-n",kgArgs::ALLPARAM);
+void kgMvstats::setArgsMain(void){
 
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
   _oFile.setPrecision(_precision);
 	_iFile.read_header();
 
@@ -518,253 +513,132 @@ void kgMvstats::setArgs(void){
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgMvstats::setArgs(int i_p,int o_p){
+void kgMvstats::setArgs(void){
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,c=,skip=,t=,s=,-q,-n",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vs_f = _args.toStringVecVec("f=",':',2,true,true);
+	setArgsMain();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
 
-	// t= の値をセット
-	kgstr_t strT=_args.toString("t=",true);
-	_term = aToSizeT(strT.c_str());
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgMvstats::setArgs(int inum,int *i_p,int onum ,int *o_p){
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	kgstr_t strS=_args.toString("skip=",false);
-	if(strS.empty()){
-		_skip = _term-1;
-	}else{
-		_skip = atoi(strS.c_str());
-		if(_skip>=_term){ _skip = _term -1; }
-	}
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-    	 	 if(_c_type=="sum"   ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvSum  >(),lambda::_1,lambda::_2); }
-	  else if(_c_type=="mean"  ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvMean >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="devsq" ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvDevsq>(),lambda::_1,lambda::_2); }
-		else if(_c_type=="var"   ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvVar  >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="uvar"  ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvUvar >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="sd"    ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvSd   >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="usd"   ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvUsd  >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="cv"    ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvCv   >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="min"   ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvMin  >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="max"   ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvMax >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="range" ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvRange>(),lambda::_1,lambda::_2); }
-		else if(_c_type=="skew"  ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvSkew >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="uskew" ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvUskew>(),lambda::_1,lambda::_2); }
-		else if(_c_type=="kurt"  ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvKurt >(),lambda::_1,lambda::_2); }
-		else if(_c_type=="ukurt" ){_function = lambda::bind(lambda::new_ptr<kgmvstats_::kgMvUkurt>(),lambda::_1,lambda::_2); }
-	else {
-		ostringstream ss;
-		ss << "unknown keyword: " << _c_type << ": c=sum|mean|devsq|var|uvar|sd|usd|cv|min|max|range|skew|kurt|uskew|ukurt" << _c_type;
-		throw kgError(ss.str());	
-	}
-	_null = _args.toBool("-n");
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	if(!seqflg&&vss.empty()){
-		throw kgError("parameter s= is mandatory without -q,-nfn");
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	if(!seqflg && (!vs.empty()||!vss.empty())){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgMvstats::run(void) try {
+int kgMvstats::runMain(void) try {
 
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+	
+	// 項目名の出力
+  _oFile.writeFldName(_fField, true);
+
+	size_t fldSize=_fField.size();
+
+	// 結果格納変数の領域確保
+	vector<kgVal>  result(fldSize ,kgVal('N'));
+	vector<kgVal> inpval   (fldSize ,kgVal('N'));
+	
+	// 計算クラスセット
+	kgmvstats_::kgMvBase* kmvb = _function(_term,fldSize);
+
+	while(_iFile.blkset()!=EOF){
+		size_t recno =0;
+		while(  EOF != _iFile.blkread() ){
+			recno++;
+			for(size_t i=0; i<fldSize; i++){
+				char* str=_iFile.getBlkVal(_fField.num(i));
+				if(*str=='\0') { 
+					inpval[i].null(true); 
+					if(_assertNullIN) { _existNullIN  = true;}
+				}
+				else{
+					inpval[i].r(atof(str));
+				}
+			}
+			kmvb->calc(result,inpval);
+			if(recno>_skip){
+				if(_null){
+					for(size_t i=0; i < result.size() ;i++){
+						if(kmvb->isNull(i)){ result.at(i).null(true); }
+					}
+				}
+				if(_assertNullOUT){ 
+					for(size_t i=0; i < result.size() ;i++){
+						if(result.at(i).null()){ _existNullOUT = true; }
+					}
+				}				
+				_oFile.writeFld(_iFile.getBlkFld(),_fField.getFlg_p(),result);
+			}
+		}
+		kmvb->clear();
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+	// 終了処理(メッセージ出力,thread pipe終了通知)
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const std::exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgMvstats::run(void) 
+{
 	setArgs();
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	size_t fldSize=_fField.size();
-
-	// 結果格納変数の領域確保
-	vector<kgVal>  result(fldSize ,kgVal('N'));
-	vector<kgVal> inpval   (fldSize ,kgVal('N'));
-	
-	// 計算クラスセット
-	kgmvstats_::kgMvBase* kmvb = _function(_term,fldSize);
-
-	while(_iFile.blkset()!=EOF){
-		size_t recno =0;
-		while(  EOF != _iFile.blkread() ){
-			recno++;
-			for(size_t i=0; i<fldSize; i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0') { 
-					inpval[i].null(true); 
-					if(_assertNullIN) { _existNullIN  = true;}
-				}
-				else{
-					inpval[i].r(atof(str));
-				}
-			}
-			kmvb->calc(result,inpval);
-			if(recno>_skip){
-				if(_null){
-					for(size_t i=0; i < result.size() ;i++){
-						if(kmvb->isNull(i)){ result.at(i).null(true); }
-					}
-				}
-				if(_assertNullOUT){ 
-					for(size_t i=0; i < result.size() ;i++){
-						if(result.at(i).null()){ _existNullOUT = true; }
-					}
-				}				
-				_oFile.writeFld(_iFile.getBlkFld(),_fField.getFlg_p(),result);
-			}
-		}
-		kmvb->clear();
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgMvstats::run(int i_p,int o_p) try {
-
-	setArgs(i_p,o_p);
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	size_t fldSize=_fField.size();
-
-	// 結果格納変数の領域確保
-	vector<kgVal>  result(fldSize ,kgVal('N'));
-	vector<kgVal> inpval   (fldSize ,kgVal('N'));
-	
-	// 計算クラスセット
-	kgmvstats_::kgMvBase* kmvb = _function(_term,fldSize);
-
-	while(_iFile.blkset()!=EOF){
-		size_t recno =0;
-		while(  EOF != _iFile.blkread() ){
-			recno++;
-			for(size_t i=0; i<fldSize; i++){
-				char* str=_iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0') { 
-					inpval[i].null(true); 
-					if(_assertNullIN) { _existNullIN  = true;}
-				}
-				else{
-					inpval[i].r(atof(str));
-				}
-			}
-			kmvb->calc(result,inpval);
-			if(recno>_skip){
-				if(_null){
-					for(size_t i=0; i < result.size() ;i++){
-						if(kmvb->isNull(i)){ result.at(i).null(true); }
-					}
-				}
-				if(_assertNullOUT){ 
-					for(size_t i=0; i < result.size() ;i++){
-						if(result.at(i).null()){ _existNullOUT = true; }
-					}
-				}				
-				_oFile.writeFld(_iFile.getBlkFld(),_fField.getFlg_p(),result);
-			}
-		}
-		kmvb->clear();
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgMvstats::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
-

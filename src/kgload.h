@@ -44,7 +44,7 @@ class kgLoad : public kgMod
 
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i,int o);
+	void setArgs(int inum,int *i,int onum, int* o);
 
 public:
 	// コンストラクタ
@@ -58,9 +58,9 @@ public:
 	//実行メソッド
 	int run(void);
 	//実行メソッド
-	int run(int i,int o);
 	int run(PyObject* i_p,int o_p);
 	int run(int i_p,PyObject* o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

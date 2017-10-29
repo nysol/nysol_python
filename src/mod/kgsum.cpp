@@ -54,14 +54,8 @@ kgSum::kgSum(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSum::setArgs(void)
+void kgSum::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-n,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
 	// f= 項目引数のセット
 	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true,true);
@@ -91,46 +85,35 @@ void kgSum::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSum::setArgs(int i_p,int o_p)
+void kgSum::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,-n,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	// 入出力ファイルオープン
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	setArgsMain();
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true,true);
+}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSum::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// -n オプションのセット
-	_null=_args.toBool("-n");
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	_iFile.read_header();	
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// 必要ならソートが実行されiFileは初期化され,
-	// ソーティンぐ結果のが出力されるファイルで再度読み込み直される	
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg) { sortingRun(&_iFile,vs);}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_oFile.setPrecision(_precision);
-
-	_fField.set(vvs, &_iFile,_fldByNum);
-
-	_kField.set(vs, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 
@@ -138,208 +121,117 @@ void kgSum::setArgs(int i_p,int o_p)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSum::run(void) try 
+int kgSum::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+  _oFile.writeFldName(_fField, true);
+
+	// 集計用変数領域確保＆初期化
+	vector<double> sum(_fField.size() ,0);
+	vector<double> cnt(_fField.size() ,0);
+	vector<kgVal>  val(_fField.size() ,kgVal('N'));
+
+	double count=0;
+	// データ集計＆出力
+	while(_iFile.read()!=EOF){
+
+		if( _iFile.keybreak() ){
+
+			//keybreakしたら出力
+			for(std::size_t i=0; i<_fField.size(); i++){
+				// -n 指定時はnullが一つでもあれば結果もnull
+				if(_null){ 
+					if(cnt.at(i)==count){ val.at(i).r( sum.at(i) );}
+					else {
+						val.at(i).null(true);
+						if(_assertNullOUT){ _existNullOUT = true;}
+					}
+				}else{
+					if(cnt.at(i)==0){	
+						val.at(i).null(true);
+						if(_assertNullOUT){ _existNullOUT = true;}
+					}
+					else{
+						val.at(i).r( sum.at(i) );
+					}
+				}
+			}
+			_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),val);
+
+			//ENDなら終了
+			if((_iFile.status() & kgCSV::End )) break;
+
+			// 集計値の初期化
+			count=0;
+			for(std::size_t i=0; i<val.size(); i++){
+				sum.at(i)=0;
+				cnt.at(i)=0;
+			}
+		}
+
+		// 通常処理
+		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+			char* str=_iFile.getNewVal(_fField.num(i));
+			if(*str!='\0'){
+				sum.at(i) += atof(str);
+				cnt.at(i) += 1;
+			}
+			else{
+				if(_assertNullIN) { _existNullIN  = true;}			
+			}
+		}
+		count+=1;
+	}
+
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgSum::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	// 集計用変数領域確保＆初期化
-	vector<double> sum(_fField.size() ,0);
-	vector<double> cnt(_fField.size() ,0);
-	vector<kgVal>  val(_fField.size() ,kgVal('N'));
-
-	double count=0;
-	// データ集計＆出力
-	while(_iFile.read()!=EOF){
-
-		if( _iFile.keybreak() ){
-
-			//keybreakしたら出力
-			for(std::size_t i=0; i<_fField.size(); i++){
-				// -n 指定時はnullが一つでもあれば結果もnull
-				if(_null){ 
-					if(cnt.at(i)==count){ val.at(i).r( sum.at(i) );}
-					else {
-						val.at(i).null(true);
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-				}else{
-					if(cnt.at(i)==0){	
-						val.at(i).null(true);
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-					else{
-						val.at(i).r( sum.at(i) );
-					}
-				}
-			}
-			_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),val);
-
-			//ENDなら終了
-			if((_iFile.status() & kgCSV::End )) break;
-
-			// 集計値の初期化
-			count=0;
-			for(std::size_t i=0; i<val.size(); i++){
-				sum.at(i)=0;
-				cnt.at(i)=0;
-			}
-		}
-
-		// 通常処理
-		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-			char* str=_iFile.getNewVal(_fField.num(i));
-			if(*str!='\0'){
-				sum.at(i) += atof(str);
-				cnt.at(i) += 1;
-			}
-			else{
-				if(_assertNullIN) { _existNullIN  = true;}			
-			}
-		}
-		count+=1;
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgSum::run(int i_p,int o_p) try 
+int kgSum::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	// 集計用変数領域確保＆初期化
-	vector<double> sum(_fField.size() ,0);
-	vector<double> cnt(_fField.size() ,0);
-	vector<kgVal>  val(_fField.size() ,kgVal('N'));
-
-	double count=0;
-	// データ集計＆出力
-	while(_iFile.read()!=EOF){
-
-		if( _iFile.keybreak() ){
-
-			//keybreakしたら出力
-			for(std::size_t i=0; i<_fField.size(); i++){
-				// -n 指定時はnullが一つでもあれば結果もnull
-				if(_null){ 
-					if(cnt.at(i)==count){ val.at(i).r( sum.at(i) );}
-					else {
-						val.at(i).null(true);
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-				}else{
-					if(cnt.at(i)==0){	
-						val.at(i).null(true);
-						if(_assertNullOUT){ _existNullOUT = true;}
-					}
-					else{
-						val.at(i).r( sum.at(i) );
-					}
-				}
-			}
-			_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),val);
-
-			//ENDなら終了
-			if((_iFile.status() & kgCSV::End )) break;
-
-			// 集計値の初期化
-			count=0;
-			for(std::size_t i=0; i<val.size(); i++){
-				sum.at(i)=0;
-				cnt.at(i)=0;
-			}
-		}
-
-		// 通常処理
-		for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-			char* str=_iFile.getNewVal(_fField.num(i));
-			if(*str!='\0'){
-				sum.at(i) += atof(str);
-				cnt.at(i) += 1;
-			}
-			else{
-				if(_assertNullIN) { _existNullIN  = true;}			
-			}
-		}
-		count+=1;
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+

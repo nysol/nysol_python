@@ -52,14 +52,8 @@ kgDuprec::kgDuprec(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDuprec::setArgs(void)
+void kgDuprec::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,n=",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_iFile.read_header();
 	
 	// f= 項目引数のセット
@@ -81,141 +75,100 @@ void kgDuprec::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgDuprec::setArgs(int i_p,int o_p)
+void kgDuprec::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,n=",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 
+	setArgsMain();
 
-	_iFile.read_header();
-	
-	// f= 項目引数のセット
-	kgstr_t fs = _args.toString("f=",false);
-	if(!fs.empty()){ _fField.set(fs,  &_iFile,_fldByNum); }
+}
 
-	// n=のセット
-	kgstr_t s=_args.toString("n=",false);
-	_num = 0;
-	if(!s.empty()){
-		_num =atoi(s.c_str());
-		if(_num <= 0){ throw kgError("n= takes interger >=1"); }
-	}
-	if((_num==0 && fs.empty())||( _num!=0 && !fs.empty())){
-		throw kgError("Either n= or f= must be specified.");
-	}
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgDuprec::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
+
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgDuprec::run(void) try 
+int kgDuprec::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	//項目名出力
+	_oFile.writeFldName(_iFile);
+
+	int gyo = _num;
+	// 行数を取得してデータ出力
+	while( EOF != _iFile.read() ){
+		if (_num==0) {
+			if(*_iFile.getVal(_fField.num(0))=='\0' && _assertNullIN ) { _existNullIN  = true;}
+			gyo = atoi(_iFile.getVal(_fField.num(0)));
+		}
+		for(int i=0;i<gyo;i++){
+			_oFile.writeFld(_iFile.fldSize(),_iFile.getFld());
+		}
+	}
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgDuprec::run(void) 
+{
 	setArgs();
-
-	//項目名出力
-	_oFile.writeFldName(_iFile);
-
-	int gyo = _num;
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		if (_num==0) {
-			if(*_iFile.getVal(_fField.num(0))=='\0' && _assertNullIN ) { _existNullIN  = true;}
-			gyo = atoi(_iFile.getVal(_fField.num(0)));
-		}
-		for(int i=0;i<gyo;i++){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getFld());
-		}
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgDuprec::run(int i_p,int o_p) try 
+
+int kgDuprec::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	//項目名出力
-	_oFile.writeFldName(_iFile);
-
-	int gyo = _num;
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		if (_num==0) {
-			if(*_iFile.getVal(_fField.num(0))=='\0' && _assertNullIN ) { _existNullIN  = true;}
-			gyo = atoi(_iFile.getVal(_fField.num(0)));
-		}
-		for(int i=0;i<gyo;i++){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getFld());
-		}
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+
 

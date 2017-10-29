@@ -52,14 +52,8 @@ kgSplit::kgSplit(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSplit::setArgs(void)
+void kgSplit::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,delim=,a=,-r",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -85,232 +79,140 @@ void kgSplit::setArgs(void)
 	}else{
 		_delim=*(s_d.c_str());
 	}
+
+}
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSplit::setArgs(void)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+
+	// 入出力ファイルオープン
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+
+	setArgsMain();
+
 
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSplit::setArgs(int i_p,int o_p)
+void kgSplit::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,f=,delim=,a=,-r",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	_iFile.read_header();
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// f= 項目引数のセット
-	vector<kgstr_t>  vs = _args.toStringVector("f=",true);
-	if( vs.size()!=1){
-		ostringstream ss;
-		ss << "f= must take just one item : f= size:" << vs.size() ;
-		throw kgError(ss.str());
-	}
-	_fField.set(vs, &_iFile,_fldByNum); 
+	setArgsMain();
 
-	_aStr = _args.toStringVector("a=",true);
+}
 
-	_remove = _args.toBool("-r");
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgSplit::runMain(void) try 
+{
+
+	char dmy[1];
+	dmy[0] = '\0';
 	
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
+	// 項目名出力
+	if (_remove){
+		vector<kgstr_t> outFldName;
+		for(size_t i=0; i<_iFile.fldSize(); i++){
+			if( _fField.flg(i) == -1  ){
+				outFldName.push_back(_iFile.fldName(i,true));
+			}
+		}
+		for(vector<kgstr_t>::size_type i=0; i<_aStr.size(); i++){
+			outFldName.push_back(_aStr.at(i));
+		}
+		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
+	}
+	else{	
+		_oFile.writeFldName(_iFile, _aStr);
 	}
 
+	kgAutoPtr2<char*> _o_stock_ap;
+	_o_stock_ap.set( new char*[_aStr.size()] );
+	char ** opp = _o_stock_ap.get();
+	while(EOF != _iFile.read() ){
+		strcpy(_outstr,_iFile.getVal(_fField.num(0)));
+		if( *_outstr=='\0'){
+			if( _assertNullIN ){ _existNullIN  = true;} 
+			if( _assertNullOUT){ _existNullOUT = true;}
+		}
+		vector<char*> eachItem = splitToken(_outstr,_delim);
+		for( size_t i=0 ;  i < _aStr.size() ;i++){
+			if( i < eachItem.size() ){ * (opp+i) = 	eachItem[i] ;}
+			else { 	
+				* (opp+i) = dmy;
+				if( _assertNullOUT){ _existNullOUT = true;}
+			} 
+		}
+		if (_remove){
+			for(size_t i=0; i<_iFile.fldSize(); i++){
+				if( _fField.flg(i) == -1  ){ _oFile.writeStr( _iFile.getVal(i), false ); }
+			}
+			for(size_t i=0; i<_aStr.size()-1; i++){
+				_oFile.writeStr( *(opp+i), false );
+			}
+				_oFile.writeStr( *(opp+_aStr.size()-1), true );
+		}
+		else{
+			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),opp,_aStr.size());
+		}
+	}
+
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+// 例外catcher
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
 }
-
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgSplit::run(void) try 
+int kgSplit::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
 	setArgs();
-	char dmy[1];
-	dmy[0] = '\0';
-
-	// 項目名出力
-	if (_remove){
-		vector<kgstr_t> outFldName;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			if( _fField.flg(i) == -1  ){
-				outFldName.push_back(_iFile.fldName(i,true));
-			}
-		}
-		for(vector<kgstr_t>::size_type i=0; i<_aStr.size(); i++){
-			outFldName.push_back(_aStr.at(i));
-		}
-		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
-	}
-	else{	
-		_oFile.writeFldName(_iFile, _aStr);
-	}
-
-	kgAutoPtr2<char*> _o_stock_ap;
-	_o_stock_ap.set( new char*[_aStr.size()] );
-	char ** opp = _o_stock_ap.get();
-	while(EOF != _iFile.read() ){
-		strcpy(_outstr,_iFile.getVal(_fField.num(0)));
-		if( *_outstr=='\0'){
-			if( _assertNullIN ){ _existNullIN  = true;} 
-			if( _assertNullOUT){ _existNullOUT = true;}
-		}
-		vector<char*> eachItem = splitToken(_outstr,_delim);
-		for( size_t i=0 ;  i < _aStr.size() ;i++){
-			if( i < eachItem.size() ){ * (opp+i) = 	eachItem[i] ;}
-			else { 	
-				* (opp+i) = dmy;
-				if( _assertNullOUT){ _existNullOUT = true;}
-			} 
-		}
-		if (_remove){
-			for(size_t i=0; i<_iFile.fldSize(); i++){
-				if( _fField.flg(i) == -1  ){ _oFile.writeStr( _iFile.getVal(i), false ); }
-			}
-			for(size_t i=0; i<_aStr.size()-1; i++){
-				_oFile.writeStr( *(opp+i), false );
-			}
-				_oFile.writeStr( *(opp+_aStr.size()-1), true );
-		}
-		else{
-			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),opp,_aStr.size());
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgSplit::run(int i_p,int o_p) try 
+int kgSplit::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	char dmy[1];
-	dmy[0] = '\0';
-
-	// 項目名出力
-	if (_remove){
-		vector<kgstr_t> outFldName;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			if( _fField.flg(i) == -1  ){
-				outFldName.push_back(_iFile.fldName(i,true));
-			}
-		}
-		for(vector<kgstr_t>::size_type i=0; i<_aStr.size(); i++){
-			outFldName.push_back(_aStr.at(i));
-		}
-		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
-	}
-	else{	
-		_oFile.writeFldName(_iFile, _aStr);
-	}
-
-	kgAutoPtr2<char*> _o_stock_ap;
-	_o_stock_ap.set( new char*[_aStr.size()] );
-	char ** opp = _o_stock_ap.get();
-	while(EOF != _iFile.read() ){
-		strcpy(_outstr,_iFile.getVal(_fField.num(0)));
-		if( *_outstr=='\0'){
-			if( _assertNullIN ){ _existNullIN  = true;} 
-			if( _assertNullOUT){ _existNullOUT = true;}
-		}
-		vector<char*> eachItem = splitToken(_outstr,_delim);
-		for( size_t i=0 ;  i < _aStr.size() ;i++){
-			if( i < eachItem.size() ){ * (opp+i) = 	eachItem[i] ;}
-			else { 	
-				* (opp+i) = dmy;
-				if( _assertNullOUT){ _existNullOUT = true;}
-			} 
-		}
-		if (_remove){
-			for(size_t i=0; i<_iFile.fldSize(); i++){
-				if( _fField.flg(i) == -1  ){ _oFile.writeStr( _iFile.getVal(i), false ); }
-			}
-			for(size_t i=0; i<_aStr.size()-1; i++){
-				_oFile.writeStr( *(opp+i), false );
-			}
-				_oFile.writeStr( *(opp+_aStr.size()-1), true );
-		}
-		else{
-			_oFile.writeFld(_iFile.getFld(),_iFile.fldSize(),opp,_aStr.size());
-		}
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
-

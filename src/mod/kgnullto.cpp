@@ -55,14 +55,8 @@ kgNullto::kgNullto(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNullto::setArgs(void)
+void kgNullto::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("k=,s=,f=,i=,o=,O=,v=,-A,-p",kgArgs::COMMON|kgArgs::IODIFF);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_iFile.read_header();
 
 	// k= 項目引数のセット
@@ -102,232 +96,133 @@ void kgNullto::setArgs(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNullto::setArgs(int i_p,int o_p)
+void kgNullto::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("k=,s=,f=,i=,o=,O=,v=,-A,-p",kgArgs::COMMON|kgArgs::IODIFF);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 
-	_iFile.read_header();
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// -A（追加）,-p(前行文字列での置換) フラグセット
-	_add_flg 		= _args.toBool("-A");
-	_prv_flg 		= _args.toBool("-p");
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-	_fField.set(vvs, &_iFile,_fldByNum);
-
-	// v= 置換文字列
-	_vField = _args.toString("v=",false);
-
-	// O= NULL値以外の置換文字列
-	_OField = _args.toString("O=",false);
-	_exp_nul = !_OField.empty();
-
-	if(_prv_flg && !_vField.empty()){ throw kgError("-p cannot be specified with v=");}
-	if(!_prv_flg && _vField.empty()){ throw kgError("-p or v= must be specified"); }
-
-	vector<kgstr_t> vss = _args.toStringVector("s=",false);
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && (!vs.empty()||!vss.empty())){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),vss.begin(),vss.end());
-		sortingRun(&_iFile,vsk);
-	}
-	_kField.set(vs,  &_iFile, _fldByNum);
+	setArgsMain();
 
 }
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgNullto::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
+}
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNullto::run(void) try 
+int kgNullto::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	//出力項目名出力 追加 or 置換
+	if(_add_flg) { _oFile.writeFldName(_iFile,_fField,true);}
+	else				 { _oFile.writeFldName(_fField, true);}
+
+	//	fieldの項目番号をセット
+	vector<int> field_lst = _fField.getNum();
+
+	// 前行保存用配列(-p用)
+	vector<string> prvRec(_fField.size());
+
+	// OUT領域確保:f=項目数分
+	kgAutoPtr2<char*> o_stock_ap;
+	try {
+		o_stock_ap.set( new char*[_fField.size()] ); 
+	} catch(...) {
+		throw kgError("memory allocation error ");
+	}
+	char** stock = o_stock_ap.get();
+
+	while( EOF != _iFile.read() ){
+
+		if( _iFile.keybreak() ){
+			if((_iFile.status() & kgCSV::End )) break;
+			if(_prv_flg){
+				for(size_t i=0 ; i<_fField.size();i++){			
+					 prvRec.at(i)="";
+				}
+			}
+		}
+		for(size_t i=0 ; i<_fField.size();i++){
+			char* val=_iFile.getNewVal(_fField.num(i));
+			if(*val=='\0'){
+				if(_prv_flg){ *(stock+i) = const_cast<char*>(prvRec.at(i).c_str());}
+				else				{ *(stock+i) = const_cast<char*>(_vField.c_str());}
+			}else{
+				if(_exp_nul){ *(stock+i) = const_cast<char*>(_OField.c_str());}
+				else				{ *(stock+i) = val;}
+				//前回値としてセット
+				if(_prv_flg){ prvRec.at(i)=val;}	
+			}
+		}
+		if(_add_flg){
+			_oFile.writeFld(_iFile.getNewFld(),_iFile.fldSize(),stock,_fField.size());		
+		}else{
+			_oFile.writeFld(_iFile.getNewFld(),_fField.getFlg_p(),stock);
+		}
+	}
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgNullto::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_fField,true);}
-	else				 { _oFile.writeFldName(_fField, true);}
-
-	//	fieldの項目番号をセット
-	vector<int> field_lst = _fField.getNum();
-
-	// 前行保存用配列(-p用)
-	vector<string> prvRec(_fField.size());
-
-	// OUT領域確保:f=項目数分
-	kgAutoPtr2<char*> o_stock_ap;
-	try {
-		o_stock_ap.set( new char*[_fField.size()] ); 
-	} catch(...) {
-		throw kgError("memory allocation error ");
-	}
-	char** stock = o_stock_ap.get();
-
-	while( EOF != _iFile.read() ){
-
-		if( _iFile.keybreak() ){
-			if((_iFile.status() & kgCSV::End )) break;
-			if(_prv_flg){
-				for(size_t i=0 ; i<_fField.size();i++){			
-					 prvRec.at(i)="";
-				}
-			}
-		}
-		for(size_t i=0 ; i<_fField.size();i++){
-			char* val=_iFile.getNewVal(_fField.num(i));
-			if(*val=='\0'){
-				if(_prv_flg){ *(stock+i) = const_cast<char*>(prvRec.at(i).c_str());}
-				else				{ *(stock+i) = const_cast<char*>(_vField.c_str());}
-			}else{
-				if(_exp_nul){ *(stock+i) = const_cast<char*>(_OField.c_str());}
-				else				{ *(stock+i) = val;}
-				//前回値としてセット
-				if(_prv_flg){ prvRec.at(i)=val;}	
-			}
-		}
-		if(_add_flg){
-			_oFile.writeFld(_iFile.getNewFld(),_iFile.fldSize(),stock,_fField.size());		
-		}else{
-			_oFile.writeFld(_iFile.getNewFld(),_fField.getFlg_p(),stock);
-		}
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgNullto::run(int i_p,int o_p) try 
+int kgNullto::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_fField,true);}
-	else				 { _oFile.writeFldName(_fField, true);}
-
-	//	fieldの項目番号をセット
-	vector<int> field_lst = _fField.getNum();
-
-	// 前行保存用配列(-p用)
-	vector<string> prvRec(_fField.size());
-
-	// OUT領域確保:f=項目数分
-	kgAutoPtr2<char*> o_stock_ap;
-	try {
-		o_stock_ap.set( new char*[_fField.size()] ); 
-	} catch(...) {
-		throw kgError("memory allocation error ");
-	}
-	char** stock = o_stock_ap.get();
-
-	while( EOF != _iFile.read() ){
-
-		if( _iFile.keybreak() ){
-			if((_iFile.status() & kgCSV::End )) break;
-			if(_prv_flg){
-				for(size_t i=0 ; i<_fField.size();i++){			
-					 prvRec.at(i)="";
-				}
-			}
-		}
-		for(size_t i=0 ; i<_fField.size();i++){
-			char* val=_iFile.getNewVal(_fField.num(i));
-			if(*val=='\0'){
-				if(_prv_flg){ *(stock+i) = const_cast<char*>(prvRec.at(i).c_str());}
-				else				{ *(stock+i) = const_cast<char*>(_vField.c_str());}
-			}else{
-				if(_exp_nul){ *(stock+i) = const_cast<char*>(_OField.c_str());}
-				else				{ *(stock+i) = val;}
-				//前回値としてセット
-				if(_prv_flg){ prvRec.at(i)=val;}	
-			}
-		}
-		if(_add_flg){
-			_oFile.writeFld(_iFile.getNewFld(),_iFile.fldSize(),stock,_fField.size());		
-		}else{
-			_oFile.writeFld(_iFile.getNewFld(),_fField.getFlg_p(),stock);
-		}
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

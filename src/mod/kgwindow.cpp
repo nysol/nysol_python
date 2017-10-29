@@ -53,14 +53,8 @@ kgWindow::kgWindow(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgWindow::setArgs(void)
+void kgWindow::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("wk=,i=,o=,k=,t=,-n,-r,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
 	_iFile.read_header();
 
 	// num=スライド数
@@ -101,61 +95,34 @@ void kgWindow::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgWindow::setArgs(int i_p,int o_p)
+void kgWindow::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("wk=,i=,o=,k=,t=,-n,-r,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	setArgsMain();
 
 
-	_iFile.read_header();
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgWindow::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
 
-	// num=スライド数
-	kgstr_t s = _args.toString("t=",true);
-	_interval = atoi(s.c_str());
-	if(_interval<=0)		{ _interval = 1; }	
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// wk= 項目引数のセット
-	vector< vector<kgstr_t> > vswk = _args.toStringVecVec("wk=",':',2,true);
-	vector<kgstr_t> sortvec = vswk[0];
-	for(size_t i=0;i<vswk[0].size();i++){
-		vector<kgstr_t> spvec = splitToken(vswk[0].at(i),'%');
-		vswk[0].at(i) = spvec[0];
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// -n NULL出力フラグ
-	_nulout = _args.toBool("-n");
-
-	// -r reverseフラグ
-	_reverse = _args.toBool("-r");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg){ 
-		vector<kgstr_t> vsk	= vs;
-		vsk.insert(vsk.end(),sortvec.begin(),sortvec.end());
-		sortingRun(&_iFile,vsk);
-	}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_wkField.set(vswk,  &_iFile,_fldByNum);
+	setArgsMain();
 
 
 }
@@ -180,10 +147,8 @@ void kgWindow::output(int s_pos,int e_pos, int nkpos)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgWindow::run(void) try 
+int kgWindow::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
 
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
@@ -298,124 +263,17 @@ int kgWindow::run(void) try
 	return 1;
 }
 
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgWindow::run(int i_p,int o_p) try 
+int kgWindow::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名出力
-	if( !_oFile.noFldName( ) ){
-		vector<kgstr_t> outfld;
-		for(string::size_type i=0; i<_wkField.size(); i++){
-			kgstr_t oName;
-			oName=_wkField.attr(i);                    
-			if( oName.empty()) oName=_wkField.name(i);
-			oName.append(_iFile.sortParaStr(_wkField.num(i)));
-			outfld.push_back( oName );
-		}
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			if(_kField.flg(i)==-1){ outfld.push_back( _iFile.fldName(i)); }
-			else{ outfld.push_back(_iFile.fldName(i,true)); }
-		}
-		_oFile.writeFldNameCHK(outfld);
-	}
-
-	// データストック領域確保:項目数*(num)分
-	_d_stock_ap.resize(_iFile.fldSize()*(_interval));
-	for(unsigned int i=0;i<_iFile.fldSize()*_interval;i++){
-		try {
-			_d_stock_ap.at(i).set( new char[KG_MAX_STR_LEN] );
-		} catch(...) {
-			throw kgError("memory allocation error ");
-		}
-	}
-
-	// 既存OUTOUT領域確保:f=項目数分+_wkFildサイズ
-	_o_stock_ap.set( new char*[_iFile.fldSize()+_wkField.size()] );
-
-	// データ格納位置セット
-	int pos=0;
-	bool full=false;
-
-	// データ集計＆出力
-	while(_iFile.read()!=EOF){
-
-		/*一行目読み込み時は何もしない*/
-		if(( _iFile.status() & kgCSV::Begin )){continue;}
-
-		// oldデータをセット
-		for(unsigned int i=0;i<_iFile.fldSize();i++){
-			strcpy(_d_stock_ap.at(pos*_iFile.fldSize()+i).get(),_iFile.getOldVal(i));
-		}
-		pos = pos_inc(pos);
-
-		if(pos==0){ full=true; }
-
-		//出力領域セット＆出力
-		if(full){
-			int nkpos=pos;
-			if(!_reverse){ nkpos=pos_dec(pos);}
-			int tpos = pos;
-			output(tpos,pos,nkpos);
-		}
-		else if(_nulout&&!_reverse){
-			int nkpos=pos_dec(pos);
-			int tpos =0;
-			output(tpos,pos,nkpos);
-		}
-
-		// キーブレイク
-		if( _iFile.keybreak() ){
-			if(_nulout&&_reverse){
-				int tpos = pos_inc(pos);
-				if(!full){tpos=0;}
-				for(;tpos!=pos;tpos=pos_inc(tpos)){
-					output(tpos,pos,tpos);
-				}
-			}
-			/*ENDなら終了*/
-			if((_iFile.status() & kgCSV::End )) break;
-			pos=0;
-			full=false;
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgWindow::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

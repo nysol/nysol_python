@@ -232,6 +232,43 @@ namespace kgnormalize_
 		}
 	}
 }
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgNormalize::setArgsMain(void)
+{
+	kgstr_t s=_args.toString("bufcount=",false);
+	int bcnt = 10;
+	if(!s.empty()){ 
+		bcnt = atoi(s.c_str());
+		if(bcnt<=0){ bcnt=1;}
+	}
+	_iFile.setbufsize(bcnt);
+	_iFile.read_header();
+  _oFile.setPrecision(_precision);
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+
+	// c= 計算方法のセット
+	_c_type = _args.toString("c=", true);
+     	 if(_c_type=="z"     ){_function=&kgnormalize_::zscore;}
+  else if(_c_type=="Z"     ){_function=&kgnormalize_::Zscore;}
+	else if(_c_type=="range" ){_function=&kgnormalize_::range; }
+	else {	throw kgError("c= takes one of `z',`Z' and `range'");	}
+
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+
+	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
+
+	_kField.set(vs,  &_iFile,_fldByNum);
+	_fField.set(vvs, &_iFile,_fldByNum);
+
+}
 
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
@@ -239,191 +276,91 @@ namespace kgnormalize_
 void kgNormalize::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("k=,f=,c=,i=,o=,bufcount=,-q",kgArgs::ALLPARAM );
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン&バッファセット
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
-	}
-	_iFile.setbufsize(bcnt);
-	_iFile.read_header();
-  _oFile.setPrecision(_precision);
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-     	 if(_c_type=="z"     ){_function=&kgnormalize_::zscore;}
-  else if(_c_type=="Z"     ){_function=&kgnormalize_::Zscore;}
-	else if(_c_type=="range" ){_function=&kgnormalize_::range; }
-	else {	throw kgError("c= takes one of `z',`Z' and `range'");	}
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
 
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgNormalize::setArgs(int i_p,int o_p)
+void kgNormalize::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("k=,f=,c=,i=,o=,bufcount=,-q",kgArgs::ALLPARAM );
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン&バッファセット
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
-	}
-	_iFile.setbufsize(bcnt);
-	_iFile.read_header();
-  _oFile.setPrecision(_precision);
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-     	 if(_c_type=="z"     ){_function=&kgnormalize_::zscore;}
-  else if(_c_type=="Z"     ){_function=&kgnormalize_::Zscore;}
-	else if(_c_type=="range" ){_function=&kgnormalize_::range; }
-	else {	throw kgError("c= takes one of `z',`Z' and `range'");	}
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNormalize::run(void) try 
+int kgNormalize::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+  _oFile.writeFldName(_iFile,_fField, true);
+
+	//キー単位で読み込み一時ファイルに出力
+	while(_iFile.blkset()!=EOF){
+		// 計算の実行本体
+		_function(_iFile, _fField, _oFile,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
+	}
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgNormalize::run(void) 
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-
-	//キー単位で読み込み一時ファイルに出力
-	while(_iFile.blkset()!=EOF){
-		// 計算の実行本体
-		_function(_iFile, _fField, _oFile,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgNormalize::run(int i_p,int o_p) try 
+
+int kgNormalize::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-
-	//キー単位で読み込み一時ファイルに出力
-	while(_iFile.blkset()!=EOF){
-		// 計算の実行本体
-		_function(_iFile, _fField, _oFile,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

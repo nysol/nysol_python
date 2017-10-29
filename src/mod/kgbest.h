@@ -44,7 +44,10 @@ class kgBest : public kgModIncludeSort {
 
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 	// 範囲内にあるかをチェックするあるならtrue,無いならfalseを返す
 	bool IsInRange(size_t val);
@@ -60,7 +63,8 @@ public:
 
 	//実行関数メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
+
 };
 
 }

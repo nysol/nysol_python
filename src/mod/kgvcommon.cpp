@@ -53,25 +53,11 @@ kgVcommon::kgVcommon(void)
 	#endif
 
 }
-
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVcommon::setArgs(void)
+void kgVcommon::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,vf=,K=,delim=,-r,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
-
-	// 入出力ファイルオープン
-	kgstr_t ifile = _args.toString("i=",false);
-	kgstr_t mfile = _args.toString("m=",false);
-	if(ifile.empty() && mfile.empty()){
-		throw kgError("Either i= or m= must be specified.");
-	}
-	_iFile.open(ifile, _env,_nfn_i);
-	_mFile.open(mfile, _env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
-
 	// 入力ファイルから項目名行を読み込む
 	_iFile.read_header();
 	_mFile.read_header();
@@ -109,78 +95,60 @@ void kgVcommon::setArgs(void)
 
 }
 
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgVcommon::setArgs(int i_p,int o_p,int m_p)
+void kgVcommon::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("i=,o=,m=,vf=,K=,delim=,-r,-A",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
+
+	// 入出力ファイルオープン
+	kgstr_t ifile = _args.toString("i=",false);
+	kgstr_t mfile = _args.toString("m=",false);
+	if(ifile.empty() && mfile.empty()){
+		throw kgError("Either i= or m= must be specified.");
+	}
+	_iFile.open(ifile, _env,_nfn_i);
+	_mFile.open(mfile, _env,_nfn_i);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+
+	setArgsMain();
+
+}
+
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgVcommon::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>2 && onum>1){ throw kgError("no match IO"); }
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
 	kgstr_t mfile = _args.toString("m=",false);
 
-	if((ifile.empty()&&i_p<=0) && ( mfile.empty()&&m_p<=0)){
+	int i_p_t = -1;
+	int m_p_t = -1;
+	if(inum>0){ i_p_t = *i_p;     }
+	if(inum>1){ m_p_t = *(i_p+1); }
+
+	if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
 		throw kgError("Either i= or m= must be specified.");
 	}
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(ifile, _env,_nfn_i);
-	}
-	if(m_p>0){
-		_mFile.popen(m_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_mFile.open(mfile, _env,_nfn_i);
-	}
+	// 入出力ファイルオープン
+	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+	else       { _iFile.open(ifile, _env,_nfn_i);}
+	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+	else       { _mFile.open(mfile, _env,_nfn_i);}
 
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-	  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
+	else{ _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// 入力ファイルから項目名行を読み込む
-	_iFile.read_header();
-	_mFile.read_header();
-
-	// vf= 項目引数のセット
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("vf=","%:",2,true,true);
-	_vfField.set(vs, &_iFile,_fldByNum);
-
-	//反転フラグ
-	_reverse  = _args.toBool("-r");
-
-	//区切り文字指定
-	kgstr_t s_d = _args.toString("delim=",false);
-	if(s_d.empty()){	
-		_delim=' ';
-	}else if(s_d.size()!=1){
-		ostringstream ss;
-		ss << "delim= takes 1 byte charactor (" << s_d << ")";
-		throw kgError(ss.str());
-	}else{
-		_delim=*(s_d.c_str());
-	}
-	
-	// K＝指定:マスタにあるkey
-	vector<kgstr_t>  vs2 = _args.toStringVector("K=",true);
-	if(vs2.size()!=1){ throw kgError("K= takes just one item "); }
-	_mkField.set(vs2, &_mFile,_fldByNum);	
-
-	// -A（追加）フラグセット
-	_add_flg 		= _args.toBool("-A");
-
-	//文字列生成用領域
-	_delimstr[0] =_delim;
-	_delimstr[1] ='\0';
-
-
+	setArgsMain();
 
 }
 
@@ -206,15 +174,11 @@ void kgVcommon::output_n(char *str,bool eol)
 
 } 
 
-
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgVcommon::run(void) try 
+int kgVcommon::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
 
 	// 参照ファイルからitemのhash表を作成する
 	while(EOF != _mFile.read() ){
@@ -283,78 +247,17 @@ int kgVcommon::run(void) try
 	return 1;
 }
 
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgVcommon::run(int i_p,int o_p,int m_p) try 
+int kgVcommon::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p, o_p,m_p);
+	setArgs();
+	return runMain();
+}
 
-	// 参照ファイルからitemのhash表を作成する
-	while(EOF != _mFile.read() ){
-		const char* item = _mFile.getVal(_mkField.num(0));
-		if(_assertNullKEY && *item=='\0') { _existNullKEY = true; }
-		_itmSet.insert(item);
-	}
-
-	//出力項目名出力 追加 or 置換
-	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
-	else				 { _oFile.writeFldName(_vfField, true);}
-	int outsize = _iFile.fldSize();
-	if(_add_flg) { outsize += _vfField.size(); }	
-
-
-	while(EOF != _iFile.read() ){
-
-		int outcnt=0;
-		for(size_t i=0; i<_iFile.fldSize(); i++){
-			outcnt++;
-			char* str=_iFile.getVal(i);			
-			if(_add_flg||_vfField.flg(i)==-1){
-				_oFile.writeStr(str,outcnt==outsize);
-			}
-			else{
-				if(_assertNullIN && *str=='\0' ) { _existNullIN  = true;}
-				output_n(str,outcnt==outsize);
-			}
-		}
-		if(_add_flg){
-			for(kgstr_t::size_type i=0 ; i< _vfField.size() ;i++){
-				outcnt++;
-				if(_assertNullIN && *_iFile.getVal(_vfField.num(i))=='\0') { _existNullIN  = true;}
-				output_n(_iFile.getVal(_vfField.num(i)),outcnt==outsize);
-			}
-		}
-	}
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	_iFile.close();
-	_mFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgVcommon::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

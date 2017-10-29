@@ -53,17 +53,12 @@ kgRand::kgRand(void)
 	#endif
 
 }
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgRand::setArgs(void)
+void kgRand::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("S=,min=,max=,a=,i=,o=,k=,-int,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_oFile.setPrecision(_precision);
 	_iFile.read_header();
 
@@ -131,85 +126,37 @@ void kgRand::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgRand::setArgs(int i_p,int o_p)
+void kgRand::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("S=,min=,max=,a=,i=,o=,k=,-int,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_oFile.setPrecision(_precision);
-	_iFile.read_header();
+	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
+	setArgsMain();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
+}
 
-	//キー指定が有ればキー内では全行同じ乱数
-	_B_flg = false;
-	if(vs.size() != 0){
-		_B_flg = true;
-	}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgRand::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
 
-	// a= 項目引数のセット
-	_aField = _args.toString("a=",false);
-	if(_aField.empty()&& _nfn_o==false){
-		throw kgError("parameter a= is mandatory");
-	}
 
-	//乱数の種
-	kgstr_t S_s = _args.toString("S=",false);
-	if(S_s.empty())	{
-		// 乱数の種生成（時間）
-		posix_time::ptime now = posix_time::microsec_clock::local_time();
-		posix_time::time_duration nowt = now.time_of_day();
-		_seed = static_cast<unsigned long>(nowt.total_microseconds());
-	}
-	else	{ _seed = static_cast<unsigned long>(aToSizeT(S_s.c_str()));}
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
-	_int_rand = _args.toBool("-int");
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-	//乱数の最小値(min)
-	kgstr_t min_s = _args.toString("min=",false);
-	if(min_s.empty())	{ _min = 0;}
-	else	{ _min = atoi(min_s.c_str());}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	//乱数の最大値(max)
-	kgstr_t max_s = _args.toString("max=",false);
-	if(max_s.empty())	{ _max = INT_MAX;}
-	else	{ _max = atoi(max_s.c_str());}
+	setArgsMain();
 
-	// エラーチェック
-	if(!_int_rand&&(!min_s.empty()||!max_s.empty())){
-		throw kgError("min= or max=  must be specified with -int.");	
-	}
-
-	if(!_int_rand){
-		_min=0;
-		_max=1;
-	}
-
-	//最小値最大値のチェック
-	if(_min>_max){
-		ostringstream ss;
-		ss << "min= > max= [" << _min << ">" << _max << "]" ;
-		throw kgError(ss.str());
-	}	
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
 
 }
 // -----------------------------------------------------------------------------
@@ -226,11 +173,8 @@ void kgRand::writeFld(char** fld ,int size ,double val)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgRand::run(void) try 
+int kgRand::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
 
@@ -316,96 +260,19 @@ int kgRand::run(void) try
 	return 1;
 }
 
+
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgRand::run(int i_p,int o_p) try 
+int kgRand::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-	_oFile.writeFldName(_iFile, _aField);
-
-	//実数版
-	if(!_int_rand){
-		uniform_real<> dst_r(_min,_max);
-		variate_generator< mt19937,uniform_real<> > *rand_r=NULL;
-		double val=0;
-		while(_iFile.read()!=EOF){
-			if((_iFile.status() & kgCSV::End )) break;
-			//keybreakあるいは最初は乱数生成エンジン生成
-			if( _iFile.begin() ){
-				rand_r = new variate_generator< mt19937,uniform_real<> > (mt19937(_seed),dst_r);
-			}
-			if( _iFile.keybreak() ){
-				if(!_B_flg){
-					if(rand_r){ delete rand_r;}
-					rand_r = new variate_generator< mt19937,uniform_real<> > (mt19937(_seed),dst_r);
-				}
-			}
-			if( _iFile.begin() ||  _iFile.keybreak() || !_B_flg ){
-				val=(*rand_r)();
-			}
-			writeFld(_iFile.getNewFld() ,_iFile.fldSize() ,val);
-		}
-		if(rand_r){ delete rand_r ;}
-	}
-	else{//整数版
-		uniform_int<> dst_i(_min,_max);
-		variate_generator< mt19937,uniform_int<> > *rand_i=NULL;
-		int val=0;
-		while(_iFile.read()!=EOF){
-			//keybreakあるいは最初は乱数生成エンジン生成
-			if((_iFile.status() & kgCSV::End )) break;
-			if( _iFile.begin() ){
-				rand_i = new variate_generator< mt19937,uniform_int<> > (mt19937(_seed),dst_i);
-			}
-			if( _iFile.keybreak() ){
-				if(!_B_flg){
-					if(rand_i){ delete rand_i;}
-					rand_i = new variate_generator< mt19937,uniform_int<> > (mt19937(_seed),dst_i);
-				}
-			}
-			if( _iFile.begin() ||  _iFile.keybreak() || !_B_flg ){
-				val=(*rand_i)();
-			}
-			_oFile.writeFld(_iFile.getNewFld() ,_iFile.fldSize() ,val,false);
-		}
-		if(rand_i){ delete rand_i;}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgRand::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

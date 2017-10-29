@@ -574,7 +574,10 @@ class kgMvsim : public kgModIncludeSort {
 	boost::function<kgmvsim_::kgMvSimFunc*(size_t,size_t)> _function;
 
   void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 public:
   // コンストラクタ
@@ -587,7 +590,7 @@ public:
 	
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

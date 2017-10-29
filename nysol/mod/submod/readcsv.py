@@ -17,6 +17,5 @@ class Nysol_Readcsv(NysolMOD_CORE):
 		else :
 			print("unsuport type")
 			return None
-			
 		super(Nysol_Readcsv,self).__init__("readcsv",nutil.args2dict((),kw_args,Nysol_Readcsv.kwd))
 

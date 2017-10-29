@@ -54,8 +54,11 @@ class kgPadding : public kgModIncludeSort
 	boost::gregorian::date _today;
 	
   void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
 
+	int runMain(void);
+	
 	bool parseTime(const char* str,boost::posix_time::ptime& value);
 	bool parseDate(const char* str,boost::gregorian::date& value);
 
@@ -76,7 +79,7 @@ public:
 
 	// 実行
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 	// コマンド固有の公開メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }

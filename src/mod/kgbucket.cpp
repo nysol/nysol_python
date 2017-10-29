@@ -148,22 +148,11 @@ kgBucket::kgBucket(void)
 
 }
 // -----------------------------------------------------------------------------
-// 入出力ファイルオープン
+// パラーメータセット
 // -----------------------------------------------------------------------------
-void kgBucket::setArgs(void){
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,O=,n=,F=,-r,-rng,bufcount=,-q",kgArgs::ALLPARAM);
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+void kgBucket::setArgsMain(void){
+
   _oFile.setPrecision(_precision);
-	kgstr_t rFile = _args.toString("O=",false);
-	if(rFile.empty()){ _rangefile=false; }
-	else {
-		_rangefile=true;
-		_rFile.open(rFile,_env,_nfn_o);
-  	_rFile.setPrecision(_precision);
-	}	
 	//バッファサイズ変更
 	kgstr_t s=_args.toString("bufcount=",false);
 	int bcnt = 10;
@@ -190,8 +179,6 @@ void kgBucket::setArgs(void){
 		_bktSize.push_back(cnt);			
 	}
 	
-	
-
 	// F=出力タイプ(0 or 1 or 2)
 	kgstr_t F_s = _args.toString("F=",false);
 	if(F_s.empty())	{ _out_type=0;}
@@ -228,26 +215,16 @@ void kgBucket::setArgs(void){
 
 }
 // -----------------------------------------------------------------------------
-// 入出力ファイルオープン
+// パラメータチェック&入出力オープン
 // -----------------------------------------------------------------------------
-void kgBucket::setArgs(int i_p,int o_p){
+void kgBucket::setArgs(void){
+
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,O=,n=,F=,-r,-rng,bufcount=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
+	// 入出力ファイルオープン
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-
-  _oFile.setPrecision(_precision);
 	kgstr_t rFile = _args.toString("O=",false);
 	if(rFile.empty()){ _rangefile=false; }
 	else {
@@ -255,68 +232,36 @@ void kgBucket::setArgs(int i_p,int o_p){
 		_rFile.open(rFile,_env,_nfn_o);
   	_rFile.setPrecision(_precision);
 	}	
-	//バッファサイズ変更
-	kgstr_t s=_args.toString("bufcount=",false);
-	int bcnt = 10;
-	if(!s.empty()){ 
-		bcnt = atoi(s.c_str());
-		if(bcnt<=0){ bcnt=1;}
+	setArgsMain();
+}
+void kgBucket::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>2){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	kgstr_t rFile = _args.toString("O=",false);
+
+	if(onum>1 && *(o_p+1)>0){ 
+		_rangefile=true;
+		_rFile.popen(*(o_p+1), _env,_nfn_o); 
+  	_rFile.setPrecision(_precision);
 	}
-	_iFile.setbufsize(bcnt);
-
-	// 入力ファイルから項目名行を読み込む
-	_iFile.read_header();
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",':',2,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// n= 分割数のセット(2以上)
-	vector<kgstr_t> vs_n =_args.toStringVector("n=",true);
-	for(vector<kgstr_t>::size_type i=0; i<vs_n.size();i++){
-		int cnt = atoi(vs_n.at(i).c_str());
-		if(cnt < 2){ throw kgError("the number of buckets (n=) must be >=2"); }
-		_bktSize.push_back(cnt);			
+	else if(rFile.empty()){
+		_rangefile=false;
 	}
-	
-	
-
-	// F=出力タイプ(0 or 1 or 2)
-	kgstr_t F_s = _args.toString("F=",false);
-	if(F_s.empty())	{ _out_type=0;}
-	else						{ _out_type = atoi(F_s.c_str());}
-	if(_out_type>2 && _out_type<0){
-		throw kgError("F= parameter must take 0,1 or 2");
+	else{
+		_rangefile=true;
+		_rFile.open(rFile,_env,_nfn_o);
+  	_rFile.setPrecision(_precision);
 	}
-	
-	//rngタイプバケット分割する
-	_rng_flg = _args.toBool("-rng");
-
-	//逆順でバケット番号をふる
-	_reverse = _args.toBool("-r");
-	
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-
-	_kField.set(vs,  &_iFile, _fldByNum);
-	_fField.set(vvs, &_iFile, _fldByNum);
-
-	// n=パラメータに指定された値が一つであれば，全ての項目の分割数を
-	// この値にする．
-	if(_bktSize.size()==1){
-		for(vector<kgstr_t>::size_type i=1; i<_fField.size(); i++){
-			_bktSize.push_back(_bktSize.at(0));			
-		}
-	}
-	// サイズチェック
-	if( _fField.size() != _bktSize.size()){
-		throw kgError("the number of arguments on f= and n= must be same");
-	}
-
+	setArgsMain();
 }
 // -----------------------------------------------------------------------------
 // 範囲ファイルの項目名の出力
@@ -339,340 +284,188 @@ void kgBucket::writeFldName_RangeF()
 	_rFile.writeStr("rangeTo"  );
 	_rFile.writeEolNC();
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgBucket::run(void) try 
+int kgBucket::runMain(void) try 
+{
+
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+
+	// 項目名の出力
+  _oFile.writeFldName(_iFile,_fField, true);
+	if(_rangefile){ writeFldName_RangeF();}
+
+	while(_iFile.blkset()!=EOF){
+		//範囲セット領域
+		vector< vector<rTbl> > rtables(_fField.size());
+		if(_rng_flg){
+			// 最小値と最大値を計算
+			vector<double> mintables(_fField.numSize(), DBL_MAX);
+			vector<double> maxtables(_fField.numSize(),-DBL_MAX);
+			while(_iFile.blkread() != EOF){
+				for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
+					char* str=_iFile.getBlkVal(_fField.num(i));
+					if(*str!='\0'){ // null値判定
+          	double tmp_val=atof(str);
+						if( maxtables.at(i) < tmp_val ) maxtables.at(i)=tmp_val;
+						if( mintables.at(i) > tmp_val ) mintables.at(i)=tmp_val;
+					}
+				}
+			}
+			// 範囲のセット
+			for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
+				if(maxtables.at(i)==-DBL_MAX || mintables.at(i)== DBL_MAX){ continue; }
+				if(maxtables.at(i)==mintables.at(i)){
+					vector<rTbl> rtable(1);
+					rtable.at(0).from	= maxtables.at(i);
+					rtable.at(0).to		= mintables.at(i);
+					rtables.at(i) = rtable;
+				}else{
+					vector<rTbl> rtable(_bktSize.at(i));
+					double step = ( maxtables.at(i) - mintables.at(i) )/(double)(_bktSize.at(i));
+					for(vector<kgstr_t>::size_type j=0 ;j<_bktSize.at(i);j++){
+						rtable.at(j).from	= mintables.at(i)+ j*step;
+						if(j==_bktSize.at(i)-1)	rtable.at(j).to		= maxtables.at(i);
+						else 												rtable.at(j).to		= mintables.at(i)+(j+1)*step;
+					}
+					rtables.at(i) = rtable;
+				}
+			}
+		}
+		else{
+			// 値と出現回数のmapテーブル作成
+			vector< map<double,int> >ctables(_fField.size());
+			while(_iFile.blkread() != EOF){
+				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+					char* str=_iFile.getBlkVal(_fField.num(i));
+					if(*str!='\0'){ // null値判定
+						++((ctables.at(i))[atof(str)]);
+					}
+				}
+			}
+			//	値と出現数のテーブルからfieldごとに最適カットポイントを求める
+			//	最終的にrtablesにfieldごとの最適なカットポイント(範囲)をセットする
+			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+				if(ctables.at(i).size()!=0){ // 一件もデータがない時は分割実行しない
+					rtables.at(i)= calcutpoint( ctables.at(i),_bktSize.at(i));
+				}
+			}
+		}
+		// 範囲ファイルの出力
+		if(_rangefile){
+			for(vector<kgstr_t>::size_type h=0; h<_fField.size(); h++){
+				if(rtables.at(h).size()==0) continue; // 一件もデータがない時は出力しない
+				for(unsigned int j=0; j<rtables.at(h).size(); j++){
+					for(unsigned int k=0; k<_kField.size(); k++){
+						_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
+					}
+					_rFile.writeStr(_fField.name(h).c_str(),false);
+					if(_reverse) _rFile.writeInt(rtables.at(h).size()-j,false);
+					else         _rFile.writeInt(j+1                ,false);
+					if(j==0){ // 最初のバケットのlowerは出力しない
+						_rFile.writeStr("",false);
+					}else{
+						_rFile.writeDbl(rtables.at(h).at(j).from,false);
+					}
+					if(j==rtables.at(h).size()-1){ // 最後のバケットのupperは出力しない
+						_rFile.writeStr("",true);
+					}else{
+						_rFile.writeDbl(rtables.at(h).at(j).to,true);
+					}
+				}
+			}
+		}
+		// 出力処理
+		_iFile.seekBlkTop();
+		while(_iFile.blkread() != EOF){
+			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
+			vector<int> val(_fField.size());
+			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
+				bool eol= ( i==_fField.size()-1 );
+				char* str = _iFile.getBlkVal(_fField.num(i));
+				if(*str=='\0'){
+					if(_assertNullIN) { _existNullIN  = true;}
+					if(_assertNullOUT){ _existNullOUT = true;}
+					_oFile.writeStr("", eol);
+				}else{
+					double checkval = atof( _iFile.getBlkVal(_fField.num(i)) );
+					unsigned int bktNo;
+					for(bktNo=0; bktNo<rtables.at(i).size()-1; bktNo++){
+						if( checkval<rtables.at(i).at(bktNo).to ) break;
+					}
+					switch (_out_type){
+					case 0:
+						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo,eol);}
+						else        { _oFile.writeInt(bktNo+1                   ,eol);}
+						break;
+					case 1:
+						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
+						_oFile.writeStr( "_" );
+						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
+						else{	_oFile.writeStr("",eol);}
+						break;
+					default :
+						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo);}
+						else        { _oFile.writeInt(bktNo+1                );}
+						_oFile.writeStr( ":" );
+						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
+						_oFile.writeStr( "_" );
+						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
+						else{ _oFile.writeStr("",eol);}
+						break;
+					}
+				}
+			}
+		}
+	}
+	//ASSERT keynull_CHECK
+	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
+	th_cancel();
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	if(_rangefile){ _rFile.close();}
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgBucket::run(void) 
 {
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-	if(_rangefile){ writeFldName_RangeF();}
-
-	while(_iFile.blkset()!=EOF){
-		//範囲セット領域
-		vector< vector<rTbl> > rtables(_fField.size());
-		if(_rng_flg){
-			// 最小値と最大値を計算
-			vector<double> mintables(_fField.numSize(), DBL_MAX);
-			vector<double> maxtables(_fField.numSize(),-DBL_MAX);
-			while(_iFile.blkread() != EOF){
-				for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
-					char* str=_iFile.getBlkVal(_fField.num(i));
-					if(*str!='\0'){ // null値判定
-          	double tmp_val=atof(str);
-						if( maxtables.at(i) < tmp_val ) maxtables.at(i)=tmp_val;
-						if( mintables.at(i) > tmp_val ) mintables.at(i)=tmp_val;
-					}
-				}
-			}
-			// 範囲のセット
-			for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
-				if(maxtables.at(i)==-DBL_MAX || mintables.at(i)== DBL_MAX){ continue; }
-				if(maxtables.at(i)==mintables.at(i)){
-					vector<rTbl> rtable(1);
-					rtable.at(0).from	= maxtables.at(i);
-					rtable.at(0).to		= mintables.at(i);
-					rtables.at(i) = rtable;
-				}else{
-					vector<rTbl> rtable(_bktSize.at(i));
-					double step = ( maxtables.at(i) - mintables.at(i) )/(double)(_bktSize.at(i));
-					for(vector<kgstr_t>::size_type j=0 ;j<_bktSize.at(i);j++){
-						rtable.at(j).from	= mintables.at(i)+ j*step;
-						if(j==_bktSize.at(i)-1)	rtable.at(j).to		= maxtables.at(i);
-						else 												rtable.at(j).to		= mintables.at(i)+(j+1)*step;
-					}
-					rtables.at(i) = rtable;
-				}
-			}
-		}
-		else{
-			// 値と出現回数のmapテーブル作成
-			vector< map<double,int> >ctables(_fField.size());
-			while(_iFile.blkread() != EOF){
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					char* str=_iFile.getBlkVal(_fField.num(i));
-					if(*str!='\0'){ // null値判定
-						++((ctables.at(i))[atof(str)]);
-					}
-				}
-			}
-			//	値と出現数のテーブルからfieldごとに最適カットポイントを求める
-			//	最終的にrtablesにfieldごとの最適なカットポイント(範囲)をセットする
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				if(ctables.at(i).size()!=0){ // 一件もデータがない時は分割実行しない
-					rtables.at(i)= calcutpoint( ctables.at(i),_bktSize.at(i));
-				}
-			}
-		}
-		// 範囲ファイルの出力
-		if(_rangefile){
-			for(vector<kgstr_t>::size_type h=0; h<_fField.size(); h++){
-				if(rtables.at(h).size()==0) continue; // 一件もデータがない時は出力しない
-				for(unsigned int j=0; j<rtables.at(h).size(); j++){
-					for(unsigned int k=0; k<_kField.size(); k++){
-						_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-					}
-					_rFile.writeStr(_fField.name(h).c_str(),false);
-					if(_reverse) _rFile.writeInt(rtables.at(h).size()-j,false);
-					else         _rFile.writeInt(j+1                ,false);
-					if(j==0){ // 最初のバケットのlowerは出力しない
-						_rFile.writeStr("",false);
-					}else{
-						_rFile.writeDbl(rtables.at(h).at(j).from,false);
-					}
-					if(j==rtables.at(h).size()-1){ // 最後のバケットのupperは出力しない
-						_rFile.writeStr("",true);
-					}else{
-						_rFile.writeDbl(rtables.at(h).at(j).to,true);
-					}
-				}
-			}
-		}
-		// 出力処理
-		_iFile.seekBlkTop();
-		while(_iFile.blkread() != EOF){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-			vector<int> val(_fField.size());
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				bool eol= ( i==_fField.size()-1 );
-				char* str = _iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0'){
-					if(_assertNullIN) { _existNullIN  = true;}
-					if(_assertNullOUT){ _existNullOUT = true;}
-					_oFile.writeStr("", eol);
-				}else{
-					double checkval = atof( _iFile.getBlkVal(_fField.num(i)) );
-					unsigned int bktNo;
-					for(bktNo=0; bktNo<rtables.at(i).size()-1; bktNo++){
-						if( checkval<rtables.at(i).at(bktNo).to ) break;
-					}
-					switch (_out_type){
-					case 0:
-						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo,eol);}
-						else        { _oFile.writeInt(bktNo+1                   ,eol);}
-						break;
-					case 1:
-						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
-						_oFile.writeStr( "_" );
-						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
-						else{	_oFile.writeStr("",eol);}
-						break;
-					default :
-						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo);}
-						else        { _oFile.writeInt(bktNo+1                );}
-						_oFile.writeStr( ":" );
-						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
-						_oFile.writeStr( "_" );
-						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
-						else{ _oFile.writeStr("",eol);}
-						break;
-					}
-				}
-			}
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	th_cancel();
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	if(_rangefile){ _rFile.close();}
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgBucket::run(int i_p,int o_p) try 
+int kgBucket::run(int inum,int *i_p,int onum, int* o_p)
 {
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile,_fField, true);
-	if(_rangefile){ writeFldName_RangeF();}
-
-	while(_iFile.blkset()!=EOF){
-		//範囲セット領域
-		vector< vector<rTbl> > rtables(_fField.size());
-		if(_rng_flg){
-			// 最小値と最大値を計算
-			vector<double> mintables(_fField.numSize(), DBL_MAX);
-			vector<double> maxtables(_fField.numSize(),-DBL_MAX);
-			while(_iFile.blkread() != EOF){
-				for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
-					char* str=_iFile.getBlkVal(_fField.num(i));
-					if(*str!='\0'){ // null値判定
-          	double tmp_val=atof(str);
-						if( maxtables.at(i) < tmp_val ) maxtables.at(i)=tmp_val;
-						if( mintables.at(i) > tmp_val ) mintables.at(i)=tmp_val;
-					}
-				}
-			}
-			// 範囲のセット
-			for(vector<kgstr_t>::size_type i=0; i<_fField.numSize(); i++){
-				if(maxtables.at(i)==-DBL_MAX || mintables.at(i)== DBL_MAX){ continue; }
-				if(maxtables.at(i)==mintables.at(i)){
-					vector<rTbl> rtable(1);
-					rtable.at(0).from	= maxtables.at(i);
-					rtable.at(0).to		= mintables.at(i);
-					rtables.at(i) = rtable;
-				}else{
-					vector<rTbl> rtable(_bktSize.at(i));
-					double step = ( maxtables.at(i) - mintables.at(i) )/(double)(_bktSize.at(i));
-					for(vector<kgstr_t>::size_type j=0 ;j<_bktSize.at(i);j++){
-						rtable.at(j).from	= mintables.at(i)+ j*step;
-						if(j==_bktSize.at(i)-1)	rtable.at(j).to		= maxtables.at(i);
-						else 												rtable.at(j).to		= mintables.at(i)+(j+1)*step;
-					}
-					rtables.at(i) = rtable;
-				}
-			}
-		}
-		else{
-			// 値と出現回数のmapテーブル作成
-			vector< map<double,int> >ctables(_fField.size());
-			while(_iFile.blkread() != EOF){
-				for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-					char* str=_iFile.getBlkVal(_fField.num(i));
-					if(*str!='\0'){ // null値判定
-						++((ctables.at(i))[atof(str)]);
-					}
-				}
-			}
-			//	値と出現数のテーブルからfieldごとに最適カットポイントを求める
-			//	最終的にrtablesにfieldごとの最適なカットポイント(範囲)をセットする
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				if(ctables.at(i).size()!=0){ // 一件もデータがない時は分割実行しない
-					rtables.at(i)= calcutpoint( ctables.at(i),_bktSize.at(i));
-				}
-			}
-		}
-		// 範囲ファイルの出力
-		if(_rangefile){
-			for(vector<kgstr_t>::size_type h=0; h<_fField.size(); h++){
-				if(rtables.at(h).size()==0) continue; // 一件もデータがない時は出力しない
-				for(unsigned int j=0; j<rtables.at(h).size(); j++){
-					for(unsigned int k=0; k<_kField.size(); k++){
-						_rFile.writeStr(_iFile.getOldVal(_kField.num(k)),false);
-					}
-					_rFile.writeStr(_fField.name(h).c_str(),false);
-					if(_reverse) _rFile.writeInt(rtables.at(h).size()-j,false);
-					else         _rFile.writeInt(j+1                ,false);
-					if(j==0){ // 最初のバケットのlowerは出力しない
-						_rFile.writeStr("",false);
-					}else{
-						_rFile.writeDbl(rtables.at(h).at(j).from,false);
-					}
-					if(j==rtables.at(h).size()-1){ // 最後のバケットのupperは出力しない
-						_rFile.writeStr("",true);
-					}else{
-						_rFile.writeDbl(rtables.at(h).at(j).to,true);
-					}
-				}
-			}
-		}
-		// 出力処理
-		_iFile.seekBlkTop();
-		while(_iFile.blkread() != EOF){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld(),false);
-			vector<int> val(_fField.size());
-			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				bool eol= ( i==_fField.size()-1 );
-				char* str = _iFile.getBlkVal(_fField.num(i));
-				if(*str=='\0'){
-					if(_assertNullIN) { _existNullIN  = true;}
-					if(_assertNullOUT){ _existNullOUT = true;}
-					_oFile.writeStr("", eol);
-				}else{
-					double checkval = atof( _iFile.getBlkVal(_fField.num(i)) );
-					unsigned int bktNo;
-					for(bktNo=0; bktNo<rtables.at(i).size()-1; bktNo++){
-						if( checkval<rtables.at(i).at(bktNo).to ) break;
-					}
-					switch (_out_type){
-					case 0:
-						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo,eol);}
-						else        { _oFile.writeInt(bktNo+1                   ,eol);}
-						break;
-					case 1:
-						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
-						_oFile.writeStr( "_" );
-						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
-						else{	_oFile.writeStr("",eol);}
-						break;
-					default :
-						if(_reverse){ _oFile.writeInt(rtables.at(i).size()-bktNo);}
-						else        { _oFile.writeInt(bktNo+1                );}
-						_oFile.writeStr( ":" );
-						if(bktNo!=0){ _oFile.writeDbl( rtables.at(i).at(bktNo).from );}
-						_oFile.writeStr( "_" );
-						if(bktNo!=rtables.at(i).size()-1){ _oFile.writeDbl( rtables.at(i).at(bktNo).to, eol );}
-						else{ _oFile.writeStr("",eol);}
-						break;
-					}
-				}
-			}
-		}
-	}
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	th_cancel();
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	if(_rangefile){ _rFile.close();}
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
+

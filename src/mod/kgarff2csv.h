@@ -39,7 +39,10 @@ class kgArff2csv : public kgMod
 	
 	// 引数セット
 	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+	void setArgs(int inum,int *i,int onum, int* o);
+
+	int runMain(void);
+
 	void arff2data(char* recdata,char* setdata);
 	bool sameStr(const char* rec, const char* str);
 
@@ -55,7 +58,7 @@ public:
 
 	//実行関数メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i,int onum, int* o);
 
 
 };

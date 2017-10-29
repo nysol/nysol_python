@@ -52,8 +52,11 @@ class kgNrjoin:public kgModIncludeSort
 	bool _range1_type,_range2_type;
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p,int m_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
 
 	// 範囲マッチ
 	void range_match(void);
@@ -73,7 +76,7 @@ public:
 	size_t oRecNo(void) const { return _oFile.recNo(); }
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p,int m_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 
 };

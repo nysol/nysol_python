@@ -80,215 +80,131 @@ kgArff2csv::kgArff2csv(void)
 	#ifdef JPN_FORMAT
 		#include <help/jp/kgarff2csvHelp.h>
 	#endif
-
 }
-
-
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
+// 入力ファイル ヘッダ無パターンで読み込む
 // -----------------------------------------------------------------------------
 void kgArff2csv::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::NULL_OUT);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	// (入力ファイルオープンヘッダ無パターンで読み込む)
 	_iFile.open(_args.toString("i=",false), _env, true);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
 	_iFile.read_header();
 }
 
-
-// -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kgArff2csv::setArgs(int i_p,int o_p)
+void kgArff2csv::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::NULL_OUT);
+
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,true);
-	}
-	else{
-//		_iF =fopen(_args.toString("i=",false).c_str(),"r");
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env, true); }
+	else     { _iFile.open(_args.toString("i=",false), _env, true); }
 
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,true);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
 	_iFile.read_header();
-}
 
+}
 // -----------------------------------------------------------------------------
-// 実行
 // arffは@ATTRIBUTEが項目名行(上から順番にcsvの左から順番の項目になる)で、
 // @DATA行以降がデータ(csv)になるので@DATA行以降csvとして出力していく(DQのチェックも行う)
 // -----------------------------------------------------------------------------
-int kgArff2csv::run(void) try 
+int kgArff2csv::runMain() try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	bool dataflg=false;
+	int fldcnt=0;
+	char** sepstr=0;
+
+	kgAutoPtr2<char> buf_ap;
+	kgAutoPtr2<char*> ap;
+	vector<kgstr_t> outfld;
+	buf_ap.set( new char[KG_MaxRecLen] );
+	char *strtmp = buf_ap.get();
+	char *recstr;
+
+	// arff -> csv変換処理
+	while( EOF != _iFile.read() ){
+		recstr =	_iFile.getRec();
+		//コメント行はskip
+		if(*recstr=='%'){continue; }
+		if(dataflg){//データ行出力
+			strcpy(strtmp,recstr);
+			sepFldToken(sepstr,fldcnt,strtmp);
+			if(_assertNullOUT){ 
+				for(size_t i=0 ; i<fldcnt ; i++){
+					if( *sepstr[i] =='\0' ){ _existNullOUT = true; break;}
+				}
+			}
+			_oFile.writeFld(fldcnt,sepstr);
+
+		}
+		else{
+			char *p =strtmp;
+			if(sameStr(recstr,"@attribute")){
+				arff2data(recstr,p);
+				fldcnt++;
+				outfld.push_back(p);
+			}
+			if(sameStr(recstr,"@data")){
+				if( !_oFile.noFldName( ) ){
+					_oFile.writeFldNameCHK(outfld);
+				}
+				dataflg=true;
+				try {
+					ap.set( new char*[fldcnt] );
+				}catch(...){
+					throw kgError("memory allocation error");
+				}
+				sepstr=ap.get();
+			}
+		}
+	}
+	// 終了処理
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行 
+// -----------------------------------------------------------------------------
+int kgArff2csv::run(void) 
+{
 	setArgs();
-
-	bool dataflg=false;
-	int fldcnt=0;
-	char** sepstr=0;
-	kgAutoPtr2<char> buf_ap;
-	kgAutoPtr2<char*> ap;
-	vector<kgstr_t> outfld;
-	buf_ap.set( new char[KG_MaxRecLen] );
-	char *strtmp = buf_ap.get();
-	char *recstr;
-
-
-	// arff -> csv変換処理
-	while( EOF != _iFile.read() ){
-		char* recstr =	_iFile.getRec();
-		//コメント行はskip
-		if(*recstr=='%'){continue; }
-		if(dataflg){//データ行出力
-			strcpy(strtmp,recstr);
-			sepFldToken(sepstr,fldcnt,strtmp);
-			if(_assertNullOUT){ 
-				for(size_t i=0 ; i<fldcnt ; i++){
-					if( *sepstr[i] =='\0' ){ _existNullOUT = true; break;}
-				}
-			}
-			_oFile.writeFld(fldcnt,sepstr);
-		}
-		else{
-			char *p =strtmp;
-			if(sameStr(recstr,"@attribute")){
-				arff2data(recstr,p);
-				fldcnt++;
-				outfld.push_back(p);
-			}
-			if(sameStr(recstr,"@data")){
-				if( !_oFile.noFldName( ) ){
-					_oFile.writeFldNameCHK(outfld);
-				}
-				dataflg=true;
-				try {
-					ap.set( new char*[fldcnt] );
-				}catch(...){
-					throw kgError("memory allocation error");
-				}
-				sepstr=ap.get();
-			}
-		}
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-	
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-int kgArff2csv::run(int i_p,int o_p) try 
+int kgArff2csv::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-	bool dataflg=false;
-	int fldcnt=0;
-	char** sepstr=0;
-
-	kgAutoPtr2<char> buf_ap;
-	kgAutoPtr2<char*> ap;
-	vector<kgstr_t> outfld;
-	buf_ap.set( new char[KG_MaxRecLen] );
-	char *strtmp = buf_ap.get();
-	char *recstr;
-
-	// arff -> csv変換処理
-	while( EOF != _iFile.read() ){
-		char* recstr =	_iFile.getRec();
-		//コメント行はskip
-		if(*recstr=='%'){continue; }
-		if(dataflg){//データ行出力
-			strcpy(strtmp,recstr);
-			sepFldToken(sepstr,fldcnt,strtmp);
-			if(_assertNullOUT){ 
-				for(size_t i=0 ; i<fldcnt ; i++){
-					if( *sepstr[i] =='\0' ){ _existNullOUT = true; break;}
-				}
-			}
-			_oFile.writeFld(fldcnt,sepstr);
-
-		}
-		else{
-			char *p =strtmp;
-			if(sameStr(recstr,"@attribute")){
-				arff2data(recstr,p);
-				fldcnt++;
-				outfld.push_back(p);
-			}
-			if(sameStr(recstr,"@data")){
-				if( !_oFile.noFldName( ) ){
-					_oFile.writeFldNameCHK(outfld);
-				}
-				dataflg=true;
-				try {
-					ap.set( new char*[fldcnt] );
-				}catch(...){
-					throw kgError("memory allocation error");
-				}
-				sepstr=ap.get();
-			}
-		}
-	}
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
-

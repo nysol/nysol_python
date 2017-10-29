@@ -44,8 +44,13 @@ class kgWindow : public kgModIncludeSort {
 	int				_interval;//t=
 
 	// 引数セット
-	void setArgs(void);
-	void setArgs(int i_p,int o_p);
+  void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+	
+	
 	int pos_inc(int i){ return (++i)%(_interval); }
 	int pos_dec(int i){ return (i-1+_interval)%(_interval); }
 	void output(int spos,int epos,int nkpos);
@@ -66,7 +71,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int i_p,int o_p);
+	int run(int inum,int *i_p,int onum, int* o_p);
 
 };
 

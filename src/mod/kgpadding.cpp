@@ -57,14 +57,8 @@ kgPadding::kgPadding(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgPadding::setArgs(void) 
+void kgPadding::setArgsMain(void) 
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,v=,-n,S=,E=,-q",kgArgs::ALLPARAM);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -116,78 +110,41 @@ void kgPadding::setArgs(void)
 
 
 }
+
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgPadding::setArgs(int i_p,int o_p) 
+void kgPadding::setArgs(void) 
 {
 	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,v=,-n,S=,E=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
 
-	_iFile.read_header();
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("f=",":%",2,true,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// v=のセット
-	_pStr=_args.toString("v=",false);
+	setArgsMain();
 
 
-	// typeのセット:int or date or tine
-	_today=day_clock::local_day();
-	if(vvs[1][0].find('r')!=string::npos)	{ _dict = -1;}
-	else																	{ _dict =  1;}
-	     if(vvs[1][0].find('n')!=string::npos)	{ _typeC='i';}
-	else if(vvs[1][0].find('d')!=string::npos)	{ _typeC='d';}
-	else if(vvs[1][0].find('t')!=string::npos)	{ _typeC='t';}
-	else																				{ _typeC='i';}
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgPadding::setArgs(int inum,int *i_p,int onum, int* o_p)
+{
+
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
+	setArgsMain();
 	
-	//開始終了値
-	_sStr = _args.toString("S=",false);
-	_eStr = _args.toString("E=",false);
-	
-	// -nオプションのセット
-	_nil=_args.toBool("-n");
-	
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg){
-		vector<kgstr_t> vsk = vs;
-		kgstr_t vstmp = vvs[0][0];
-		if(_typeC=='i'||_dict==-1){
-			vstmp.push_back('%');
-			if(_typeC=='i') { vstmp.push_back('n'); }
-			if(_dict==-1)		{ vstmp.push_back('r'); }
-		}
-		vsk.push_back(vstmp);
-		sortingRun(&_iFile,vsk);
-	}
-
-
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vvs, &_iFile,_fldByNum);
-	if( _fField.attr(0).find('r')!=string::npos )	{ _dict = -1;}
-	else																					{ _dict =  1;}
-
-
 }
 // -----------------------------------------------------------------------------
 // char -> date
@@ -428,15 +385,11 @@ void kgPadding::writePading(const char *from ,const char *to,int dir,int outtype
 			break;
 	}
 }
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgPadding::run(void) try 
+int kgPadding::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
 
@@ -495,72 +448,18 @@ int kgPadding::run(void) try
 	errorEnd(err);
 	return 1;
 }
-
-
 // -----------------------------------------------------------------------------
-// 実行
+// 実行 
 // -----------------------------------------------------------------------------
-int kgPadding::run(int i_p,int o_p) try 
+int kgPadding::run(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	setArgs();
+	return runMain();
+}
 
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-
-	// 項目名の出力
-  _oFile.writeFldName(_iFile, true);
-
-	while(_iFile.read()!=EOF){
-	
-		char* oldv = _iFile.getOldVal(_fField.num(0));
-		char* newv = _iFile.getNewVal(_fField.num(0));
-
-		if(_iFile.begin()){			
-			writePading(_sStr.c_str(),newv,_dict,-1);
-		}
-		else if( _iFile.keybreak() ){
-			if(*oldv=='\0'&&_assertNullIN){ _existNullIN  = true;}
-			writePading(oldv,_eStr.c_str(),_dict,1);
-			if( !_iFile.end() ){
-				writePading(_sStr.c_str(),newv,_dict,-1);
-			}
-		}else{
-			if(*oldv=='\0'&&_assertNullIN){ _existNullIN  = true;}
-			writePading(oldv,newv,_dict,0);
-		}
-	}
-
-	//ASSERT keynull_CHECK
-	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+int kgPadding::run(int inum,int *i_p,int onum, int* o_p)
+{
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 

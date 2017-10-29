@@ -157,398 +157,229 @@ void kg2Cross::setFldName(string tName)
 
 
 }
-
 // -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
+//  パラメータセット
+// -----------------------------------------------------------------------------
+void kg2Cross::setArgsMain(void)
+{
+
+	_iFile.read_header();
+
+	// k= 項目引数のセット
+	vector<kgstr_t> vk  = _args.toStringVector("k=",false);
+
+	// f= 項目引数のセット
+	vector<kgstr_t> vf = _args.toStringVector("f=",true);
+
+	// s= 項目引数のセット	%nr
+	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("s=","%:",2,false);
+
+	// a= 項目引数のセット
+	_a_str = _args.toStringVector("a=",false);
+
+	_fixfld = _args.toStringVector("fixfld=",false);
+
+	// v= null値変換文字列セット
+	_v_str = _args.toString("v=",false);
+	if(_v_str.size()==0) { _n_flg=false; }
+	else								 { _n_flg=true;	 }
+
+	bool seqflg = _args.toBool("-q");
+	if(_nfn_i) { seqflg = true; }
+
+	if(!seqflg&&!vk.empty()){ sortingRun(&_iFile,vk);}
+
+	_kField.set(vk, &_iFile, _fldByNum);
+	_fField.set(vf, &_iFile, _fldByNum);
+	_sField.set(vs, &_iFile, _fldByNum);
+
+	// ー => |　:: a=必須 f=必須             v=オプション
+	// | => ー　:: s=必須 f=必須 k=オプション  v=オプション
+	if(_a_str.size()==0){
+		if(_sField.size()!=1){ throw kgError("s= takes just one field name."); }
+		if(_fField.size()!=1){ throw kgError("f= takes just one field name."); }
+
+		//比較タイプセット(nがあるとtrueをセット(数字ソートになる)r)
+		_reverse = _sField.attr(0).find("r") != kgstr_t::npos ;
+		_numsort = _sField.attr(0).find("n") != kgstr_t::npos ;	
+		_t_type = true;
+	}
+	else{	
+		if(_a_str.size()!=2){ throw kgError("a= takes just two field name."); }
+		if(_fixfld.size()>0){ throw kgError("fixfld= must be specified with s="); }
+		_reverse = false;
+		_numsort = false;
+		_t_type = false;
+	}
+}
+// -----------------------------------------------------------------------------
+//  パラメータチェック&入出力ファイルオープン
 // -----------------------------------------------------------------------------
 void kg2Cross::setArgs(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,s=,a=,k=,v=,i=,o=,fixfld=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_iFile.read_header();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vk  = _args.toStringVector("k=",false);
+	setArgsMain();
 
-	// f= 項目引数のセット
-	vector<kgstr_t> vf = _args.toStringVector("f=",true);
-
-	// s= 項目引数のセット	%nr
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("s=","%:",2,false);
-
-	// a= 項目引数のセット
-	_a_str = _args.toStringVector("a=",false);
-
-	_fixfld = _args.toStringVector("fixfld=",false);
-
-	// v= null値変換文字列セット
-	_v_str = _args.toString("v=",false);
-	if(_v_str.size()==0) { _n_flg=false; }
-	else								 { _n_flg=true;	 }
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg&&!vk.empty()){ sortingRun(&_iFile,vk);}
-
-	_kField.set(vk, &_iFile, _fldByNum);
-	_fField.set(vf, &_iFile, _fldByNum);
-	_sField.set(vs, &_iFile, _fldByNum);
-
-	// ー => |　:: a=必須 f=必須             v=オプション
-	// | => ー　:: s=必須 f=必須 k=オプション  v=オプション
-	if(_a_str.size()==0){
-		if(_sField.size()!=1){ throw kgError("s= takes just one field name."); }
-		if(_fField.size()!=1){ throw kgError("f= takes just one field name."); }
-
-		//比較タイプセット(nがあるとtrueをセット(数字ソートになる)r)
-		_reverse = _sField.attr(0).find("r") != kgstr_t::npos ;
-		_numsort = _sField.attr(0).find("n") != kgstr_t::npos ;	
-		_t_type = true;
-	}
-	else{	
-		if(_a_str.size()!=2){ throw kgError("a= takes just two field name."); }
-		if(_fixfld.size()>0){ throw kgError("fixfld= must be specified with s="); }
-		_reverse = false;
-		_numsort = false;
-		_t_type = false;
-	}
 }
-
-
-
-// -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kg2Cross::setArgs(int i_p,int o_p)
+void kg2Cross::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	// パラメータチェック
-	_args.paramcheck("f=,s=,a=,k=,v=,i=,o=,fixfld=,-q",kgArgs::ALLPARAM);
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	_iFile.read_header();
+	setArgsMain();
 
-	// k= 項目引数のセット
-	vector<kgstr_t> vk  = _args.toStringVector("k=",false);
-
-	// f= 項目引数のセット
-	vector<kgstr_t> vf = _args.toStringVector("f=",true);
-
-	// s= 項目引数のセット	%nr
-	vector< vector<kgstr_t> >  vs = _args.toStringVecVec("s=","%:",2,false);
-
-	// a= 項目引数のセット
-	_a_str = _args.toStringVector("a=",false);
-
-	_fixfld = _args.toStringVector("fixfld=",false);
-
-	// v= null値変換文字列セット
-	_v_str = _args.toString("v=",false);
-	if(_v_str.size()==0) { _n_flg=false; }
-	else								 { _n_flg=true;	 }
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-
-	if(!seqflg&&!vk.empty()){ sortingRun(&_iFile,vk);}
-
-	_kField.set(vk, &_iFile, _fldByNum);
-	_fField.set(vf, &_iFile, _fldByNum);
-	_sField.set(vs, &_iFile, _fldByNum);
-
-	// ー => |　:: a=必須 f=必須             v=オプション
-	// | => ー　:: s=必須 f=必須 k=オプション  v=オプション
-	if(_a_str.size()==0){
-		if(_sField.size()!=1){ throw kgError("s= takes just one field name."); }
-		if(_fField.size()!=1){ throw kgError("f= takes just one field name."); }
-
-		//比較タイプセット(nがあるとtrueをセット(数字ソートになる)r)
-		_reverse = _sField.attr(0).find("r") != kgstr_t::npos ;
-		_numsort = _sField.attr(0).find("n") != kgstr_t::npos ;	
-		_t_type = true;
-	}
-	else{	
-		if(_a_str.size()!=2){ throw kgError("a= takes just two field name."); }
-		if(_fixfld.size()>0){ throw kgError("fixfld= must be specified with s="); }
-		_reverse = false;
-		_numsort = false;
-		_t_type = false;
-	}
 }
 
-int kg2Cross::run(void) try 
+
+int kg2Cross::runMain() try 
 {
-	// パラメータセット＆入出力ファイルオープン
+	//縦から横へ
+	if(_t_type){
+		// データ複製、項目名=>出力位置リスト生成、項目名出力
+		kgTempfile tempFile(_env);
+		string tName = tempFile.create();
+		setFldName(tName);
+
+		// データファイルオープン
+		kgCSVkey tiFile;
+		tiFile.open(tName, _env, _nfn_i);
+		tiFile.read_header();
+		tiFile.setKey(_kField.getNum());
+
+		size_t outValCount=_newFldMap.size();
+		vector<string> fldVals(outValCount);
+
+		while( EOF != tiFile.read() ){
+			if( tiFile.keybreak() ){
+				// keybreak時にデータを出力する
+				for(size_t i=0; i<_iFile.fldSize(); i++){
+					if( _fField.flg(i) == -1 && _sField.flg(i) == -1){
+						_oFile.writeStr( tiFile.getOldVal(i), false);
+					}
+				}
+				for(size_t i=0; i < outValCount; i++){
+					string o_str;
+					if (!strcmp(fldVals.at(i).c_str(),"")){
+						if( _n_flg ){ o_str = _v_str; }
+						else{
+							o_str = fldVals.at(i);
+							if(_assertNullOUT){ _existNullOUT = true;}
+						}
+					}else{
+						o_str = fldVals.at(i);
+					}
+					if(i==outValCount-1) _oFile.writeStr( o_str.c_str(), true );
+					else                 _oFile.writeStr( o_str.c_str(), false);
+				}
+				fldVals.clear();
+				fldVals.resize(outValCount);
+			}
+			// Normal
+			char *ck_str = tiFile.getNewVal(_sField.num(0));
+			if(*ck_str == '\0') continue;
+			int sno = _newFldMap[ck_str];
+			fldVals.at(sno) = tiFile.getNewVal(_fField.num(0));
+			if(_assertNullIN && fldVals.at(sno).size()==0) { _existNullIN  = true;}	
+		}
+		//ASSERT keynull_CHECK
+		if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
+		th_cancel();
+	// 終了処理
+		tiFile.close();
+	}
+	//横から縦へ
+	else{
+		vector<kgstr_t> outFldName;
+		vector<size_t> outsNo;
+		if(_kField.size()==0){
+			for(size_t i=0; i<_iFile.fldSize(); i++){
+				if( _fField.flg(i) == -1 ){ outsNo.push_back(i); }
+			}
+		}
+		else{
+			for(size_t i=0; i<_kField.size(); i++){
+				outsNo.push_back(_kField.num(i));
+			}
+		}
+
+		//	項目名出力
+		for(size_t i=0; i<outsNo.size(); i++){
+			outFldName.push_back(_iFile.fldName(outsNo.at(i),true));
+		}
+		for(size_t i=0; i<_a_str.size(); i++){
+			outFldName.push_back(_a_str.at(i));
+		}
+		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
+
+		//	展開出力
+		while( EOF != _iFile.read() ){
+			for(size_t i=0;i<_fField.size(); i++){
+				for(size_t j=0; j<outsNo.size(); j++){
+					_oFile.writeStr( _iFile.getVal(outsNo.at(j)), false);
+				}
+				char *ckstr = _iFile.getVal(_fField.num(i));
+				_oFile.writeStr( _iFile.fldName(_fField.num(i),false).c_str(),false);
+				if(*ckstr == '\0' && _n_flg ){
+					_oFile.writeStr( _v_str.c_str(), true);			
+					if(_assertNullOUT){ _existNullOUT = true;}
+				}
+				else {
+					_oFile.writeStr( ckstr, true);			
+				}
+			}
+		}
+		th_cancel();
+		_iFile.close();
+	}
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+// -----------------------------------------------------------------------------
+// RUN 
+// -----------------------------------------------------------------------------
+int kg2Cross::run(void) 
+{
 	setArgs();
-
-	//縦から横へ
-	if(_t_type){
-		// データ複製、項目名=>出力位置リスト生成、項目名出力
-		kgTempfile tempFile(_env);
-		string tName = tempFile.create();
-		setFldName(tName);
-
-		// データファイルオープン
-		kgCSVkey tiFile;
-		tiFile.open(tName, _env, _nfn_i);
-		tiFile.read_header();
-		tiFile.setKey(_kField.getNum());
-
-		size_t outValCount=_newFldMap.size();
-		vector<string> fldVals(outValCount);
-
-		while( EOF != tiFile.read() ){
-			if( tiFile.keybreak() ){
-				// keybreak時にデータを出力する
-				for(size_t i=0; i<_iFile.fldSize(); i++){
-					if( _fField.flg(i) == -1 && _sField.flg(i) == -1){
-						_oFile.writeStr( tiFile.getOldVal(i), false);
-					}
-				}
-				for(size_t i=0; i < outValCount; i++){
-					string o_str;
-					if (!strcmp(fldVals.at(i).c_str(),"")){
-						if( _n_flg ){ o_str = _v_str; }
-						else{
-							o_str = fldVals.at(i);
-							if(_assertNullOUT){ _existNullOUT = true;}
-						}
-					}else{
-						o_str = fldVals.at(i);
-					}
-					if(i==outValCount-1) _oFile.writeStr( o_str.c_str(), true );
-					else                 _oFile.writeStr( o_str.c_str(), false);
-				}
-				fldVals.clear();
-				fldVals.resize(outValCount);
-			}
-			// Normal
-			char *ck_str = tiFile.getNewVal(_sField.num(0));
-			if(*ck_str == '\0') continue;
-			int sno = _newFldMap[ck_str];
-			fldVals.at(sno) = tiFile.getNewVal(_fField.num(0));
-			if(_assertNullIN && fldVals.at(sno).size()==0) { _existNullIN  = true;}	
-		}
-		//ASSERT keynull_CHECK
-		if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
-		th_cancel();
-	// 終了処理
-		tiFile.close();
-	}
-	//横から縦へ
-	else{
-		vector<kgstr_t> outFldName;
-		vector<size_t> outsNo;
-		if(_kField.size()==0){
-			for(size_t i=0; i<_iFile.fldSize(); i++){
-				if( _fField.flg(i) == -1 ){ outsNo.push_back(i); }
-			}
-		}
-		else{
-			for(size_t i=0; i<_kField.size(); i++){
-				outsNo.push_back(_kField.num(i));
-			}
-		}
-
-		//	項目名出力
-		for(size_t i=0; i<outsNo.size(); i++){
-			outFldName.push_back(_iFile.fldName(outsNo.at(i),true));
-		}
-		for(size_t i=0; i<_a_str.size(); i++){
-			outFldName.push_back(_a_str.at(i));
-		}
-		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
-
-		//	展開出力
-		while( EOF != _iFile.read() ){
-			for(size_t i=0;i<_fField.size(); i++){
-				for(size_t j=0; j<outsNo.size(); j++){
-					_oFile.writeStr( _iFile.getVal(outsNo.at(j)), false);
-				}
-				char *ckstr = _iFile.getVal(_fField.num(i));
-				_oFile.writeStr( _iFile.fldName(_fField.num(i),false).c_str(),false);
-				if(*ckstr == '\0' && _n_flg ){
-					_oFile.writeStr( _v_str.c_str(), true);			
-					if(_assertNullOUT){ _existNullOUT = true;}
-				}
-				else {
-					_oFile.writeStr( ckstr, true);			
-				}
-			}
-		}
-		th_cancel();
-		_iFile.close();
-	}
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
 
-
-int kg2Cross::run(int i_p,int o_p) try 
+int kg2Cross::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	//縦から横へ
-	if(_t_type){
-		// データ複製、項目名=>出力位置リスト生成、項目名出力
-		kgTempfile tempFile(_env);
-		string tName = tempFile.create();
-		setFldName(tName);
-
-		// データファイルオープン
-		kgCSVkey tiFile;
-		tiFile.open(tName, _env, _nfn_i);
-		tiFile.read_header();
-		tiFile.setKey(_kField.getNum());
-
-		size_t outValCount=_newFldMap.size();
-		vector<string> fldVals(outValCount);
-
-		while( EOF != tiFile.read() ){
-			if( tiFile.keybreak() ){
-				// keybreak時にデータを出力する
-				for(size_t i=0; i<_iFile.fldSize(); i++){
-					if( _fField.flg(i) == -1 && _sField.flg(i) == -1){
-						_oFile.writeStr( tiFile.getOldVal(i), false);
-					}
-				}
-				for(size_t i=0; i < outValCount; i++){
-					string o_str;
-					if (!strcmp(fldVals.at(i).c_str(),"")){
-						if( _n_flg ){ o_str = _v_str; }
-						else{
-							o_str = fldVals.at(i);
-							if(_assertNullOUT){ _existNullOUT = true;}
-						}
-					}else{
-						o_str = fldVals.at(i);
-					}
-					if(i==outValCount-1) _oFile.writeStr( o_str.c_str(), true );
-					else                 _oFile.writeStr( o_str.c_str(), false);
-				}
-				fldVals.clear();
-				fldVals.resize(outValCount);
-			}
-			// Normal
-			char *ck_str = tiFile.getNewVal(_sField.num(0));
-			if(*ck_str == '\0') continue;
-			int sno = _newFldMap[ck_str];
-			fldVals.at(sno) = tiFile.getNewVal(_fField.num(0));
-			if(_assertNullIN && fldVals.at(sno).size()==0) { _existNullIN  = true;}	
-		}
-		//ASSERT keynull_CHECK
-		if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
-		th_cancel();
-	// 終了処理
-		tiFile.close();
-	}
-	//横から縦へ
-	else{
-		vector<kgstr_t> outFldName;
-		vector<size_t> outsNo;
-		if(_kField.size()==0){
-			for(size_t i=0; i<_iFile.fldSize(); i++){
-				if( _fField.flg(i) == -1 ){ outsNo.push_back(i); }
-			}
-		}
-		else{
-			for(size_t i=0; i<_kField.size(); i++){
-				outsNo.push_back(_kField.num(i));
-			}
-		}
-
-		//	項目名出力
-		for(size_t i=0; i<outsNo.size(); i++){
-			outFldName.push_back(_iFile.fldName(outsNo.at(i),true));
-		}
-		for(size_t i=0; i<_a_str.size(); i++){
-			outFldName.push_back(_a_str.at(i));
-		}
-		if(!_nfn_o){ _oFile.writeFldNameCHK(outFldName); }
-
-		//	展開出力
-		while( EOF != _iFile.read() ){
-			for(size_t i=0;i<_fField.size(); i++){
-				for(size_t j=0; j<outsNo.size(); j++){
-					_oFile.writeStr( _iFile.getVal(outsNo.at(j)), false);
-				}
-				char *ckstr = _iFile.getVal(_fField.num(i));
-				_oFile.writeStr( _iFile.fldName(_fField.num(i),false).c_str(),false);
-				if(*ckstr == '\0' && _n_flg ){
-					_oFile.writeStr( _v_str.c_str(), true);			
-					if(_assertNullOUT){ _existNullOUT = true;}
-				}
-				else {
-					_oFile.writeStr( ckstr, true);			
-				}
-			}
-		}
-		th_cancel();
-		_iFile.close();
-	}
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }

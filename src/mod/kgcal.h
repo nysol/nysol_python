@@ -107,10 +107,6 @@ class kgCal:public kgMod {
 
 	kgFuncMap _funcMap;
 
-	// 引数セット
-	void setArgs(void);
-	void setArgs(int i,int o);
-
 	// 構文木を走査するiterator型定義
 	typedef boost::spirit::classic::tree_match<std::string::const_iterator,
 		boost::spirit::classic::node_val_data_factory<void *> >::tree_iterator tree_node_iter_t;
@@ -136,6 +132,14 @@ class kgCal:public kgMod {
 	//前回データセット
 	//void prersl_set(kgVal *rls);
 
+	// 引数セット
+	void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+
+
 public:
 	// コンストラクタ
 	kgCal(void);
@@ -147,8 +151,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	//実行メソッド
-	int run(int i,int o);
+	int run(int inum,int *i,int onum, int* o);
 
 };
 

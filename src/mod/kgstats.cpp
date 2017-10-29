@@ -934,14 +934,9 @@ namespace kgstats_
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgStats::setArgs(void)
+void kgStats::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=,c=,-q,-n",kgArgs::ALLPARAM);
 
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
   _oFile.setPrecision(_precision);
 	_iFile.read_header();
 
@@ -994,178 +989,100 @@ void kgStats::setArgs(void)
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgStats::setArgs(int i_p,int o_p)
+void kgStats::setArgs(void)
 {
 	// パラメータチェック
 	_args.paramcheck("f=,i=,o=,k=,c=,-q,-n",kgArgs::ALLPARAM);
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	setArgsMain();
+}
+// -----------------------------------------------------------------------------
+// 入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgStats::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+	// パラメータチェック
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){
+		throw kgError("no match IO");
 	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
 
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
-  _oFile.setPrecision(_precision);
-	_iFile.read_header();
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vs_f = _args.toStringVecVec("f=",':',2,true,true);
-
-	// k= 項目引数のセット
-	vector<kgstr_t> vs = _args.toStringVector("k=",false);
-
-	// c= 計算方法のセット
-	_c_type = _args.toString("c=", true);
-	
-     	 if(_c_type=="sum"   ){_function = &kgstats_::sum    ; }
-  else if(_c_type=="mean"  ){_function = &kgstats_::mean   ; }
-	else if(_c_type=="count" ){_function = &kgstats_::count  ; }
-	else if(_c_type=="devsq" ){_function = &kgstats_::devsq  ; }
-	else if(_c_type=="var"   ){_function = &kgstats_::var    ; }
-	else if(_c_type=="uvar"  ){_function = &kgstats_::uvar   ; }
-	else if(_c_type=="sd"    ){_function = &kgstats_::sd     ; }
-	else if(_c_type=="usd"   ){_function = &kgstats_::ssd    ; }
-	else if(_c_type=="USD"   ){_function = &kgstats_::usd    ; }
-	else if(_c_type=="cv"    ){_function = &kgstats_::cv     ; }
-	else if(_c_type=="min"   ){_function = &kgstats_::minimum; }
-	else if(_c_type=="qtile1"){_function = &kgstats_::qtile1 ; }
-	else if(_c_type=="median"){_function = &kgstats_::median ; }
-	else if(_c_type=="qtile3"){_function = &kgstats_::qtile3 ; }
-	else if(_c_type=="max"   ){_function = &kgstats_::maximum; }
-	else if(_c_type=="range" ){_function = &kgstats_::range  ; }
-	else if(_c_type=="qrange"){_function = &kgstats_::qrange ; }
-	else if(_c_type=="mode"  ){_function = &kgstats_::mode   ; }
-	else if(_c_type=="ucount"){_function = &kgstats_::ucount ; }
-	else if(_c_type=="skew"  ){_function = &kgstats_::skew   ; }
-	else if(_c_type=="kurt"  ){_function = &kgstats_::kurt   ; }
-	else if(_c_type=="uskew" ){_function = &kgstats_::uskew  ; }
-	else if(_c_type=="ukurt" ){_function = &kgstats_::ukurt  ; }
-	else {
-		ostringstream ss;
-		ss << "unknown keyword: " << _c_type << ": c=sum|mean|count|ucount|devsq|var|uvar|sd|usd|USD|cv|min|qtile1|median|qtile3|max|range|qrange|mode|skew|kurt|uskew|ukurt" << _c_type;
-		throw kgError(ss.str());	
-	}
-	_null = _args.toBool("-n");
-
-	bool seqflg = _args.toBool("-q");
-	if(_nfn_i) { seqflg = true; }
-	if(!seqflg && !vs.empty()){ sortingRun(&_iFile,vs);}
-	_kField.set(vs,  &_iFile,_fldByNum);
-	_fField.set(vs_f, &_iFile,_fldByNum);
+	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgStats::run(void) try 
+int kgStats::runMain(void) try 
 {
-	// パラメータセット＆入出力ファイルオープン
+
+	// 入力ファイルにkey項目番号をセットする．
+	_iFile.setKey(_kField.getNum());
+	
+	// 項目名の出力
+  _oFile.writeFldName(_fField, true);
+
+	// 結果格納変数の領域確保
+	vector<kgVal>  result(_fField.size() ,kgVal('N'));
+
+	while(_iFile.blkset()!=EOF){
+		// 計算の実行本体
+		_function(result,_iFile,_fField,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
+		// 結果出力
+		_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),result);
+	}
+
+	// 終了処理
+	th_cancel();
+	_iFile.close();
+	_oFile.close();
+	successEnd();
+	return 0;
+
+}catch(kgOPipeBreakError& err){
+	// 終了処理
+	_iFile.close();
+	successEnd();
+	return 0;
+}catch(kgError& err){
+	errorEnd(err);
+	return 1;
+}catch (const exception& e) {
+	kgError err(e.what());
+	errorEnd(err);
+	return 1;
+}catch(char * er){
+	kgError err(er);
+	errorEnd(err);
+	return 1;
+}catch(...){
+	kgError err("unknown error" );
+	errorEnd(err);
+	return 1;
+}
+
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgStats::run(void)
+{
 	setArgs();
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	// 結果格納変数の領域確保
-	vector<kgVal>  result(_fField.size() ,kgVal('N'));
-
-	while(_iFile.blkset()!=EOF){
-		// 計算の実行本体
-		_function(result,_iFile,_fField,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-		// 結果出力
-		_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),result);
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	return runMain();
 }
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgStats::run(int i_p,int o_p) try 
+int kgStats::run(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
-
-	// 入力ファイルにkey項目番号をセットする．
-	_iFile.setKey(_kField.getNum());
-	
-	// 項目名の出力
-  _oFile.writeFldName(_fField, true);
-
-	// 結果格納変数の領域確保
-	vector<kgVal>  result(_fField.size() ,kgVal('N'));
-
-	while(_iFile.blkset()!=EOF){
-		// 計算の実行本体
-		_function(result,_iFile,_fField,_null,_assertNullIN,_assertNullOUT,&_existNullIN,&_existNullOUT);
-		// 結果出力
-		_oFile.writeFld(_iFile.getOldFld(),_fField.getFlg_p(),result);
-	}
-
-	// 終了処理
-	th_cancel();
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	setArgs(inum, i_p, onum,o_p);
+	return runMain();
 }
 
