@@ -35,7 +35,6 @@ static char* strGET(PyObject* data){
 
 }
 
-
 static bool strCHECK(PyObject* data){
 
 #if PY_MAJOR_VERSION >= 3
@@ -46,259 +45,14 @@ static bool strCHECK(PyObject* data){
 
 }
 
-int run_sub(PyObject* tlist,
-	vector< cmdCapselST >& cmdcap,
-	vector< vector<int> > & p_list, // i,o,tp(0:i=,1:m=)
-	int lcnt
-){
-	int pos = lcnt;
-
-	int ipos = -1;
-	int mpos = -1;
-
-	cmdCapselST cmpcaplocal;
-
-	cmpcaplocal.cmdname = strGET(PyList_GetItem(tlist, 0));
-
-	kgstr_t para_part = "";
-	if(strCHECK(PyList_GetItem(tlist, 1))){
-		para_part = strGET(PyList_GetItem(tlist, 1));
-	}
-	cmpcaplocal.paralist=kglib::splitTokenQ(para_part, ' ',true);
-
-
-	PyObject *ilink = PyList_GetItem(tlist, 2);
-	PyObject *mlink = PyList_GetItem(tlist, 3);
-
-	if(strCHECK(ilink)){
-		cmpcaplocal.paralist.push_back( kgstr_t("i=")+ strGET(ilink) );
-		cmdcap.push_back(cmpcaplocal);
-	}
-	else if(PyList_Check(ilink)){
-		if(PyList_Check(PyList_GetItem(ilink, 0))){
-			cmdcap.push_back(cmpcaplocal);
-			cmdCapselST cmpcapmload;
-			//list data mload追加
-			ipos = lcnt+1;
-			cmpcapmload.cmdname="mload";
-			cmpcapmload.iobj=ilink;
-			cmdcap.push_back(cmpcapmload);
-
-			lcnt++;
-			vector<int> pno_i;
-			pno_i.push_back(pos-1);
-			pno_i.push_back(ipos-1);
-			pno_i.push_back(0);
-			p_list.push_back(pno_i);
-
-		}
-		else{
-			cmdcap.push_back(cmpcaplocal);
-			ipos = lcnt+1;
-			lcnt = run_sub(ilink,cmdcap,p_list,lcnt+1);
-
-			vector<int> pno_i;
-			pno_i.push_back(pos-1);
-			pno_i.push_back(ipos-1);
-			pno_i.push_back(0);
-			p_list.push_back(pno_i);
-		}
-	}
-
-	if(strCHECK(mlink)){
-		cmdcap[pos-1].paralist.push_back( kgstr_t("m=")+ strGET(mlink) );
-	}
-	else if(PyList_Check(mlink)){
-		if(PyList_Check(PyList_GetItem(mlink, 0))){
-			cmdCapselST cmpcapmload;
-			//list data mload追加
-			mpos = lcnt+1;
-			cmpcapmload.cmdname="mload";
-			cmpcapmload.iobj=mlink;
-			cmdcap.push_back(cmpcapmload);
-
-			lcnt++;
-			vector<int> pno_o;
-			pno_o.push_back(pos-1);
-			pno_o.push_back(mpos-1);
-			pno_o.push_back(1);
-			p_list.push_back(pno_o);
-		}	
-		else{
-			mpos = lcnt+1;	
-			lcnt = run_sub(mlink,cmdcap,p_list,lcnt+1);
-			vector<int> pno_o;
-			pno_o.push_back(pos-1);
-			pno_o.push_back(mpos-1);
-			pno_o.push_back(1);
-			p_list.push_back(pno_o);
-		}
-	}
-
-	if(ilink==Py_None &&mlink==Py_None ){
-		cmdcap.push_back(cmpcaplocal);
-	}
-	
-	return lcnt;
-}
-
-PyObject* run(PyObject* self, PyObject* args)try
-{
-	PyObject *sh;
-	PyObject *list;
-	PyObject *rlist;
-	int tp;
-	if (!PyArg_ParseTuple(args, "OOiO", &sh , &list ,&tp ,&rlist)){
-    return NULL;
-  }
-/*
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(list)){
-		cerr << "cannot run " << PyList_Check(list) << " "<<PyList_Size(list)<< endl;
-		return Py_BuildValue("");
-	}
-
-	// list [ cmd para ilink mlink]
-	vector< vector<int> > p_list;
-	vector< cmdCapselST > cmdCapsel;
-
-	int  lsize = run_sub(list,cmdCapsel,p_list,1);
-
-	// debug
-	cerr <<  "------" << endl;
-	cerr <<  "lsize " << lsize << endl;
-	for(int i=0;i<cmdCapsel.size();i++){
-		cerr << i << " " << cmdCapsel[i].cmdname << endl;
-	}
-	cerr <<  "------" << endl;
-	for(int i=0;i<p_list.size();i++){
-		cerr << i << " i:" << p_list[i][0] << "<<o:" << p_list[i][1]<< endl;
-	}
-	//kgshell kgshell;
-	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
-
-	//old
-	// ksh->run(cmdCapsel,p_list,tp,rlist);
-
-	if(tp){
-		return PyLong_FromLong(0);
-	}else{
-		return PyLong_FromLong(0);
-	}	
-	*/
-}catch(...){
-	cerr << "exceptipn" << endl;
-	return PyLong_FromLong(1);
-}
-
-
-int run_subL(PyObject* tlist,
-	vector< cmdCapselST >& cmdcap,
-	vector< vector<int> > & p_list, // i,o,tp(0:i=,1:m=)
-	int lcnt
-){
-	int pos = lcnt;
-
-	int ipos = -1;
-	int mpos = -1;
-
-	cmdCapselST cmpcaplocal;
-
-	cmpcaplocal.cmdname = strGET(PyList_GetItem(tlist, 0));
-
-	kgstr_t para_part = "";
-	if(strCHECK(PyList_GetItem(tlist, 1))){
-		para_part = strGET(PyList_GetItem(tlist, 1));
-	}
-	cmpcaplocal.paralist=kglib::splitTokenQ(para_part, ' ',true);
-
-
-	PyObject *ilink = PyList_GetItem(tlist, 2);
-	PyObject *mlink = PyList_GetItem(tlist, 3);
-
-	if(strCHECK(ilink)){
-		cmpcaplocal.paralist.push_back( kgstr_t("i=")+ strGET(ilink) );
-		cmdcap.push_back(cmpcaplocal);
-	}
-	else if(PyList_Check(ilink)){
-		if(PyList_Check(PyList_GetItem(ilink, 0))){
-			cmdcap.push_back(cmpcaplocal);
-			cmdCapselST cmpcapmload;
-			//list data mload追加
-			ipos = lcnt+1;
-			cmpcapmload.cmdname="mload";
-			cmpcapmload.iobj=ilink;
-			cmdcap.push_back(cmpcapmload);
-
-			lcnt++;
-			vector<int> pno_i;
-			pno_i.push_back(pos-1);
-			pno_i.push_back(ipos-1);
-			pno_i.push_back(0);
-			p_list.push_back(pno_i);
-
-		}
-		else{
-			cmdcap.push_back(cmpcaplocal);
-			ipos = lcnt+1;
-			lcnt = run_sub(ilink,cmdcap,p_list,lcnt+1);
-
-			vector<int> pno_i;
-			pno_i.push_back(pos-1);
-			pno_i.push_back(ipos-1);
-			pno_i.push_back(0);
-			p_list.push_back(pno_i);
-		}
-	}
-
-	if(strCHECK(mlink)){
-		cmdcap[pos-1].paralist.push_back( kgstr_t("m=")+ strGET(mlink) );
-	}
-	else if(PyList_Check(mlink)){
-		if(PyList_Check(PyList_GetItem(mlink, 0))){
-			cmdCapselST cmpcapmload;
-			//list data mload追加
-			mpos = lcnt+1;
-			cmpcapmload.cmdname="mload";
-			cmpcapmload.iobj=mlink;
-			cmdcap.push_back(cmpcapmload);
-
-			lcnt++;
-			vector<int> pno_o;
-			pno_o.push_back(pos-1);
-			pno_o.push_back(mpos-1);
-			pno_o.push_back(1);
-			p_list.push_back(pno_o);
-		}	
-		else{
-			mpos = lcnt+1;	
-			lcnt = run_sub(mlink,cmdcap,p_list,lcnt+1);
-			vector<int> pno_o;
-			pno_o.push_back(pos-1);
-			pno_o.push_back(mpos-1);
-			pno_o.push_back(1);
-			p_list.push_back(pno_o);
-		}
-	}
-
-	if(ilink==Py_None &&mlink==Py_None ){
-		cmdcap.push_back(cmpcaplocal);
-	}
-	
-	return lcnt;
-}
-
-
 PyObject* runL(PyObject* self, PyObject* args)try
 {
 	PyObject *sh;
 	PyObject *mlist;
-	PyObject *iolist;
 	PyObject *linklist;
 	PyObject *rlist;
 	bool tp = false;
-	if (!PyArg_ParseTuple(args, "OOOOO", &sh , &mlist ,&iolist ,&linklist,&rlist)){
+	if (!PyArg_ParseTuple(args, "OOOO", &sh , &mlist  ,&linklist,&rlist)){
     return NULL;
   }
 
@@ -400,6 +154,7 @@ struct cmdCapselST{
 PyObject* runP(PyObject* self, PyObject* args)
 {
 
+/*
 	PyObject *sh;
 	PyObject *list;
 	int tp;
@@ -435,6 +190,10 @@ PyObject* runP(PyObject* self, PyObject* args)
 	//kgshell kgshell;
 	kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list,tp,rlist);
 	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+*/
+	// dmy
+	return PyLong_FromLong(0);
+
 }
 
 PyObject* readline(PyObject* self, PyObject* args)
@@ -490,7 +249,6 @@ PyObject* start(PyObject* self, PyObject* args){
 
 static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
-	{"run", reinterpret_cast<PyCFunction>(run), METH_VARARGS },
 	{"runL", reinterpret_cast<PyCFunction>(runL), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },

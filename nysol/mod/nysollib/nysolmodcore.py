@@ -3,6 +3,7 @@ import shlex
 import re
 import nysol._nysolshell_core as n_core
 from nysol.mod.nysollib import nysolutil as nutil
+from nysol.mod.nysollib import draw as ndraw
 
 from multiprocessing import Pool
 import copy
@@ -11,7 +12,7 @@ import os, sys
 
 def mulit_run(val):
 	cc = n_core.init(val[2])
-	return n_core.run(cc,val[0],val[1])
+	return n_core.runL(cc,val[0],val[1])
 
 class NysolMOD_CORE(object):
 	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
@@ -300,17 +301,11 @@ class NysolMOD_CORE(object):
 
 		self.makeLinkList(iolist,linklist)
 
-		# DEBUG
-		#print modlist
-		#print iolist
-		#print linklist
-		#print runA
 		shobj = n_core.init(self.msg)
-
 
 		if runA:
 			
-			n_core.runL(shobj,listd,iolist,linklist,rtnlist)
+			n_core.runL(shobj,modlist,linklist,rtnlist)
 			if rtnflg:
 				return rtnlist
 			else:
@@ -318,25 +313,33 @@ class NysolMOD_CORE(object):
 		else:
 			#listd[1] += " o=" + outf 
 			#n_core.run(shobj,listd,runA,rtnlist)
+			#n_core.runL(shobj,modlist,iolist,linklist,rtnlist)
 
-			n_core.runL(shobj,modlist,iolist,linklist,rtnlist)
+			n_core.runL(shobj,modlist,linklist,rtnlist)
 
 			return outf
 
+	#GRAPH表示 #deepコピーしてからチェック
+	def drawModel(self,fname=None):
+		showobj = copy.deepcopy(self)
+		showobj.change_modNetwork()
+		uniqmod={} 
+		sumiobj= set([])
+		showobj.selectUniqMod(sumiobj,uniqmod)
 
-	def show(self):
-		listd = []
-		runA = False
-		outf = self.outp
-		if not isinstance(outf,str):
-			outf = None
-			runA = True 
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		showobj.makeModList(uniqmod,modlist,iolist)
 
-		sumiobj=set([])
-		listd = self.make_modlist(sumiobj)
-		print(listd)
+		linklist=[]
+
+		showobj.makeLinkList(iolist,linklist)
+		ndraw.chageSVG(modlist,iolist,linklist,fname)
 
 
+
+
+	# 未実装
 	def parallelrun(self,ilist,olist=None,num=2,**kw_args):
 
 		if "msg" in kw_args:
@@ -378,13 +381,7 @@ class NysolMOD_CORE(object):
 
 		return output
 
-	# 子クラス生成
-	#def add(self, obj):
-	#	obj.inp = self
-	#	self.obj = obj
-	#	return obj
-
-	# 子クラス生成
+	# 子クラス生成　	# ここうっとしい いい方法が有れば変更
 	def mfifo(self,*args, **kw_args):
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		return mfifo(nutil.args2dict(args,kw_args,mload.kwd)).addPre(self)
@@ -706,8 +703,7 @@ class NysolMOD_CORE(object):
 		return mjoin(nutil.args2dict(args,kw_args,mjoin.kwd)).addPre(self)
 
 
-
-#IOから調節にした方がいい（kgshellをpython objにする？）
+#未実装 ITERAtOR
 class Nysol_MeachIter(object):
 
 	def __init__(self,obj):
@@ -760,9 +756,5 @@ class Nysol_MeachIter(object):
 			return line
 		raise StopIteration()
 
-#class Nysol_Meach(NysolMOD_CORE):
-#	kwd = {"-nfn","-nfni","-nfno","i=","o="}
-#	def __init__(self, kwd,pre=None) :
-#		super(Nysol_Meach,self).__init__("meach",kwd,pre)
 
 
