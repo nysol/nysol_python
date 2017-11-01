@@ -23,11 +23,6 @@ class NysolMOD_CORE(object):
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
 
-		self.inp   = None
-		self.outp  = None
-		self.refp  = None
-		self.unp   = None
-
 		if "i" in self.kwd :
 			self.inplist["i"].append(self.kwd["i"])
 			del self.kwd["i"]
@@ -174,7 +169,6 @@ class NysolMOD_CORE(object):
 		sumiobj=set([])
 		dupobj={}
 		self.check_dupObj(sumiobj,dupobj)
-		#print dupobj
 		if len(dupobj)!=0:
 			self.addTee(dupobj)
 
@@ -293,10 +287,9 @@ class NysolMOD_CORE(object):
 			runA = True
 
 		listdx = self.change_modNetwork()
-
+		
 		uniqmod={} 
 		sumiobj= set([])
-
 		self.selectUniqMod(sumiobj,uniqmod)
 
 		modlist=[None]*len(uniqmod) #[[name,para]]
@@ -307,6 +300,7 @@ class NysolMOD_CORE(object):
 
 		self.makeLinkList(iolist,linklist)
 
+		# DEBUG
 		#print modlist
 		#print iolist
 		#print linklist

@@ -112,88 +112,88 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msortf"]    = boost::lambda::bind(boost::lambda::new_ptr<kgSortf>());
 		_kgmod_map["mtab2csv"]  = boost::lambda::bind(boost::lambda::new_ptr<kgTab2csv>());
 
-		_kgmod_run["m2tee"] = 4;
-		_kgmod_run["mfifo"] = 1;
-		_kgmod_run["mcut"] = 1;
-		_kgmod_run["cmd"] = 1;
-		_kgmod_run["mcat"] = 1;
-		_kgmod_run["msum"] = 1;
-		_kgmod_run["mcal"] = 1;
-		_kgmod_run["mjoin"] = 2;
-		_kgmod_run["mload"] = 3;
-		_kgmod_run["readcsv"] = 1;
-		_kgmod_run["msave"] = 1;
-		_kgmod_run["writecsv"] = 1;
-		_kgmod_run["writelist"] = 1;
-		_kgmod_run["mbuffer"] = 1;
-		_kgmod_run["m2cross"] = 1;
-		_kgmod_run["maccum"] = 1;
-		_kgmod_run["mavg"] = 1;
-		_kgmod_run["mbest"] = 1;
-		_kgmod_run["mbucket"] = 1;
-		_kgmod_run["mchgnum"] = 1;
-		_kgmod_run["mchgstr"] = 1;
-		_kgmod_run["mcombi"] = 1;
-		_kgmod_run["mcommon"] = 2;
-		_kgmod_run["mcount"] = 1;
-		_kgmod_run["mcross"] = 1;
-		_kgmod_run["mdelnull"] = 1;
-		_kgmod_run["mdformat"] = 1;
-		_kgmod_run["mduprec"] = 1;
-		_kgmod_run["mfldname"] = 1;
-		_kgmod_run["mfsort"] = 1;
-		_kgmod_run["mhashavg"] = 1;
-		_kgmod_run["mhashsum"] = 1;
-		_kgmod_run["mkeybreak"] = 1;
-		_kgmod_run["mmbucket"] = 1;
-		_kgmod_run["mmvavg"] = 1;
-		_kgmod_run["mmvsim"] = 1;
-		_kgmod_run["mmvstats"] = 1;
+		_kgmod_run["m2tee"] = 0;
+		_kgmod_run["mfifo"] = 0;
+		_kgmod_run["mcut"] = 0;
+		_kgmod_run["cmd"] = 0;
+		_kgmod_run["mcat"] = 0;
+		_kgmod_run["msum"] = 0;
+		_kgmod_run["mcal"] = 0;
+		_kgmod_run["mjoin"] = 0;
+		_kgmod_run["mload"] = 0;
+		_kgmod_run["readcsv"] = 0;
+		_kgmod_run["msave"] = 0;
+		_kgmod_run["writecsv"] = 0;
+		_kgmod_run["writelist"] = 0;
+		_kgmod_run["mbuffer"] = 0;
+		_kgmod_run["m2cross"] = 0;
+		_kgmod_run["maccum"] = 0;
+		_kgmod_run["mavg"] = 0;
+		_kgmod_run["mbest"] = 0;
+		_kgmod_run["mbucket"] = 0;
+		_kgmod_run["mchgnum"] = 0;
+		_kgmod_run["mchgstr"] = 0;
+		_kgmod_run["mcombi"] = 0;
+		_kgmod_run["mcommon"] = 0;
+		_kgmod_run["mcount"] = 0;
+		_kgmod_run["mcross"] = 0;
+		_kgmod_run["mdelnull"] = 0;
+		_kgmod_run["mdformat"] = 0;
+		_kgmod_run["mduprec"] = 0;
+		_kgmod_run["mfldname"] = 0;
+		_kgmod_run["mfsort"] = 0;
+		_kgmod_run["mhashavg"] = 0;
+		_kgmod_run["mhashsum"] = 0;
+		_kgmod_run["mkeybreak"] = 0;
+		_kgmod_run["mmbucket"] = 0;
+		_kgmod_run["mmvavg"] = 0;
+		_kgmod_run["mmvsim"] = 0;
+		_kgmod_run["mmvstats"] = 0;
 		_kgmod_run["mnewnumber"] = 0;
 		_kgmod_run["mnewrand"] = 0;
 		_kgmod_run["mnewstr"] = 0;
-		_kgmod_run["mnjoin"] = 2;
-		_kgmod_run["mnormalize"] = 1;
-		_kgmod_run["mnrcommon"] = 2;
-		_kgmod_run["mnrjoin"] = 2;
-		_kgmod_run["mnullto"] = 1;
-		_kgmod_run["mnumber"] = 1;
-		_kgmod_run["mpadding"] = 1;
-		_kgmod_run["mpaste"] = 2;
-		_kgmod_run["mproduct"] = 2;
-		_kgmod_run["mrand"] = 1;
+		_kgmod_run["mnjoin"] = 0;
+		_kgmod_run["mnormalize"] = 0;
+		_kgmod_run["mnrcommon"] = 0;
+		_kgmod_run["mnrjoin"] = 0;
+		_kgmod_run["mnullto"] = 0;
+		_kgmod_run["mnumber"] = 0;
+		_kgmod_run["mpadding"] = 0;
+		_kgmod_run["mpaste"] = 0;
+		_kgmod_run["mproduct"] = 0;
+		_kgmod_run["mrand"] = 0;
 		_kgmod_run["mrjoin"] = 2;
-		_kgmod_run["msed"] = 1;
-		_kgmod_run["msel"] = 1;
-		_kgmod_run["mselnum"] = 1;
-		_kgmod_run["mselrand"] = 1;
-		_kgmod_run["mselstr"] = 1;
-		_kgmod_run["msetstr"] = 1;
-		_kgmod_run["mshare"] = 1;
-		_kgmod_run["msim"] = 1;
-		_kgmod_run["mslide"] = 1;
-		_kgmod_run["msplit"] = 1;
-		_kgmod_run["mstats"] = 1;
-		_kgmod_run["msummary"] = 1;
-		_kgmod_run["mtonull"] = 1;
-		_kgmod_run["mtra"] = 1;
-		_kgmod_run["mtraflg"] = 1;
-		_kgmod_run["muniq"] = 1;
-		_kgmod_run["mvcat"] = 1;
-		_kgmod_run["mvcommon"] = 2;
-		_kgmod_run["mvcount"] = 1;
-		_kgmod_run["mvdelim"] = 1;
-		_kgmod_run["mvdelnull"] = 1;
-		_kgmod_run["mvjoin"] = 2;
-		_kgmod_run["mvnullto"] = 1;
-		_kgmod_run["mvreplace"] = 2;
-		_kgmod_run["mvsort"] = 1;
-		_kgmod_run["mvuniq"] = 1;
-		_kgmod_run["mwindow"] = 1;
-		_kgmod_run["marff2csv"] =1;
-		_kgmod_run["mxml2csv"] =1;
-		_kgmod_run["msortf"] =1;
-		_kgmod_run["mtab2csv"] = 1;
+		_kgmod_run["msed"] = 0;
+		_kgmod_run["msel"] = 0;
+		_kgmod_run["mselnum"] = 0;
+		_kgmod_run["mselrand"] = 0;
+		_kgmod_run["mselstr"] = 0;
+		_kgmod_run["msetstr"] = 0;
+		_kgmod_run["mshare"] = 0;
+		_kgmod_run["msim"] = 0;
+		_kgmod_run["mslide"] = 0;
+		_kgmod_run["msplit"] = 0;
+		_kgmod_run["mstats"] = 0;
+		_kgmod_run["msummary"] = 0;
+		_kgmod_run["mtonull"] = 0;
+		_kgmod_run["mtra"] = 0;
+		_kgmod_run["mtraflg"] = 0;
+		_kgmod_run["muniq"] = 0;
+		_kgmod_run["mvcat"] = 0;
+		_kgmod_run["mvcommon"] = 0;
+		_kgmod_run["mvcount"] = 0;
+		_kgmod_run["mvdelim"] = 0;
+		_kgmod_run["mvdelnull"] = 0;
+		_kgmod_run["mvjoin"] = 0;
+		_kgmod_run["mvnullto"] = 0;
+		_kgmod_run["mvreplace"] = 0;
+		_kgmod_run["mvsort"] = 0;
+		_kgmod_run["mvuniq"] = 0;
+		_kgmod_run["mwindow"] = 0;
+		_kgmod_run["marff2csv"] =0;
+		_kgmod_run["mxml2csv"] =0;
+		_kgmod_run["msortf"] =0;
+		_kgmod_run["mtab2csv"] = 0;
 
 		_nfni = false;
  		_iterrtn= NULL;
@@ -218,50 +218,6 @@ void *kgshell::run_func(void *arg)try{
 }
 
 
-/*
-void *kgshell::run_noargs_pths(void *arg)try{
-	argST *a =(argST*)arg; 
-	a->mobj->run(a->i_p,a->o_p);
-	return NULL;
-}catch(...){
-	argST *a =(argST*)arg; 
-	if(a->i_p>0){ ::close(a->i_p);}
-	if(a->o_p>0){ ::close(a->o_p);}
-	return NULL;
-}
-void *kgshell::run_noargs_pthsp(void *arg)try{
-	argST *a =(argST*)arg; 
-	a->mobj->run(a->list,a->o_p);
-	return NULL;
-}catch(...){
-	argST *a =(argST*)arg; 
-	if(a->o_p>0){ ::close(a->o_p);}
-	return NULL;
-}
-
-
-void *kgshell::run_noargs_pthsm(void *arg)try{
-	argST *a =(argST*)arg; 
-	a->mobj->run(a->i_p,a->o_p,a->m_p);
-	return NULL;
-}catch(...){
-	argST *a =(argST*)arg; 
-	if(a->i_p>0){ ::close(a->i_p);}
-	if(a->o_p>0){ ::close(a->o_p);}
-	return NULL;
-}
-
-void *kgshell::run_noargs_pths1(void *arg)try{
-	argST *a =(argST*)arg; 
-	a->mobj->run(a->o_p);
-	return NULL;
-}catch(...){
-	argST *a =(argST*)arg; 
-	if(a->o_p>0){ ::close(a->o_p);}
-	return NULL;
-}
-
-*/
 void kgshell::makePipeList(vector<linkST> & plist,bool tp)
 {
 	rlimit rlim;
@@ -376,13 +332,11 @@ int kgshell::run(
 		_modlist[i]->init(newArgs, &_env);
 	}
 
-	//int dmy = -1;	
-
 	pthread_t _th_st_p[_clen];
 	int _th_rtn[_clen];
 	argST argst[_clen];
 	for(int i=_clen-1;i>=0;i--){
-	// データ出力
+
 		argst[i].mobj= _modlist[i];
 		//	DEBIG
 		//	cerr << "-------------------" << endl;
@@ -473,37 +427,15 @@ int kgshell::run(
 		//		cerr <<  *(argst[i].o_p+j) << " " ;
 		//	}
 		//}
-		//int typ =  
-		//_kgmod_run.find(cmds[i].cmdname)->second ;
-		//cerr << typ << endl;
 		//cerr << endl;
-		if(true){
+		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_func ,(void*)&argst[i]);
 		}
 	}
 
-/*
-		if(typ==1){
-			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pths ,(void*)&argst[i]);
-		}else if(typ==2){
-			if( _mpipe_map.find(i) == _mpipe_map.end() ){ argst[i].m_p= dmy; }
-			else{ argst[i].m_p= _mpipe_map[i]; }
-			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsm ,(void*)&argst[i]);		
-		}
-		else if(typ==3){
-			argst[i].list=cmds[i].iobj;
-			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp ,(void*)&argst[i]);
-		}
-		else if(typ==4){
-			argst[i].list=cmds[i].iobj;
-			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pthsp2 ,(void*)&argst[i]);
-		}
-		else if(typ==0){
-			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_noargs_pths1 ,(void*)&argst[i]);
-		}
-		if(_th_rtn[i]){ throw kgError("cant't create thread onxx kgModIncludeSort");}
-*/
-	if(tp){
+
+if(tp){
 		// データ出力
 		kgCSVfld rls;
 		bool nfn_i = false;

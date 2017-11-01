@@ -17,9 +17,6 @@ class script(object):
 		#	obj.inp = self.cmdlist
 		#	self.cmdlist = obj
 
-
-
-
 	def msgOn(self):
 		self.msgFlg=True
 
@@ -53,8 +50,6 @@ class script(object):
 			if len(val[0]) != 1 or len(val[1]) == 0 :
 				print( key + " model err")
 
-		#print conectLIST
-
 		#print self.cmdlist
 		#cmd作成
 		newcmdlist = []
@@ -63,9 +58,10 @@ class script(object):
 
 		#ioflg =False
 		for linno ,cmd  in enumerate(self.cmdlist):
-			print linno ,cmd ,newruncmd, interobj
+			#print linno ,cmd ,newruncmd, interobj
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
+			#print cmdptn ,cmdio
 
 			if newruncmd == None :
 
@@ -76,18 +72,23 @@ class script(object):
 				newruncmd = cmdptn
 				if "i" in cmdio:
 					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
+					interobj[cmdio['i']].outlist["o"].append(newruncmd)
 				if "m" in cmdio:
 					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
+					interobj[cmdio['m']].outlist["o"].append(newruncmd)
 
 			else:
 				#tmpptn  = copy.deepcopy(cmdptn)
 				tmpptn  = cmdptn
 				tmpptn.inplist["i"].append(newruncmd)
+				newruncmd.outlist["o"].append(cmdptn)
 				newruncmd = tmpptn
 				if "i" in cmdio:
 					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
+					interobj[cmdio['i']].outlist["o"].append(newruncmd)
 				if "m" in cmdio:
 					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
+					interobj[cmdio['m']].outlist["o"].append(newruncmd)
 
 			if "u" in cmdio:
 				interobj[cmdio['u']] = newruncmd
@@ -101,8 +102,8 @@ class script(object):
 				newcmdlist.append(newruncmd)
 				newruncmd = None
 
-		print newcmdlist[0]
-		print newcmdlist[0].inplist
+		#print newcmdlist[0]
+		#print newcmdlist[0].inplist
 
 		return newcmdlist
 #			if cmd[0].name = "readcsv"
@@ -115,6 +116,7 @@ class script(object):
 
 		oldenv = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork()
+
 		if "msg" in kwd:
 			if kwd["msg"] == "on" :
 				self.msgFlg=True

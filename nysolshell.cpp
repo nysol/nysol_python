@@ -308,7 +308,6 @@ PyObject* runL(PyObject* self, PyObject* args)try
 		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
 		return Py_BuildValue("");
 	}
-	cerr << "st3" << endl;
 	vector< cmdCapselST > cmdCapsel;
 
 /*
@@ -369,16 +368,15 @@ struct cmdCapselST{
 	}
 
 	// debug
-/*	cerr <<  "------" << endl;
-	for(int i=0;i<cmdCapsel.size();i++){
-		cerr << i << " " << cmdCapsel[i].cmdname << endl;
-	}
-	cerr <<  "------" << endl;
-	for(int i=0;i<p_list.size();i++){
-		cerr << i << " " <<  p_list[i].frTP <<":" << p_list[i].frID ;
-		cerr << " >> " <<  p_list[i].toTP << ":" << p_list[i].toID << endl; 
-	}
-*/
+	//cerr <<  "------" << endl;
+	//for(int i=0;i<cmdCapsel.size();i++){
+	//	cerr << i << " " << cmdCapsel[i].cmdname << endl;
+	//}
+	//cerr <<  "------" << endl;
+	//for(int i=0;i<p_list.size();i++){
+	//	cerr << i << " " <<  p_list[i].frTP <<":" << p_list[i].frID ;
+	//	cerr << " >> " <<  p_list[i].toTP << ":" << p_list[i].toID << endl; 
+	//}
 	//kgshell kgshell;
 	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
 
