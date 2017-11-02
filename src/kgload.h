@@ -59,8 +59,8 @@ public:
 	int run(void);
 	//実行メソッド
 	int run(PyObject* i_p,int o_p);
-	int run(int i_p,PyObject* o_p);
 	int run(int inum,int *i,int onum, int* o);
+	int run(int inum,int *i,PyObject* o_p);
 
 };
 

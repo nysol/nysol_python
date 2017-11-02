@@ -59,6 +59,7 @@ struct cmdCapselST{
 	PyObject* iobj;
 	kgstr_t mstr;
 	PyObject* mobj;
+	PyObject* oobj;
 
 };
 
@@ -91,9 +92,9 @@ class kgshell{
 	typedef map<int, map<string,vector<int> > > iomap_t;
 	iomap_t _ipipe_map;
 	iomap_t _opipe_map;
-	int _lastpiped[2];
+	//int _lastpiped[2];
 
-	void makePipeList(vector<linkST>& plist,bool tp);
+	void makePipeList(vector<linkST>& plist);
 
 
 public:
@@ -125,13 +126,10 @@ public:
 		}
 	}
 	//実行メソッド
-	static void *run_noargs_pths(void *arg);
-	static void *run_noargs_pthsm(void *arg);
-	static void *run_noargs_pths1(void *arg);
-	static void *run_noargs_pthsp(void *arg);
 	static void *run_func(void *arg);
+	static void *run_writelist(void *arg);
 
-	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,bool tp,PyObject* list);
+	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 
 	kgCSVfld* runiter(vector< cmdCapselST > &cmdcap,	vector< vector<int> >& plist,bool tp,PyObject* list);
 	int getparams(kgstr_t cmdname,PyObject* list);

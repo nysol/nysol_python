@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <sstream> 
 //http://www.yukun.info/blog/2008/10/c-pthread-mutex-condition-variable.html
 #include <string>
 #include <vector>
@@ -75,7 +76,7 @@ private:
   	  char* buf=_que.at(deq_tmp);
  			size_t wsize = ::write(fd, buf , maxSize);
     	if( wsize!=maxSize ){
-				ostringstream ss;
+				std::ostringstream ss;
 				ss << "file write error";
 				throw kgError(ss.str());
 			}

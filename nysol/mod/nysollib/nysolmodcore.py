@@ -108,7 +108,8 @@ class NysolMOD_CORE(object):
 				dupobj[obj] = 2
 			return True 
 		else:
-			sumiobj.add(obj)
+			if not isinstance(obj,str):
+				sumiobj.add(obj)
 			return False
 	
 
@@ -134,7 +135,6 @@ class NysolMOD_CORE(object):
 	def addTee(self,dupobj):
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
-
 		for obj in dupobj:
 			outll = obj.outlist["o"]
 			teexxx = m2tee(i=obj)
@@ -198,8 +198,10 @@ class NysolMOD_CORE(object):
 			modlist[no]= [obj.name,obj.para2str(),{}]
 			iolist[no]=[[],[],[],[]]
 
+			
 			for ioobj in obj.inplist["i"]:
-				if isinstance(ioobj,NysolMOD_CORE):
+				#uniqmodに無ければ今回のルート外のはず
+				if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod :
 					iolist[no][0].append(uniqmod[ioobj])
 				elif isinstance(ioobj,list):
 					modlist[no][2]["i"]=ioobj
@@ -207,7 +209,7 @@ class NysolMOD_CORE(object):
 					modlist[no][2]["i"]=ioobj
 
 			for ioobj in obj.inplist["m"]:
-				if isinstance(ioobj,NysolMOD_CORE):
+				if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod:
 					iolist[no][1].append(uniqmod[ioobj])
 				elif isinstance(ioobj,list):
 					modlist[no][2]["m"]=ioobj
@@ -216,7 +218,7 @@ class NysolMOD_CORE(object):
 
 
 			for ioobj in obj.outlist["o"]:
-				if isinstance(ioobj,NysolMOD_CORE):
+				if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod:
 					iolist[no][2].append(uniqmod[ioobj])
 				elif isinstance(ioobj,list):
 					modlist[no][2]["o"]=ioobj
@@ -224,7 +226,7 @@ class NysolMOD_CORE(object):
 					modlist[no][2]["o"]=ioobj
 
 			for ioobj in obj.outlist["u"]:
-				if isinstance(ioobj,NysolMOD_CORE):
+				if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod:
 					iolist[no][3].append(uniqmod[ioobj])
 				elif isinstance(ioobj,list):
 					modlist[no][2]["u"]=ioobj
@@ -265,63 +267,44 @@ class NysolMOD_CORE(object):
 			
 	def run(self,**kw_args):
 
+		#oが無ければlist出力追加
+		rtnlist = list()
+		if len(self.outlist["o"])==0:
+			runobj = self.writelist(o=rtnlist)
+		else:
+			runobj = self
+			
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
-				self.msg = True
+				runobj.msg = True
 
-		listd = []
-		runA = False
-		rtnflg = True
-		if len(self.outlist["o"])==0:
-			outf =None
-		else:
-			outf = self.outlist["o"][0]
-		
-		rtnlist = list()
-		if isinstance(outf,str):
-			pass
-		elif isinstance(outf,list):
-			rtnlist = outf
-			runA = True
-			rtnflg = False
-		else:
-			runA = True
+		outf = runobj.outlist["o"]
 
-		listdx = self.change_modNetwork()
-		
+		runobj.change_modNetwork()
+
 		uniqmod={} 
 		sumiobj= set([])
-		self.selectUniqMod(sumiobj,uniqmod)
+		runobj.selectUniqMod(sumiobj,uniqmod)
 
 		modlist=[None]*len(uniqmod) #[[name,para]]
 		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
-		self.makeModList(uniqmod,modlist,iolist)
+		runobj.makeModList(uniqmod,modlist,iolist)
 
 		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
 
-		self.makeLinkList(iolist,linklist)
+		shobj = n_core.init(runobj.msg)
+		n_core.runL(shobj,modlist,linklist)
 
-		shobj = n_core.init(self.msg)
+		return outf
 
-		if runA:
-			
-			n_core.runL(shobj,modlist,linklist,rtnlist)
-			if rtnflg:
-				return rtnlist
-			else:
-				return None
-		else:
-			#listd[1] += " o=" + outf 
-			#n_core.run(shobj,listd,runA,rtnlist)
-			#n_core.runL(shobj,modlist,iolist,linklist,rtnlist)
-
-			n_core.runL(shobj,modlist,linklist,rtnlist)
-
-			return outf
 
 	#GRAPH表示 #deepコピーしてからチェック
 	def drawModel(self,fname=None):
+
 		showobj = copy.deepcopy(self)
+
+
 		showobj.change_modNetwork()
 		uniqmod={} 
 		sumiobj= set([])
@@ -335,7 +318,7 @@ class NysolMOD_CORE(object):
 
 		showobj.makeLinkList(iolist,linklist)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)
-
+		
 
 
 
@@ -384,17 +367,7 @@ class NysolMOD_CORE(object):
 	# 子クラス生成　	# ここうっとしい いい方法が有れば変更
 	def mfifo(self,*args, **kw_args):
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
-		return mfifo(nutil.args2dict(args,kw_args,mload.kwd)).addPre(self)
-
-
-	def mload(self,*args, **kw_args):
-		from nysol.mod.submod.mload import Nysol_Mload as mload
-		return mload(nutil.args2dict(args,kw_args,mload.kwd)).addPre(self)
-
-
-	def msave(self,*args, **kw_args):
-		from nysol.mod.submod.msave import Nysol_Msave as msave
-		return msave(nutil.args2dict(args,kw_args,msave.kwd)).addPre(self)
+		return mfifo(nutil.args2dict(args,kw_args,mfifo.kwd)).addPre(self)
 
 	def writecsv(self,*args, **kw_args):
 		from nysol.mod.submod.writecsv import Nysol_Writecsv as writecsv

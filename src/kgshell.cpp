@@ -38,11 +38,6 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msum"] = boost::lambda::bind(boost::lambda::new_ptr<kgSum>());
 		_kgmod_map["mcal"] = boost::lambda::bind(boost::lambda::new_ptr<kgCal>());
 		_kgmod_map["mjoin"] = boost::lambda::bind(boost::lambda::new_ptr<kgJoin>());
-		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
-		_kgmod_map["mload"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
-		_kgmod_map["msave"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
-		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
-		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["m2cross"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Cross>());
 		_kgmod_map["maccum"] = boost::lambda::bind(boost::lambda::new_ptr<kgAccum>());
 		_kgmod_map["mavg"] = boost::lambda::bind(boost::lambda::new_ptr<kgAvg>());
@@ -112,6 +107,13 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msortf"]    = boost::lambda::bind(boost::lambda::new_ptr<kgSortf>());
 		_kgmod_map["mtab2csv"]  = boost::lambda::bind(boost::lambda::new_ptr<kgTab2csv>());
 
+
+		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["readlist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
+		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+
+
 		_kgmod_run["m2tee"] = 0;
 		_kgmod_run["mfifo"] = 0;
 		_kgmod_run["mcut"] = 0;
@@ -120,12 +122,6 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["msum"] = 0;
 		_kgmod_run["mcal"] = 0;
 		_kgmod_run["mjoin"] = 0;
-		_kgmod_run["mload"] = 0;
-		_kgmod_run["readcsv"] = 0;
-		_kgmod_run["msave"] = 0;
-		_kgmod_run["writecsv"] = 0;
-		_kgmod_run["writelist"] = 0;
-		_kgmod_run["mbuffer"] = 0;
 		_kgmod_run["m2cross"] = 0;
 		_kgmod_run["maccum"] = 0;
 		_kgmod_run["mavg"] = 0;
@@ -194,6 +190,16 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mxml2csv"] =0;
 		_kgmod_run["msortf"] =0;
 		_kgmod_run["mtab2csv"] = 0;
+		_kgmod_run["writecsv"] = 0;
+		_kgmod_run["readcsv"] = 0;
+
+
+
+		_kgmod_run["mload"] = 0;
+		_kgmod_run["msave"] = 0;
+		_kgmod_run["writelist"] = 1;
+		_kgmod_run["readlist"] = 0; //追加
+
 
 		_nfni = false;
  		_iterrtn= NULL;
@@ -217,8 +223,19 @@ void *kgshell::run_func(void *arg)try{
 	return NULL;
 }
 
+void *kgshell::run_writelist(void *arg)try{
+	argST *a =(argST*)arg; 
+	a->mobj->run(a->i_cnt,a->i_p,a->list);
+	return NULL;
+}catch(...){
+//	argST *a =(argST*)arg; 
+//	if(a->i_p>0){ ::close(a->i_p);}
+//	if(a->o_p>0){ ::close(a->o_p);}
+	return NULL;
+}
 
-void kgshell::makePipeList(vector<linkST> & plist,bool tp)
+
+void kgshell::makePipeList(vector<linkST> & plist)
 {
 	rlimit rlim;
 	int chfFlg;
@@ -268,27 +285,15 @@ void kgshell::makePipeList(vector<linkST> & plist,bool tp)
 		_opipe_map[plist[i].frID][plist[i].frTP].push_back(piped[1]);
 
 	}
-	if(tp){
-		if( pipe(_lastpiped) < 0){ throw kgError("pipe open error on kgshell");}
-		int flags0 = fcntl(_lastpiped[0], F_GETFD);
-		int flags1 = fcntl(_lastpiped[1], F_GETFD);
-		fcntl(_lastpiped[0], F_SETFD, flags0 | FD_CLOEXEC);
-		fcntl(_lastpiped[1], F_SETFD, flags1 | FD_CLOEXEC);
-	}
-	else{
-		_lastpiped[0] = -1;
-		_lastpiped[1] = -1;
-	}
 }
 
 int kgshell::run(
 	vector<cmdCapselST> &cmds,	
-	vector<linkST> & plist,
-	bool tp,
-	PyObject* list)try
+	vector<linkST> & plist
+)try
 {
 
-	makePipeList(plist,tp);
+	makePipeList(plist);
 
 	//typedef map<int, map<string,vector<int> > > iomap_t;
 	//iomap_t _ipipe_map;
@@ -338,6 +343,8 @@ int kgshell::run(
 	for(int i=_clen-1;i>=0;i--){
 
 		argst[i].mobj= _modlist[i];
+		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+
 		//	DEBIG
 		//	cerr << "-------------------" << endl;
 		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
@@ -379,8 +386,16 @@ int kgshell::run(
 		}
 
 		if( _opipe_map.find(i) == _opipe_map.end() ){ 
-			argst[i].o_cnt= 0;
-			argst[i].o_p= NULL;
+			if(typ==2){
+				argst[i].o_cnt= 1;
+				argst[i].list = cmds[i].oobj;
+			}
+			else{
+				argst[i].o_cnt= 0;
+				argst[i].o_p= NULL;
+			}
+
+
 		}
 		else{
 			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
@@ -428,27 +443,14 @@ int kgshell::run(
 		//	}
 		//}
 		//cerr << endl;
-		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_func ,(void*)&argst[i]);
 		}
-	}
-
-
-if(tp){
-		// データ出力
-		kgCSVfld rls;
-		bool nfn_i = false;
-		rls.popen(_lastpiped[0], &_env,nfn_i);
-		rls.read_header();	
-		while( EOF != rls.read() ){
-			PyObject* tlist = PyList_New(0);
-			for(size_t j=0 ;j<rls.fldSize();j++){
-				PyList_Append(tlist,Py_BuildValue("s",rls.getVal(j)));
-			}
-			PyList_Append(list,tlist);
+		else if(typ==0){
+			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
 		}
 	}
+
 	for(int i=_clen;i>0;i--){
 		pthread_join(_th_st_p[i-1],NULL);
 	}

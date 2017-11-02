@@ -50,9 +50,7 @@ PyObject* runL(PyObject* self, PyObject* args)try
 	PyObject *sh;
 	PyObject *mlist;
 	PyObject *linklist;
-	PyObject *rlist;
-	bool tp = false;
-	if (!PyArg_ParseTuple(args, "OOOO", &sh , &mlist  ,&linklist,&rlist)){
+	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
     return NULL;
   }
 
@@ -97,6 +95,15 @@ struct cmdCapselST{
 			if(strCHECK(value)){
 				cmpcaplocal.paralist.push_back( kgstr_t(strGET(key)) + "="+ strGET(value) );
 			}
+			else if(PyList_Check(value)){
+				// ioの種類によって in or out 
+				if( kgstr_t(strGET(key)) == "i" ||kgstr_t(strGET(key)) == "m" ){
+					cmpcaplocal.iobj=value;
+				}
+				else if( kgstr_t(strGET(key)) == "o" ||kgstr_t(strGET(key)) == "u" ){
+					cmpcaplocal.oobj=value;
+				}
+			}
 		}
 		cmdCapsel.push_back(cmpcaplocal);
 	}		
@@ -134,16 +141,8 @@ struct cmdCapselST{
 	//kgshell kgshell;
 	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
 
-	ksh->run(cmdCapsel,p_list,tp,rlist);
+	ksh->run(cmdCapsel,p_list);
 
-/*
-
-	if(tp){
-		return PyLong_FromLong(0);
-	}else{
-		return PyLong_FromLong(0);
-	}	
-*/
 	return PyLong_FromLong(0);
 
 }catch(...){

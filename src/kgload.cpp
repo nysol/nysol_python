@@ -273,25 +273,25 @@ int kgLoad::run(PyObject* i_p,int o_p) try
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int i_p,PyObject* o_p) try 
+int kgLoad::run(int inum,int *i_p,PyObject* o_p) try 
 {
-	//size_t fcnt=0;
 
 	// パラメータチェック
 	_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
 
+	if(inum>1){
+		throw kgError("no match IO");
+	}
+
+	kgCSVfld rls;
+
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p > 0){ rls.popen(*i_p, _env,_nfn_i); }
+	else     { rls.open(_args.toString("i=",false), _env,_nfn_i); }
+
+	rls.read_header();
+
 	if(PyList_Check(o_p)){
-		// データ出力
-		kgCSVfld rls;
-		// 入出力ファイルオープン
-		if(i_p>0){
-			rls.popen(i_p, _env,_nfn_i);
-		}
-		else{
-			// 入出力ファイルオープン
-			rls.open(_args.toString("i=",false), _env,_nfn_i);
-		}
-		rls.read_header();	
 		while( EOF != rls.read() ){
 			PyObject* tlist = PyList_New(0);
 			for(size_t j=0 ;j<rls.fldSize();j++){
