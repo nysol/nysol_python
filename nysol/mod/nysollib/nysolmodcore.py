@@ -121,14 +121,26 @@ class NysolMOD_CORE(object):
 		if len(self.inplist["i"]) != 0 :
 			if isinstance(self.inplist["i"][0],NysolMOD_CORE):
 				self.inplist["i"][0].check_dupObj(sumiobj,dupobj)
+
 			elif isinstance(self.inplist["i"][0],str):
 				self.check_dupObjSub(sumiobj,dupobj,self.inplist["i"][0])
+
+			elif isinstance(self.inplist["i"][0],list):
+				#from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
+				#rlmod = mreadlist(i=self.inplist["i"][0])
+				#rlmod.outlist()
+				pass
+
 
 		if len(self.inplist["m"]) != 0 :
 			if isinstance(self.inplist["m"][0],NysolMOD_CORE):
 				self.inplist["m"][0].check_dupObj(sumiobj,dupobj) 
 			elif isinstance(self.inplist["m"][0],str):
 				self.check_dupObjSub(sumiobj,dupobj,self.inplist["m"][0])
+
+			elif isinstance(self.inplist["m"][0],list):
+				pass
+
 
 		return			
  
@@ -167,9 +179,31 @@ class NysolMOD_CORE(object):
 
 
 	def change_modNetwork(self):
+
 		sumiobj=set([])
 		dupobj={}
 		self.check_dupObj(sumiobj,dupobj)
+
+		# add list read
+		from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
+		for obj in sumiobj:
+			if obj.name=="readlist":
+				continue
+			if isinstance(obj,NysolMOD_CORE):
+				if len(obj.inplist["i"])!=0 and isinstance(obj.inplist["i"][0],list) :
+					rlmod = mreadlist(obj.inplist["i"][0])
+					rlmod.outlist["o"] = [obj]
+					obj.inplist["i"][0]=rlmod
+
+				if len(obj.inplist["m"])!=0 and isinstance(obj.inplist["m"][0],list) :
+					rlmod = mreadlist(inplist["m"][0])
+					rlmod.outlist["o"] = [obj]
+					obj.inplist["m"][0]=rlmod
+			
+
+		#self.addrealist(sumiobj,dupobj)
+
+
 		if len(dupobj)!=0:
 			self.addTee(dupobj)
 
@@ -280,6 +314,7 @@ class NysolMOD_CORE(object):
 
 		outf = runobj.outlist["o"]
 
+		
 		runobj.change_modNetwork()
 
 		uniqmod={} 

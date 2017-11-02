@@ -198,7 +198,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mload"] = 0;
 		_kgmod_run["msave"] = 0;
 		_kgmod_run["writelist"] = 1;
-		_kgmod_run["readlist"] = 0; //追加
+		_kgmod_run["readlist"] = 2;
 
 
 		_nfni = false;
@@ -226,6 +226,17 @@ void *kgshell::run_func(void *arg)try{
 void *kgshell::run_writelist(void *arg)try{
 	argST *a =(argST*)arg; 
 	a->mobj->run(a->i_cnt,a->i_p,a->list);
+	return NULL;
+}catch(...){
+//	argST *a =(argST*)arg; 
+//	if(a->i_p>0){ ::close(a->i_p);}
+//	if(a->o_p>0){ ::close(a->o_p);}
+	return NULL;
+}
+
+void *kgshell::run_readlist(void *arg)try{
+	argST *a =(argST*)arg; 
+	a->mobj->run(a->list,a->o_cnt,a->o_p);
 	return NULL;
 }catch(...){
 //	argST *a =(argST*)arg; 
@@ -350,8 +361,14 @@ int kgshell::run(
 		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
 
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
-			argst[i].i_cnt= 0;
-			argst[i].i_p= NULL;
+			if(typ==2){
+				argst[i].i_cnt= 1;
+				argst[i].list = cmds[i].iobj;
+			}
+			else{
+				argst[i].i_cnt= 0;
+				argst[i].i_p= NULL;
+			}
 		}
 		else{
 			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
@@ -386,7 +403,7 @@ int kgshell::run(
 		}
 
 		if( _opipe_map.find(i) == _opipe_map.end() ){ 
-			if(typ==2){
+			if(typ==1){
 				argst[i].o_cnt= 1;
 				argst[i].list = cmds[i].oobj;
 			}
@@ -446,8 +463,11 @@ int kgshell::run(
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_func ,(void*)&argst[i]);
 		}
-		else if(typ==0){
+		else if(typ==1){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
+		}
+		else if(typ==2){
+			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_readlist ,(void*)&argst[i]);
 		}
 	}
 

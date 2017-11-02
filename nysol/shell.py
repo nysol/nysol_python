@@ -128,5 +128,14 @@ class script(object):
 			for runcmd in runcmds:
 				return runcmd.run()
 
+
+	def drawModel(self , fname=None) :
+		oldenv = copy.deepcopy(self.cmdlist)
+		runcmds = self.makeNetwork()
+		for runcmd in runcmds:
+			runcmd.drawModel(fname)
+		
+		self.cmdlist = oldenv
+
 	def __lshift__(self,obj):
 		self.add(obj)

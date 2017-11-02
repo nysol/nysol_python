@@ -198,18 +198,19 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p) try
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(PyObject* i_p,int o_p) try 
+int kgLoad::run(PyObject* i_p,int onum,int *o_p) try 
 {
 	//size_t fcnt=0;
 
 	// パラメータチェック
 	_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
 
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	if(onum>1){
+		throw kgError("no match IO");
 	}
+	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+
 
 	if(PyList_Check(i_p)){
 		Py_ssize_t max = PyList_Size(i_p);

@@ -1,5 +1,6 @@
 import nysollib
 from submod.readcsv import Nysol_Readcsv as readcsv
+from submod.readlist import Nysol_Readlist as readlist
 from submod.writecsv import Nysol_Writecsv as writecsv
 from submod.writelist import Nysol_Writelist as writelist
 from submod.mfifo import Nysol_Mfifo as mfifo

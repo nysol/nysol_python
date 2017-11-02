@@ -128,6 +128,7 @@ public:
 	//実行メソッド
 	static void *run_func(void *arg);
 	static void *run_writelist(void *arg);
+	static void *run_readlist(void *arg);
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 

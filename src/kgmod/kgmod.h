@@ -162,13 +162,10 @@ class kgMod
 	// ----------------------------------------------------------------
 	// run仮想関数
 	// ----------------------------------------------------------------
-	virtual int run(int i){ return 0;};
 	virtual int run(int i,int o){return 0;};
-	virtual int run(int i,int o,int m){return 0;}
-	virtual int run(PyObject* i,int o){return 0;};
-	virtual int run(int i,int olim,int* o){return 0;}
 	virtual int run(int inum,int *i,int onum, int* o){return 0;}
 	virtual int run(int inum,int *i,PyObject* o){return 0;};
+	virtual int run(PyObject* i_p,int onum, int* o_p){return 0;}
 
 
 
