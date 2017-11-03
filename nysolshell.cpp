@@ -45,23 +45,7 @@ static bool strCHECK(PyObject* data){
 
 }
 
-PyObject* runL(PyObject* self, PyObject* args)try
-{
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
-	}
-	vector< cmdCapselST > cmdCapsel;
-
+void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCapsel, vector< linkST > & p_list){
 /*
 	// list [ cmd para ilink mlink]
 	vector< vector<int> > p_list;
@@ -114,7 +98,6 @@ struct cmdCapselST{
 	kgstr_t toTP;
 	int toID;
 	};*/
-	vector< linkST > p_list;
 	Py_ssize_t lsize = PyList_Size(linklist);
 	for(Py_ssize_t i=0 ; i<lsize;i++){
 		linkST linklocal;
@@ -140,6 +123,28 @@ struct cmdCapselST{
 	//}
 	//kgshell kgshell;
 	// args : cmdList ,pipe_conect_List , runTYPE, return_LIST
+}
+
+
+PyObject* runL(PyObject* self, PyObject* args)try
+{
+	PyObject *sh;
+	PyObject *mlist;
+	PyObject *linklist;
+	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+    return NULL;
+  }
+
+	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+	if(!PyList_Check(mlist)){
+		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+		return Py_BuildValue("");
+	}
+	vector< cmdCapselST > cmdCapsel;
+	vector< linkST > p_list;
+	runCore(mlist,linklist,cmdCapsel,p_list);
+
 
 	ksh->run(cmdCapsel,p_list);
 
@@ -152,6 +157,28 @@ struct cmdCapselST{
 
 PyObject* runP(PyObject* self, PyObject* args)
 {
+	PyObject *sh;
+	PyObject *mlist;
+	PyObject *linklist;
+	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+    return NULL;
+  }
+
+	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+	if(!PyList_Check(mlist)){
+		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+		return Py_BuildValue("");
+	}
+	vector< cmdCapselST > cmdCapsel;
+	vector< linkST > p_list;
+	runCore(mlist,linklist,cmdCapsel,p_list);
+
+	kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);
+
+	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+
+
 
 /*
 	PyObject *sh;
@@ -189,9 +216,9 @@ PyObject* runP(PyObject* self, PyObject* args)
 	//kgshell kgshell;
 	kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list,tp,rlist);
 	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
-*/
 	// dmy
 	return PyLong_FromLong(0);
+*/
 
 }
 
@@ -204,7 +231,6 @@ PyObject* readline(PyObject* self, PyObject* args)
 	if (!PyArg_ParseTuple(args, "O", &csvin)){
     return Py_BuildValue("");
   }
-
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
 
 	if( kcfld->read() == EOF){

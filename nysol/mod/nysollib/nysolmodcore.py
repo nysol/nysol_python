@@ -740,41 +740,32 @@ class NysolMOD_CORE(object):
 class Nysol_MeachIter(object):
 
 	def __init__(self,obj):
-		listd = []
-		runA = False
-		outf = obj.outp
-		if not isinstance(outf,str):
-			outf = None
-			runA = True 
 
-		i0 = None
-		i1 = None
-		sumiobj=set([])
-
-		if isinstance(obj.inp,NysolMOD_CORE):
-			i0 = obj.inp.make_modlist(sumiobj) 
-		elif isinstance(obj.inp,list):
-			i0 = obj.inp
-		elif isinstance(obj.inp,str):
-			i0 = obj.inp
-
-
-		if isinstance(obj.refp,NysolMOD_CORE):
-			i1 = obj.refp.make_modlist(sumiobj) 
-		elif isinstance(obj.refp,list):
-			i1 = obj.refp
-		elif isinstance(obj.refp,str):
-			i1 = obj.refp
-
-		listd = [obj.name,obj.para2str(),i0,i1]
-		#print list
-		self.shobj = n_core.init(obj.msg)
-		if runA:
-			self.csvin = n_core.runiter(self.shobj,listd,runA)
+		#oが無ければlist出力追加
+		rtnlist = []
+		if len(obj.outlist["o"])==0:
+			runobj = obj
 		else:
-			#n_core.runiter(shobj,list,runA)
-			#return outf
-			pass
+			print ("type ERORR")
+			return None
+			
+		
+		runobj.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+		runobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		runobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
+		# kgshell stock
+		self.shobj = n_core.init(runobj.msg)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
+
 
 	def next(self):
 		line = n_core.readline(self.csvin)

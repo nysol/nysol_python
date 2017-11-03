@@ -92,7 +92,7 @@ class kgshell{
 	typedef map<int, map<string,vector<int> > > iomap_t;
 	iomap_t _ipipe_map;
 	iomap_t _opipe_map;
-	//int _lastpiped[2];
+	int _csvpiped[2];
 
 	void makePipeList(vector<linkST>& plist);
 
@@ -131,8 +131,7 @@ public:
 	static void *run_readlist(void *arg);
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
-
-	kgCSVfld* runiter(vector< cmdCapselST > &cmdcap,	vector< vector<int> >& plist,bool tp,PyObject* list);
+	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	int getparams(kgstr_t cmdname,PyObject* list);
 
 
