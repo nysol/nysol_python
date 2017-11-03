@@ -186,10 +186,13 @@ class NysolMOD_CORE(object):
 
 		# add list read
 		from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
+		from nysol.mod.submod.writelist import Nysol_Writelist as mwritelist
 		for obj in sumiobj:
-			if obj.name=="readlist":
-				continue
 			if isinstance(obj,NysolMOD_CORE):
+				if obj.name=="readlist":
+					continue
+				if obj.name=="writelist":
+					continue
 				if len(obj.inplist["i"])!=0 and isinstance(obj.inplist["i"][0],list) :
 					rlmod = mreadlist(obj.inplist["i"][0])
 					rlmod.outlist["o"] = [obj]
@@ -200,6 +203,17 @@ class NysolMOD_CORE(object):
 					rlmod.outlist["o"] = [obj]
 					obj.inplist["m"][0]=rlmod
 			
+				if len(obj.outlist["o"])!=0 and isinstance(obj.outlist["o"][0],list) :
+					wlmod = mwritelist(obj.outlist["o"][0])
+					wlmod.inplist["i"]=[obj]
+					obj.outlist["o"][0] = wlmod
+
+
+				if len(obj.outlist["u"])!=0 and isinstance(obj.outlist["u"][0],list) :
+					wlmod = mwritelist(obj.outlist["u"][0])
+					wlmod.inplist["i"]=[obj]
+					obj.outlist["u"][0] = wlmod
+
 
 		#self.addrealist(sumiobj,dupobj)
 
@@ -232,7 +246,6 @@ class NysolMOD_CORE(object):
 			modlist[no]= [obj.name,obj.para2str(),{}]
 			iolist[no]=[[],[],[],[]]
 
-			
 			for ioobj in obj.inplist["i"]:
 				#uniqmodに無ければ今回のルート外のはず
 				if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod :
@@ -302,9 +315,13 @@ class NysolMOD_CORE(object):
 	def run(self,**kw_args):
 
 		#oが無ければlist出力追加
-		rtnlist = list()
+		rtnlist = []
 		if len(self.outlist["o"])==0:
-			runobj = self.writelist(o=rtnlist)
+			runobj = self.writelist(rtnlist)
+		elif self.name != "writelist" and isinstance(self.outlist["o"][0],list): 
+			#oがlistなら先にadd list
+			runobj = self.writelist(self.outlist["o"][0])
+			self.outlist["o"] = [runobj]
 		else:
 			runobj = self
 			
@@ -312,8 +329,7 @@ class NysolMOD_CORE(object):
 			if kw_args["msg"] == "on" :
 				runobj.msg = True
 
-		outf = runobj.outlist["o"]
-
+		outf = runobj.outlist["o"][0]
 		
 		runobj.change_modNetwork()
 
@@ -337,7 +353,16 @@ class NysolMOD_CORE(object):
 	#GRAPH表示 #deepコピーしてからチェック
 	def drawModel(self,fname=None):
 
-		showobj = copy.deepcopy(self)
+		dupshowobj = copy.deepcopy(self)
+
+		rtnlist = []
+		if len(dupshowobj.outlist["o"])==0:
+			showobj = dupshowobj.writelist(rtnlist)
+		elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
+			showobj = dupshowobj.writelist(self.outlist["o"][0])
+			dupshowobj.outlist["o"] = [showobj]
+		else:
+			showobj = dupshowobj
 
 
 		showobj.change_modNetwork()
