@@ -314,16 +314,18 @@ class NysolMOD_CORE(object):
 			
 	def run(self,**kw_args):
 
+		dupobj = copy.deepcopy(self)
+
 		#oが無ければlist出力追加
 		rtnlist = []
-		if len(self.outlist["o"])==0:
-			runobj = self.writelist(rtnlist)
-		elif self.name != "writelist" and isinstance(self.outlist["o"][0],list): 
+		if len(dupobj.outlist["o"])==0:
+			runobj = dupobj.writelist(rtnlist)
+		elif self.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
 			#oがlistなら先にadd list
-			runobj = self.writelist(self.outlist["o"][0])
-			self.outlist["o"] = [runobj]
+			runobj = dupobj.writelist(dupobj.outlist["o"][0])
+			dupobj.outlist["o"] = [runobj]
 		else:
-			runobj = self
+			runobj = dupobj
 			
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
@@ -359,7 +361,7 @@ class NysolMOD_CORE(object):
 		if len(dupshowobj.outlist["o"])==0:
 			showobj = dupshowobj.writelist(rtnlist)
 		elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
-			showobj = dupshowobj.writelist(self.outlist["o"][0])
+			showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
 			dupshowobj.outlist["o"] = [showobj]
 		else:
 			showobj = dupshowobj
@@ -740,11 +742,13 @@ class NysolMOD_CORE(object):
 class Nysol_MeachIter(object):
 
 	def __init__(self,obj):
+		
+		dupobj = copy.deepcopy(obj)
 
 		#oが無ければlist出力追加
 		rtnlist = []
-		if len(obj.outlist["o"])==0:
-			runobj = obj
+		if len(dupobj.outlist["o"])==0:
+			runobj = dupobj
 		else:
 			print ("type ERORR")
 			return None
