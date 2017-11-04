@@ -130,12 +130,13 @@ class script(object):
 
 
 	def drawModel(self , fname=None) :
-		oldenv = copy.deepcopy(self.cmdlist)
-		runcmds = self.makeNetwork()
-		for runcmd in runcmds:
-			runcmd.drawModel(fname)
+
+		runlist = copy.deepcopy(self.cmdlist)
+		runcmds = self.makeNetwork(runlist)
+
+		for i,runcmd in enumerate(runcmds):
+			runcmd.drawModel("no_"+ str(i) + "_" + fname)
 		
-		self.cmdlist = oldenv
 
 	def __lshift__(self,obj):
 		self.add(obj)
