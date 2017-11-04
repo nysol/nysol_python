@@ -234,12 +234,50 @@ class NysolMOD_CORE(object):
 					wlmod.inplist["i"]=[obj]
 					obj.outlist["u"][0] = wlmod
 
+		if len(dupobj)!=0:
+			self.addTee(dupobj)
 
-		#self.addrealist(sumiobj,dupobj)
+	def change_modNetworks(self,mods):
+		sumiobj=set([])
+		dupobj={}
+		for mod in mods:
+			mod.check_dupObj(sumiobj,dupobj)
 
+		# add list read
+		from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
+		from nysol.mod.submod.writelist import Nysol_Writelist as mwritelist
+
+		for obj in sumiobj:
+			if isinstance(obj,NysolMOD_CORE):
+				if obj.name=="readlist":
+					continue
+				if obj.name=="writelist":
+					continue
+				if len(obj.inplist["i"])!=0 and isinstance(obj.inplist["i"][0],list) :
+					rlmod = mreadlist(obj.inplist["i"][0])
+					rlmod.outlist["o"] = [obj]
+					obj.inplist["i"][0]=rlmod
+
+				if len(obj.inplist["m"])!=0 and isinstance(obj.inplist["m"][0],list) :
+					rlmod = mreadlist(inplist["m"][0])
+					rlmod.outlist["o"] = [obj]
+					obj.inplist["m"][0]=rlmod
+			
+				if len(obj.outlist["o"])!=0 and isinstance(obj.outlist["o"][0],list) :
+					wlmod = mwritelist(obj.outlist["o"][0])
+					wlmod.inplist["i"]=[obj]
+					obj.outlist["o"][0] = wlmod
+
+
+				if len(obj.outlist["u"])!=0 and isinstance(obj.outlist["u"][0],list) :
+					wlmod = mwritelist(obj.outlist["u"][0])
+					wlmod.inplist["i"]=[obj]
+					obj.outlist["u"][0] = wlmod
 
 		if len(dupobj)!=0:
 			self.addTee(dupobj)
+
+
 
 			
 	def selectUniqMod(self,sumiobj,modlist):
@@ -257,7 +295,12 @@ class NysolMOD_CORE(object):
 		for obj in self.inplist["m"]:
 			if isinstance(obj,NysolMOD_CORE):
 				obj.selectUniqMod(sumiobj,modlist)
-			
+
+
+	def selectUniqMods(self,mods,sumiobj,modlist):
+		for mod in mods:
+			mod.selectUniqMod(sumiobj,modlist)
+
 
 	def makeModList(self,uniqmod,modlist,iolist):
 
@@ -334,6 +377,11 @@ class NysolMOD_CORE(object):
 			
 	def run(self,**kw_args):
 
+		# dup しない項目セット　#コピーメソッド実装した方がいい？
+		stock = None
+		if len(self.outlist["o"]) != 0 :
+			stock = self.outlist["o"][0]
+	
 		dupobj = copy.deepcopy(self)
 
 		#oが無ければlist出力追加
@@ -342,8 +390,12 @@ class NysolMOD_CORE(object):
 			runobj = dupobj.writelist(rtnlist)
 		elif self.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
 			#oがlistなら先にadd list
-			runobj = dupobj.writelist(dupobj.outlist["o"][0])
+			#runobj = dupobj.writelist(dupobj.outlist["o"][0])
+			runobj = dupobj.writelist(stock)
 			dupobj.outlist["o"] = [runobj]
+		elif isinstance(dupobj.outlist["o"][0],list):
+			dupobj.outlist["o"][0] = stock
+			runobj = dupobj
 		else:
 			runobj = dupobj
 			
@@ -370,6 +422,59 @@ class NysolMOD_CORE(object):
 		n_core.runL(shobj,modlist,linklist)
 
 		return outf
+
+	def runs(self,mods,**kw_args):
+		
+		stocks =[]
+		outfs =[]
+		for mod in mods:
+			if len(mod.outlist["o"]) != 0 :
+				stocks.append(mod.outlist["o"][0])
+			else:
+				stocks.append(None)
+				
+
+		dupobjs = copy.deepcopy(mods)
+		#oが無ければlist出力追加
+		runobjs =[]
+		cnt=0
+		for dupobj in dupobjs:
+			if len(dupobj.outlist["o"])==0:
+				runobjs.append(dupobj.writelist([]))
+			elif self.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
+				#oがlistなら先にadd list
+				#runobj = dupobj.writelist(dupobj.outlist["o"][0])
+				runobj = dupobj.writelist(stocks[cnt])
+				dupobj.outlist["o"] = [runobj]
+				runobjs.append(runobj)
+
+			elif isinstance(dupobj.outlist["o"][0],list):
+				dupobj.outlist["o"][0] = stocks[cnt]
+				runobjs.append(dupobj)
+			else:
+				runobjs.append(dupobj)
+	
+			outfs.append(runobjs[-1].outlist["o"][0])
+			cnt+=1
+
+		self.change_modNetworks(runobjs)
+
+		uniqmod={} 
+		sumiobj= set([])
+		self.selectUniqMods(runobjs,sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		self.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		self.makeLinkList(iolist,linklist)
+
+		shobj = n_core.init(self.msg)
+		n_core.runL(shobj,modlist,linklist)
+
+		return outfs
+
 
 
 	#GRAPH表示 #deepコピーしてからチェック
@@ -400,7 +505,38 @@ class NysolMOD_CORE(object):
 
 		showobj.makeLinkList(iolist,linklist)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)
-		
+
+
+	#GRAPH表示 #deepコピーしてからチェック
+	def drawModels(self,mod,fname=None):
+
+		dupshowobjs = copy.deepcopy(mod)
+		showobjs =[]
+		rtnlist = []
+		for dupshowobj in dupshowobjs:
+			if len(dupshowobj.outlist["o"])==0:
+				showobjs.append(dupshowobj.writelist(rtnlist))
+			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
+				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
+				dupshowobj.outlist["o"] = [showobj]
+				showobjs.append(showobj)
+			else:
+				showobjs.append(dupshowobj)
+
+		self.change_modNetworks(showobjs)
+
+		uniqmod={} 
+		sumiobj= set([])
+		self.selectUniqMods(showobjs,sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		self.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+
+		self.makeLinkList(iolist,linklist)
+		ndraw.chageSVG(modlist,iolist,linklist,fname)		
 
 
 

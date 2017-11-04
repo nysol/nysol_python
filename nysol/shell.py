@@ -114,7 +114,8 @@ class script(object):
 	def run(self,**kwd) :
 
 		runlist = copy.deepcopy(self.cmdlist)
-		runcmds = self.makeNetwork(runlist)
+
+		runcmds = self.makeNetwork(self.cmdlist)
 
 		nowMsgFlg = self.msgFlg
 		if "msg" in kwd:
@@ -126,7 +127,9 @@ class script(object):
 				runcmd.run(msg="on")
 		else:
 			for runcmd in runcmds:
-				return runcmd.run()
+				runcmd.run()
+
+		self.cmdlist = runlist
 
 
 	def drawModel(self , fname=None) :
