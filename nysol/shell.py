@@ -26,11 +26,11 @@ class script(object):
 	def show(self) :
 		print(self.cmdlist)
 		
-	def makeNetwork(self):
+	def makeNetwork(self,cmdlists):
 		conectLIST={}
 
 		#iolist抽出
-		for linno ,cmd  in enumerate(self.cmdlist):
+		for linno ,cmd  in enumerate(cmdlists):
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
 			# コマンド毎にチェックし方を変えれるようにする
@@ -57,7 +57,7 @@ class script(object):
 		newruncmd = None
 
 		#ioflg =False
-		for linno ,cmd  in enumerate(self.cmdlist):
+		for linno ,cmd  in enumerate(cmdlists):
 			#print linno ,cmd ,newruncmd, interobj
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
@@ -112,16 +112,16 @@ class script(object):
 		
 		
 	def run(self,**kwd) :
-		#f.w エラー時等で必要なら戻す処理を追加する
 
-		oldenv = copy.deepcopy(self.cmdlist)
-		runcmds = self.makeNetwork()
+		runlist = copy.deepcopy(self.cmdlist)
+		runcmds = self.makeNetwork(runlist)
 
+		nowMsgFlg = self.msgFlg
 		if "msg" in kwd:
 			if kwd["msg"] == "on" :
-				self.msgFlg=True
+				nowMsgFlg=True
 
-		if self.msgFlg :
+		if nowMsgFlg :
 			for runcmd in runcmds:
 				runcmd.run(msg="on")
 		else:

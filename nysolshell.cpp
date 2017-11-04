@@ -178,48 +178,6 @@ PyObject* runP(PyObject* self, PyObject* args)
 
 	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
 
-
-
-/*
-	PyObject *sh;
-	PyObject *list;
-	int tp;
-	if (!PyArg_ParseTuple(args, "OOi", &sh , &list ,&tp)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(list)){
-		cerr << "cannot run " << PyList_Check(list) << " "<<PyList_Size(list)<< endl;
-		return Py_BuildValue("");
-	}
-
-	// list [ cmd para ilink mlink]
-	vector< vector<int> > p_list;
-	vector< cmdCapselST > cmdCapsel;
-
-	run_sub(list,cmdCapsel,p_list,1);
-
-
-	// debug
-	//	cerr <<  "------" << endl;
-	//	cerr <<  "lsize " << lsize << endl;
-	//for(int i=0;i<cmd_vv.size();i++){
-	//	cerr << i << " " << cmd_vv[i] << endl;
-	//}
-	//	cerr <<  "------" << endl;
-	//for(int i=0;i<p_list.size();i++){
-	//	cerr << i << " i:" << p_list[i][0] << "<<o:" << p_list[i][1]<< endl;
-	//}
-	PyObject* rlist = PyList_New(0);
-	//kgshell kgshell;
-	kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list,tp,rlist);
-	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
-	// dmy
-	return PyLong_FromLong(0);
-*/
-
 }
 
 PyObject* readline(PyObject* self, PyObject* args)

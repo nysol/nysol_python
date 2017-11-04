@@ -21,6 +21,9 @@ class NysolMOD_CORE(object):
 			kwd = {}
 		self.name = name
 		self.kwd   = kwd
+		self.defaltdir   = "o"
+		self.nowdir   = self.defaltdir
+
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
 
@@ -42,6 +45,9 @@ class NysolMOD_CORE(object):
 
 		self.msg=False
 
+	def dir(self,dir) :
+		self.nowdir = dir
+		return self
 
 
 	def __iter__(self):
@@ -58,9 +64,9 @@ class NysolMOD_CORE(object):
 
 	def addPre(self,pre):
 		self.inplist["i"].append(pre) 
-		pre.outlist["o"].append(self)
+		pre.outlist[pre.nowdir].append(self)
 		if len(self.inplist["m"]) != 0 and isinstance(self.inplist["m"][0],NysolMOD_CORE):			
-			self.inplist["m"][0].outlist["o"].append(self)
+			self.inplist["m"][0].outlist[self.inplist["m"][0].nowdir].append(self)
 		return self
 
 	# PRIVATEにする？
@@ -148,21 +154,35 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		for obj in dupobj:
-			outll = obj.outlist["o"]
-			teexxx = m2tee(i=obj)
-			obj.outlist["o"]= [teexxx]
-			teexxx.outlist["o"] = []
-			for outin in outll:
-				if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
-					fifoxxx=mfifo(i=teexxx)
-					teexxx.outlist["o"].append(fifoxxx)
-					fifoxxx.outlist["o"]=[outin]
-					outin.inplist["i"] = [fifoxxx]
-				if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
-					fifoxxx=mfifo(i=teexxx)
-					teexxx.outlist["o"].append(fifoxxx)
-					fifoxxx.outlist["o"]=[outin]
-					outin.inplist["m"] = [fifoxxx]
+			for k in obj.outlist.keys():
+				if len(obj.outlist[k])==0:
+					continue
+				elif len(obj.outlist[k])==1: #fifoのみ追加
+					outll = obj.outlist[k][0]
+					fifoxxx=mfifo(i=obj)
+					obj.outlist[k][0] = fifoxxx
+					fifoxxx.outlist["o"]=[outll]
+					if len(outll.inplist["i"])!=0 and obj == outll.inplist["i"][0]:
+						outll.inplist["i"] = [fifoxxx]
+					if len(outll.inplist["m"])!=0 and obj == outll.inplist["m"][0]:
+						outll.inplist["m"] = [fifoxxx]
+
+				else:
+					outll = obj.outlist[k]
+					teexxx = m2tee(i=obj)
+					obj.outlist[k]= [teexxx]
+					teexxx.outlist["o"] = [] 
+					for outin in outll:
+						if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
+							fifoxxx=mfifo(i=teexxx)
+							teexxx.outlist["o"].append(fifoxxx)
+							fifoxxx.outlist["o"]=[outin]
+							outin.inplist["i"] = [fifoxxx]
+						if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
+							fifoxxx=mfifo(i=teexxx)
+							teexxx.outlist["o"].append(fifoxxx)
+							fifoxxx.outlist["o"]=[outin]
+							outin.inplist["m"] = [fifoxxx]
 
 		# no buffer Version
 		#for obj in dupobj:
