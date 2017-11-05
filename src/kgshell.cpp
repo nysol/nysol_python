@@ -30,6 +30,7 @@ using namespace kglib;
 
 
 kgshell::kgshell(int mflg){
+
 		_kgmod_map["m2tee"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Tee>());
 		_kgmod_map["mfifo"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
 		_kgmod_map["mcut"] = boost::lambda::bind(boost::lambda::new_ptr<kgCut>());
@@ -208,6 +209,17 @@ kgshell::kgshell(int mflg){
 		_modlist=NULL;
 		if(!mflg){  _env.verblvl(2);	}
 
+	  if (pthread_mutex_init(&_mutex, NULL) == -1) { 
+			ostringstream ss;
+			ss << "init mutex error";
+			throw kgError(ss.str());
+	  }
+	  if (pthread_cond_init(&_threadState, NULL) == -1) { 
+			ostringstream ss;
+			ss << "init cond mutex error";
+			throw kgError(ss.str());
+	  }
+
 }
 
 
@@ -225,7 +237,7 @@ void *kgshell::run_func(void *arg)try{
 
 void *kgshell::run_writelist(void *arg)try{
 	argST *a =(argST*)arg; 
-	a->mobj->run(a->i_cnt,a->i_p,a->list);
+	a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex);
 	return NULL;
 }catch(...){
 //	argST *a =(argST*)arg; 
@@ -310,27 +322,28 @@ int kgshell::run(
 	//iomap_t _ipipe_map;
 	//iomap_t _opipe_map;
 	//DEBUG
-	//for(iomap_t::iterator it=_ipipe_map.begin() ;it!=_ipipe_map.end();it++){
-	//		cerr << it->first << "--|" << endl;
-	//		for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
-	//			cerr << " " << it2->first << ": ";
-	//			for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
-	//				cerr << *it3 << " ";
-	//			}
-	//			cerr << endl;
-	//		}
-	//}
-	//for(iomap_t::iterator it=_opipe_map.begin() ;it!=_opipe_map.end();it++){
-	//		cerr << it->first << "--|" << endl;
-	//		for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
-	//			cerr << " " << it2->first << ": ";
-	//			for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
-	//				cerr << *it3 << " ";
-	//			}
-	//			cerr << endl;
-	//		}
-	//}
-
+	/*
+	for(iomap_t::iterator it=_ipipe_map.begin() ;it!=_ipipe_map.end();it++){
+			cerr << it->first << "--|" << endl;
+			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+				cerr << " " << it2->first << ": ";
+				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+					cerr << *it3 << " ";
+				}
+				cerr << endl;
+			}
+	}
+	for(iomap_t::iterator it=_opipe_map.begin() ;it!=_opipe_map.end();it++){
+			cerr << it->first << "--|" << endl;
+			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+				cerr << " " << it2->first << ": ";
+				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+					cerr << *it3 << " ";
+				}
+				cerr << endl;
+			}
+	}
+*/
 	_clen = cmds.size();
 
 	_modlist = new kgMod*[_clen];
@@ -363,6 +376,7 @@ int kgshell::run(
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 			if(typ==2){
 				argst[i].i_cnt= 1;
+				argst[i].i_p= NULL;
 				argst[i].list = cmds[i].iobj;
 			}
 			else{
@@ -405,6 +419,8 @@ int kgshell::run(
 		if( _opipe_map.find(i) == _opipe_map.end() ){ 
 			if(typ==1){
 				argst[i].o_cnt= 1;
+				argst[i].o_p = NULL;
+				argst[i].mutex = &_mutex;
 				argst[i].list = cmds[i].oobj;
 			}
 			else{
@@ -446,20 +462,22 @@ int kgshell::run(
 			}
 		}
 		//debug
-		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		//if ( argst[i].i_cnt > 0){
-		//	cerr << " i:" ;
-		//	for(size_t j=0; j< argst[i].i_cnt;j++){
-		//		cerr <<  *(argst[i].i_p+j) << " " ;
-		//	}
-		//}
-		//if ( argst[i].o_cnt > 0){
-		//	cerr << " o:" ;
-		//	for(size_t j=0; j< argst[i].o_cnt;j++){
-		//		cerr <<  *(argst[i].o_p+j) << " " ;
-		//	}
-		//}
-		//cerr << endl;
+		/*
+		cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
+		if ( argst[i].i_cnt > 0&& argst[i].i_p!=NULL){
+			cerr << " i:" ;
+			for(size_t j=0; j< argst[i].i_cnt;j++){
+				cerr <<  *(argst[i].i_p+j) << " " ;
+			}
+		}
+		if ( argst[i].o_cnt > 0 && argst[i].o_p!=NULL){
+			cerr << " o:" ;
+			for(size_t j=0; j< argst[i].o_cnt;j++){
+				cerr <<  *(argst[i].o_p+j) << " " ;
+			}
+		}
+		cerr << endl;
+		*/
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_p[i], NULL, kgshell::run_func ,(void*)&argst[i]);
 		}

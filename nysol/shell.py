@@ -29,7 +29,7 @@ class script(object):
 	def makeNetwork(self,cmdlists):
 		conectLIST={}
 
-		#iolist抽出
+		#iolistcheck
 		for linno ,cmd  in enumerate(cmdlists):
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
@@ -51,6 +51,7 @@ class script(object):
 				print( key + " model err")
 
 		#print self.cmdlist
+
 		#cmd作成
 		newcmdlist = []
 		interobj = {}
@@ -58,10 +59,8 @@ class script(object):
 
 		#ioflg =False
 		for linno ,cmd  in enumerate(cmdlists):
-			#print linno ,cmd ,newruncmd, interobj
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
-			#print cmdptn ,cmdio
 
 			if newruncmd == None :
 
@@ -71,11 +70,13 @@ class script(object):
 				#newruncmd = copy.deepcopy(cmdptn)
 				newruncmd = cmdptn
 				if "i" in cmdio:
-					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
-					interobj[cmdio['i']].outlist["o"].append(newruncmd)
+					newruncmd.paraUpdate({"i":interobj[cmdio['i']][0]})
+					interobj[cmdio['i']][0].outlist[interobj[cmdio['i']][1]].append(newruncmd)
+
+
 				if "m" in cmdio:
-					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
-					interobj[cmdio['m']].outlist["o"].append(newruncmd)
+					newruncmd.paraUpdate({"m":interobj[cmdio['m']][0]})
+					interobj[cmdio['m']][0].outlist[interobj[cmdio['m']][1]].append(newruncmd)
 
 			else:
 				#tmpptn  = copy.deepcopy(cmdptn)
@@ -83,18 +84,19 @@ class script(object):
 				tmpptn.inplist["i"].append(newruncmd)
 				newruncmd.outlist["o"].append(cmdptn)
 				newruncmd = tmpptn
+
 				if "i" in cmdio:
-					newruncmd.paraUpdate({"i":interobj[cmdio['i']]})
-					interobj[cmdio['i']].outlist["o"].append(newruncmd)
+					newruncmd.paraUpdate({"i":interobj[cmdio['i']][0]})
+					interobj[cmdio['i']][0].outlist[interobj[cmdio['i']][1]].append(newruncmd)
 				if "m" in cmdio:
-					newruncmd.paraUpdate({"m":interobj[cmdio['m']]})
-					interobj[cmdio['m']].outlist["o"].append(newruncmd)
+					newruncmd.paraUpdate({"m":interobj[cmdio['m']][0]})
+					interobj[cmdio['m'][0]].outlist[interobj[cmdio['m'][1]]].append(newruncmd)
 
 			if "u" in cmdio:
-				interobj[cmdio['u']] = newruncmd
+				interobj[cmdio['u']] = [newruncmd,"u"]
 
 			if "o" in cmdio:
-				interobj[cmdio['o']] = newruncmd
+				interobj[cmdio['o']] = [newruncmd,"o"]
 				newruncmd =None
 
 			#writescv ,writelistで終了
@@ -113,8 +115,7 @@ class script(object):
 		
 	def run(self,**kwd) :
 
-		runlist = copy.deepcopy(self.cmdlist)
-
+		runlist_org = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork(self.cmdlist)
 
 		nowMsgFlg = self.msgFlg
@@ -122,23 +123,25 @@ class script(object):
 			if kwd["msg"] == "on" :
 				nowMsgFlg=True
 
+		from nysol.mod.nysollib.nysolmodcore import runs 
+
 		if nowMsgFlg :
-			for runcmd in runcmds:
-				runcmd.run(msg="on")
+			runs(runcmds,msg="on")
 		else:
-			for runcmd in runcmds:
-				runcmd.run()
+			runs(runcmds)
 
-		self.cmdlist = runlist
+		self.cmdlist = runlist_org
 
 
-	def drawModel(self , fname=None) :
+	def drawModel(self,fname=None):
 
 		runlist = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork(runlist)
 
-		for i,runcmd in enumerate(runcmds):
-			runcmd.drawModel("no_"+ str(i) + "_" + fname)
+		from nysol.mod.nysollib.nysolmodcore import drawModels as drawModels
+		drawModels(runcmds,fname)
+		#for i,runcmd in enumerate(runcmds):
+		#	runcmd.drawModel("no_"+ str(i) + "_" + fname)
 		
 
 	def __lshift__(self,obj):

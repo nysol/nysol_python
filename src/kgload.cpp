@@ -274,9 +274,8 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p) try
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int inum,int *i_p,PyObject* o_p) try 
+int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx) try 
 {
-
 	// パラメータチェック
 	_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
 
@@ -294,11 +293,16 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p) try
 
 	if(PyList_Check(o_p)){
 		while( EOF != rls.read() ){
-			PyObject* tlist = PyList_New(0);
-			for(size_t j=0 ;j<rls.fldSize();j++){
-				PyList_Append(tlist,Py_BuildValue("s",rls.getVal(j)));
+			pthread_mutex_lock(mtx);
+			{
+				PyObject* tlist = PyList_New(rls.fldSize());
+				for(size_t j=0 ;j<rls.fldSize();j++){
+					PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+				}
+				PyList_Append(o_p,tlist);
 			}
-			PyList_Append(o_p,tlist);
+			pthread_mutex_unlock(mtx);
+
 		}
 		rls.close();
 	}

@@ -33,6 +33,7 @@
 #include <kgConfig.h>
 #include <csignal>
 #include <cstring>
+#include <pthread.h>
 
 using namespace kglib;
 
@@ -164,7 +165,7 @@ class kgMod
 	// ----------------------------------------------------------------
 	virtual int run(int i,int o){return 0;};
 	virtual int run(int inum,int *i,int onum, int* o){return 0;}
-	virtual int run(int inum,int *i,PyObject* o){return 0;};
+	virtual int run(int inum,int *i,PyObject* o,pthread_mutex_t *mtx){return 0;};
 	virtual int run(PyObject* i_p,int onum, int* o_p){return 0;}
 
 

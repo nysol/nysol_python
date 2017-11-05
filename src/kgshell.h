@@ -49,7 +49,7 @@ struct argST{
 	int *i_p;
 	int *o_p;
 	PyObject* list;
-	
+	pthread_mutex_t *mutex;
 };
 
 struct cmdCapselST{
@@ -72,6 +72,9 @@ struct linkST{
 
 
 class kgshell{
+
+	pthread_mutex_t _mutex;
+	pthread_cond_t 	_threadState;
 
 	typedef map<std::string, boost::function<kgMod* ()> > kgmod_map_t;
 	typedef map<std::string, int > kgmod_run_t;
