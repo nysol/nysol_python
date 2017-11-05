@@ -90,7 +90,7 @@ class script(object):
 					interobj[cmdio['i']][0].outlist[interobj[cmdio['i']][1]].append(newruncmd)
 				if "m" in cmdio:
 					newruncmd.paraUpdate({"m":interobj[cmdio['m']][0]})
-					interobj[cmdio['m'][0]].outlist[interobj[cmdio['m'][1]]].append(newruncmd)
+					interobj[cmdio['m']][0].outlist[interobj[cmdio['m']][1]].append(newruncmd)
 
 			if "u" in cmdio:
 				interobj[cmdio['u']] = [newruncmd,"u"]
