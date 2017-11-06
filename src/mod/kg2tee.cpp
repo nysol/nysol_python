@@ -98,7 +98,7 @@ void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 	if(inum>1){ throw kgError("no match IO"); }
 
 
-	if(inum==1 && i_p>0)   { _iFD=*i_p;}
+	if(inum==1 && *i_p>0)   { _iFD=*i_p;}
 	else if(_iName.empty()){ _iFD=0;}
 	else {
 		_iFD = ::open(_iName.c_str(), O_RDONLY);
