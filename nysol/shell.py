@@ -27,90 +27,70 @@ class script(object):
 		print(self.cmdlist)
 		
 	def makeNetwork(self,cmdlists):
-		conectLIST={}
 
-		#iolistcheck
+		conectLIST={}
+		#f.w.コマンド毎にする
+		ioParams = {"i":0,"m":0,"o":1,"u":1}
+
+		# IO list check
+		# f.w.
+		# コマンド毎にチェックし方を変えれるようにする 
+		# io以外にも拡張 
 		for linno ,cmd  in enumerate(cmdlists):
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
-			# コマンド毎にチェックし方を変えれるようにする
 			for k ,v in cmdio.items():
-
-				if k == 'o' or k == 'u':
-					if not v in conectLIST:
-						conectLIST[v] =[[],[]]
-					conectLIST[v][0].append([k,linno])
-				else:
+				if not isinstance(v,str):
+					continue
+				ioTP = ioParams[k]
+				if ioTP == 0 :
 					if not v in conectLIST:
 						print( k + " model err before output")
 					conectLIST[v][1].append([k,linno])
 
+				elif ioTP == 1 :
+					if not v in conectLIST:
+						conectLIST[v] =[[],[]]
+					conectLIST[v][0].append([k,linno])
 
 		for key ,val in conectLIST.items():
 			if len(val[0]) != 1 or len(val[1]) == 0 :
 				print( key + " model err")
-
-		#print self.cmdlist
 
 		#cmd作成
 		newcmdlist = []
 		interobj = {}
 		newruncmd = None
 
-		#ioflg =False
 		for linno ,cmd  in enumerate(cmdlists):
 			cmdptn = cmd[0]
 			cmdio = cmd[1]
 
-			if newruncmd == None :
-
-				if not "i" in cmdio and len(cmdptn.inplist["i"])==0:
-					print(cmdptn.name + " model err (" + str(linno)  + ")"    )
-
-				#newruncmd = copy.deepcopy(cmdptn)
-				newruncmd = cmdptn
-				if "i" in cmdio:
-					newruncmd.paraUpdate({"i":interobj[cmdio['i']][0]})
-					interobj[cmdio['i']][0].outlist[interobj[cmdio['i']][1]].append(newruncmd)
-
-
-				if "m" in cmdio:
-					newruncmd.paraUpdate({"m":interobj[cmdio['m']][0]})
-					interobj[cmdio['m']][0].outlist[interobj[cmdio['m']][1]].append(newruncmd)
-
+			if newruncmd != None and (not "i" in cmdio or len(cmdio["i"])==0):
+					tmpptn  = cmdptn
+					tmpptn.inplist["i"].append(newruncmd)
+					newruncmd.outlist[newruncmd.nowdir].append(cmdptn)
+					newruncmd = tmpptn
 			else:
-				#tmpptn  = copy.deepcopy(cmdptn)
-				tmpptn  = cmdptn
-				tmpptn.inplist["i"].append(newruncmd)
-				newruncmd.outlist["o"].append(cmdptn)
-				newruncmd = tmpptn
+				newruncmd = cmdptn
 
-				if "i" in cmdio:
-					newruncmd.paraUpdate({"i":interobj[cmdio['i']][0]})
-					interobj[cmdio['i']][0].outlist[interobj[cmdio['i']][1]].append(newruncmd)
-				if "m" in cmdio:
-					newruncmd.paraUpdate({"m":interobj[cmdio['m']][0]})
-					interobj[cmdio['m']][0].outlist[interobj[cmdio['m']][1]].append(newruncmd)
-
-			if "u" in cmdio:
-				interobj[cmdio['u']] = [newruncmd,"u"]
-
-			if "o" in cmdio:
-				interobj[cmdio['o']] = [newruncmd,"o"]
-				newruncmd =None
+			for k ,v in cmdio.items():
+				if isinstance(v,str):
+					ioTP = ioParams[k]
+					if ioTP == 0 :
+						newruncmd.paraUpdate({k:interobj[v][0]})
+						interobj[v][0].outlist[interobj[v][1]].append(newruncmd)
+					elif ioTP == 1 :
+						interobj[v] = [newruncmd,k]
+				else:
+					newruncmd.paraUpdate({k:v})
 
 			#writescv ,writelistで終了
 			if cmdptn.name == "writecsv" or cmdptn.name=="writelist"  :
 				newcmdlist.append(newruncmd)
 				newruncmd = None
 
-		#print newcmdlist[0]
-		#print newcmdlist[0].inplist
-
 		return newcmdlist
-#			if cmd[0].name = "readcsv"
-			#if ioflg==False and 
-
 		
 		
 	def run(self,**kwd) :
@@ -140,9 +120,14 @@ class script(object):
 
 		from nysol.mod.nysollib.nysolmodcore import drawModels as drawModels
 		drawModels(runcmds,fname)
-		#for i,runcmd in enumerate(runcmds):
-		#	runcmd.drawModel("no_"+ str(i) + "_" + fname)
-		
+
+	def modelInfo(self):
+
+		runlist = copy.deepcopy(self.cmdlist)
+		runcmds = self.makeNetwork(runlist)
+
+		from nysol.mod.nysollib.nysolmodcore import modelInfos as modelInfos
+		return modelInfos(runcmds)
 
 	def __lshift__(self,obj):
 		self.add(obj)

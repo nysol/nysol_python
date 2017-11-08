@@ -21,6 +21,9 @@ def runs(val,**kw_args):
 def drawModels(val,fname):
 	return NysolMOD_CORE.drawModels(val,fname)
 
+def modelInfos(val):
+	return NysolMOD_CORE.modelInfos(val)
+
 class NysolMOD_CORE(object):
 	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
 	def __init__(self,name=None,kwd=None) :
@@ -305,9 +308,6 @@ class NysolMOD_CORE(object):
 			if isinstance(obj,NysolMOD_CORE):
 				obj.selectUniqMod(sumiobj,modlist)
 
-
-
-
 	@classmethod
 	def makeModList(self,uniqmod,modlist,iolist):
 
@@ -439,7 +439,6 @@ class NysolMOD_CORE(object):
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
 				msgF = True
-		runobjs = mods
 
 		stocks =[None]*len(mods)
 		outfs = [None]*len(mods)
@@ -448,13 +447,7 @@ class NysolMOD_CORE(object):
 			if len(mod.outlist["o"]) != 0 :
 				stocks[i] = mod.outlist["o"][0]
 				
-
-		dupobjs = [None]*len(mods)
-
-		for i,mod in enumerate(mods):
-			dupobjs[i] = copy.deepcopy(mod)
-
-
+		dupobjs = copy.deepcopy(mods)
 
 		#oが無ければlist出力追加
 		runobjs =[None]*len(dupobjs)
@@ -486,7 +479,6 @@ class NysolMOD_CORE(object):
 		for mod in runobjs:
 			mod.selectUniqMod(sumiobj,uniqmod)
 
-
 		modlist=[None]*len(uniqmod) #[[name,para]]
 		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
 
@@ -495,12 +487,10 @@ class NysolMOD_CORE(object):
 		linklist=[]
 		self.makeLinkList(iolist,linklist)
 
-
 		shobj = n_core.init(msgF)
 		
 		n_core.runL(shobj,modlist,linklist)
 		return outfs
-
 
 
 	#GRAPH表示 #deepコピーしてからチェック
@@ -532,6 +522,35 @@ class NysolMOD_CORE(object):
 		showobj.makeLinkList(iolist,linklist)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)
 
+	def modelInfo(self):
+
+		dupshowobj = copy.deepcopy(self)
+
+		rtnlist = []
+		if len(dupshowobj.outlist["o"])==0:
+			showobj = dupshowobj.writelist(rtnlist)
+		elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
+			showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
+			dupshowobj.outlist["o"] = [showobj]
+		else:
+			showobj = dupshowobj
+
+
+		showobj.change_modNetwork()
+		uniqmod={} 
+		sumiobj= set([])
+		showobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		showobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+
+		showobj.makeLinkList(iolist,linklist)
+	
+		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
+	
 
 	#GRAPH表示 #deepコピーしてからチェック
 	@classmethod
@@ -567,12 +586,44 @@ class NysolMOD_CORE(object):
 
 
 		self.makeLinkList(iolist,linklist)
-
-		print modlist,iolist,linklist
 		
 		ndraw.chageSVG(modlist,iolist,linklist,fname)		
 
 
+	#GRAPH表示 #deepコピーしてからチェック
+	@classmethod
+	def modelInfos(self,mod):
+
+		dupshowobjs = copy.deepcopy(mod)
+		showobjs =[]
+		rtnlist = []
+		for dupshowobj in dupshowobjs:
+			if len(dupshowobj.outlist["o"])==0:
+				showobjs.append(dupshowobj.writelist(rtnlist))
+			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
+				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
+				dupshowobj.outlist["o"] = [showobj]
+				showobjs.append(showobj)
+			else:
+				showobjs.append(dupshowobj)
+
+		self.change_modNetworks(showobjs)
+
+		uniqmod={} 
+		sumiobj= set([])
+
+		for mod in showobjs:
+			mod.selectUniqMod(sumiobj,uniqmod)
+
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		self.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		self.makeLinkList(iolist,linklist)
+		
+		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
 
 	# 未実装
 	def parallelrun(self,ilist,olist=None,num=2,**kw_args):

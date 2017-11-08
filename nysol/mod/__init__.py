@@ -1,6 +1,5 @@
 import nysollib
-from nysol.mod.nysollib.nysolmodcore import runs 
-from nysol.mod.nysollib.nysolmodcore import drawModels
+from nysol.mod.nysollib.nysolmodcore import runs, drawModels, modelInfos
 from submod.readcsv import Nysol_Readcsv as readcsv
 from submod.readlist import Nysol_Readlist as readlist
 from submod.writecsv import Nysol_Writecsv as writecsv
