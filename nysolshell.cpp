@@ -167,7 +167,7 @@ PyObject* runP(PyObject* self, PyObject* args)
 	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
 
 	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+		cerr << "cannot run " << PyList_Check(mlist) << " " << PyList_Size(mlist)<< endl;
 		return Py_BuildValue("");
 	}
 	vector< cmdCapselST > cmdCapsel;

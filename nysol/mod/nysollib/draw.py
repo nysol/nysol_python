@@ -68,15 +68,21 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 		mstr +=  modobj[0]
 		mstr += " </text>\n"
 		f.write(mstr)
-		f.write("<g>\n")
+		f.write("</g>\n")
 
 
 	for fr , to in linklist:
 		frNo = fr[1] 
 		toNo = to[1] 
+		frTp = fr[0] 
+		toTp = to[0] 
+		 
 		frX , frY = dsppos[frNo]
 		toX , toY = dsppos[toNo]
+		f.write("<g>\n")
+		f.write("<title>" + frTp + " => " + toTp + "</title>\n" )
 		f.write("<line x1='" + str(frX*60+20) + "' y1='" + str(frY*60+40) + "' x2='" + str(toX*60+20) + "' y2='" + str(toY*60+0) + "' stroke='black' stroke-width='5' marker-end='url(#endmrk)'/>\n")
+		f.write("</g>\n")
 
 
 	f.write("</svg>\n")

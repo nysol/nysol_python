@@ -161,7 +161,7 @@ class NysolMOD_CORE(object):
 		return			
  
 	@classmethod
-	def addTee(self,dupobj):
+	def addTee(self,dupobj): #なんかへん
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		for obj in dupobj:
@@ -291,7 +291,7 @@ class NysolMOD_CORE(object):
 
 
 
-			
+
 	def selectUniqMod(self,sumiobj,modlist):
 		if self in sumiobj:
 			return None
@@ -986,8 +986,6 @@ class Nysol_MeachIter(object):
 		
 		dupobj = copy.deepcopy(obj)
 
-		#oが無ければlist出力追加
-		rtnlist = []
 		if len(dupobj.outlist["o"])==0:
 			runobj = dupobj
 		else:
