@@ -150,11 +150,11 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p) try
 
 	pid_t pid;
 	if ((pid = fork()) == 0) {	
-		if(i_p>0){
+		if(i_p_t>0){
 			dup2(i_p_t, 0);
 			close(i_p_t);
 		} 
-		if(o_p>0){
+		if(o_p_t>0){
 			dup2(o_p_t, 1);
 			close(o_p_t);
 		} 
