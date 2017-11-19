@@ -102,6 +102,7 @@ void kgDelnull::setArgs(void)
 	setArgsMain();
 	
 }
+// -----------------------------------------------------------------------------
 void kgDelnull::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
 	_args.paramcheck(_paralist,_paraflg);
@@ -109,10 +110,10 @@ void kgDelnull::setArgs(int inum,int *i_p,int onum ,int *o_p)
 	if(inum>1 || onum>2){ throw kgError("no match IO");}
 
 	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 
 	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
 
 	kgstr_t ufile = _args.toString("u=",false);
 
@@ -165,7 +166,7 @@ bool kgDelnull::nullcheck(vector<int>& cnt,char** str)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgDelnull::runMain(void) try 
+int kgDelnull::runMain(void)
 {
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
@@ -239,41 +240,91 @@ int kgDelnull::runMain(void) try
 	_iFile.close();
 	_oFile.close();
 	if(_elsefile){ _uFile.close(); }
-	successEnd();
+
 	return 0;
 
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
 }
 // -----------------------------------------------------------------------------
 // 実行 
 // -----------------------------------------------------------------------------
 int kgDelnull::run(void) 
 {
-	setArgs();
-	return runMain();
+	try {
+
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
+	return 1;
+
 }
 
-int kgDelnull::run(int inum,int *i_p,int onum, int* o_p)
+
+int kgDelnull::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
-	setArgs(inum, i_p, onum,o_p);
-	return runMain();
+	try {
+
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
+	return 1;
 }

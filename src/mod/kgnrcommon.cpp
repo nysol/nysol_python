@@ -185,11 +185,21 @@ void kgNrcommon::setArgs(int inum,int *i_p,int onum, int* o_p)
 		throw kgError("Either i= or m= must be specified.");
 	}
 	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+	else if( ifile.empty()){ 
+		throw kgError("i= is necessary");
+	}
 	else       { _iFile.open(ifile, _env,_nfn_i);}
+
 	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+	else if( mfile.empty()){ 
+		throw kgError("m= is necessary");
+	}
 	else       { _mFile.open(mfile, _env,_nfn_i);}
 
 	if(o_p_t>0){ _oFile.popen(o_p_t, _env,_nfn_o);}
+	else if( ofile.empty()){ 
+		throw kgError("o= is necessary");
+	}
 	else       { _oFile.open(ofile, _env,_nfn_o);}
 
 	if(u_p_t>0){ 
@@ -246,7 +256,7 @@ void kgNrcommon::range_match(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgNrcommon::runMain(void) try 
+int kgNrcommon::runMain(void)
 {
 	// 入力、参照ファイルにkey項目番号をセットする．
 	_iFile.setKey(_kField.getNum());
@@ -333,43 +343,92 @@ int kgNrcommon::runMain(void) try
 	_mFile.close();
 	_oFile.close();
 	if(_elsefile){ _uFile.close(); }
-	successEnd();
+
 	return 0;
 
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	_mFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
 }
-
 // -----------------------------------------------------------------------------
 // 実行 
 // -----------------------------------------------------------------------------
 int kgNrcommon::run(void) 
 {
-	setArgs();
-	return runMain();
+	try {
+
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
+	return 1;
+
 }
 
-int kgNrcommon::run(int inum,int *i_p,int onum, int* o_p)
+int kgNrcommon::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
-	setArgs(inum, i_p, onum,o_p);
-	return runMain();
+	try {
+
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
+	return 1;
 }
+
+

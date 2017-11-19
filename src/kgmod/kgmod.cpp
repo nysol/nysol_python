@@ -311,6 +311,26 @@ void kgMod::AssertWarnig(void){
 	}
 }
 
+
+string kgMod::errorEndMsg(kgError& err){
+	err.addModName(_name);
+	kgMsg msg(kgMsg::ERR, _env);
+	_status = 1;
+	if( _env->recursiveMsg() ){
+		return msg.outputMsg(this,err.message());
+	}else{
+		return msg.outputMsg(this,err.message(0));
+	}
+	
+}
+string kgMod::successEndMsg(void){
+	AssertWarnig();
+	_status = 0;
+	kgMsg msg(kgMsg::END, _env);
+	return msg.outputMsg(this,"");
+}
+
+
 void kgMod::successEnd(void)
 {
 	AssertWarnig();

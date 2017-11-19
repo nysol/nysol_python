@@ -175,7 +175,7 @@ void kgCat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 	}
 
 	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
 
 
 	vector<kgstr_t> vskv = _args.toStringVector("kv=",false);
@@ -305,7 +305,7 @@ void kgCat::readFile_unset()
 }
 
 
-int kgCat::runMain() try {
+int kgCat::runMain(){
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 	// 出力項目名or出力項目数決定
 	// データがある最初ファイルの項目名or項目数を基準とする
@@ -364,45 +364,93 @@ int kgCat::runMain() try {
 	// 終了処理
 	_iFile.close();
 	_oFile.close();
-	successEnd();
+
 	return 0;
 
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
 }
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
 int kgCat::run(void)
 {
-	setArgs();
-	return runMain();
-}
-int kgCat::run(int inum,int *i_p,int onum, int* o_p)
-{
-	setArgs(inum, i_p, onum,o_p);
-	return runMain();
+	try {
+
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
+	return 1;
+
 }
 
+int kgCat::run(int inum,int *i_p,int onum, int* o_p,string &msg)
+{
+	try {
+
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
+	return 1;
+}
 
 
 

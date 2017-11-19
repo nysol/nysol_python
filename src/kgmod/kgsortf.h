@@ -60,7 +60,10 @@ class kgSortf :public kgMod{
 	int      _threadCnt; // threadCnt=
 	bool 		 _noflg;
   void setArgs(void); // 引数セット
-  void setArgs(int i,int o); // 引数セット
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+
 
 	kgTempfile tempFile_;                        // 分割ソート時の一時ファイル
 	vector< vector<kgstr_t> > tmpName_;          // 一時ファイルの名前を格納する2次元vector(level,no)
@@ -96,7 +99,7 @@ public:
 	}
 	//実行メソッド
 	int run(void);
-	int run(int i,int o);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 	static void* run_sort_thread(void *obj);
 
 	//実行メソッド

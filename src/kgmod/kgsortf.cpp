@@ -191,6 +191,57 @@ kgSortf::kgSortf(void)
 
 
 }
+
+void kgSortf::setArgsMain(void){
+
+	_iFile.read_header();
+	// マージソートを行う際に、何個までのファイルを同時に併合させるか
+	kgstr_t ps=_args.toString("pways=",false);
+	if(ps.empty()) _pways=32;
+	else          _pways=atoi(ps.c_str());
+	if(_pways < 2 || _pways>100){
+		throw kgError("invalid pways: must be in range [2,100]");
+	}
+
+	// 分割ソートでのデータ読み込み行数の上限値
+	kgstr_t maxline =_args.toString("maxlines=",false);
+	if(maxline.empty()) _maxlines=500000;
+	else          _maxlines=aToSizeT(maxline.c_str());
+//	if(_maxlines < 100 || _maxlines>10000000){
+//		throw kgError("invalid maxlines: must be in range [100,10000000]");
+//	}
+
+	// ソートするthreadの数
+	kgstr_t thc =_args.toString("threadCnt=",false);
+	if(thc.empty()) _threadCnt=8;
+	else          _threadCnt=atoi(thc.c_str());
+	if(_threadCnt < 1 || _threadCnt>50){
+		throw kgError("invalid threadCnt: must be in range [1,50]");
+	}
+
+	// f= 項目引数のセット
+	vector< vector<kgstr_t> > vvsf = _args.toStringVecVec("f=","%:",2,true);
+	vector< vector<kgstr_t> > vvs(2);
+	for(size_t i=0;i<vvsf[0].size();i++){
+		bool add = true;
+		for(size_t j=0;j<vvs[0].size();j++){
+			if(vvsf[0][i]==vvsf[0][j]){
+				add = false;
+				break;
+			}
+		}
+		if(add){
+			vvs[0].push_back(vvsf[0][i]);
+			vvs[1].push_back(vvsf[1][i]);
+		}
+	}
+
+	//_fField.set(vvs, &_iFile,_fldByNum, false); // 項目名展開は行わない
+	_fField.set(vvs, &_iFile,_fldByNum); // 項目名展開は行わない
+
+	// 一時ファイルの初期化
+	tempFile_.init(_env);
+}
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
 // -----------------------------------------------------------------------------
@@ -212,138 +263,30 @@ void kgSortf::setArgs(void)
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env, _nfn_i, _blocks);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
-	_iFile.read_header();
 
-	// マージソートを行う際に、何個までのファイルを同時に併合させるか
-	s=_args.toString("pways=",false);
-	if(s.empty()) _pways=32;
-	else          _pways=atoi(s.c_str());
-	if(_pways < 2 || _pways>100){
-		throw kgError("invalid pways: must be in range [2,100]");
-	}
-
-	// 分割ソートでのデータ読み込み行数の上限値
-	s=_args.toString("maxlines=",false);
-	if(s.empty()) _maxlines=500000;
-	else          _maxlines=aToSizeT(s.c_str());
-//	if(_maxlines < 100 || _maxlines>10000000){
-//		throw kgError("invalid maxlines: must be in range [100,10000000]");
-//	}
-
-	// ソートするthreadの数
-	s=_args.toString("threadCnt=",false);
-	if(s.empty()) _threadCnt=8;
-	else          _threadCnt=atoi(s.c_str());
-	if(_threadCnt < 1 || _threadCnt>50){
-		throw kgError("invalid threadCnt: must be in range [1,50]");
-	}
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvsf = _args.toStringVecVec("f=","%:",2,true);
-	vector< vector<kgstr_t> > vvs(2);
-	for(size_t i=0;i<vvsf[0].size();i++){
-		bool add = true;
-		for(size_t j=0;j<vvs[0].size();j++){
-			if(vvsf[0][i]==vvsf[0][j]){
-				add = false;
-				break;
-			}
-		}
-		if(add){
-			vvs[0].push_back(vvsf[0][i]);
-			vvs[1].push_back(vvsf[1][i]);
-		}
-	}
-
-	//_fField.set(vvs, &_iFile,_fldByNum, false); // 項目名展開は行わない
-	_fField.set(vvs, &_iFile,_fldByNum); // 項目名展開は行わない
-
-	// 一時ファイルの初期化
-	tempFile_.init(_env);
+	setArgsMain();
 }
 
-// -----------------------------------------------------------------------------
-// 入出力ファイルオープン
-// -----------------------------------------------------------------------------
-void kgSortf::setArgs(int i_p,int o_p)
-{
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,pways=,maxlines=,blocks=,threadCnt=,-noflg",kgArgs::COMMON|kgArgs::IODIFF);
-	// 
-	_noflg =_args.toBool("-noflg");
 
-	// バッファのブロック数 1block=KG_MAX_REC_LEN*4
-	kgstr_t s=_args.toString("blocks=",false);
-	if(s.empty()) _blocks=10;
-	else          _blocks=atoi(s.c_str());
-	if(_blocks < 1 || _blocks>1000){
-		kgError err("invalid blocks: must be in range [1,1000]");
-		errorEnd(err);
-	}
+void kgSortf::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+
+	_args.paramcheck(_paralist,_paraflg);
+
+	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
 	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i,_blocks);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i ,_blocks);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 
+	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
 
-	// マージソートを行う際に、何個までのファイルを同時に併合させるか
-	s=_args.toString("pways=",false);
-	if(s.empty()) _pways=32;
-	else          _pways=atoi(s.c_str());
-	if(_pways < 2 || _pways>100){
-		throw kgError("invalid pways: must be in range [2,100]");
-	}
+	setArgsMain();
 
-	// 分割ソートでのデータ読み込み行数の上限値
-	s=_args.toString("maxlines=",false);
-	if(s.empty()) _maxlines=500000;
-	else          _maxlines=aToSizeT(s.c_str());
-//	if(_maxlines < 100 || _maxlines>10000000){
-//		throw kgError("invalid maxlines: must be in range [100,10000000]");
-//	}
-
-	// ソートするthreadの数
-	s=_args.toString("threadCnt=",false);
-	if(s.empty()) _threadCnt=8;
-	else          _threadCnt=atoi(s.c_str());
-	if(_threadCnt < 1 || _threadCnt>50){
-		throw kgError("invalid threadCnt: must be in range [1,50]");
-	}
-
-	// f= 項目引数のセット
-	vector< vector<kgstr_t> > vvsf = _args.toStringVecVec("f=","%:",2,true);
-	vector< vector<kgstr_t> > vvs(2);
-	for(size_t i=0;i<vvsf[0].size();i++){
-		bool add = true;
-		for(size_t j=0;j<vvs[0].size();j++){
-			if(vvsf[0][i]==vvsf[0][j]){
-				add = false;
-				break;
-			}
-		}
-		if(add){
-			vvs[0].push_back(vvsf[0][i]);
-			vvs[1].push_back(vvsf[1][i]);
-		}
-	}
-
-	//_fField.set(vvs, &_iFile,_fldByNum, false); // 項目名展開は行わない
-	_fField.set(vvs, &_iFile,_fldByNum); // 項目名展開は行わない
-
-	// 一時ファイルの初期化
-	tempFile_.init(_env);
 }
+
+
 // ---------------------------------------------------------------------------
 // 一時ファイル名の取得
 // ---------------------------------------------------------------------------
@@ -827,117 +770,142 @@ int kgSortf::mergeOneLevel(int level, int iCnt)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSortf::run(void) try 
+int kgSortf::run(void)  
 {	
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
+	try{
+		// パラメータセット＆入出力ファイルオープン
+		setArgs();
 
-	if( _iFile.noFldName() && _iFile.fldSize()==0 ){
+		if( _iFile.noFldName() && _iFile.fldSize()==0 ){
+			successEnd();
+			return 0;
+		}
+
+		// ソート対象項目のセット
+		setCfld(&_fField);
+
+		// thread分割ソート
+		int iCnt=sort(_iFile);
+
+		// 入力件数0の時は例外的に項目名のみ出力して終了
+		if(iCnt==0){
+			if(_noflg) { _oFile.writeFldName(_iFile); }
+			else			 { _oFile.writeFldName(_fField,kgstr_t("%")); }
+			_oFile.close();
+		}else{
+			// マージ
+			for(int level=0; iCnt!=0 ;level++){
+				iCnt=mergeOneLevel(level, iCnt);
+			}
+		}
+		// 終了処理
+		_iFile.close();
+		_oFile.close();
 		successEnd();
 		return 0;
-	}
+	}catch(kgOPipeBreakError& err){
 
-	// ソート対象項目のセット
-	setCfld(&_fField);
-
-	// thread分割ソート
-	int iCnt=sort(_iFile);
-
-	// 入力件数0の時は例外的に項目名のみ出力して終了
-	if(iCnt==0){
-		if(_noflg) { _oFile.writeFldName(_iFile); }
-		else			 { _oFile.writeFldName(_fField,kgstr_t("%")); }
+		_iFile.close();
 		_oFile.close();
-	}else{
-		// マージ
-		for(int level=0; iCnt!=0 ;level++){
-			iCnt=mergeOneLevel(level, iCnt);
-		}
+		successEnd();
+		return 0;
+	}catch(kgError& err){
+		_iFile.close();
+		_oFile.close();
+		errorEnd(err);
+	}catch (const std::exception& e) {
+		_iFile.close();
+		_oFile.close();
+		kgError err(e.what());
+		errorEnd(err);
+
+	}catch(char * er){
+		_iFile.close();
+		_oFile.close();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+		_iFile.close();
+		_oFile.close();
+		kgError err("unknown error" );
+		errorEnd(err);
 	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
 	return 1;
 }
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSortf::run(int i_p,int o_p) try 
+int kgSortf::run(int inum,int *i_p,int onum, int* o_p ,string & msg) 
 {	
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p);
+	try {
 
-	if( _iFile.noFldName() && _iFile.fldSize()==0 ){
-		successEnd();
-		return 0;
-	}
-
-	// ソート対象項目のセット
-	setCfld(&_fField);
-
-	// thread分割ソート
-	int iCnt=sort(_iFile);
-
-	// 入力件数0の時は例外的に項目名のみ出力して終了
-	if(iCnt==0){
-		if(_noflg) { _oFile.writeFldName(_iFile); }
-		else			 { _oFile.writeFldName(_fField,kgstr_t("%")); }
-		_oFile.close();
-	}else{
-		// マージ
-		for(int level=0; iCnt!=0 ;level++){
-			iCnt=mergeOneLevel(level, iCnt);
+		setArgs(inum, i_p, onum,o_p);
+		if( _iFile.noFldName() && _iFile.fldSize()==0 ){
+			msg.append(successEndMsg());
+			return 0;
 		}
+
+		// ソート対象項目のセット
+		setCfld(&_fField);
+
+		// thread分割ソート
+		int iCnt=sort(_iFile);
+
+		// 入力件数0の時は例外的に項目名のみ出力して終了
+		if(iCnt==0){
+			if(_noflg) { _oFile.writeFldName(_iFile); }
+			else			 { _oFile.writeFldName(_fField,kgstr_t("%")); }
+			_oFile.close();
+		}else{
+			// マージ
+			for(int level=0; iCnt!=0 ;level++){
+				iCnt=mergeOneLevel(level, iCnt);
+			}
+		}
+
+		// 終了処理
+		_iFile.close();
+		_oFile.close();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgOPipeBreakError& err){
+
+		_iFile.close();
+		_oFile.close();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+
+		_iFile.close();
+		_oFile.close();
+		msg.append(errorEndMsg(err));
+
+	}catch (const std::exception& e) {
+
+		_iFile.close();
+		_oFile.close();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		_iFile.close();
+		_oFile.close();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		_iFile.close();
+		_oFile.close();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
 	}
 
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	_iFile.close();
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
 	return 1;
 }
 

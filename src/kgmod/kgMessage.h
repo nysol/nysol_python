@@ -68,6 +68,11 @@ public:
 	void output(kglib::kgMod* kgmod, string v, const string& comment="");
 	void output(kgMod* kgmod, vector<string> vv, const string& comment="");
 
+	string outputMsg(kglib::kgMod* kgmod, string v, const string& comment="");
+	string outputMsg(kgMod* kgmod, vector<string> vv, const string& comment="");
+
+
+
 };
 
 } //////////////////////////////////////////////////////////////// end namespace

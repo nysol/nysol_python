@@ -443,8 +443,6 @@ int kgTee::run(void) try {
 		}
 	}
 		
-	// 全ファイルクローズ
-
 	// 終了処理(メッセージ出力,thread pipe終了通知)
 	successEnd();
 	return 0;

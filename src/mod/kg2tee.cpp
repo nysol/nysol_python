@@ -99,7 +99,11 @@ void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 
 
 	if(inum==1 && *i_p>0)   { _iFD=*i_p;}
-	else if(_iName.empty()){ _iFD=0;}
+	else if(_iName.empty()){ 
+		ostringstream ss;
+		ss << "i= is necessary";
+		throw kgError(ss.str());
+	}
 	else {
 		_iFD = ::open(_iName.c_str(), O_RDONLY);
 		if(_iFD == -1 ){
@@ -137,7 +141,8 @@ void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 // -----------------------------------------------------------------------------
 // runMain
 // -----------------------------------------------------------------------------
-int kg2Tee::runMain() try {
+int kg2Tee::runMain()
+{
 
 	// que全体のbufferを確保
 	_buf_ap.set( new char[KG_iSize] );
@@ -170,40 +175,71 @@ int kg2Tee::runMain() try {
 			::close(_oFD[i]);
 		}
 	}
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	successEnd();
+
 	return 0;
 
 // 例外catcher
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
 }
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
 int kg2Tee::run(void) 
 {
-	setArgs();
-	return runMain();
+	try {
+
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	}catch(kgError& err){
+		runErrEnd();
+		errorEnd(err);
+	}catch (const exception& e) {
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
+	return 1;
 }
-int kg2Tee::run(int inum,int *i_p,int onum, int* o_p)
+
+int kg2Tee::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
-	setArgs(inum, i_p, onum,o_p);
-	return runMain();
+	try {
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+
+	}catch(kgError& err){
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
+	return 1;
 }
 
 

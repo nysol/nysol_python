@@ -49,6 +49,13 @@ class kgBest : public kgModIncludeSort {
 
 	int runMain(void);
 
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.close();
+		if(_elsefile){ _uFile.close();}
+	}
+
 	// 範囲内にあるかをチェックするあるならtrue,無いならfalseを返す
 	bool IsInRange(size_t val);
 
@@ -63,7 +70,7 @@ public:
 
 	//実行関数メソッド
 	int run(void);
-	int run(int inum,int *i,int onum, int* o);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 };
 

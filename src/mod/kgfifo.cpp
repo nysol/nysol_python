@@ -396,7 +396,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 		_iName = _args.toString("i=",false);
 		// 入力ファイルオープン
 		if(_iName.empty()){
-			_iFD=0;
+				throw kgError("i= is necessary");
 		}else{
 			_iFD = ::open(_iName.c_str(), O_RDONLY);
 			if(_iFD == -1 ){
@@ -411,7 +411,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 	else{
 		_oName = _args.toString("o=",false);
 		if(_oName.empty()){
-			_oFD=1;
+				throw kgError("o= is necessary");
 		}else{
 			_oFD = ::open(_oName.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
 			if(_oFD == -1 ){
@@ -457,7 +457,7 @@ void kgFifo::iClose(void) throw(kgError) {
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgFifo::runMain(void) try {
+int kgFifo::runMain(void) {
 
 	Queue que(_iFD,_oFD,_queSize,KG_iSize,_env);
 
@@ -474,32 +474,55 @@ int kgFifo::runMain(void) try {
 
 	iClose();
 	oClose();
-	// 終了処理(メッセージ出力,thread pipe終了通知)
-	successEnd();
 
+	return 0;
 // 例外catcher
-}catch(kgError& err){
-	iClose();
-	oClose();
-	errorEnd(err);
-}catch(...){
-	iClose();
-	oClose();
-	errorEnd();
 }
-
 // -----------------------------------------------------------------------------
 // 実行 
 // -----------------------------------------------------------------------------
-int kgFifo::run(void) 
+int kgFifo::run(void)
 {
-	setArgs();
-	return runMain();
+	try {
+
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+	}
+	catch(kgError& err){
+		iClose();
+		oClose();
+		errorEnd(err);
+	}catch(...){
+		iClose();
+		oClose();
+		errorEnd();
+	}
+	return 1;
 }
 
-int kgFifo::run(int inum,int *i_p,int onum, int* o_p)
+
+int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
-	setArgs(inum, i_p, onum,o_p);
-	return runMain();
+	try {
+
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+	}
+	catch(kgError& err){
+		iClose();
+		oClose();
+		msg.append(errorEndMsg(err));
+	}catch(...){
+		iClose();
+		oClose();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
+	return 1;
 }
+
 

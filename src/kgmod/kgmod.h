@@ -147,6 +147,10 @@ class kgMod
 	void errorEnd(kgError& err, const string& comment);
 	void errorEnd(const string& comment);
 
+	string errorEndMsg(kgError& err);
+	string successEndMsg(void);
+
+
 	// 入力データ件数と出力データ件数
 	// 各モジュールで独自に登録する．
 	// 登録しなければ-1を返し，メッセージとして表示されない．
@@ -164,9 +168,9 @@ class kgMod
 	// run仮想関数
 	// ----------------------------------------------------------------
 	virtual int run(int i,int o){return 0;};
-	virtual int run(int inum,int *i,int onum, int* o){return 0;}
-	virtual int run(int inum,int *i,PyObject* o,pthread_mutex_t *mtx){return 0;};
-	virtual int run(PyObject* i_p,int onum, int* o_p){return 0;}
+	virtual int run(int inum,int *i,int onum, int* o,string & msg){return 0;}
+	virtual int run(int inum,int *i,PyObject* o,pthread_mutex_t *mtx,string & msg){return 0;};
+	virtual int run(PyObject* i_p,int onum, int* o_p,string &msg){return 0;}
 
 
 

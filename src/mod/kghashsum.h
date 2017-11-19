@@ -44,6 +44,10 @@ class kgHashsum :public kgMod
 	void setArgsMain(void);	
 
 	int runMain(void);
+	void runErrEnd(void){
+		_iFile.close();
+		_oFile.close();
+	}
 
 public:
   // コンストラクタ
@@ -56,7 +60,7 @@ public:
 
 	// 実行
 	int run(void);
-	int run(int inum,int *i,int onum, int* o);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 };
 

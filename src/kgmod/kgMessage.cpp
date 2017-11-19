@@ -171,6 +171,30 @@ void kgMsg::output(kgMod* kgmod, string msg, const string& comment)
 		WriteMsg(ss.str(),getTime());
 	}
 }
+string kgMsg::outputMsg(kgMod* kgmod, string msg, const string& comment)
+{	
+	//if(kgmod->oRecNo()>LIMIT_OUT){WriteMsg(LIMIT_MSG,getTime());}
+	if(isOn()){
+		ostringstream ss;
+		ss << header() << " ";
+		if( !comment.empty( ) ) {
+			ss << comment << "; ";
+		}
+		if(!msg.empty()){
+			ss << msg << "; ";
+		}
+
+		// コマンドライン,引数出力
+		ss << kgmod->cmdline() << "; ";
+
+		//行数出力
+		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
+		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		ss << "; " << getTime();
+		return ss.str();
+	}
+	return "";
+}
 // -----------------------------------------------------------------------------
 // コマンドライン 入出力行数 vector msg + commentをメッセージ出力する
 // -----------------------------------------------------------------------------
@@ -195,3 +219,27 @@ void kgMsg::output(kgMod* kgmod, vector<string> vv, const string& comment){
 		WriteMsg(ss.str(),getTime());
 	}
 }
+
+string kgMsg::outputMsg(kgMod* kgmod, vector<string> vv, const string& comment){
+	
+	if(isOn()){
+		ostringstream ss;
+		ss << header() << " ";
+		if( !comment.empty( ) ) {
+			ss << comment << "; ";
+		}
+		for(size_t i=0; i<vv.size(); i++){
+			ss << vv.at(i) << "; ";
+		}
+		// コマンドライン,引数出力
+		ss << kgmod->cmdline() << "; ";
+
+		//行数出力
+		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
+		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		ss << "; " << getTime();
+		return ss.str();
+	}
+	return ""	;
+}
+

@@ -85,10 +85,10 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 
 	// 入出力ファイルオープン
 	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 
 	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
 
 	_iFile.read_header();
 	
@@ -97,234 +97,250 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(void) try 
+int kgLoad::run(void)
 {
-	char * data;
-	size_t fcnt=0;
+	try {
+		size_t fcnt=0;
+		// パラメータセット＆入出力ファイルオープン
+		setArgs();
 
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
-	// headerがあるとき
-	if(!_nfn_i){
-		vector<string> head;
-		if(EOF != _iFile.read()){
-			data = _iFile.getRec();
-			string hdata = data;
-			head = splitToken(hdata,',');
-			fcnt = head.size();
-		}
-		// headerを出力するとき
-		if(!_nfn_o){ _oFile.writeFldName(head);}
-	}
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		_oFile.writeRec(_iFile.getRec());
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgLoad::run(int inum,int *i_p,int onum, int* o_p) try 
-{
-	size_t fcnt=0;
-
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(inum, i_p,onum, o_p);
-
-	// headerがあるとき
-	if(!_nfn_i){
-		vector<string> head;
-		if(EOF != _iFile.read()){
-			char * data = _iFile.getRec();
-			string hdata = data;
-			head = splitToken(hdata,',');
-			fcnt = head.size();
-		}
-		// headerを出力するとき
-		if(!_nfn_o){ _oFile.writeFldName(head);}
-	}
-	// 行数を取得してデータ出力
-	while( EOF != _iFile.read() ){
-		_oFile.writeRec(_iFile.getRec());
-	}
-
-	// 終了処理
-	_iFile.close();
-	_oFile.close();
-	successEnd();
-	return 0;
-
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
-}
-
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgLoad::run(PyObject* i_p,int onum,int *o_p) try 
-{
-	//size_t fcnt=0;
-
-	// パラメータチェック
-	_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
-
-	if(onum>1){
-		throw kgError("no match IO");
-	}
-	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
-
-
-	if(PyList_Check(i_p)){
-		Py_ssize_t max = PyList_Size(i_p);
-		Py_ssize_t fldsize = 0;
-		Py_ssize_t nowlin = 0;
-		vector<string> headdata;
-		if ( max > 0 ){
-			// headerがあるとき
-			if(!_nfn_i){
-				PyObject* head = PyList_GetItem(i_p, nowlin);
-				fldsize = PyList_Size(head);
-				for(Py_ssize_t i=0 ; i<fldsize;i++){
-					headdata.push_back(strGET(PyList_GetItem(head,i)));
-				}		
-				nowlin++;
-			}
-			else{
-				fldsize = PyList_Size(PyList_GetItem(i_p, nowlin));
+		// headerがあるとき
+		if(!_nfn_i){
+			vector<string> head;
+			if(EOF != _iFile.read()){
+				char * data = _iFile.getRec();
+				string hdata = data;
+				head = splitToken(hdata,',');
+				fcnt = head.size();
 			}
 			// headerを出力するとき
-			if(!_nfn_o){ _oFile.writeFldName(headdata);}
-			// 行数を取得してデータ出力
-			char ** vals = new char*[fldsize];
-			while( nowlin < max ){
-				PyObject* ddata = PyList_GetItem(i_p, nowlin);
-				if( fldsize != PyList_Size(ddata) ){
-					kgError err("unmatch fld size" );	
-				}
-				for(Py_ssize_t i=0 ; i<fldsize;i++){
-					vals[i] = strGET(PyList_GetItem(ddata,i));
-				}
-				_oFile.writeFld(fldsize,vals);
-				nowlin++;
-			}
+			if(!_nfn_o){ _oFile.writeFldName(head);}
 		}
-	}else{
-	
+		// 行数を取得してデータ出力
+		while( EOF != _iFile.read() ){
+			_oFile.writeRec(_iFile.getRec());
+		}
+		// 終了処理
+		_iFile.close();
+		_oFile.close();
+		successEnd();
+		return 0;
+	}catch(kgError& err){
+		_iFile.close();
+		_oFile.close();
+		errorEnd(err);
+		return 1;
+	}catch (const exception& e) {
+		_iFile.close();
+		_oFile.close();
+		kgError err(e.what());
+		errorEnd(err);
+		return 1;
+	}catch(char * er){
+		_iFile.close();
+		_oFile.close();
+		kgError err(er);
+		errorEnd(err);
+		return 1;
+	}catch(...){
+		_iFile.close();
+		_oFile.close();
+		kgError err("unknown error" );
+		errorEnd(err);
+		return 1;
 	}
-	_oFile.close();
-	successEnd();
-	return 0;
+}
 
-}catch(kgError& err){
-	errorEnd(err);
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg) 
+{
+	try {
+		size_t fcnt=0;
+		// パラメータセット＆入出力ファイルオープン
+		setArgs(inum, i_p,onum, o_p);
+		// headerがあるとき
+		if(!_nfn_i){
+			vector<string> head;
+			if(EOF != _iFile.read()){
+				char * data = _iFile.getRec();
+				string hdata = data;
+				head = splitToken(hdata,',');
+				fcnt = head.size();
+			}
+			// headerを出力するとき
+			if(!_nfn_o){ _oFile.writeFldName(head);}
+		}
+		// 行数を取得してデータ出力
+		while( EOF != _iFile.read() ){
+			_oFile.writeRec(_iFile.getRec());
+		}
+		// 終了処理
+		_iFile.close();
+		_oFile.close();
+		msg.append(successEndMsg());
+		return 0;
+		
+	}catch(kgError& err){
+		_iFile.close();
+		_oFile.close();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+		_iFile.close();
+		_oFile.close();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+	}catch(char * er){
+		_iFile.close();
+		_oFile.close();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+	}catch(...){
+		_iFile.close();
+		_oFile.close();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
 	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
+}
+
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg) 
+{
+	try {
+
+		// パラメータチェック
+		_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
+
+		if(onum>1){
+			throw kgError("no match IO");
+		}
+		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+
+
+		if(PyList_Check(i_p)){
+			Py_ssize_t max = PyList_Size(i_p);
+			Py_ssize_t fldsize = 0;
+			Py_ssize_t nowlin = 0;
+			vector<string> headdata;
+			if ( max > 0 ){
+				// headerがあるとき
+				if(!_nfn_i){
+					PyObject* head = PyList_GetItem(i_p, nowlin);
+					fldsize = PyList_Size(head);
+					for(Py_ssize_t i=0 ; i<fldsize;i++){
+						headdata.push_back(strGET(PyList_GetItem(head,i)));
+					}		
+					nowlin++;
+				}
+				else{
+					fldsize = PyList_Size(PyList_GetItem(i_p, nowlin));
+				}
+				// headerを出力するとき
+				if(!_nfn_o){ _oFile.writeFldName(headdata);}
+				// 行数を取得してデータ出力
+				char ** vals = new char*[fldsize];
+				while( nowlin < max ){
+					PyObject* ddata = PyList_GetItem(i_p, nowlin);
+					if( fldsize != PyList_Size(ddata) ){
+						kgError err("unmatch fld size" );	
+					}
+					for(Py_ssize_t i=0 ; i<fldsize;i++){
+						vals[i] = strGET(PyList_GetItem(ddata,i));
+					}
+					_oFile.writeFld(fldsize,vals);
+					nowlin++;
+				}
+			}
+		}else{
+			throw kgError("not python list");
+		}
+		_oFile.close();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+		_oFile.close();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+		_oFile.close();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+	}catch(char * er){
+		_oFile.close();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+	}catch(...){
+		_oFile.close();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
 	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+
 }
 
 
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx) try 
+int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
 {
-	// パラメータチェック
-	_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
+	try {
+		// パラメータチェック
+		_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
+		if(inum>1){ throw kgError("no match IO"); }
+	
+		kgCSVfld rls;
 
-	if(inum>1){
-		throw kgError("no match IO");
-	}
+		// 入出力ファイルオープン
+		if(inum==1 && *i_p > 0){ rls.popen(*i_p, _env,_nfn_i); }
+		else     { rls.open(_args.toString("i=",true), _env,_nfn_i); }
+		rls.read_header();
 
-	kgCSVfld rls;
-
-	// 入出力ファイルオープン
-	if(inum==1 && *i_p > 0){ rls.popen(*i_p, _env,_nfn_i); }
-	else     { rls.open(_args.toString("i=",false), _env,_nfn_i); }
-
-	rls.read_header();
-
-	if(PyList_Check(o_p)){
-		while( EOF != rls.read() ){
-			pthread_mutex_lock(mtx);
-			{
-				PyObject* tlist = PyList_New(rls.fldSize());
-				for(size_t j=0 ;j<rls.fldSize();j++){
-					PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+		if(PyList_Check(o_p)){
+			while( EOF != rls.read() ){
+				pthread_mutex_lock(mtx);
+				{
+					PyObject* tlist = PyList_New(rls.fldSize());
+					for(size_t j=0 ;j<rls.fldSize();j++){
+						PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+					}
+					PyList_Append(o_p,tlist);
 				}
-				PyList_Append(o_p,tlist);
+				pthread_mutex_unlock(mtx);
 			}
-			pthread_mutex_unlock(mtx);
-
+			rls.close();
 		}
-		rls.close();
-	}
-	successEnd();
-	return 0;
+		else{
+			throw kgError("not python list");
+		}
+		msg.append(successEndMsg());
+		return 0;
 
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
+	}
+	catch(kgError& err){
+		pthread_mutex_unlock(mtx);
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+		pthread_mutex_unlock(mtx);
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+	}catch(char * er){
+		pthread_mutex_unlock(mtx);
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+	}catch(...){
+		pthread_mutex_unlock(mtx);
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
 	return 1;
 }
-
-
 

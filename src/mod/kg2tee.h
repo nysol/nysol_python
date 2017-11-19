@@ -50,6 +50,14 @@ class kg2Tee : public kgMod {
 	void setArgs(int inum,int *i,int onum, int* o);
 
 	int runMain(void);
+	void runErrEnd(void){
+		::close(_iFD);
+		for(size_t i=0 ; i<_oFD.size();i++){
+			if(!_endFlg[i]){
+				::close(_oFD[i]);
+			}
+		}
+	}
 
 public:
   // コンストラクタ
@@ -57,7 +65,7 @@ public:
 	~kg2Tee(void){}
 
 	int run(void);
-	int run(int inum,int *i,int onum, int* o);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 	// コマンド固有の公開メソッド
 	size_t iRecNo(void) const { return -1; }

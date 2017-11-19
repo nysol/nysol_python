@@ -62,6 +62,11 @@ class kgSlide : public kgModIncludeSort
 	void setArgs(int inum,int *i_p,int onum, int* o_p);
 
 	int runMain(void);
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.close();
+	}
 	void setArgsMain(void);	
 
 public:
@@ -75,7 +80,7 @@ public:
 
 	//実行メソッド
 	int run(void);
-	int run(int inum,int *i_p,int onum, int* o_p);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 };
 

@@ -108,90 +108,94 @@ void kgExcmd::setArgs(int i_p,int o_p)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgExcmd::run(void) try 
-{
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
-}
+int kgExcmd::run(void) {
+	try {
+		return 0;
 
+	}catch(kgError& err){
+
+		errorEnd(err);
+	}catch (const std::exception& e) {
+
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
+	return 1;
+
+}
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgExcmd::run(int inum,int *i_p,int onum, int* o_p) try 
+int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string & msg)  
 {
+	try{
+		setArgs();
+		if(inum>1 || onum>1){
+			throw kgError("no match IO");
+		}
 
-	setArgs();
+		int i_p_t=-1; 
+		int o_p_t=-1;
+		// 入出力ファイルオープン
+		if(inum==1 && *i_p > 0){ i_p_t = *i_p; }
+		if(onum==1 && *o_p > 0){ o_p_t = *o_p; }
 
-
-	if(inum>1 || onum>1){
-		throw kgError("no match IO");
-	}
-
-	int i_p_t=-1; 
-	int o_p_t=-1;
-	// 入出力ファイルオープン
-	if(inum==1 && *i_p > 0){ i_p_t = *i_p; }
-	if(onum==1 && *o_p > 0){ o_p_t = *o_p; }
-
-
-
-	pid_t pid;
-	if ((pid = fork()) == 0) {	
-		if(i_p_t>0){
-			dup2(i_p_t, 0);
-			close(i_p_t);
-		} 
-		if(o_p_t>0){
-			dup2(o_p_t, 1);
-			close(o_p_t);
-		} 
-		execvp(_cmdars[0],(char*const*)_cmdars);
-		throw kgError("run error" );
+		pid_t pid;
+		if ((pid = fork()) == 0) {	
+			if(i_p_t>0){
+				dup2(i_p_t, 0);
+				close(i_p_t);
+			} 
+			if(o_p_t>0){
+				dup2(o_p_t, 1);
+				close(o_p_t);
+			} 
+			execvp(_cmdars[0],(char*const*)_cmdars);
+			throw kgError("run error" );
 	
-	}
-	else if (pid>0){//parent
-		int status = 0;
-		//int ret = 
-		waitpid(pid, &status, 0);
-		if(i_p_t>0){ close(i_p_t);}
-		if(o_p_t>0){ close(o_p_t);}
-		successEnd();
-		return status;
-	}
-	else {//err
-		throw kgError("fork error" );
-	}
-	
-	return 0;
+		}
+		else if (pid>0){//parent
+			int status = 0;
+			//int ret = 
+			waitpid(pid, &status, 0);
+			if(i_p_t>0){ close(i_p_t);}
+			if(o_p_t>0){ close(o_p_t);}
+			msg.append(successEndMsg());
+			return status;
+		}
+		else {//err
+			throw kgError("fork error" );
+		}
+		return 0;
 
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
+	}catch(kgError& err){
+
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
 	return 1;
 }
-
 
