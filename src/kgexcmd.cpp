@@ -28,16 +28,6 @@
 using namespace std;
 using namespace kglib;
 using namespace kgmod;
-/*
-static char* strGET(PyObject* data){
-#if PY_MAJOR_VERSION >= 3
-	return PyUnicode_AsUTF8(data);
-#else		
-	return PyString_AsString(data);
-#endif
-
-}
-*/
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
