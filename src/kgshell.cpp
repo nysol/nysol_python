@@ -247,8 +247,9 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
-	a->msg.append("unKnown ERROR");
+	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(err.message(0));
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -258,8 +259,9 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
-	a->msg.append("unKnown ERROR");
+	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(e.what());
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -269,8 +271,9 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
-	a->msg.append("unKnown ERROR");
+	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(er);
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -280,7 +283,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
-	a->msg.append("unKnown ERROR");
+	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -305,6 +308,7 @@ catch(kgError& err){
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(err.message(0));
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -316,6 +320,7 @@ catch(kgError& err){
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(e.what());
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -327,6 +332,7 @@ catch(kgError& err){
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(er);
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -338,6 +344,7 @@ catch(kgError& err){
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
 }
@@ -361,6 +368,7 @@ void *kgshell::run_readlist(void *arg)try{
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(err.message(0));
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -372,6 +380,7 @@ void *kgshell::run_readlist(void *arg)try{
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(e.what());
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -383,6 +392,7 @@ void *kgshell::run_readlist(void *arg)try{
 	a->finflg=true;
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
+	a->msg.append(" ");
 	a->msg.append(er);
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
@@ -689,6 +699,7 @@ kgCSVfld* kgshell::runiter(
 
 	makePipeList(plist);
 	if( pipe(_csvpiped) < 0){ throw kgError("pipe open error on kgshell");}
+	// pipe2(piped,O_CLOEXEC) pipe2なら省略化
 	int flags0 = fcntl(_csvpiped[0], F_GETFD);
 	int flags1 = fcntl(_csvpiped[1], F_GETFD);
 	fcntl(_csvpiped[0], F_SETFD, flags0 | FD_CLOEXEC);

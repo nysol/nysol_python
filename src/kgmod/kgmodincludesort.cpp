@@ -68,13 +68,16 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 		throw kgError("sort module allocation error on kgModIncludeSort");
 	}
 	int piped[2];
-	if( pipe(piped) < 0){
+	if( pipe(piped) < 0){ 
 		throw kgError("sort pipe open error on kgModIncludeSort");		
-	}
+	} 
+	//pipe2(piped,O_CLOEXEC)
+	//pipe2なら以下省略できる 
 	int flags0 = fcntl(piped[0], F_GETFD);
 	int flags1 = fcntl(piped[1], F_GETFD);
 	fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
 	fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
+
 	kgArgs newArgs;// 引数
 	newArgs.add("i=",csv->fileName());
 	newArgs.add("f=",fldname);

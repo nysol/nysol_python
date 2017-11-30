@@ -122,16 +122,15 @@ void kgCSVout::popen(int fd, kgEnv *env, bool noFldName, size_t cnt)
 	initialset(env,noFldName,cnt);
 	// オープン処理
 	try {
+		opened_= true;
 		fname_ = "STDOUT";
 		fd_=fd;
+
 	} catch(...) {
 		ostringstream ss;
 		ss << "file write open error: " << fname_;
 		throw kgError(ss.str());
 	}
-	kgMsg(kgMsg::DEB, env_).output("O open inter 3");
-	opened_= true;
-	kgMsg(kgMsg::DEB, env_).output("O open inter 4");
 }
 // -----------------------------------------------------------------------------
 // 書き込みファイルをオープンする。
@@ -144,20 +143,23 @@ void kgCSVout::open(kgstr_t fileName, kgEnv *env, bool noFldName, size_t cnt)
 
 	// オープン処理
 	try {
+		opened_= true;
 		if(fileName.size()==0){
 			fname_ = "STDOUT";
 			fd_=1;
 		}else{
 			fname_ = fileName;
 			fd_ = ::open(fname_.c_str(), KG_OOPEN_FLG , S_IRWXU);
-			if(fd_ == -1 ){ throw kgError();}
+			if(fd_ == -1 ){ 
+				opened_= false;
+				throw kgError();
+			}
 		}
 	} catch(...) {
 		ostringstream ss;
 		ss << "file write open error: " << fname_;
 		throw kgError(ss.str());
 	}
-	opened_= true;
 }
 // -----------------------------------------------------------------------------
 //  有効桁数セット
@@ -169,8 +171,8 @@ void kgCSVout::setPrecision(int precision){
 }
 void kgCSVout::forceclose(void){
 	if(!opened_) return;
-	::close(fd_);
 	opened_ = false;
+	::close(fd_);
 }
 // -----------------------------------------------------------------------------
 // 書き込みファイルをクローズする。
@@ -178,6 +180,7 @@ void kgCSVout::forceclose(void){
 void kgCSVout::close(void) 
 {
 	if(!opened_) return;
+	opened_ = false;
 	flush();
 	try {
 		::close(fd_);
@@ -186,7 +189,6 @@ void kgCSVout::close(void)
 		ss << "file write close error: " << fname_;
 		throw kgError(ss.str());
 	}
-	opened_ = false;
 }
 // -----------------------------------------------------------------------------
 // bufferに残ったデータを出力する。
@@ -204,6 +206,7 @@ void kgCSVout::flush(void)
 		}
 		size_t wsize_ttl=0;
 		int wsize =0;
+		int retryCNT =0;
 		while(wsize_ttl<size){
 			wsize = ::write(fd_, start+wsize_ttl, size-wsize_ttl);
 			if(wsize<0){
@@ -217,12 +220,14 @@ void kgCSVout::flush(void)
 				ostringstream ss;
 				ss << "pipe broken(" << strerror(errno) << "):" << fname_;
 				opened_ = false;
-				throw kgOPipeBreakError(ss.str());
-				//close();
+				::close(fd_); // f.w.
 				wsize=0;
+				throw kgOPipeBreakError(ss.str());
 			}else{
 				ostringstream ss;
-				ss << "file write error(" << strerror(errno) << "):" << fname_;
+				ss << "file write error(" << strerror(errno) << "):" << fd_ << ":"<< fname_;
+				opened_ = false;
+				::close(fd_);// f.w.
 				throw kgError(ss.str());
 			}
 		}

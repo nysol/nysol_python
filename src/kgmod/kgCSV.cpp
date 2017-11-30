@@ -87,12 +87,20 @@ void kgCSV::readCSVfile() throw(kgError)
 	size_t maxSize=ioSize_*ioCnt_;
 	size_t accSize=0;
 	size_t resSize=maxSize;
+
+	int retryCNT =0;
 	while(accSize<maxSize){
 		int rsize = ::read(fd_, buf_ + dupSize_ + accSize, resSize<ioSize_ ? resSize : ioSize_);
 		if( rsize < 0 ){ 
 			if(errno==70||errno==11){ continue;}
-			cerr << "errno " << errno << endl;
-			throw kgError("read error "); 
+			if(errno==9&&retryCNT<10){
+				retryCNT++;
+				cerr << "retry " << retryCNT << endl; 
+				continue;
+			}
+			ostringstream ss;
+			ss << "file read error: " << fname_ << "(" << errno << ")" ;
+			throw kgError(ss.str()); 
 		}
 		if( rsize == 0 ) { 
 			//最後が改行でなければ改行付加(ただしゼロバイトファイル除く)
@@ -147,13 +155,14 @@ void kgCSV::popen(int fd, kgEnv* env, bool noFldName,size_t cnt) throw(kgError)
 
 	// オープン処理
 	try {
+		opened_=true;
 		fd_ = fd;
 	}catch(kgError& err){
+		opened_=false;
 		ostringstream ss;
 		ss << "file read open error: " << fname_;
 		throw kgError(ss.str());
 	}
-	opened_=true;
 }
 
 // ----------------------------------------------------------------------------
@@ -168,15 +177,17 @@ void kgCSV::open(const kgstr_t& fileName, kgEnv* env, bool noFldName,size_t cnt)
 
 	// オープン処理
 	try {
+		opened_=true;
 		fd_ = ::open(fname_.c_str(), KG_IOPEN_FLG);
-		if(fd_ == -1 ){ throw kgError(); }
-
+		if(fd_ == -1 ){
+			opened_=false;
+			ostringstream ss;
+			ss << "file read open error: " << fname_;
+			throw kgError(ss.str());
+		}
 	}catch(kgError& err){
-		ostringstream ss;
-		ss << "file read open error: " << fname_ << "(" << errno << ")" ;
-		throw kgError(ss.str());
+		throw kgError(err);
 	}
-	opened_=true;
 }
 
 void kgCSV::setSortInfo(const kgstr_t& fldName)
@@ -331,6 +342,7 @@ void kgCSV::set_fields(size_t dupSize)
 void kgCSV::close(void) throw(kgError) 
 {
 	if(!opened_) return;
+	opened_=false;
 	try {
 		::close(fd_);
 	}catch(kgError& err){
@@ -338,7 +350,6 @@ void kgCSV::close(void) throw(kgError)
 		ss << "file read close error: " << fname_;
 		throw kgError(ss.str());
 	}
-	opened_=false;
 }
 // ----------------------------------------------------------------------------
 // num番目の項目名を返す
