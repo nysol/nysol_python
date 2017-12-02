@@ -208,8 +208,9 @@ kgshell::kgshell(int mflg){
 		_th_st_pp = NULL;
 		_clen = 0;
 		_modlist=NULL;
-		
+
 		if(!mflg){  _env.verblvl(2);	}
+
 	  if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 			ostringstream ss;
 			ss << "init mutex error";
@@ -304,6 +305,8 @@ void *kgshell::run_writelist(void *arg)try{
 	a->status = sts;
 	a->finflg=true;
 	a->msg.append(msg);
+	a->endtime=getNowTime(true);
+
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
 
@@ -360,7 +363,6 @@ catch(kgError& err){
 	pthread_mutex_unlock(a->stMutex);
 }
 
-
 void *kgshell::run_readlist(void *arg)try{
 	string msg;
 	argST *a =(argST*)arg; 
@@ -369,6 +371,8 @@ void *kgshell::run_readlist(void *arg)try{
 	a->status = sts;
 	a->finflg=true;
 	a->msg.append(msg);
+	a->endtime=getNowTime(true);
+
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
 
@@ -506,7 +510,7 @@ int kgshell::run(
 				cerr << endl;
 			}
 	}
-*/
+	*/
 	_clen = cmds.size();
 
 	_modlist = new kgMod*[_clen];
@@ -523,6 +527,7 @@ int kgshell::run(
 		}
 		_modlist[i]->init(newArgs, &_env);
 	}
+
 	_th_st_pp = new pthread_t[_clen];
 	argST *argst = new argST[_clen];
 	int _th_rtn[_clen];
@@ -752,12 +757,12 @@ kgCSVfld* kgshell::runiter(
 	for(int i=_clen-1;i>=0;i--){
 
 		argst[i].mobj= _modlist[i];
+		argst[i].tag= cmds[i].tag;
 		argst[i].finflg = false;
 		argst[i].outputEND = false;
 		argst[i].status = 0;
 		argst[i].stMutex = &_stsMutex;
 		argst[i].stCond = &_stsCond;
-
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 
@@ -885,11 +890,9 @@ kgCSVfld* kgshell::runiter(
 
 	return _iterrtn;
 
-
 }catch(...){
 	return NULL;
 }
-
 
 int kgshell::getparams(
 	kgstr_t cmdname,

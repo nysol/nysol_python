@@ -49,10 +49,6 @@ kgLoad::kgLoad(void)
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF;
 
 	_titleL = _title = "";
-//	_docL   = _doc  = "";
-//	#ifdef JPN_FORMAT
-//		#include <help/jp/kgtab2csvHelp.h>
-//	#endif
 	
 }
 // -----------------------------------------------------------------------------
@@ -155,7 +151,7 @@ int kgLoad::run(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg) 
+int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	try {
 		size_t fcnt=0;
@@ -182,7 +178,7 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		_oFile.close();
 		msg.append(successEndMsg());
 		return 0;
-		
+
 	}catch(kgError& err){
 		_iFile.close();
 		_oFile.close();
@@ -193,16 +189,19 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		_oFile.close();
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
+
 	}catch(char * er){
 		_iFile.close();
 		_oFile.close();
 		kgError err(er);
 		msg.append(errorEndMsg(err));
+
 	}catch(...){
 		_iFile.close();
 		_oFile.close();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
+
 	}
 	return 1;
 }
@@ -213,7 +212,6 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg) 
 {
 	try {
-
 		// パラメータチェック
 		_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
 
@@ -222,7 +220,6 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 		}
 		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
 		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
-
 
 		if(PyList_Check(i_p)){
 			Py_ssize_t max = PyList_Size(i_p);
@@ -257,6 +254,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 					_oFile.writeFld(fldsize,vals);
 					nowlin++;
 				}
+				delete[] vals;
 			}
 		}else{
 			throw kgError("not python list");
@@ -285,8 +283,6 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 	return 1;
 
 }
-
-
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
@@ -296,7 +292,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		// パラメータチェック
 		_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
 		if(inum>1){ throw kgError("no match IO"); }
-	
+
 		kgCSVfld rls;
 
 		// 入出力ファイルオープン
@@ -333,15 +329,17 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		pthread_mutex_unlock(mtx);
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
+
 	}catch(char * er){
 		pthread_mutex_unlock(mtx);
 		kgError err(er);
 		msg.append(errorEndMsg(err));
+
 	}catch(...){
 		pthread_mutex_unlock(mtx);
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
+
 	}
 	return 1;
 }
-

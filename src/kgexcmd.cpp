@@ -40,10 +40,6 @@ kgExcmd::kgExcmd(void)
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF;
 
 	_titleL = _title = "";
-//	_docL   = _doc  = "";
-//	#ifdef JPN_FORMAT
-//		#include <help/jp/kgtab2csvHelp.h>
-//	#endif
 	
 }
 // -----------------------------------------------------------------------------
@@ -70,35 +66,10 @@ void kgExcmd::setArgs(void)
 }
 
 // -----------------------------------------------------------------------------
-// パラメータセット＆入出力ファイルオープン
-// -----------------------------------------------------------------------------
-/*
-void kgExcmd::setArgs(int i_p,int o_p)
-{
-	// パラメータチェック
-	_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
-
-	// 入出力ファイルオープン
-	if(i_p>0){
-		_iFile.popen(i_p, _env,_nfn_i);
-	}
-	else{
-		// 入出力ファイルオープン
-		_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
-	_iFile.read_header();
-	
-}*/
-
-// -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgExcmd::run(void) {
+int kgExcmd::run(void)
+{
 	try {
 		return 0;
 
@@ -124,7 +95,7 @@ int kgExcmd::run(void) {
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string & msg)  
+int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 {
 	try{
 		setArgs();
@@ -150,7 +121,6 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string & msg)
 			} 
 			execvp(_cmdars[0],(char*const*)_cmdars);
 			throw kgError("run error" );
-	
 		}
 		else if (pid>0){//parent
 			int status = 0;
@@ -188,4 +158,3 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string & msg)
 	}
 	return 1;
 }
-

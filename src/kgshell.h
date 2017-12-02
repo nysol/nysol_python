@@ -37,8 +37,6 @@ struct argST{
 	kgMod * mobj;
 	int i_cnt;
 	int o_cnt;
-//	int m_p;
-//	int u_p;
 	int *i_p;
 	int *o_p;
 	PyObject* list;

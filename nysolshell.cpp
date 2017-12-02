@@ -46,24 +46,9 @@ static bool strCHECK(PyObject* data){
 }
 
 void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCapsel, vector< linkST > & p_list){
-/*
-	// list [ cmd para ilink mlink]
-	vector< vector<int> > p_list;
-	vector< cmdCapselST > cmdCapsel;
-struct cmdCapselST{
-	kgstr_t cmdname;
-	vector<kgstr_t> paralist;
-	kgstr_t istr;
-	PyObject* iobj;
-	kgstr_t mstr;
-	PyObject* mobj;
-
-};
-
-	int  lsize = run_sub(mlist,cmdCapsel,p_list,1);
-*/
 
 	Py_ssize_t msize = PyList_Size(mlist);
+	
 	for(Py_ssize_t i=0 ; i<msize;i++){
 		PyObject *modinfo = PyList_GetItem(mlist ,i);
 		cmdCapselST cmpcaplocal;
