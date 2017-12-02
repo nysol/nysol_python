@@ -27,6 +27,7 @@
 #include <kgConfig.h>
 #include <kgWildcard.h>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace std;
 using namespace kglib;
@@ -1095,6 +1096,34 @@ bool kglib::putime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *
 	return true;
 }
 
+string kglib::getNowTime(bool fsec){
+
+	char buf[128];
+	ostringstream ss;
+	boost::posix_time::ptime _now = boost::posix_time::microsec_clock::local_time();
+	
+	if(fsec){
+		sprintf(buf,"%04d/%02d/%02d ",
+			static_cast<int>(_now.date().year()),
+			static_cast<int>(_now.date().month()),
+			static_cast<int>(_now.date().day())
+		);
+		ss << buf << to_simple_string(_now.time_of_day());
+	
+	}
+	else{
+		sprintf(buf,"%04d/%02d/%02d %02d:%02d:%02d",
+			static_cast<int>(_now.date().year()),
+			static_cast<int>(_now.date().month()),
+			static_cast<int>(_now.date().day()),
+			static_cast<int>(_now.time_of_day().hours()),
+			static_cast<int>(_now.time_of_day().minutes()),
+			static_cast<int>(_now.time_of_day().seconds())
+		);
+		ss << buf;
+	}
+	return ss.str();
+}
 
 // -----------------------------------------------------------------------------
 // null値考慮型割り算

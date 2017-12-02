@@ -47,6 +47,7 @@ struct argST{
 	int status;
 	kgstr_t msg;
 	kgstr_t tag;
+	kgstr_t endtime;
 	pthread_mutex_t *mutex;
 	pthread_mutex_t *stMutex;
 	pthread_cond_t *stCond;

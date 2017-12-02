@@ -20,6 +20,7 @@
 #include <kgCSV.h>
 #include <kgEnv.h>
 #include <kgError.h>
+#include <kgMethod.h>
 #include <kgshell.h>
 #include <pthread.h>
 #include <sys/time.h>
@@ -238,6 +239,8 @@ void *kgshell::run_func(void *arg)try{
 	a->status =sts;
 	a->finflg=true;
 	a->msg.append(msg);
+	a->endtime=getNowTime(true);
+
 	pthread_cond_signal(a->stCond);
 	pthread_mutex_unlock(a->stMutex);
 
@@ -247,6 +250,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -259,6 +263,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -271,6 +276,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -283,6 +289,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR ");
 	a->msg.append(a->mobj->name());
 	pthread_cond_signal(a->stCond);
@@ -306,6 +313,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -318,6 +326,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -330,6 +339,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -342,6 +352,7 @@ catch(kgError& err){
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -366,6 +377,7 @@ void *kgshell::run_readlist(void *arg)try{
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -378,6 +390,7 @@ void *kgshell::run_readlist(void *arg)try{
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -390,6 +403,7 @@ void *kgshell::run_readlist(void *arg)try{
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	a->msg.append(" ");
@@ -402,6 +416,7 @@ void *kgshell::run_readlist(void *arg)try{
 	pthread_mutex_lock(a->stMutex);
 	a->status = 1;
 	a->finflg=true;
+	a->endtime=getNowTime(true);
 	a->msg.append("unKnown ERROR");
 	a->msg.append(a->mobj->name());
 	pthread_cond_signal(a->stCond);
@@ -652,7 +667,10 @@ int kgshell::run(
 			if(argst[pos].finflg==false){ endFLG=false;}
 			else if(argst[pos].outputEND==false){
 				if(!argst[pos].msg.empty()){
-					cerr << argst[pos].msg << " " <<  argst[pos].tag << endl; 
+					cerr << argst[pos].msg << " " << "(" << argst[pos].endtime << ")" << endl; 
+				}
+				else if(!argst[pos].tag.empty()){
+					cerr  << argst[pos].tag << "(" << argst[pos].endtime << ")" << endl; 
 				}
 				argst[pos].outputEND = true;
 			}
@@ -676,10 +694,15 @@ int kgshell::run(
 	}
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
-			if(argst[i].outputEND == false && !argst[i].msg.empty()){
-				cerr << argst[i].msg << " " <<  argst[i].tag << endl;
-				argst[i].outputEND = true;
+			if(argst[i].outputEND == false){
+				if(!argst[i].msg.empty()){
+					cerr << argst[i].msg << " " <<  argst[i].tag << "(" << argst[i].endtime << ")" << endl;
+				}
+				else if(!argst[i].tag.empty()){
+					cerr << argst[i].tag  << "(" << argst[i].endtime << ")" <<  endl;
+				}
 			}
+			argst[i].outputEND = true;
 			delete _modlist[i];
 		}
 		delete[] _modlist;

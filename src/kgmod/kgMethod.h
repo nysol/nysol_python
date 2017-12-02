@@ -74,6 +74,7 @@ bool ptime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *mi,int *
 
 bool putime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *mi,int *sc,int *usc,int resolv);
 bool utime_set(const char * str,int *h,int *m,int *s,int *usc,int resolv);
+string getNowTime(bool fsec=false);
 
 
 bool kgDiv(double* val, char* a, char* b);
