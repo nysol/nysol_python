@@ -43,6 +43,9 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 		elif k in klist[1] and v== True:
 			pass
+		elif k == "tag":
+			pass
+			
 		else:
 			exval.append(k)
 			print ( k + " is not keyword")

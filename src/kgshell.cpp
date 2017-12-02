@@ -515,6 +515,7 @@ int kgshell::run(
 	for(int i=_clen-1;i>=0;i--){
 
 		argst[i].mobj= _modlist[i];
+		argst[i].tag= cmds[i].tag;
 		argst[i].finflg = false;
 		argst[i].outputEND = false;
 		argst[i].status = 0;
@@ -651,7 +652,7 @@ int kgshell::run(
 			if(argst[pos].finflg==false){ endFLG=false;}
 			else if(argst[pos].outputEND==false){
 				if(!argst[pos].msg.empty()){
-					cerr << argst[pos].msg << endl; 
+					cerr << argst[pos].msg << " " <<  argst[pos].tag << endl; 
 				}
 				argst[pos].outputEND = true;
 			}
@@ -676,7 +677,7 @@ int kgshell::run(
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
 			if(argst[i].outputEND == false && !argst[i].msg.empty()){
-				cerr << argst[i].msg << endl;
+				cerr << argst[i].msg << " " <<  argst[i].tag << endl;
 				argst[i].outputEND = true;
 			}
 			delete _modlist[i];

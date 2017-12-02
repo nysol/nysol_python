@@ -46,6 +46,7 @@ struct argST{
 	bool outputEND;
 	int status;
 	kgstr_t msg;
+	kgstr_t tag;
 	pthread_mutex_t *mutex;
 	pthread_mutex_t *stMutex;
 	pthread_cond_t *stCond;
@@ -60,6 +61,7 @@ struct cmdCapselST{
 	kgstr_t mstr;
 	PyObject* mobj;
 	PyObject* oobj;
+	kgstr_t tag;
 
 };
 

@@ -1,1 +1,1 @@
-import mod
+from . import mod

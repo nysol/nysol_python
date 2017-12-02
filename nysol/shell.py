@@ -121,6 +121,15 @@ class script(object):
 		from nysol.mod.nysollib.nysolmodcore import drawModels as drawModels
 		drawModels(runcmds,fname)
 
+	def drawModelD3(self,fname=None):
+
+		runlist = copy.deepcopy(self.cmdlist)
+		runcmds = self.makeNetwork(runlist)
+
+		from nysol.mod.nysollib.nysolmodcore import drawModelsD3 as drawModelsD3
+		drawModelsD3(runcmds,fname)
+
+
 	def modelInfo(self):
 
 		runlist = copy.deepcopy(self.cmdlist)

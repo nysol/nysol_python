@@ -70,6 +70,7 @@ struct cmdCapselST{
 		cmpcaplocal.cmdname  = strGET(PyList_GetItem(modinfo ,0));
 		kgstr_t para_part    = strGET(PyList_GetItem(modinfo ,1));
 		PyObject *addinfo    = PyList_GetItem(modinfo ,2);
+		cmpcaplocal.tag      = strGET(PyList_GetItem(modinfo ,3));
 
 		cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);
 
@@ -105,9 +106,9 @@ struct cmdCapselST{
 		PyObject *linkinfoFR = PyList_GetItem(linkinfo ,0);
 		PyObject *linkinfoTO = PyList_GetItem(linkinfo ,1);
 		linklocal.frTP = strGET(PyList_GetItem(linkinfoFR ,0));
-		linklocal.frID = PyInt_AsLong(PyList_GetItem(linkinfoFR ,1));
+		linklocal.frID = PyLong_AsLong(PyList_GetItem(linkinfoFR ,1));
 		linklocal.toTP = strGET(PyList_GetItem(linkinfoTO ,0));
-		linklocal.toID = PyInt_AsLong(PyList_GetItem(linkinfoTO ,1));
+		linklocal.toID = PyLong_AsLong(PyList_GetItem(linkinfoTO ,1));
 		p_list.push_back(linklocal);
 	}
 

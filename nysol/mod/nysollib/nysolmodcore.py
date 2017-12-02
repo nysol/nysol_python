@@ -21,6 +21,10 @@ def runs(val,**kw_args):
 def drawModels(val,fname):
 	return NysolMOD_CORE.drawModels(val,fname)
 
+def drawModelsD3(val,fname):
+	return NysolMOD_CORE.drawModelsD3(val,fname)
+
+
 def modelInfos(val):
 	return NysolMOD_CORE.modelInfos(val)
 
@@ -36,6 +40,12 @@ class NysolMOD_CORE(object):
 
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
+		self.tag = ""
+
+		if "tag" in self.kwd :
+			self.tag = self.kwd["tag"]
+			del self.kwd["tag"]
+
 
 		if "i" in self.kwd :
 			self.inplist["i"].append(self.kwd["i"])
@@ -281,7 +291,7 @@ class NysolMOD_CORE(object):
 
 		for obj,no in uniqmod.items():
 
-			modlist[no]= [obj.name,obj.para2str(),{}]
+			modlist[no]= [obj.name,obj.para2str(),{},obj.tag]
 			iolist[no]=[[],[],[],[]]
 
 			for ioobj in obj.inplist["i"]:
@@ -332,13 +342,13 @@ class NysolMOD_CORE(object):
 		for idx, val in enumerate(iolist):
 			rtn = None
 			for v in val[0]:
-				if isinstance(v, (int, long)):
+				if isinstance(v, (int)):
 					rtn = self.getLink(iolist,v,idx)
 					if rtn != None:
 						linklist.append([[rtn,v],["i",idx]])
 
 			for v in val[1]:
-				if isinstance(v, (int, long)):
+				if isinstance(v, (int)):
 					rtn = self.getLink(iolist,v,idx)
 					if rtn != None:
 						linklist.append([[rtn,v],["m",idx]])
@@ -408,11 +418,8 @@ class NysolMOD_CORE(object):
 		return NysolMOD_CORE.runs([self],**kw_args)[0]
 
 
-
-	#GRAPH表示 #deepコピーしてからチェック
 	@classmethod
-	def drawModels(self,mod,fname=None):
-
+	def drawModelsCore(self,mod):
 		dupshowobjs = copy.deepcopy(mod)
 		showobjs =[]
 		rtnlist = []
@@ -440,17 +447,33 @@ class NysolMOD_CORE(object):
 		self.makeModList(uniqmod,modlist,iolist)
 
 		linklist=[]
-
-
 		self.makeLinkList(iolist,linklist)
+		return modlist,iolist,linklist
 		
+	#GRAPH表示 #deepコピーしてからチェック
+	@classmethod
+	def drawModels(self,mod,fname=None):
+
+		modlist,iolist,linklist = NysolMOD_CORE.drawModelsCore(mod)	
 		ndraw.chageSVG(modlist,iolist,linklist,fname)		
+
+	#GRAPH表示 #deepコピーしてからチェック
+	@classmethod
+	def drawModelsD3(self,mod,fname=None):
+
+		modlist,iolist,linklist = NysolMOD_CORE.drawModelsCore(mod)
+		ndraw.chageSVG_D3(modlist,iolist,linklist,fname)		
 
 
 	#GRAPH表示 #deepコピーしてからチェック
 	def drawModel(self,fname=None):
 
 		NysolMOD_CORE.drawModels([self],fname)
+
+
+	def drawModelD3(self,fname=None):
+
+		NysolMOD_CORE.drawModelsD3([self],fname)
 
 
 
