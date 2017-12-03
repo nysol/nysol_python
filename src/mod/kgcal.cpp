@@ -257,7 +257,7 @@ void kgCal::writeFld(char** fld,int size, vector<kgVal*>& val)
 	for(int i=0; i<size; i++){
 		_oFile.writeStr( *(fld+i), false );
 	}
-	for(int i=0; i<val.size(); i++){
+	for(size_t i=0; i<val.size(); i++){
 		_oFile.writeVal(*val[i],i==val.size()-1);
 	}	
 }

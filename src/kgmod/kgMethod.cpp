@@ -226,9 +226,9 @@ char* kglib::sepFldToken(char **pnt, size_t fldCnt, char *str)
 							 if(*str==',' ){*(str-1)='\0'; str=rpt+1; break; } //Comma
 					else if(*str=='\0'){
 						*(str-1)='\0';return rpt; 
-						//項目数のチェック
-						if(j==fldCnt){ return rpt;}
-						else{ 	kgError::fldCntErr(fldCnt,j);}
+						//項目数のチェックしない
+						//if(j==fldCnt){ return rpt;}
+						//else{ 	kgError::fldCntErr(fldCnt,j);}
 					}//'\0'
 					else if(*str=='"' ){ str--		    ;                   } // DQ("")
 				}
@@ -978,7 +978,7 @@ bool kglib::time_set(const char * str,int *h,int *m,int *s)
 // 返値：trueで成功, falseで変換失敗
 // 利用関数例: kgFunction_constant_time::initialize(string str)
 // -----------------------------------------------------------------------------
-bool kglib::utime_set(const char * str,int *h,int *m,int *s,int *us, int resolv)
+bool kglib::utime_set(const char * str,int *h,int *m,int *s,int *us, size_t resolv)
 {
 	size_t dtlen = 7; 
 	// 分解能によって取得する桁数変更 最大6桁
@@ -1051,7 +1051,7 @@ bool kglib::ptime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *m
 // 返値：trueで成功, false以外で変換失敗
 // 利用関数例: kgFunction_constant_time::initialize(string str)
 // -----------------------------------------------------------------------------
-bool kglib::putime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *mi,int *sc,int *usc ,int resolv)
+bool kglib::putime_set(const char * str,int *yr, int *mo, int *dy, int *hr,int *mi,int *sc,int *usc ,size_t resolv)
 {
 	size_t dtlen = 15; 
 	// 分解能によって取得する桁数変更 最大6桁

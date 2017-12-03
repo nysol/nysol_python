@@ -666,13 +666,18 @@ int kgshell::run(
 	// status check
 	pthread_mutex_lock(&_stsMutex);
 	while(1){
-		int pos = 0;
+		size_t pos = 0;
 		bool endFLG = true;
 		while(pos<_clen){
 			if(argst[pos].finflg==false){ endFLG=false;}
 			else if(argst[pos].outputEND==false){
 				if(!argst[pos].msg.empty()){
-					cerr << argst[pos].msg << " " << "(" << argst[pos].endtime << ")" << endl; 
+					if(!argst[pos].tag.empty()){
+						cerr << argst[pos].msg << " " << argst[pos].tag << "(" << argst[pos].endtime << ")" << endl; 
+					}
+					else{
+						cerr << argst[pos].msg  << endl; 					
+					}
 				}
 				else if(!argst[pos].tag.empty()){
 					cerr  << argst[pos].tag << "(" << argst[pos].endtime << ")" << endl; 
@@ -681,7 +686,7 @@ int kgshell::run(
 			}
 			if(argst[pos].status!=0){
 				//エラー発生時はthread cancel
-				for(int j=0;j<_clen;j++){
+				for(size_t j=0;j<_clen;j++){
 					pthread_cancel(_th_st_pp[j]);	
 				}
 				endFLG=true;
@@ -694,14 +699,19 @@ int kgshell::run(
 	}
 	pthread_mutex_unlock(&_stsMutex);
 
-	for(int i=_clen;i>0;i--){
+	for(size_t i=_clen;i>0;i--){
 		pthread_join(_th_st_pp[i-1],NULL);
 	}
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
 			if(argst[i].outputEND == false){
 				if(!argst[i].msg.empty()){
-					cerr << argst[i].msg << " " <<  argst[i].tag << "(" << argst[i].endtime << ")" << endl;
+					if(!argst[i].tag.empty()){
+						cerr << argst[i].msg << " " << argst[i].tag << "(" << argst[i].endtime << ")" << endl; 
+					}
+					else{
+						cerr << argst[i].msg  << endl; 					
+					}
 				}
 				else if(!argst[i].tag.empty()){
 					cerr << argst[i].tag  << "(" << argst[i].endtime << ")" <<  endl;

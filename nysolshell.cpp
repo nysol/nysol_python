@@ -180,7 +180,7 @@ PyObject* readline(PyObject* self, PyObject* args)
 	if( kcfld->read() == EOF){
 		return Py_BuildValue("");
 	}
-	int fcnt = kcfld->fldSize();
+	size_t fcnt = kcfld->fldSize();
 	PyObject* rlist = PyList_New(0);
 	for(size_t j=0 ;j<fcnt;j++){
 		PyList_Append(rlist,Py_BuildValue("s", kcfld->getVal(j)));

@@ -119,7 +119,7 @@ int kgArff2csv::runMain()
 {
 
 	bool dataflg=false;
-	int fldcnt=0;
+	size_t fldcnt=0;
 	char** sepstr=0;
 
 	kgAutoPtr2<char> buf_ap;

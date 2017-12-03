@@ -582,7 +582,7 @@ void* kgSortf::run_sort_thread(void *obj){
 // -----------------------------------------------------------------------------
 int kgSortf::sort(kgCSVfld& csv) throw(kgError) 
 {
-	int fldCnt = csv.fldSize();
+	size_t fldCnt = csv.fldSize();
 
 	// ソーティング用レコードインデックス領域の確保
 	kgAutoPtr2<char**> ap1;
@@ -603,14 +603,14 @@ int kgSortf::sort(kgCSVfld& csv) throw(kgError)
 	char** fldIndex = ap2.get();
 
 	int oCnt   = 0; // 分割されたファイル番号
-	int recCnt = 0; // インデックス上のレコード数
+	size_t recCnt = 0; // インデックス上のレコード数
 
 	// 入力ファイルの行単位read
 	while(EOF != csv.read() ){
 		char** flds = csv.getFld();
 
 		// fldインデックスの作成
-		for(int i=0; i<fldCnt; i++){
+		for(size_t i=0; i<fldCnt; i++){
 			fldIndex[recCnt*fldCnt+i]=flds[i];
 		}
 

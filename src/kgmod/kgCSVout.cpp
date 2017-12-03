@@ -206,7 +206,6 @@ void kgCSVout::flush(void)
 		}
 		size_t wsize_ttl=0;
 		int wsize =0;
-		int retryCNT =0;
 		while(wsize_ttl<size){
 			wsize = ::write(fd_, start+wsize_ttl, size-wsize_ttl);
 			if(wsize<0){

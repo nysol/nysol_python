@@ -86,7 +86,7 @@ class kgshell{
 	bool _nfni;
  	kgCSVfld* _iterrtn;
 	pthread_t* _th_st_pp;
-	int _clen;
+	size_t _clen;
 	kgMod **_modlist;
 
 	// pipe LIST
