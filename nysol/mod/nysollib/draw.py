@@ -82,9 +82,16 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 		 
 		frX , frY = dsppos[frNo]
 		toX , toY = dsppos[toNo]
+		x = toX-frX
+		y = toY-frY
+		z = ((x ** 2) + (y ** 2)) ** 0.5
+		
+		xsub = 20.0 * x / z
+		ysub = 20.0 * y / z
+
 		f.write("<g>\n")
 		f.write("<title>" + frTp + " => " + toTp + "</title>\n" )
-		f.write("<line x1='" + str(frX*60+20) + "' y1='" + str(frY*60+40) + "' x2='" + str(toX*60+20) + "' y2='" + str(toY*60+0) + "' stroke='black' stroke-width='5' marker-end='url(#endmrk)'/>\n")
+		f.write("<line x1='" + str(20+frX*60+xsub) + "' y1='" + str(20+frY*60+ysub) + "' x2='" + str(20+toX*60-xsub) + "' y2='" + str(20+toY*60-ysub) + "' stroke='black' stroke-width='5' marker-end='url(#endmrk)'/>\n")
 		f.write("</g>\n")
 
 
@@ -153,7 +160,8 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		linklist_n2e[toNo][1].append(str(i))
 
 		f.write("{ title:\"%s => %s \"," % (frTp,toTp))
-		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+40,toX*60+20,toY*60+0))
+#		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+40,toX*60+20,toY*60+0))
+		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+20,toX*60+20,toY*60+20))
 
 		if elastNo==i+1 :
 			f.write("]\n")
@@ -193,19 +201,40 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
   	d.y += d3.event.dy
    	d3.select(this)
    		.attr('transform','translate('+d.x+','+d.y+')')
+
 		for(var j=0 ; j<LinkLIST[i][0].length;j++){
 			EdgeDATA[LinkLIST[i][0][j]].x1 += d3.event.dx
 			EdgeDATA[LinkLIST[i][0][j]].y1 += d3.event.dy
 	   	d3.select('#edgeP-'+LinkLIST[i][0][j])
-  	 		.attr('x1' ,function (ds) {return ds.x1;})
-  	 		.attr('y1' ,function (ds) {return ds.y1;})
+				.attr('x1',function(d) {
+					return d.x1 + ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('x2',function(d) {
+					return d.x2 - ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('y1',function(d) {
+					return d.y1 + ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('y2',function(d) { 
+					return d.y2 - ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
 		}
 		for(var j=0 ; j<LinkLIST[i][1].length;j++){
 			EdgeDATA[LinkLIST[i][1][j]].x2 += d3.event.dx
 			EdgeDATA[LinkLIST[i][1][j]].y2 += d3.event.dy
 	   	d3.select('#edgeP-'+LinkLIST[i][1][j])
-  	 		.attr('x2' ,function (ds) {return ds.x2;})
-  	 		.attr('y2' ,function (ds) {return ds.y2;})
+				.attr('x1',function(d) {
+					return d.x1 + ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('x2',function(d) {
+					return d.x2 - ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('y1',function(d) {
+					return d.y1 + ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
+				.attr('y2',function(d) { 
+					return d.y2 - ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+				})
 		}
 	}
  	node_g2 = node_g.enter().append('g')
@@ -232,12 +261,21 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		.attr('class', 'edge')
 		.attr('id', function (d,i) {return 'edge-' + i;})
 
+
 	edge_g2.append('line')
 		.attr('id', function (d,i) {return 'edgeP-' + i;})
-		.attr('x1',function(d) { return d.x1})
-		.attr('x2',function(d) { return d.x2})
-		.attr('y1',function(d) { return d.y1})
-		.attr('y2',function(d) { return d.y2})
+		.attr('x1',function(d) {
+			return d.x1 + ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+		})
+		.attr('x2',function(d) {
+			return d.x2 - ( 20.0 * (d.x2-d.x1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+		})
+		.attr('y1',function(d) {
+			return d.y1 + ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+		})
+		.attr('y2',function(d) { 
+			return d.y2 - ( 20.0 * (d.y2-d.y1) / (Math.pow(Math.pow(d.x2-d.x1,2)+Math.pow(d.y2-d.y1,2),0.5)))
+		})
 		.attr('stroke','black')
 		.attr('stroke-width','5')
 		.attr('marker-end','url(#endmrk)')
