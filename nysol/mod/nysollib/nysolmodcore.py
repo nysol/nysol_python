@@ -41,10 +41,15 @@ class NysolMOD_CORE(object):
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
 		self.tag = ""
+		self.dlog = ""
 
 		if "tag" in self.kwd :
 			self.tag = self.kwd["tag"]
 			del self.kwd["tag"]
+
+		if "dlog" in self.kwd :
+			self.dlog = self.kwd["dlog"]
+			del self.kwd["dlog"]
 
 
 		if "i" in self.kwd :
@@ -219,11 +224,11 @@ class NysolMOD_CORE(object):
 
 
 	@classmethod
-	def addIoMod(self,sumiobj):
+	def addIoMod(self,sumiobj,dupobj):
 		# add list read
 		from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
 		from nysol.mod.submod.writelist import Nysol_Writelist as mwritelist
-
+		add_mod =[]
 		for obj in sumiobj:
 			if isinstance(obj,NysolMOD_CORE):
 				if obj.name=="readlist":
@@ -250,6 +255,31 @@ class NysolMOD_CORE(object):
 					wlmod = mwritelist(obj.outlist["u"][0])
 					wlmod.inplist["i"]=[obj]
 					obj.outlist["u"][0] = wlmod
+					
+				if obj.dlog != "" :
+					if len(obj.outlist["o"])!=0:
+						from nysol.mod.submod.writecsv import Nysol_Writecsv as mwritecsv
+						wcsv_o = mwritecsv(obj.dlog+"_o")
+						wcsv_o.inplist["i"]=[obj]
+						obj.outlist["o"].append(wcsv_o)
+						if obj in dupobj:
+							dupobj[obj] += 1
+						else:
+							dupobj[obj] = 2
+						add_mod.append(wcsv_o)	
+
+					if len(obj.outlist["u"])!=0:
+						from nysol.mod.submod.writecsv import Nysol_Writecsv as mwritecsv
+						wcsv_u = mwritecsv(obj.dlog+"_u")
+						wcsv_u.inplist["i"]=[obj]
+						obj.outlist["u"].append(wcsv_u)
+						if obj in dupobj:
+							dupobj[obj] += 1
+						else:
+							dupobj[obj] = 2
+						add_mod.append(wcsv_u)	
+
+		return add_mod		
 	
 	@classmethod
 	def change_modNetworks(self,mods):
@@ -258,10 +288,12 @@ class NysolMOD_CORE(object):
 		for mod in mods:
 			mod.check_dupObj(sumiobj,dupobj)
 
-		NysolMOD_CORE.addIoMod(sumiobj)
+		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
 		if len(dupobj)!=0:
 			NysolMOD_CORE.addTee(dupobj)
+			
+		mods.extend(add_Dmod)
 
 
 	def change_modNetwork(self):

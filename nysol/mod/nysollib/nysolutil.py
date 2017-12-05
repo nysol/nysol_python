@@ -43,7 +43,7 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 		elif k in klist[1] and v== True:
 			pass
-		elif k == "tag":
+		elif k == "tag" or k == "dlog" :
 			pass
 			
 		else:
@@ -84,6 +84,8 @@ def arg2dict(args, kw_args,klist,uk=None):
 		elif k in klist[0] :
 			pass
 		elif k in klist[1] and v== True:
+			pass
+		elif k == "tag" or k == "dlog" :
 			pass
 		else:
 			exval.append(k)
