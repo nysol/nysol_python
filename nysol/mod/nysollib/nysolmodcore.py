@@ -820,6 +820,10 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.mtraflg import Nysol_Mtraflg as mtraflg
 		return mtraflg(nutil.args2dict(args,kw_args,mtraflg.kwd)).addPre(self)
 
+	def mtrafld(self,*args, **kw_args):
+		from nysol.mod.submod.mtrafld import Nysol_Mtrafld as mtrafld
+		return mtrafld(nutil.args2dict(args,kw_args,mtrafld.kwd)).addPre(self)
+
 	def muniq(self,*args, **kw_args):
 		from nysol.mod.submod.muniq import Nysol_Muniq as muniq
 		return muniq(nutil.args2dict(args,kw_args,muniq.kwd)).addPre(self)

@@ -92,6 +92,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["mtonull"] = boost::lambda::bind(boost::lambda::new_ptr<kgTonull>());
 		_kgmod_map["mtra"] = boost::lambda::bind(boost::lambda::new_ptr<kgTra>());
 		_kgmod_map["mtraflg"] = boost::lambda::bind(boost::lambda::new_ptr<kgTraflg>());
+		_kgmod_map["mtrafld"] = boost::lambda::bind(boost::lambda::new_ptr<kgTrafld>());
 		_kgmod_map["muniq"] = boost::lambda::bind(boost::lambda::new_ptr<kgUniq>());
 		_kgmod_map["mvcat"] = boost::lambda::bind(boost::lambda::new_ptr<kgVcat>());
 		_kgmod_map["mvcommon"] = boost::lambda::bind(boost::lambda::new_ptr<kgVcommon>());
@@ -176,6 +177,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mtonull"] = 0;
 		_kgmod_run["mtra"] = 0;
 		_kgmod_run["mtraflg"] = 0;
+		_kgmod_run["mtrafld"] = 0;
 		_kgmod_run["muniq"] = 0;
 		_kgmod_run["mvcat"] = 0;
 		_kgmod_run["mvcommon"] = 0;

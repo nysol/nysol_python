@@ -77,7 +77,7 @@
 #include <kgsummary.h>
 #include <kgtonull.h>
 #include <kgtra.h>
-//#include <kgtrafld.h>
+#include <kgtrafld.h>
 #include <kgtraflg.h>
 #include <kguniq.h>
 #include <kgvcat.h>
