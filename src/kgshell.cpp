@@ -161,7 +161,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mpaste"] = 0;
 		_kgmod_run["mproduct"] = 0;
 		_kgmod_run["mrand"] = 0;
-		_kgmod_run["mrjoin"] = 2;
+		_kgmod_run["mrjoin"] = 0;
 		_kgmod_run["msed"] = 0;
 		_kgmod_run["msel"] = 0;
 		_kgmod_run["mselnum"] = 0;
@@ -569,6 +569,7 @@ int kgshell::run(
 			}
 			if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
 				cnt += _ipipe_map[i]["m"].size();
+				if(cnt==1) { cnt++; } //mのみの場合はdmy追加 
 			}
 			if(cnt==0){
 				argst[i].i_cnt= 0;
@@ -585,6 +586,9 @@ int kgshell::run(
 					}
 				}
 				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+					if(pos==0 && cnt>1){ // mのみ対応
+						argst[i].i_p[pos]=-1; pos++;
+					}
 					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
 						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
 						pos++;

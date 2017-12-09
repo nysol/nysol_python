@@ -53,6 +53,8 @@ class NysolMOD_CORE(object):
 
 
 		if "i" in self.kwd :
+			if isinstance(self.kwd["i"],NysolMOD_CORE):	
+				self.kwd["i"].outlist[self.kwd["i"].nowdir].append(self)
 			self.inplist["i"].append(self.kwd["i"])
 			del self.kwd["i"]
 
@@ -61,7 +63,11 @@ class NysolMOD_CORE(object):
 			del self.kwd["o"]
 		
 		if "m" in self.kwd :
+			if isinstance(self.kwd["m"],NysolMOD_CORE):	
+				self.kwd["m"].outlist[self.kwd["m"].nowdir].append(self)
+
 			self.inplist["m"].append(self.kwd["m"])
+			
 			del self.kwd["m"]
 
 		if "u" in self.kwd :
