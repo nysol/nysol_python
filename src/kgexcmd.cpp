@@ -21,6 +21,7 @@
 // =============================================================================
 #include <cstdio>
 #include <unistd.h>
+#include <fcntl.h>
 #include <kgexcmd.h>
 #include <kgError.h>
 #include <kgConfig.h>
@@ -51,18 +52,18 @@ void kgExcmd::setArgs(void)
 	_args.paramcheck("cmdstr=");
 
 	// 入出力ファイルオープン
-	string cv = _args.toString("cmdstr=",true);
-	if(cv.size()!=0&&cv[0] =='\''&&cv[cv.size()-1]=='\''){
-		cv = cv.substr(1,cv.size()-2);
+	_cmdstr = _args.toString("cmdstr=",true);
+	if(_cmdstr.size()!=0&&_cmdstr[0] =='\''&&_cmdstr[_cmdstr.size()-1]=='\''){
+		_cmdstr = _cmdstr.substr(1,_cmdstr.size()-2);
 	}
 	
-	vector<string> cmdstr = kglib::splitToken(cv,' ');
-	_cmdars = new const char* [cmdstr.size()+1];
+	_cmdstrv = kglib::splitToken(_cmdstr,' ');
+	_cmdars = new const char* [_cmdstrv.size()+1];
 
-	for(size_t i=0;i<cmdstr.size();i++){
-		_cmdars[i]  = cmdstr[i].c_str();
+	for(size_t i=0;i<_cmdstrv.size();i++){
+		_cmdars[i]  = _cmdstrv[i].c_str();
 	}
-	_cmdars[cmdstr.size()]=NULL;
+	_cmdars[_cmdstrv.size()]=NULL;
 }
 
 // -----------------------------------------------------------------------------
@@ -109,6 +110,11 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		if(inum==1 && *i_p > 0){ i_p_t = *i_p; }
 		if(onum==1 && *o_p > 0){ o_p_t = *o_p; }
 
+		// FD_CLOSE_FLGを外す
+		if(i_p_t!=-1){ fcntl(i_p_t, F_SETFD, 0);}
+		if(o_p_t!=-1){ fcntl(o_p_t, F_SETFD, 0);}
+
+
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
 			if(i_p_t>0){
@@ -118,17 +124,28 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 			if(o_p_t>0){
 				dup2(o_p_t, 1);
 				close(o_p_t);
-			} 
-			execvp(_cmdars[0],(char*const*)_cmdars);
-			throw kgError("run error" );
+			}
+			if(execvp(_cmdars[0],(char*const*)_cmdars)==-1){
+				return errno;
+			}
 		}
 		else if (pid>0){//parent
 			int status = 0;
 			//int ret = 
 			waitpid(pid, &status, 0);
+
+
 			if(i_p_t>0){ close(i_p_t);}
 			if(o_p_t>0){ close(o_p_t);}
-			msg.append(successEndMsg());
+			if(status==0){
+				msg.append(successEndMsg());
+			}
+			else{
+				throw kgError("exec err errno:" + status);
+				
+			}
+
+
 			return status;
 		}
 		else {//err

@@ -43,6 +43,8 @@ class kgExcmd : public kgMod
 	// 引数セット
 	void setArgs(void);
 //	char * const * 
+	kgstr_t _cmdstr;
+	vector<kgstr_t> _cmdstrv;
 	char const ** _cmdars;
 
 public:
