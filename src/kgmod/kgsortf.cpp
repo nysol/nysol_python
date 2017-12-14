@@ -275,9 +275,22 @@ void kgSortf::setArgs(int inum,int *i_p,int onum ,int *o_p)
 
 	if(inum>1 || onum>1){ throw kgError("no match IO");}
 
+	_noflg =_args.toBool("-noflg");
+
+	// バッファのブロック数 1block=KG_MAX_REC_LEN*4
+	kgstr_t s=_args.toString("blocks=",false);
+	if(s.empty()) _blocks=10;
+	else          _blocks=atoi(s.c_str());
+	if(_blocks < 1 || _blocks>1000){
+		kgError err("invalid blocks: must be in range [1,1000]");
+		errorEnd(err);
+	}
+
+
+
 	// 入出力ファイルオープン
 	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i,_blocks); }
 
 	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
 	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}

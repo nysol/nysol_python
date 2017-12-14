@@ -190,7 +190,9 @@ PyObject* readline(PyObject* self, PyObject* args)
 
 void py_kgshell_free(PyObject *obj){
 	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(obj,"kgshellP");
-	delete ksh;
+	if(ksh){
+		delete ksh;
+	}
 }
 
 PyObject* getparams(PyObject* self, PyObject* args){
