@@ -4,15 +4,9 @@
 #include "grhfil/grhfil.c"
 
 #if PY_MAJOR_VERSION >= 3
-
-//extern "C" {
-	PyMODINIT_FUNC PyInit__grhfillib(void);
-//}
-
+PyMODINIT_FUNC PyInit__grhfillib(void);
 #else
-//extern "C" {
-	void init_grhfillib(void);
-//}
+void init_grhfillib(void);
 #endif
 
 static char* strGET(PyObject* data){
@@ -24,20 +18,20 @@ static char* strGET(PyObject* data){
 
 }
 
-PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
-	//try{
-		char * paraLIST[]={ 
+static const char * paraLIST[]={ 
 			"type","i","o","t","T","ideg","Ideg","odeg","Odeg","r","R","n","X",
 			"w","W","d","m","M","p","Q",NULL
 		};//20
 
-		char * paraLIST_i[]={
+static const char *  paraLIST_i[]={
 			"","","",
 			"-t","-T","-i","-I","-o","-O","-r","-R","-n","-X",
 			"-w","-W","-d","-m","-M","-P","-Q",""
 		};//18
 
-		// stop=> # , separator => ,
+PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
+	//try{
+
 	 char * pval[20];
 	 
 	 unsigned int maxParaCnt=20;
@@ -48,7 +42,8 @@ PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
  	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
 	
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssssssssssssssss", paraLIST, 
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssssssssssssssss",
+					(char **)paraLIST, 
 					&pval[0],&pval[1],&pval[2],&pval[3],&pval[4],
 					&pval[5],&pval[6],&pval[7],&pval[8],&pval[9],
 					&pval[10],&pval[11],&pval[12],&pval[13],&pval[14],
@@ -74,7 +69,7 @@ PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=paraLIST_i[i]; 
+				vv[pos++]=(char **)paraLIST_i[i]; 
 				vv[pos++]=pval[i];
 			}
 		}
@@ -85,17 +80,12 @@ PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
 		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
 		//printf("\n");
 
-		GRHFIL_main(vsize,vv);
+		int sts= GRHFIL_main(vsize,vv);
 
 		if(vv){ free(vv);}
 
-		return PyLong_FromLong(0);
+		return PyLong_FromLong(sts);
 
-	//}
-	//catch(...){
-//		std::cerr << "exceptipn" << std::endl;
-	//	return PyLong_FromLong(1);
-	//}
 }
 
 static PyMethodDef takemethods_grhfil[] = {

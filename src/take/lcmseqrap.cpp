@@ -73,28 +73,27 @@ t:transpose the input database (item i will be i-th transaction, and i-th transa
 # if the output file name is -, the solutions will be output to standard output.
 */
 
+static const char * paraLIST[]={ 
+	"type","i","sup","o","K","l","u","U","g","G","w","item","a","A","r","R",
+	"f","F","p","P","n","N","opos","Opos","s",
+	"Q","stop","separator","so",NULL
+};//28
+
+static const char * paraLIST_i[]={
+	"","","","",
+	"-K","-l","-u","-U","-g","-G","-W","-i","-a","-A","-r","-R",
+	"-f","-F","-p","-P","-n","-N","-o","-O","-s","-Q","-#","-,",""
+};//24
 
 PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 
 	try{
 		PyObject *params;
-		char * paraLIST[]={ 
-			"type","i","sup","o","K","l","u","U","g","G","w","item","a","A","r","R",
-			"f","F","p","P","n","N","opos","Opos","s",
-			"Q","stop","separator","so",NULL
-		};//29
-
-		char * paraLIST_i[]={
-			"","","","",
-			"-K","-l","-u","-U","-g","-G","-W","-i","-a","-A","-r","-R",
-			"-f","-F","-p","-P","-n","-N","-o","-O","-s","-Q","-#","-,",""
-		};//24
 
 		char * pval[29];
 	 
 		unsigned int maxParaCnt=28;
 		unsigned int singleParaCnt=4;
-		unsigned int paraCnt=0;
 		unsigned int vsize=1;
 
 		for(unsigned int i=0;i<maxParaCnt+1;i++){ pval[i]=NULL;}
@@ -128,7 +127,7 @@ PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=paraLIST_i[i]; 
+				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
 				vv[pos++]=pval[i];
 			}
 		}
@@ -146,7 +145,7 @@ PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 			dup2(fd, 1);
  			stdout = fdopen(fd, "w");
 		}
-		LCMseq_main(vsize,vv);
+		int sts = LCMseq_main(vsize,vv);
 		if(pval[28]!=NULL){		// 標準出力きりかえ
 			fflush (stdout);
 			dup2(backup, 1); 
@@ -154,7 +153,7 @@ PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 			close(backup);
 		}
 		if(vv){ delete[] vv;}
-		return PyLong_FromLong(0);
+		return PyLong_FromLong(sts);
 
 
 	}catch(...){
@@ -167,30 +166,18 @@ PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 
 PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 	try{
-		char * paraLIST[]={ 
-			"type","i","sup","o","K","l","u","U","g","G","w","item","a","A","r","R",
-			"f","F","p","P","n","N","opos","Opos","s",
-			"Q","stop","separator","so",NULL
-		};//28
-
-		char * paraLIST_i[]={
-			"","","","",
-			"-K","-l","-u","-U","-g","-G","-W","-i","-a","-A","-r","-R",
-			"-f","-F","-p","-P","-n","-N","-o","-O","-s","-Q","-#","-,",""
-		};//24
 
 
-		// stop=> # , separator => ,
 	 char * pval[29];
 	 
 	 unsigned int maxParaCnt=28;
 	 unsigned int singleParaCnt=4;
-	 unsigned int paraCnt=0;
 	 unsigned int vsize=1;
 
  	for(unsigned int i=0;i<maxParaCnt+1;i++){ pval[i]=NULL;}
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|ssssssssssssssssssssssssss", paraLIST, 
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|ssssssssssssssssssssssssss", 
+					const_cast<char**>(paraLIST), 
 					&pval[0],&pval[1],&pval[2],&pval[3],&pval[4],
 					&pval[5],&pval[6],&pval[7],&pval[8],&pval[9],
 					&pval[10],&pval[11],&pval[12],&pval[13],&pval[14],
@@ -213,7 +200,7 @@ PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=paraLIST_i[i]; 
+				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
 				vv[pos++]=pval[i];
 			}
 		}
@@ -231,6 +218,7 @@ PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 			dup2(fd, 1);
  			stdout = fdopen(fd, "w");
 		}
+		int sts = LCMseq_main(vsize,vv);
 		if(pval[28]!=NULL){		// 標準出力きりかえ
 			fflush (stdout);
 			dup2(backup, 1); 
@@ -239,12 +227,11 @@ PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 		}
 		if(vv){ delete[] vv;}
 
-		LCMseq_main(vsize,vv);
-		return PyLong_FromLong(0);
+		return PyLong_FromLong(sts);
 
 	}
 	catch(...){
-//		std::cerr << "exceptipn" << std::endl;
+		//	std::cerr << "exceptipn" << std::endl;
 		return PyLong_FromLong(1);
 	}
 }

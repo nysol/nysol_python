@@ -221,10 +221,7 @@ PyObject* lcmtrans_run(PyObject* self, PyObject* args)
     return NULL;
   }
 	int rtn = lcmtrans(inf,para,outf);
-	if(rtn){
-		return PyLong_FromLong(1);
-	}
-	return PyLong_FromLong(0);
+	return PyLong_FromLong(rtn);
 }
 
 static PyMethodDef takemethods[] = {

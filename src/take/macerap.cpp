@@ -39,11 +39,11 @@ if the 1st letter of input-filename is '-', be considered as 'parameter list'
 */
 PyObject* mace_run(PyObject* self, PyObject* args, PyObject* kwds){
 	try{
-		char * paraLIST[]={ 
+		const char * paraLIST[]={ 
 			"type","i","o","l","u","S","Q","separator",NULL
 		};//8
 
-		char * paraLIST_i[]={
+		const char * paraLIST_i[]={
 			"","","",
 			"-l","-u","-S","-,","-Q",""
 		};
@@ -58,7 +58,8 @@ PyObject* mace_run(PyObject* self, PyObject* args, PyObject* kwds){
 
  	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssss", paraLIST, 
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssss", 
+					const_cast<char**>(paraLIST), 
 					&pval[0],&pval[1],&pval[2],&pval[3],&pval[4],
 					&pval[5],&pval[6],&pval[7])){
 			return NULL;
@@ -77,7 +78,7 @@ PyObject* mace_run(PyObject* self, PyObject* args, PyObject* kwds){
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=paraLIST_i[i]; 
+				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
 				vv[pos++]=pval[i];
 			}
 		}
@@ -87,11 +88,11 @@ PyObject* mace_run(PyObject* self, PyObject* args, PyObject* kwds){
 		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
 		//printf("\n");
 
-		MACE_main(vsize,vv);
+		int sts = MACE_main(vsize,vv);
 
 		if(vv){ delete[] vv;}
 
-		return PyLong_FromLong(0);
+		return PyLong_FromLong(sts);
 
 	}
 	catch(...){

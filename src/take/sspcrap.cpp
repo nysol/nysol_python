@@ -29,12 +29,12 @@ static char* strGET(PyObject* data){
 PyObject* sspc_run(PyObject* self, PyObject* args, PyObject* kwds)
 {
 	try{
-		char * paraLIST[]={ 
+		const char * paraLIST[]={ 
 			"type","i","th","o","2","9","K","k","w","W","l","u","L","U",
 			"c","b","B","T","TT","Q","stop","separator",NULL
 		};//22
 
-		char * paraLIST_i[]={
+		const char * paraLIST_i[]={
 			"","","","",
 			"-2","-9","-K","-k","-w","-W","-l","-u","-L","-U",
 			"-c","-b","-B","-T","-TT","-Q","-#","-,",""
@@ -50,7 +50,8 @@ PyObject* sspc_run(PyObject* self, PyObject* args, PyObject* kwds)
 
 		for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
-		if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssssssssssssssssss", paraLIST, 
+		if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssssssssssssssssss", 
+					const_cast<char**>(paraLIST), 
 					&pval[0],&pval[1],&pval[2],&pval[3],&pval[4],
 					&pval[5],&pval[6],&pval[7],&pval[8],&pval[9],
 					&pval[10],&pval[11],&pval[12],&pval[13],&pval[14],
@@ -72,7 +73,7 @@ PyObject* sspc_run(PyObject* self, PyObject* args, PyObject* kwds)
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=paraLIST_i[i]; 
+				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
 				vv[pos++]=pval[i];
 			}
 		}
@@ -83,9 +84,9 @@ PyObject* sspc_run(PyObject* self, PyObject* args, PyObject* kwds)
 		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
 		//printf("\n");
 
-		SSPC_main(vsize,vv);
+		int sts = SSPC_main(vsize,vv);
 		if(vv){ delete[] vv;}
-		return PyLong_FromLong(0);
+		return PyLong_FromLong(sts);
 
 	}
 	catch(...){
