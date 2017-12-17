@@ -49,9 +49,44 @@ module1 = Extension('nysol/_nysolshell_core',
 										include_dirs=hedears,
 										libraries=['pthread','boost_filesystem','boost_regex','boost_system','xml2']
 										)
+
+lcmmod = Extension('nysol/take/_lcmlib',
+                    sources = ['src/take/lcmrap.cpp'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/lcm']
+										)
+
+seqmod = Extension('nysol/take/_lcmseqlib',
+                    sources = ['src/take/lcmseqrap.cpp'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq']
+										)
+
+seqmodzero = Extension('nysol/take/_lcmseq_zerolib',
+                    sources = ['src/take/lcmseq_zerorap.cpp'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq_zero']
+										)
+
+lcmtransmod = Extension('nysol/take/_lcmtranslib',
+                    sources = ['src/take/lcmtransrun.cpp'],
+										include_dirs=['src','src/kgmod','src/mod']
+										)
+
+
+sspcmod = Extension('nysol/take/_sspclib',
+                    sources = ['src/take/sspcrap.cpp'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/sspc']
+										)
+grhfilmod = Extension('nysol/take/_grhfillib',
+                    sources = ['src/take/grhfilrap.c'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/grhfil']
+										)
+macemod = Extension('nysol/take/_macelib',
+                    sources = ['src/take/macerap.cpp'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/mace']
+										)
+										
 setup (name = 'nysol',
-      packages=['nysol','nysol/mod','nysol/mod/submod','nysol/mod/nysollib'],
+      packages=['nysol','nysol/take','nysol/mod','nysol/mod/submod','nysol/mod/nysollib'],
        version = '0.1',
        description = 'This is a demo package',
-       ext_modules = [module1])
+       ext_modules = [module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,seqmodzero,lcmtransmod])
        

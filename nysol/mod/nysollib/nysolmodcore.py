@@ -100,6 +100,16 @@ class NysolMOD_CORE(object):
 			self.inplist["m"][0].outlist[self.inplist["m"][0].nowdir].append(self)
 		return self
 
+	def __ilshift__(self, other):
+		other.addPre(self)
+		return other
+
+	def __rlshift__(self, other):
+		if(other!=None):
+			raise Exception("unsuport TYPE")
+		return self
+		
+		
 	# PRIVATEにする？
 	def para2str(self):
 		rtnStr = ""
