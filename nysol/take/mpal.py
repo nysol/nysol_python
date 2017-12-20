@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import nysol.mod as nm
-import mtemp as nutil
-import margs as nu
-import mtra2gc 
-import mfriends
 import shutil
+import nysol.mod as nm
+import nysol.util.margs as margs
+import nysol.util.mtemp as mtemp
+import nysol.take.mtra2gc as mtra2gc  
+import nysol.take.mfriends as mfriends
 
 
 class mpal(object):
@@ -244,7 +244,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 	# ============
 	# entry point
 	def run(self):
-		temp=nutil.Mtemp()
+		temp=mtemp.Mtemp()
 		xxsimgN=temp.file()
 		xxsimgE0=temp.file()
 		xxsimgE=temp.file()
@@ -282,7 +282,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		param.append("no="+xxsimgN)
 		param.append("eo="+xxsimgE0)
 
-		args=nu.Margs(param)
+		args=margs.Margs(param)
 		mtra2gc.mtra2gc(args).run()
 
 
@@ -324,7 +324,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			param.append("eo="+xxfriendE)
 			param.append("no="+xxfriends+"/n_"+str(i))
 
-			args=nu.Margs(param)
+			args=margs.Margs(param)
 			mfriends.mfriends(args).run()
 			
 			f = nm.mfsort(f="node1,node2",i=xxfriendE)
@@ -392,6 +392,6 @@ confidence,1,f,c,0.3333333333,F,8888FF
 if __name__ == '__main__':
 
 	import sys
-	args=nu.Margs(sys.argv,"i=,tid=,item=,ro=,eo=,no=,s=,S=,filter=,lb=,ub=,sim=,dir=,rank=,-prune,-num,-verbose","i=,tid=,item=,eo=,no=")
+	args=margs.Margs(sys.argv,"i=,tid=,item=,ro=,eo=,no=,s=,S=,filter=,lb=,ub=,sim=,dir=,rank=,-prune,-num,-verbose","i=,tid=,item=,eo=,no=")
 	mpal(args).run()
 

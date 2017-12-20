@@ -69,6 +69,7 @@ from .submod.mvreplace import Nysol_Mvreplace as mvreplace
 from .submod.mvsort import Nysol_Mvsort as mvsort
 from .submod.mvuniq import Nysol_Mvuniq as mvuniq
 from .submod.mwindow import Nysol_Mwindow as mwindow
+from .submod.mtrafld import Nysol_Mtrafld as mtrafld
 from .submod.mcal import Nysol_Mcal as mcal
 from .submod.mcut import Nysol_Mcut as mcut
 from .submod.mcat import Nysol_Mcat as mcat

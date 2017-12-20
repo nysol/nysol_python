@@ -22,21 +22,6 @@
 import os
 import glob
 
-#あとで作り直す
-def mrecount(**kw_args):
-	import subprocess
-	res = subprocess.run(["wc", "-l", kw_args["i"]], stdout=subprocess.PIPE)
-	cnt = int(res.stdout.decode('utf-8').strip().split()[0])
-
-	if "nfni" in kw_args and kw_args["nfni"] == True:
-		return cnt
-	else:
-		if cnt > 0:
-			cnt -=1
-		return cnt
-
-	
-
 #= 一時ファイル名を扱うクラス
 #
 #  一時ファイル名の生成と、そのファイルの(自動)削除を行うクラス*。

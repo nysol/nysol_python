@@ -2,17 +2,16 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import margs as nu
-import traDB as tdb
-import taxonomy as taxolib
-import enumLcmIs as elcmIs
-import enumLcmEp as elcmEp
+import nysol.util.margs as margs
+import nysol.take.lib.traDB as tdb
+import nysol.take.lib.taxonomy as taxolib
+import nysol.take.lib.enumLcmIs as elcmIs
+import nysol.take.lib.enumLcmEp as elcmEp
 
 
 class mitemset(object):
-	
-	def help(self):
-		msg = """
+
+	helpMSG="""
 ----------------------------
 #{$cmd} version #{$version}
 ----------------------------
@@ -62,8 +61,13 @@ class mitemset(object):
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 		"""
 
-	def ver(self):
-		print("version #{$version}")
+	verInfo="version=1.2"
+	
+	def help():
+		print(mitemset.helpMSG) 
+
+	def ver():
+		print(mitemset.versionInfo)
 
 
 	def __init__(self,args):
@@ -96,31 +100,31 @@ class mitemset(object):
 		self.eArgs["nomodel"] = True
 
 		val =  args.int("S=",None,1,None) # 最小サポート件数
-		if val:
+		if val!=None:
 			self.eArgs["minCnt"] = val
 
 		val = args.float("sx=",None,0,1) # 最小サポート
-		if val:
+		if val!=None:
 			self.eArgs["maxSup"] = val 
 
 		val = args.int("Sx=",None,1,None) # 最小サポート件数
-		if val:
+		if val!=None:
 			self.eArgs["maxCnt"] = val
 
 		val = args.float("g=",None,1.0,None) # 最小GR
-		if val:
+		if val!=None:
 			self.eArgs["minGR"] = val
 
 		val = args.int("l=",None,1,None)
-		if val:
+		if val!=None:
 			self.eArgs["minLen"] = val
 
 		val = args.int("u=",None,1,None)
-		if val:
+		if val!=None:
 			self.eArgs["maxLen"] = args.int("u=",None,1,None)
 
 		val = args.int("top=",None,0)
-		if val:
+		if val!=None:
 			self.eArgs["top"] = val
 
 
@@ -132,7 +136,7 @@ class mitemset(object):
 		self.taxo=None
 		if self.xFile!=None :
 			self.taxo = taxolib.Taxonomy(self.xFile,self.itemFN,self.taxoFN)
-			if args.bool("-replaceTaxo") :
+			if self.args.bool("-replaceTaxo") :
 				db.repTaxo(self.taxo) # taxonomyの置換
 			else:
 				db.addTaxo(self.taxo) # taxonomyの追加

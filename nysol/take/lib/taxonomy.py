@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
+import os
 import nysol.mod as nm
-
+import nysol.util.mtemp as mtemp
 
 #=分類階層(taxonomy)クラス
 # 一階層の分類階層(アイテム-分類)を扱うクラス。
@@ -63,7 +64,7 @@ class Taxonomy(object):
 		# taxonomyデータファイル名(=>String)
 		self.file = None
 
-		self.temp = nutil.Mtemp()
+		self.temp = mtemp.Mtemp()
 
 		self.iFile  = iFile
 		self.iPath  = os.path.abspath(self.iFile)
@@ -75,13 +76,18 @@ class Taxonomy(object):
 		para_it = self.itemFN +"," + self.taxoFN
 		nm.mcut(f=para_it,i=self.iFile).muniq(k=para_it,o=self.file).run()
 
-
-		xx1 = nm.mcut(f=self.itemFN,i=self.iFile).mtrafld(f=self.itemFN).mtra(f="__fld",r=True).muniq(k="__fld").mcount(a="size").run()
+		f = nm.mcut(f=self.itemFN,i=self.iFile)
+		f <<= nm.mtrafld(f=self.itemFN,a="__fld",valOnly=True)
+		f <<= nm.mtra(f="__fld",r=True)
+		f <<= nm.muniq(k="__fld")
+		f <<= nm.mcount(a="size")
+		f <<= nm.mcut(f="size")
+		xx1 = f.run()
 
 		self.itemSize = int(xx1[0][0])
 
 
-		xx2 = nm.mcut(f=self.taxoFN+":item",i=self.file).muniq(k=item).mcount(a="size").mcut(a="size").run()
+		xx2 = nm.mcut(f=self.taxoFN+":item",i=self.file).muniq(k="item").mcount(a="size").mcut(f="size").run()
 
 		self.itemSize = int(xx2[0][0])
 

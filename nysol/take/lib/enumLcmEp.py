@@ -9,8 +9,8 @@
 #module TAKE
 import os
 import shutil
-import mtemp as nutil
 import nysol.mod as nm
+import nysol.util.mtemp as mtemp
 import nysol.take._lcmlib as ntlcm
 import nysol.take._lcmtranslib as ntrans
 
@@ -87,7 +87,7 @@ class LcmEp(object):
 		self.size  = None
 		self.pFile = None
 		self.tFile = None
-		self.temp  = nutil.Mtemp()
+		self.temp  = mtemp.Mtemp()
 		self.db    = db # 入力データベース
 		self.file  = self.temp.file()
 		self.outtf = outtf
@@ -116,7 +116,7 @@ class LcmEp(object):
 
 		pFiles=[]
 		tFiles=[]
-		tf=nutil.Mtemp()
+		tf=mtemp.Mtemp()
 		for cName,posSize in self.db.clsNameRecSize.items(): 
 			negSize=self.db.size-posSize
 			if "minGR" in eArgs :

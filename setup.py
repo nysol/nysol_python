@@ -85,8 +85,9 @@ macemod = Extension('nysol/take/_macelib',
 										)
 										
 setup (name = 'nysol',
-      packages=['nysol','nysol/take','nysol/mod','nysol/mod/submod','nysol/mod/nysollib'],
+      packages=['nysol','nysol/util','nysol/mod','nysol/mod/submod','nysol/mod/nysollib','nysol/take','nysol/take/lib'],
        version = '0.1',
        description = 'This is a demo package',
+			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py','scripts/take/mpolishing.py','scripts/take/msequence.py','scripts/take/mtra2gc.py','scripts/take/mpal.py'],
        ext_modules = [module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,seqmodzero,lcmtransmod])
        

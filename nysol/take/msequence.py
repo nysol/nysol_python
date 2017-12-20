@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import margs as nu
-import seqDB as sdb
-import taxonomy as taxolib
-import enumLcmSeq as elcmSeq
-import enumLcmEsp as elcmEsp
+import nysol.take.lib.seqDB as sdb
+import nysol.take.lib.taxonomy as taxolib
+import nysol.take.lib.enumLcmSeq as elcmSeq
+import nysol.take.lib.enumLcmEsp as elcmEsp
 
 
 class msequence(object):
@@ -117,39 +116,39 @@ class msequence(object):
 		self.eArgs["padding"] = args. bool("-padding") # 0item ommit
 
 		val =  args.int("S=",None,1,None) # 最小サポート件数
-		if val:
+		if val!=None:
 			self.eArgs["minCnt"] = val
 
 		val = args.float("sx=",None,0,1) # 最小サポート
-		if val:
+		if val!=None:
 			self.eArgs["maxSup"] = val 
 
 		val = args.int("Sx=",None,1,None) # 最小サポート件数
-		if val:
+		if val!=None:
 			self.eArgs["maxCnt"] = val
 
 		val = args.float("g=",None,1.0,None) # 最小GR
-		if val:
+		if val!=None:
 			self.eArgs["minGR"] = val
 
 		val = args.int("l=",None,1,None)
-		if val:
+		if val!=None:
 			self.eArgs["minLen"] = val
 
 		val = args.int("u=",None,1,None)
-		if val:
+		if val!=None:
 			self.eArgs["maxLen"] = args.int("u=",None,1,None)
 
 		val = args.int("gap=",None,0,None) # gap長上限限
-		if val:
+		if val!=None:
 			self.eArgs["gap"] = val
 
 		val = args.int("win=",None,0,None) # win size上限限
-		if val:
+		if val!=None:
 			self.eArgs["win"] = val
 
 		val = args.int("top=",None,0)
-		if val:
+		if val!=None:
 			self.eArgs["top"] = val
 
 		if "minLen" in self.eArgs and "maxLen" in self.eArgs:
@@ -157,7 +156,7 @@ class msequence(object):
 				raise Exception("u= must be greater than or equal to l=")
 
 		if "gap" in self.eArgs and "win" in self.eArgs:
-			if eArgs["gap"] > eArgs["win"] :
+			if self.eArgs["gap"] > self.eArgs["win"] :
 				raise Exception("win= must be greater than or equal to gap=")
 
 	def run(self):
@@ -176,10 +175,10 @@ class msequence(object):
 		lcm=None
 		if self.clsFN:
 			lcm=elcmEsp.LcmEsp(db);
-			lcm.enumerate(eArgs)
+			lcm.enumerate(self.eArgs)
 		else:
 			lcm=elcmSeq.LcmSeq(db);
-			lcm.enumerate(eArgs)
+			lcm.enumerate(self.eArgs)
 
 		# 出力
 		os.system("mkdir -p %s"%(self.outPath))
@@ -193,6 +192,7 @@ class msequence(object):
 
 if __name__ == '__main__':
 	import sys
-	args=nu.Margs(sys.argv,"i=,c=,x=,O=,tid=,time=,item=,class=,taxo=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,gap=,win=,-padding,T=,-mcmdenv","i=")
+	import nysol.util.margs as margs
+	args=margs.Margs(sys.argv,"i=,c=,x=,O=,tid=,time=,item=,class=,taxo=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,gap=,win=,-padding,T=,-mcmdenv","i=")
 	msequence(args).run()
 

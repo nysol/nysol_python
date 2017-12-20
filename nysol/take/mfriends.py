@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import mtemp as nutil
-import margs as nu
+import nysol.util.mtemp as mtemp
+import nysol.util.margs as margs
 
 
 class mfriends(object):
-	def help(self):
-		"""
+	helpMSG="""
 # ver="1.0" # 初期リリース 2016/10/2
 # ver="1.1" -pal,rank2=,-udout追加 2016/12/13
 # ver="1.2" rank2=削除,-palの意味を変更 2016/12/25
@@ -70,10 +69,14 @@ d,c,0.30
 
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 		"""
-		
+
+	verInfo="version=1.2"
+
+	def help(self):
+		print(mfriends.helpMSG)
 
 	def ver(self):
-		print("version #{$version}")
+		print(mfriends.versionInfo)
 
 
 	def __init__(self,args):
@@ -115,13 +118,13 @@ d,c,0.30
 
 
 	def run(self):
-		wf=nutil.Mtemp()
-		xxpal   =wf.file()
-		xxa=wf.file()
-		xxb=wf.file()
-		xxc=wf.file()
-		xxd=wf.file()
-		xxout=wf.file()
+		wf=mtemp.Mtemp()
+		xxpal = wf.file()
+		xxa   = wf.file()
+		xxb   = wf.file()
+		xxc   = wf.file()
+		xxd   = wf.file()
+		xxout = wf.file()
 
 		# ============
 		# n1,n2,sim
@@ -172,5 +175,5 @@ d,c,0.30
 if __name__ == '__main__':
 
 	import sys
-	args=nu.Margs(sys.argv,"ni=,nf=,ei=,ef=,eo=,no=,sim=,rank=,dir=,-directed,-udout","ei=,ef=,sim=")
+	args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,eo=,no=,sim=,rank=,dir=,-directed,-udout","ei=,ef=,sim=")
 	mfriends(args).run()

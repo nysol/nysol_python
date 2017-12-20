@@ -3,7 +3,9 @@
 import os
 
 import shutil
-import mtemp as nutil
+import nysol.util.mtemp as mtemp
+import nysol.util.mrecount as mrecount
+
 import nysol.mod as nm
 
 import taxonomy
@@ -90,7 +92,7 @@ class Items(object):
 		# 分類階層クラス(=>Taxonomy)
 		self.taxonomy = None
 
-		self.temp = nutil.Mtemp()
+		self.temp = mtemp.Mtemp()
 		self.iFile   = []
 		self.iPath   = []
 		self.iFile.append(iFile)
@@ -102,7 +104,7 @@ class Items(object):
 
 		nm.mcut(f=itemFN,i=iFile).muniq(k=itemFN).mnumber(s=itemFN,a=idFN,S=0,o=self.file).run()
 
-		self.size = nutil.mrecount(i=self.file) # itemの数
+		self.size = mrecount.mrecount(i=self.file) # itemの数
 
 
 	def show(self):
@@ -133,17 +135,20 @@ class Items(object):
 		self.iFile.append(iFile)
 		self.iPath.append(os.path.abspath(iFile))
 
-		xx=nutil.Mtemp()
+		xx=mtemp.Mtemp()
 		xx1=xx.file()
 		xx2=xx.file()
-		x0 = nm.mcommon(f=self.itemFN,i=iFile,m=self.file).mcut(itemFN,self.itemFN)
-		x0.muniq(k=self.itemFN).mnumber(s=self.itemFN,S=self.size+1,a=self.idFN,o=xx1).run()
+		x0 =   nm.mcommon(k=self.itemFN,i=iFile,m=self.file)
+		x0 <<= nm.mcut(f=itemFN+","+self.itemFN)
+		x0 <<= nm.muniq(k=self.itemFN)
+		x0 <<= nm.mnumber(s=self.itemFN,S=self.size+1,a=self.idFN,o=xx1)
+		x0.run()
 
-		nm.mcat(i=self.file+","+xx1).msortf(f=self.itemFN,o=xx2)
+		nm.mcat(i=self.file+","+xx1).msortf(f=self.itemFN,o=xx2).run()
 
 		# 新itemファイル登録&item数更新
-		shutil.mv(xx2,self.file)
-		self.size = nutil.mrecount(i=self.file)
+		shutil.move(xx2,self.file)
+		self.size = mrecount.mrecount(i=self.file)
 
 
 	#==Taxonomyの設定

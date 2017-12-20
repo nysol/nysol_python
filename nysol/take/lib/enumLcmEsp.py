@@ -20,7 +20,8 @@
 # ////////// LICENSE INFO ////////////////////*/
 import os
 import shutil
-import mtemp as nutil
+import nysol.util.mtemp as mtemp
+import nysol.util.mrecount as mrecount
 import nysol.mod as nm
 import nysol.take._lcmseqlib as ntseq
 import nysol.take._lcmseq_zerolib as ntseq0
@@ -71,7 +72,7 @@ class LcmEsp(object):
 	def __init__(self,db,outtf=True):
 		self.size  = None
 
-		self.temp  = nutil.Mtemp()
+		self.temp  = mtemp.Mtemp()
 		self.db    = db # 入力データベース
 		self.file  = self.temp.file()
 		self.outtf = outtf
@@ -97,15 +98,15 @@ class LcmEsp(object):
 
 		# アイテムをシンボルから番号に変換する。
 		f=None
-		f << nm.mjoin(k=self.db.itemFN,K=items.itemFN,m=items.file,f=items.idFN,i=self.db.file)
-		f << nm.mcut(f=self.db.idFN+","+self.db.timeFN+","+self.items.idFN)
-		f << nm.msortf(f=self.db.idFN+","+self.db.timeFN+"%n")
-		f << nm.mtra(k=self.db.idFN,f=items.idFN)
-		f << nm.mcut(f=items.idFN,nfno=True,o=self.file)
+		f <<= nm.mjoin(k=self.db.itemFN,K=items.itemFN,m=items.file,f=items.idFN,i=self.db.file)
+		f <<= nm.mcut(f=self.db.idFN+","+self.db.timeFN+","+items.idFN)
+		f <<= nm.msortf(f=self.db.idFN+","+self.db.timeFN+"%n")
+		f <<= nm.mtra(k=self.db.idFN,f=items.idFN)
+		f <<= nm.mcut(f=items.idFN,nfno=True,o=self.file)
 		f.run()
 
 	def enumerate(self,eArgs):
-		tf=nutil.Mtemp()
+		tf=mtemp.Mtemp()
 
 		# 最小サポートと最小サポート件数
 		if "minCnt" in eArgs :
@@ -129,7 +130,7 @@ class LcmEsp(object):
 		#@minProb = eArgs["minProb"].to_f # 事後確率
 		#@minGR   = @minProb/(1-@minProb) # 増加率
 		#@minGR   = eArgs["minGR"].to_f if eArgs["minGR"]
-
+		print "a",self.db.size
 		# あるクラスをpos、他のクラスをnegにして、パターン列挙した結果ファイル名を格納する
 		pFiles=[]
 		tFiles=[]
@@ -141,7 +142,7 @@ class LcmEsp(object):
 				self.minGR=eArgs["minGR"]
 			else:
 				minProb = eArgs["minProb"] if ( "minProb" in eArgs ) else 0.5
-				if "uniform" in eArgs :
+				if "uniform" in eArgs and eArgs["uniform"]:
 					self.minGR = (minProb/(1-minProb)) * (self.db.clsSize-1) # マニュアルの式(4)
 				else:
 					self.minGR = (minProb/(1-minProb)) * (float(negSize)/float(posSize)) # マニュアルの式(4)
@@ -191,20 +192,20 @@ class LcmEsp(object):
 				params["G"] = str(eArgs["win"])
 
 			params["w"] = self.weightFile[cName]
-			runPara["i"] = self.file
-			runPara["sup"] = str(self.sigma[cName])
-			runPara["o"] = lcmout
+			params["i"] = self.file
+			params["sup"] = str(self.sigma[cName])
+			params["o"] = lcmout
 
 			# lcm_seq実行
 			#MCMD::msgLog("#{run}")
-			if 'padding' in eArgs: # padding指定時は、0アイテムを出力しないlcm_seqを実行
+			if 'padding' in eArgs and eArgs["padding"]: # padding指定時は、0アイテムを出力しないlcm_seqを実行
 				ntseq0.lcmseq_zero_runByDict(params)
 			else:
-				ntseq0.lcmseq_runByDict(params)
+				ntseq.lcmseq_runByDict(params)
 
 			# パターンのサポートを計算しCSV出力する
 			#MCMD::msgLog("output patterns to CSV file ...")
-			pFiles << self.temp.file()
+			pFiles.append(self.temp.file())
 			transle = self.temp.file()
 
 			ntrans.lcmtrans_run(lcmout,"e",transle)
@@ -227,15 +228,15 @@ class LcmEsp(object):
 			if self.outtf :
 				# トランザクション毎に出現するシーケンスを書き出す
 				#MCMD::msgLog("output tid-patterns ...")
-				tFiles << self.temp.file()
+				tFiles.append(self.temp.file())
 
 				xxw= tf.file()
-				f=""
-				f << "mcut    f=#{@db.idFN} i=#{@db.file} |"
-				f << "muniq   k=#{@db.idFN} |"
-				f << "mnumber S=0 a=__tid -q|"
-				f << "msortf  f=__tid       o=#{xxw}"
-				system(f)
+				f=None
+				f <<= nm.mcut(f=self.db.idFN,i=self.db.file)
+				f <<= nm.muniq(k=self.db.idFN)
+				f <<= nm.mnumber(S=0,a="__tid",q=True)
+				f <<= nm.msortf(f="__tid",o=xxw)
+				f.run()
 
 				nm.mcut(f=self.db.idFN,i=self.db.file).muniq(k=self.db.idFN).mnumber(S=0,a="__tid",q=True,o=xxw).run()
 				translt = self.temp.file()
@@ -254,7 +255,6 @@ class LcmEsp(object):
 		f <<= nm.mnumber(s="class,pid",S=0,a="ppid",o=xxpCat)
 		f.run()
 
-
 		# パターンファイル計算
 		items=self.db.items
 		f=""
@@ -263,7 +263,7 @@ class LcmEsp(object):
 		f <<= nm.mcal(c='${total}-${posTotal}',a="negTotal") # negのトータル件数
 		f <<= nm.mcal(c='${pos}/${posTotal}',a="support") # サポートの計算
 		f <<= nm.mcal(c='if(${neg}==0,1.797693135e+308,(${pos}/${posTotal})/(${neg}/${negTotal}))',a="growthRate")
-		if "uniform" in eArgs:
+		if "uniform" in eArgs and eArgs["uniform"] == True:
 			f <<= nm.mcal(c='(${pos}/${posTotal})/(${pos}/${posTotal}+(%s-1)*${neg}/${negTotal})'%(self.db.clsSize),a="postProb")
 		else:
 			f <<= nm.mcal(c='${pos}/(${pos}+${neg})',a="postProb")
@@ -287,7 +287,7 @@ class LcmEsp(object):
 			f.run()
 
 
-		self.size = nutil.mrecount(i=self.pFile)
+		self.size = mrecount.mrecount(i=self.pFile)
 		#MCMD::msgLog("the number of emerging sequence patterns enumerated is #{@size}")
 
 	def output(self,outpath):

@@ -18,15 +18,10 @@
 # * for more details.
 #
 # ////////// LICENSE INFO ////////////////////*/
-
-#require "rubygems"
-#require "nysol/mcmd"
-#require "nysol/zdd"
-#require "nysol/take"
-#require "nysol/traDB.rb"
 import os
 import shutil
-import mtemp as nutil
+import nysol.util.mtemp as mtemp
+import nysol.util.mrecount as mrecount
 import nysol.mod as nm
 import nysol.take._lcmlib as ntlcm
 import nysol.take._lcmtranslib as ntrans
@@ -82,7 +77,7 @@ class LcmIs(object):
 		self.type =None
 		self.top =None
 
-		self.temp=nutil.Mtemp()
+		self.temp=mtemp.Mtemp()
 		self.db = db # 入力データベース
 		self.file=self.temp.file()
 		self.items=self.db.items
@@ -97,7 +92,7 @@ class LcmIs(object):
 
 	def enumerate(self,eArgs):
 
-		tf=nutil.Mtemp()
+		tf=mtemp.Mtemp()
 		self.type = eArgs["type"]
 
 		if "minCnt" in eArgs and eArgs["minCnt"] != None:
@@ -226,6 +221,7 @@ class LcmIs(object):
 		else:
 			#MCMD::msgLog("reducing redundant rules in terms of taxonomy ...")
 			#未実装
+			shutil.move(xxp0,xxp1)
 			"""
 			zdd=ZDD.constant(0)
 			MCMD::Mcsvin.new("i=#{xxp0}"){|csv|
@@ -282,7 +278,7 @@ class LcmIs(object):
 		f3 <<= nm.msortf(f="support%nr",o=self.pFile)
 		f3.run()
 
-		self.size = nutil.mrecount(i=self.file)
+		self.size = mrecount.mrecount(i=self.file)
 
 
 		#MCMD::msgLog("the number of patterns enumerated is #{@size}")

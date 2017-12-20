@@ -21,7 +21,7 @@
 #require "nysol/seqDB.rb"
 import os
 import shutil
-import mtemp as nutil
+import nysol.util.mtemp as mtemp
 import nysol.mod as nm
 import nysol.take._lcmseqlib as ntseq
 import nysol.take._lcmseq_zerolib as ntseq0
@@ -36,7 +36,7 @@ class LcmSeq(object):
 
 	def __init__(self,db,outtf=True):
 		self.size =None
-		self.temp=nutil.Mtemp()
+		self.temp=mtemp.Mtemp()
 		self.db = db # 入力データベース
 		self.file=self.temp.file()
 		items=self.db.items
@@ -52,7 +52,7 @@ class LcmSeq(object):
 
 
 	def enumerate(self,eArgs):
-		tf=nutil.Mtemp()
+		tf=mtemp.Mtemp()
 
 		# 最小サポートと最小サポート件数
 		if "minCnt" in eArgs and eArgs["minCnt"] != None:
@@ -93,7 +93,7 @@ class LcmSeq(object):
 		lcmout = tf.file()
 		# 頻出パターンがなかった場合、lcm出力ファイルが生成されないので
 		# そのときのために空ファイルを生成しておいく。
-		os.system("touch #{lcmout}")
+		os.system("touch "+lcmout)
 
 		# lcm_seqのパラメータ設定と実行
 		params = {}
@@ -114,20 +114,20 @@ class LcmSeq(object):
 		params["o"] = lcmout
 
 
+		print params
 		# lcm_seq実行
 		#MCMD::msgLog("#{run}")
-
-		if 'padding' in eArgs : # padding指定時は、0アイテムを出力しないlcm_seqを実行
-			ntseq0.lcmseq_zero_run(params)
+		if 'padding' in eArgs and eArgs["padding"] : # padding指定時は、0アイテムを出力しないlcm_seqを実行
+			ntseq0.lcmseq_zero_runByDict(params)
 		else:
-			ntseq0.lcmseq_run(params)
+			ntseq.lcmseq_runByDict(params)
 		#system run
 
 		# パターンのサポートを計算しCSV出力する
-		self.pFile = self.temp.file
+		self.pFile = self.temp.file()
 		items=self.db.items
 
-		transl = self.temp.file
+		transl = self.temp.file()
 		ntrans.lcmtrans_run(lcmout,"p",transl)
 
 
@@ -149,7 +149,7 @@ class LcmSeq(object):
 			f=None
 			f <<= nm.mcut(f=self.db.idFN,i=self.db.file)
 			f <<= nm.muniq(k=self.db.idFN)
-			f <<= nm.mnumber(S=0,a="__tid",q=Ture)
+			f <<= nm.mnumber(S=0,a="__tid",q=True)
 			f <<= nm.msortf(f="__tid",o=xxw)
 			f.run()
 

@@ -3,11 +3,13 @@
 
 import os
 import os.path
+
+import nysol.mod as nm
+import nysol.util.margs as margs
+import nysol.util.mtemp as mtemp
 import nysol.take._sspclib as ntsspc
 import nysol.take._grhfillib as ntgrhfil
-import nysol.mod as nm
-import margs as nu
-import mtemp as nutil
+
 #require "rubygems"
 #require "nysol/mcmd"
 #require "nysol/take"
@@ -149,7 +151,7 @@ c,d
 		self.nf = args.field("nf=", self.ni, "node",1,1)
 
 		if self.nf:
-			self.nf = nf["names"][0] 
+			self.nf = self.nf["names"][0] 
 
 		self.measure = args.str("sim=","R")    # similarity measure
 		self.minSupp = args.int("sup=",0)      # mimam support
@@ -197,12 +199,14 @@ c,d
 	def calGsize(self,file):
 		nodes = set([])
 		edgeSize=0
-		for lin in nm.readcsv(file):
-			n1,n2=lin[0].split(" ")
-			nodes.add(n1)
-			nodes.add(n2)
-			edgeSize+=1
-	
+		with open(file) as f:
+			for line in f:
+				line = line.rstrip('\r\n')
+				n1,n2=line.split(" ")
+				nodes.add(n1)
+				nodes.add(n2)
+				edgeSize+=1
+
 		return len(nodes),edgeSize
 
 
@@ -217,24 +221,26 @@ c,d
 		nodes = set([])
 		graph={}
 		edgeSize=0
-		for lin in nm.readcsv(file):
-			n1 , n2 = lin[0].split(" ") 
-			#print(len(lin))
-			#n1=lin[0]
-			#n2=lin[1]
-			if int(n1)>int(n2):
-				nt=n1; 
-				n1=n2; 
-				n2=nt
+		with open(file) as f:
+			for line in f:
+				line = line.rstrip('\r\n')
+				n1 , n2 = line.split(" ") 
+				#print(len(lin))
+				#n1=lin[0]
+				#n2=lin[1]
+				if int(n1)>int(n2):
+					nt=n1; 
+					n1=n2; 
+					n2=nt
 
-			if n1 in graph:
-				s=graph[n1]
-				if n2 not in s:
-					s << n2
+				if n1 in graph:
+					s=graph[n1]
+					if n2 not in s:
+						s << n2
  
-			nodes.add(n1)
-			nodes.add(n2)			
-			edgeSize+=1
+				nodes.add(n1)
+				nodes.add(n2)			
+				edgeSize+=1
 
 		# 密度
 		dens=None
@@ -259,13 +265,13 @@ c,d
 		return nSize,edgeSize,dens
 
 	def same(self,file1,file2):
-		xxt = nutil.Mtemp()
+		xxt = mtemp.Mtemp()
 		xx = xxt.file() 
 		
 		if os.path.getsize(file1)!= os.path.getsize(file2):
 			return False
 			
-		os.system("diff -q %s %s > %s",(file1,file2,xx))
+		os.system("diff -q %s %s > %s"%(file1,file2,xx))
 
 		if(os.path.getsize(xx) != 0):
 			return False
@@ -275,7 +281,7 @@ c,d
 	def g2pair(self,ni,nf,ei,ef1,ef2,ipair,mapFile):
 		#MCMD::msgLog("converting graph files into a pair of numbered nodes ...")
 		print("converting graph files into a pair of numbered nodes ...")
-		wf = nutil.Mtemp()
+		wf = mtemp.Mtemp()
 		wf1=wf.file()
 		wf2=wf.file()
 		wf3=wf.file()
@@ -289,8 +295,7 @@ c,d
 			para="%s,%s,%s"%(wf1,wf2,wf3)
 		else:
 			para="%s,%s"%(wf1,wf2)
-		nm.mcat(i=para,f="node").muniq(k="node").mnumber(q=True,a="num",o=mapFile).run(msg="on")
-		print("x1")
+		nm.mcat(i=para,f="node").muniq(k="node").mnumber(q=True,a="num",o=mapFile).run()
 
 		wf4=wf.file()
 
@@ -307,7 +312,7 @@ c,d
 		from datetime import datetime	
 		t = datetime.now()
 
-		wf = nutil.Mtemp()
+		wf = mtemp.Mtemp()
 		xxinp    = wf.file()
 		xxmap    = wf.file()
 		xxmaprev = wf.file()
@@ -403,10 +408,10 @@ c,d
 		procTime = datetime.now()-t
 		# ログファイル出力
 		if(self.logFile):
-			kv=[["key","val"]]
-			kv.extend(args.getKeyValue())
+			kv=[["key","value"]]
+			kv.extend(self.args.getKeyValue())
 			kv.append(["iter",str(iter)])
-			kv.append(["item",str(procTime)])
+			kv.append(["time",str(procTime)])
 			for i in range(len(nSizes)):
 				kv.append(["nSize"+str(i),str(nSizes[i])]);
 				kv.append(["eSize"+str(i),str(eSizes[i])]);
@@ -421,7 +426,7 @@ c,d
 	 
 if __name__ == '__main__':
 	import sys
-	args=nu.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=")
+	args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=")
 	mpolishing(args).run()
 	#"ei=,ef=,th="
 

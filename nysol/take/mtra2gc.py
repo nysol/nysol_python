@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import mtemp as nutil
-import margs as nu
+import nysol.util.mtemp as mtemp
+import nysol.util.mrecount as mrecount
 import nysol.take._sspclib as ntsspc
 
 
@@ -182,7 +182,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			raise Exception("sim= takes one of 'J','P','C'")
 
 	def convNum(self,iFile,idFN,itemFN,oFile,mapFile):
-		temp=nutil.Mtemp()
+		temp=mtemp.Mtemp()
 		xxtra=temp.file()
 
 		# 入力ファイルのidがnilの場合は連番を生成して新たなid項目を作成する。
@@ -194,11 +194,11 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# d,4,1
 		nm.mtra(k=idFN,f=itemFN+":##num",i=iFile).mcut(f="##num",nfno=True,o=oFile).run()
 
-		size = nutil.mrecount(i=oFile,nfn=True)
+		size = mrecount.mrecount(i=oFile,nfn=True)
 		return size
 
 	def conv(self,iFile,idFN,itemFN,oFile,mapFile):
-		temp=nutil.Mtemp()
+		temp=mtemp.Mtemp()
 		xxtra=temp.file()
 		# 入力ファイルのidがnilの場合は連番を生成して新たなid項目を作成する。
 		f0=nm.mcut(f=itemFN+":##item",i=iFile).mcount(k="##item",a="##freq").mnumber(s="##freq%nr",a="##num",o=mapFile).run()
@@ -207,14 +207,14 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# b,4,0
 		# d,4,1
 		nm.mjoin(k=itemFN,K="##item",m=mapFile,f="##num",i=iFile).mtra(k=idFN,f="##num").mnumber(q=True,a="##traID").mcut(f="##num",nfno=True,o=oFile).run() 
-		size=nutil.mrecount(i=oFile,nfn=True)
+		size=mrecount.mrecount(i=oFile,nfn=True)
 		return size
 
 
 	def run(self):
 		from datetime import datetime	
 		t = datetime.now()
-		temp=nutil.Mtemp()
+		temp=mtemp.Mtemp()
 		xxsspcin=temp.file()
 		xxsspcout=temp.file()
 		xxmap=temp.file()
@@ -294,7 +294,8 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		if self.onFile:
 			f4 = nm.mcut(f=self.itemFN+":node",i=self.iFile).mcount(k="node",a="frequency")
 			if self.node_support :
-				f4 = f4.mselnum(f="frequency",c='[#{minSupp},]')
+				minstr = "[%s,]"%(minSupp)
+				f4 = f4.mselnum(f="frequency",c=minstr)
 			f5 = f4.msetstr(v=total,a="total").mcal(c='${frequency}/${total}',a="support").mcut(f="node,support,frequency,total",o=self.onFile)
 			f5.run()
 
@@ -303,7 +304,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# ログファイル出力
 		if self.logFile :
 			kv=[["key","val"]]
-			kv.extend(args.getKeyValue())
+			kv.extend(self.args.getKeyValue())
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
 
