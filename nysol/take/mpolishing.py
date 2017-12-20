@@ -3,6 +3,7 @@
 
 import os
 import os.path
+import shutil
 
 import nysol.mod as nm
 import nysol.util.margs as margs
@@ -142,6 +143,16 @@ c,d
 
 	def __init__(self,args):
 		self.args = args
+
+		# mcmdのメッセージは警告とエラーのみ
+		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
+
+		#ワークファイルパス
+		#if args.str("T=")!=nil then
+		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
+		#end
+
+
 		self.indirect=args.bool("-indirect")
 		self.ei = args. file("ei=","r") # edge file name
 		self.ni = args. file("ni=","r") # node file name
@@ -163,37 +174,12 @@ c,d
 		self.logFile = args.file("log=", "w")
 		self.outDir  = args.str("O=")	# 過程出力
 
-		os.system("mkdir -p %s"%(self.outDir))
+		if self.outDir and not os.path.isdir(self.outDir) :
+			os.makedirs(self.outDir)
 
 
 
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
 
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
-
-#indirect=args.bool("-indirect")
-
-#ei = args. file("ei=","r") # edge file name
-#ni = args. file("ni=","r") # node file name
-
-## ---- node field name on ni=
-#nf = args.field("nf=", ni, "node",1,1)
-#nf = nf["names"][0] if nf
-
-#measure = args.str("sim=","R")    # similarity measure
-#minSupp = args.int("sup=",0)      # mimam support
-#iterMax = args.int("iter=",30,1)  # upper bound of iterations
-#th      = args.float("th=")       # threashold for similarity measure
-
-#eo      = args.file("eo=", "w")
-#no      = args.file("no=", "w")
-#logFile = args.file("log=", "w")
-#outDir  = args.str("O=")	# 過程出力
-#MCMD::mkDir(outDir) if outDir
 
 	# node数とedge数をカウント
 	def calGsize(self,file):
@@ -300,9 +286,13 @@ c,d
 		wf4=wf.file()
 
 		paraE="%s,%s"%(ef1,ef2)
-		ff0 = nm.mcut(f=paraE,i=ei).mjoin(k=ef1,K="node",m=mapFile,f="num:num1").mjoin(k=ef2,K="node",m=mapFile,f="num:num2")
-		ff1 = ff0.mcut(f="num1,num2").mfsort(f="num1,num2").msortf(f="num1%n,num2%n" , nfno=True,o=wf4)
-		ff1.run()
+		f =   nm.mcut(f=paraE,i=ei)
+		f <<= nm.mjoin(k=ef1,K="node",m=mapFile,f="num:num1")
+		f <<= nm.mjoin(k=ef2,K="node",m=mapFile,f="num:num2")
+		f <<= nm.mcut(f="num1,num2")
+		f <<= nm.mfsort(f="num1,num2")
+		f <<= nm.msortf(f="num1%n,num2%n" , nfno=True,o=wf4)
+		f.run()
 		os.system("tr ',' ' ' < " + wf4 + ">"+ipair)
 
 
@@ -320,17 +310,7 @@ c,d
 
 		self.g2pair(self.ni,self.nf,self.ei,self.ef1,self.ef2,xxinp,xxmap)
 
-# 入力ファイルをノード番号ペアデータ(input)に変換する。
-# csvで指定された場合は、番号-アイテムmapデータも作成(xxmap)。
-#wf=MCMD::Mtemp.new
-#xxinp=wf.file
-#xxmap=wf.file
-#xxmaprev=wf.file
-#input=ei
-#self.g2pair(ni,nf,ei,ef1,ef2,xxinp,xxmap)
-
 		input=xxinp
-		#systemm, "msortf f=num i=#{xxmap} o=#{xxmaprev}"
 
 		nm.msortf(f="num",i=xxmap,o=xxmaprev).run()
 
@@ -339,7 +319,7 @@ c,d
 		xxprev = wf.file() # 前回のxxtra
 		xxtmmp = wf.file() # 前回のxxtra
 
-		os.system("cp %s %s"%(input,xxpair))
+		shutil.copyfile(input,xxpair)
 
 		nSizes=[]
 		eSizes=[]
@@ -356,14 +336,12 @@ c,d
 
 			# node pairをsspc入力形式に変換
 			if(self.indirect):
-				#system "#{CMD_grhfil} ue  #{xxpair} #{xxtra}"
 				ntgrhfil.grhfil_run(type="ue",i=xxpair,o=xxtra)
-
 			else:
-				#system "#{CMD_grhfil} ue0 #{xxpair} #{xxtra}"
 				ntgrhfil.grhfil_run(type="ue0",i=xxpair,o=xxtra)
 				
 			para = "%s,%s"%(self.ef1,self.ef2)
+
 			if(self.outDir):
 				os.system("tr ' ' ',' < %s > %s"%(xxpair,xxtmmp))
 				f0 = nm.mcut(i=xxtmmp,f="0:num1,1:num2",nfni=True).mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1))
@@ -378,11 +356,10 @@ c,d
 				break
 
 			#MCMD::msgLog("polishing iteration ##{iter} (tra size=#{File.size(xxtra)}")
-			os.system("cp %s %s"%(xxtra,xxprev))
+			shutil.copyfile(xxtra,xxprev)
+
 			#puts "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
-			#system "#{CMD_sspc} #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
 			ntsspc.sspc_run(type=self.measure,l=str(self.minSupp),i=xxtra,th=str(self.th),o=xxpair)
-			#system "#{CMD_grhfil} ue0 #{xxpair} #{xxtra}"
 			ntgrhfil.grhfil_run(type="ue0",i=xxpair,o=xxtra)
 
 

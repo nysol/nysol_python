@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import shutil
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.margs as margs
@@ -162,12 +163,10 @@ d,c,0.30
 		if self.udout :
 			nm.mfsort(f=kpara,i=xxout).mavg(k=kpara,f=self.sim).msortf(f=kpara,o=self.eo).run()
 		else:
-			#os.system("cat %s > %s_1"%(xxout,self.eo))
-			f = nm.msortf(f=kpara,i=xxout,o=self.eo)
-			f.run()
+			nm.msortf(f=kpara,i=xxout,o=self.eo).run()
 
 		if self.ni and self.no :
-			os.system("cp %s %s"%(self.ni,self.no))
+			shutil.copyfile(self.ni,self.no)
 		# 終了メッセージ
 		#MCMD::endLog(args.cmdline)
 

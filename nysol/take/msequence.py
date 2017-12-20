@@ -181,7 +181,10 @@ class msequence(object):
 			lcm.enumerate(self.eArgs)
 
 		# 出力
-		os.system("mkdir -p %s"%(self.outPath))
+		if not os.path.isdir(self.outPath) :
+			os.makedirs(self.outPath)
+
+
 		lcm.output(self.outPath)
 
 

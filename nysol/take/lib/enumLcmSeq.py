@@ -80,10 +80,9 @@ class LcmSeq(object):
 
 		# 列挙パターン数上限が指定されれば、一度lcmを実行して最小サポートを得る
 		if self.top and self.top>0 :
+
 			xxtop = tf.file()
-			#TAKE::run_lcmseqK("Cf -K #{@top} #{@file} 1 #{xxtop}")
-			#system("#{CMD} Cf -K #{@top} #{@file} 1 > #{xxtop}")
-			os.system("lcm_seq Cf -K %s %s 1 > %s"%(self.top,self.file,xxtop))
+			ntseq.lcmseq_run(type="Cf",K=str(self.top),i=self.file,sup="1" ,so=xxtop)
 
 			with open(xxtop, "r") as rfile:
 				self.minCnt = int(rfile.read().strip())
@@ -93,7 +92,8 @@ class LcmSeq(object):
 		lcmout = tf.file()
 		# 頻出パターンがなかった場合、lcm出力ファイルが生成されないので
 		# そのときのために空ファイルを生成しておいく。
-		os.system("touch "+lcmout)
+		with open(lcmout, "w") as efile:
+			pass
 
 		# lcm_seqのパラメータ設定と実行
 		params = {}
@@ -121,7 +121,6 @@ class LcmSeq(object):
 			ntseq0.lcmseq_zero_runByDict(params)
 		else:
 			ntseq.lcmseq_runByDict(params)
-		#system run
 
 		# パターンのサポートを計算しCSV出力する
 		self.pFile = self.temp.file()

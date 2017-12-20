@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import os.path
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.take.lib.traDB as tdb
@@ -150,7 +151,8 @@ class mitemset(object):
 			lcm=elcmIs.LcmIs(db);
 			lcm.enumerate(self.eArgs)
 		# 出力
-		os.system("mkdir -p %s"%(self.outPath))
+		if not os.path.isdir(self.outPath) :
+			os.makedirs(self.outPath)
 		lcm.output(self.outPath)
 
 

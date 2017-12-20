@@ -286,10 +286,6 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		mtra2gc.mtra2gc(args).run()
 
 
-		#system "mtra2gc.rb #{param} no=#{xxsimgN} eo=#{xxsimgE0}"
-		#puts "mtra2gc.rb #{param} no=#{xxsimgN} eo=#{xxsimgE}"
-		#system "cp #{xxsimgE} xxsimgE"
-
 		if len(self.filter)>0:
 			f = nm.mselnum(i=xxsimgE0,f=self.filterStr[0],c="[%s,%s]"%(self.lbStr[0],self.ubStr[0]))
 
@@ -306,7 +302,9 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 		col=[ ["FF000080","FF888880"], ["0000FF80","8888FF80"], ["00FF0080","88FF8880"]]
 
-		os.system("mkdir -p %s"%(xxfriends))
+
+		if not os.path.isdir(xxfriends) :
+			os.makedirs(xxfriends)
 
 		# friendの結果dir
 		for i in range(len(self.sim)):
@@ -365,16 +363,10 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		if self.prune:
 			# 双方向と片方向に分割
 			nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W",o=xxw,u=xxf).run()
-			#puts "----------xxw"
-			#system "cat #{xxw}"
-			#puts "----------xxf"
-			#system "cat #{xxf}"
 			# 片方向のみの枝を選択
 			f =   nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=xxw,i=xxf)
 			f <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=xxw,o=xxff)
 			f.run()
-			#puts "----------xxff"
-			#system "cat #{xxff}"
 			f = nm.mcat(i=xxw+","+xxff).mbest(k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile).run()
 			
 		else:
@@ -383,10 +375,8 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		shutil.move(xxfriends+"/n_0",self.onFile)
 
 
-#system "m2gv.rb -noiso ni=#{onFile} nf=node nv=support ei=#{oeFile} ef=node1,node2 ed=dir ec=color ev=sim -d o=#{dotFile}"
-
-# end message
-#MCMD::endLog(args.cmdline)
+		# end message
+		#MCMD::endLog(args.cmdline)
 
 
 if __name__ == '__main__':

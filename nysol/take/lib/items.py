@@ -110,14 +110,14 @@ class Items(object):
 	def show(self):
 		print("#### BEGIN Items class")
 		#print("@temp=%s"%(self.temp))
-		print("@iFile=#{@iFile}"%(','.join(self.iFile)))
-		print("@iPath=#{@iPath}"%(','.join(self.iPath)))
+		print("@iFile=%s"%(','.join(self.iFile)))
+		print("@iPath=%s"%(','.join(self.iPath)))
 		#print("@taxonomy=#{@taxonomy}"%(@temp))
-		print("@itemFN=#{@itemFN}"%(self.itemFN))
-		print("@idFN=#{@idFN}"%(self.idFN))
-		print("@file=#{@file}"%(self.file ))
+		print("@itemFN=%s"%(self.itemFN))
+		print("@idFN=%s"%(self.idFN))
+		print("@file=%s"%(self.file ))
 		print("@file:")
-		os.system("cat #{@file}")
+		os.system("cat "+self.file)
 		print("#### END Items class")
 
 	#==アイテムの追加

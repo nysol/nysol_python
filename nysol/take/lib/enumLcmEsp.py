@@ -59,11 +59,11 @@ class LcmEsp(object):
 	# 4:Dn  クラス2トランザクション数
 	# 5:lcmq   LCM列挙数調整パラメータ
   # 1:γ 2:Dp 3:Dn 4:lcmq 
+  # 未使用
 	#def calOmega(minGR,posCnt,negCnt,lcmq=0.5)
 	#	#return (negCnt.to_f*(1-prob))/(posCnt.to_f*prob)/(1-lcmq)
 	#	return negCnt.to_f/posCnt.to_f/minGR.to_f/(1-lcmq)
 	#end
-
 	#def calAlphaD(minSup,minGR,posCnt,negCnt,lcmq=0.5)
 	#	return lcmq*minSup.to_f*negCnt.to_f/minGR.to_f/(1-lcmq)
 	#end
@@ -127,10 +127,11 @@ class LcmEsp(object):
 				self.maxSup = float(eArgs["maxSup"])
 				self.maxCnt = int(self.maxSup * float(self.db.size) + 0.99)
 
+		#未使用
 		#@minProb = eArgs["minProb"].to_f # 事後確率
 		#@minGR   = @minProb/(1-@minProb) # 増加率
 		#@minGR   = eArgs["minGR"].to_f if eArgs["minGR"]
-		print "a",self.db.size
+
 		# あるクラスをpos、他のクラスをnegにして、パターン列挙した結果ファイル名を格納する
 		pFiles=[]
 		tFiles=[]
@@ -168,15 +169,8 @@ class LcmEsp(object):
 			lcmout = tf.file() # lcm_seq出力ファイル
 			# 頻出パターンがなかった場合、lcm出力ファイルが生成されないので
 			# そのときのために空ファイルを生成しておいく。
-			os.system("touch "+lcmout)
-
-			#run="CIA"
-			#run << " -U #{@maxCnt}"         
-			#run << " -l #{eArgs['minLen']}" if eArgs["minLen"] # パターンサイズ下限
-			#run << " -u #{eArgs['maxLen']}" if eArgs['maxLen'] # パターンサイズ上限
-			#run << " -g #{eArgs['gap']}"    if eArgs['gap'] # gap上限
-			#run << " -G #{eArgs['win']}"    if eArgs['win'] # windowサイズ上限
-			#run << " -w #{@weightFile[cName]} #{@file} #{@sigma[cName]} #{lcmout}"
+			with open(lcmout, "w") as efile:
+				pass
 
 			params = {}
 			params["type"] ="CIA"
@@ -208,10 +202,9 @@ class LcmEsp(object):
 			pFiles.append(self.temp.file())
 			transle = self.temp.file()
 
-			ntrans.lcmtrans_run(lcmout,"e",transle)
+			ntrans.lcmtrans_run(lcmout,"e",transle) # pattern,countP,countN,size,pid
 
 			f=None
-			#f << "lcm_trans #{lcmout} e |" # pattern,countP,countN,size,pid
 			f <<= nm.mdelnull(f="pattern",i=transle)
 			f <<= nm.mcal(c='round(${countN},1)',a="neg")
 			f <<= nm.mcal(c='round(${countP}/%s,1)'%(self.posWeight[cName]),a="pos")

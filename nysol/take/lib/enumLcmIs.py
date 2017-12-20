@@ -31,9 +31,10 @@ import nysol.take._lcmtranslib as ntrans
 #========================================================================
 class LcmIs(object):
 
-	"""
-	未実装 ZDD作成してから
-	def reduceTaxo(pat,items)
+	def reduceTaxo(self,pat,items):
+		#未実装 ZDD作成してから
+		pass
+		"""
 		tf=MCMD::Mtemp.new
 
 		if items.taxonomy==nil then
@@ -139,10 +140,6 @@ class LcmIs(object):
 			top_params["K"] = str(self.top)
 			top_params["so"] = xxtop
 
-			#仮
-			#TAKE::run_lcmK("#{run} -K #{@top} #{@file} 1 #{xxtop}")			
-			#system("#{run} -K #{@top} #{@file} 1 > #{xxtop}")
-			#os.system("lcm %s -K %s %s 1 > %s"%(run,self.top,self.file,xxtop))
 			ntlcm.lcm_runByDict(top_params)
 
 			with open(xxtop, "r") as rfile:
@@ -163,23 +160,13 @@ class LcmIs(object):
 
 
 		# lcm実行
-		#MCMD::msgLog("#{run} #{@file} #{@minCnt} #{lcmout}")
-		#print(run,self.file,self.minCnt,lcmout)
-		#print("lcm %s %s %s %s"%(run,self.file,self.minCnt,lcmout))
-		#TAKE::run_lcm("#{run} #{@file} #{@minCnt} #{lcmout}")
-		#os.system("lcm %s %s %s %s"%(run,self.file,self.minCnt,lcmout))
-		#ntlcm.lcm_run(type=run,i=self.file,sup=str(self.minCnt),o=lcmout)
-
 		params["i"] = self.file
 		params["sup"] = str(self.minCnt)
 		params["o"] = lcmout
-		print(params)
 		ntlcm.lcm_runByDict(params)
 
 		# caliculate one itemset for lift value
 		xxone= tf.file()
-		#TAKE::run_lcm("FIf -l 1 -u 1 #{@file} 1 #{xxone}")
-		#os.system("lcm FIf -l 1 -u 1 %s 1 %s"%(,))
 		ntlcm.lcm_run(type="FIf",i=self.file,sup="1",o=xxone,l="1",u="1")
 
 
@@ -190,13 +177,6 @@ class LcmIs(object):
 		self.pFile = self.temp.file()
 		items=self.db.items
 		trans0 = self.temp.file()
-
-		#TAKE::run_lcmtrans(lcmout,"p",trans0)
-		#os.system("lcm_trans "+lcmout+" p > "+trans0)
-		#os.system("cp "+lcmout + " xlogx")
-		#os.system("cp "+self.items.file + " xmstx")
-		#f = nm.mdelnull(i=trans0, f="pattern").mvreplace(vf="pattern",m=self.items.file,K=self.items.idFN,f=self.items.itemFN).msetstr(v=self.db.size,a="total").mcal(c='${count}/${total}',a="support").mcut(f="pid,pattern,size,count,total,support").mvsort(vf="pattern").msortf(f="pid",o=xxp0)
-		#f.drawModelD3("xx.html")
 
 		ntrans.lcmtrans_run(lcmout,"p",trans0)
 		f =   nm.mdelnull(i=trans0,f="pattern")
@@ -235,24 +215,21 @@ class LcmIs(object):
 			xxz1=tf.file
 			xxz2=tf.file
 			zdd.csvout(xxz1)
-			f=""
-			f << "mcut   -nfni f=1:pattern i=#{xxz1} |"
-			f << "mvsort vf=pattern        |"
-			f << "msortf f=pattern         o=#{xxz2}"
-			system(f)
+
+			f0=None
+			f0 << nm.mcut(nfni=True,f="1:pattern" i=xxz1)
+			f0 << nm.mvsort(vf="pattern")
+			f0 << nm.msortf(f="pattern")
 
 			f=""
-			f << "msortf  f=pattern           i=#{xxp0} |"
-			f << "mcommon k=pattern m=#{xxz2} |"
-			f << "msortf  f=pid               o=#{xxp1}"
-			system(f)
+			f << nm.msortf(f="pattern",i=xxp0)
+			f << nm.mcommon(k="pattern",m=f0)
+			f << nm.msortf(f="pid",o=xxp1)
+			f.run()
 			"""
 
 
 		# lift値の計算		
-		#TAKE::run_lcmtrans(xxone,"p",transl)
-		#os.system("lcm_trans "+xxone+" p > " + xxp2l)
-
 		transl = tf.file()
 		ntrans.lcmtrans_run(xxone,"p",transl)
 
@@ -286,7 +263,6 @@ class LcmIs(object):
 		if self.outtf:
 			# トランザクション毎に出現するシーケンスを書き出す
 			#MCMD::msgLog("output tid-patterns ...")
-			#os.system("lcm_trans "+lcmout+" t > " + xxw3i)
 
 			self.tFile = self.temp.file()
 			xxw3i = tf.file()

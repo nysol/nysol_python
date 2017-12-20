@@ -18,9 +18,10 @@ import nysol.take._lcmtranslib as ntrans
 # 列挙関数:lcm 利用DB:TraDB
 #========================================================================
 class LcmEp(object):
-	"""
-	未実装zddつくってから
-	def reduceTaxo(pat,items)
+	#未実装zddつくってから
+	def reduceTaxo(self,pat,items):
+		pass
+		"""
 		tf=MCMD::Mtemp.new
 
 		if items.taxonomy==nil then
@@ -29,9 +30,7 @@ class LcmEp(object):
 
 		xxrt = tf.file
 		taxo=items.taxonomy
-		f=""
-		f << "mtrafld f=#{taxo.itemFN},#{taxo.taxoFN} -valOnly a=__fld i=#{taxo.file} o=#{xxrt}"
-		system(f)
+		nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN ,valOnly=True a="__fld" i=taxo.file o=xxrt).run()
 
 		# xxrtの内容：oyakoに親子関係にあるアイテム集合のリストが格納される
 		# __fld
@@ -166,7 +165,6 @@ class LcmEp(object):
 			# lcmのパラメータ設定と実行
 			# 頻出パターンがなかった場合、lcm出力ファイルが生成されないので
 			# そのときのために空ファイルを生成しておいく。
-			#os.system("touch "+lcmout)
 			lcmout = tf.file() # lcm出力ファイル
 			with open(lcmout, "w") as efile:
 				pass

@@ -262,8 +262,6 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			self.th=0
 
 		############ 列挙本体 ############
-		#system "#{CMD_sspc} #{sspcSim}ft -TT #{minSupp} #{xxsspcin} #{th} #{xxsspcout}"
-		#TAKE::run_sspc("#{sspcSim}ft -TT #{minSupp} #{xxsspcin} #{th} #{xxsspcout}")
 		ntsspc.sspc_run(type=sspcSim+"ft",TT=str(minSupp),i=xxsspcin,th=str(self.th),o=xxsspcout)
 		##################################
 		# $ xxminSup 
@@ -271,25 +269,34 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# 2 0 (3)
 		xxtmmp = temp.file()
 		os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
-		f0 = nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",i=xxtmmp,nfni=True)
+		f = nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",i=xxtmmp,nfni=True)
 		if self.num :
-			f1 = f0.mfldname(f="i1:node1,i2:node2")
+			f <<= nm.mfldname(f="i1:node1,i2:node2")
 			if self.sim!="C":
-				f1 = f1.mfsort(f="node1,node2")
+				f <<= nm.mfsort(f="node1,node2")
 			
-			f2 = f1.mjoin(k="node1",K="##item",m=xxmap,f="##freq:frequency1").mjoin(k="node2",K="##item",m=xxmap,f="##freq:frequency2") 
+			f <<= nm.mjoin(k="node1",K="##item",m=xxmap,f="##freq:frequency1")
+			f <<= nm.mjoin(k="node2",K="##item",m=xxmap,f="##freq:frequency2") 
 			
 		else:
-			f2 = f0.mjoin(k="i1",K="##num",m=xxmap,f="##item:node1,##freq:frequency1").mjoin(k="i2",K="##num",m=xxmap,f="##item:node2,##freq:frequency2") 
+			f <<= nm.mjoin(k="i1",K="##num",m=xxmap,f="##item:node1,##freq:frequency1")
+			f <<= nm.mjoin(k="i2",K="##num",m=xxmap,f="##item:node2,##freq:frequency2") 
 			if self.sim!="C":
-				f2 = f2.mcut(f="i1,i2,frequency,sim,node1,node2,frequency1,frequency2,node1:node1x,node2:node2x").mfsort(f="node1x,node2x")
-				f2 = f2.mcal(c='if($s{node1}==$s{node1x},$s{frequency1},$s{frequency2})',a="freq1").mcal(c='if($s{node2}==$s{node2x},$s{frequency2},$s{frequency1})',a="freq2")
-				f2 = f2.mcut(f="i1,i2,frequency,sim,node1x:node1,node2x:node2,freq1:frequency1,freq2:frequency2")
+				f <<= nm.mcut(f="i1,i2,frequency,sim,node1,node2,frequency1,frequency2,node1:node1x,node2:node2x")
+				f <<= nm.mfsort(f="node1x,node2x")
+				f <<= nm.mcal(c='if($s{node1}==$s{node1x},$s{frequency1},$s{frequency2})',a="freq1")
+				f <<= nm.mcal(c='if($s{node2}==$s{node2x},$s{frequency2},$s{frequency1})',a="freq2")
+				f <<= nm.mcut(f="i1,i2,frequency,sim,node1x:node1,node2x:node2,freq1:frequency1,freq2:frequency2")
 
-		f3 = f2.msetstr(v=total,a="total").mcal(c='${frequency}/${frequency1}',a="confidence").mcal(c='${frequency}/${total}',a="support")
-		f3 = f3.mcal(c='${frequency}/(${frequency1}+${frequency2}-${frequency})',a="jaccard").mcal(c='(${frequency}*${total})/((${frequency1}*${frequency2}))',a="lift")
-		f3 = f3.mcal(c='(ln(${frequency})+ln(${total})-ln(${frequency1})-ln(${frequency2}))/(ln(${total})-ln(${frequency}))',a="PMI").mcut(f="node1,node2,frequency,frequency1,frequency2,total,support,confidence,lift,jaccard,PMI").msortf(f="node1,node2",o=self.oeFile)
-		f3.run()
+		f <<= nm.msetstr(v=total,a="total")
+		f <<= nm.mcal(c='${frequency}/${frequency1}',a="confidence")
+		f <<= nm.mcal(c='${frequency}/${total}',a="support")
+		f <<= nm.mcal(c='${frequency}/(${frequency1}+${frequency2}-${frequency})',a="jaccard")
+		f <<= nm.mcal(c='(${frequency}*${total})/((${frequency1}*${frequency2}))',a="lift")
+		f <<= nm.mcal(c='(ln(${frequency})+ln(${total})-ln(${frequency1})-ln(${frequency2}))/(ln(${total})-ln(${frequency}))',a="PMI")
+		f <<= nm.mcut(f="node1,node2,frequency,frequency1,frequency2,total,support,confidence,lift,jaccard,PMI")
+		f <<= nm.msortf(f="node1,node2",o=self.oeFile)
+		f.run()
 
 		if self.onFile:
 			f4 = nm.mcut(f=self.itemFN+":node",i=self.iFile).mcount(k="node",a="frequency")
@@ -307,13 +314,6 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			kv.extend(self.args.getKeyValue())
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
-
-# コマンド実行可能確認
-#CMD_sspc="sspc_20161209"
-#exit(1) unless(MCMD::chkCmdExe(CMD_sspc  , "executable"))
-
-
-
 
 
 
