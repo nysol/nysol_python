@@ -317,7 +317,6 @@ c,d
 		xxpair = wf.file() # sscpの出力(pair形式)
 		xxtra  = wf.file() # sscpの入力(tra形式)
 		xxprev = wf.file() # 前回のxxtra
-		xxtmmp = wf.file() # 前回のxxtra
 
 		shutil.copyfile(input,xxpair)
 
@@ -343,10 +342,12 @@ c,d
 			para = "%s,%s"%(self.ef1,self.ef2)
 
 			if(self.outDir):
-				os.system("tr ' ' ',' < %s > %s"%(xxpair,xxtmmp))
-				f0 = nm.mcut(i=xxtmmp,f="0:num1,1:num2",nfni=True).mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1))
-				f1 = f0.mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2)).mcut(f=para).mfsort(f=para).msortf(f=para,o="%s/pair_%s.csv"%(self.outDir,iter))
-				f1.run()
+				f =   nm.cmd("tr ' ' ',' < " + xxpair)
+				f <<= nm.mcut(f="0:num1,1:num2",nfni=True)
+				f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1))
+				f <<= nm.mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2)).mcut(f=para).mfsort(f=para)
+				f <<= nm.msortf(f=para,o="%s/pair_%s.csv"%(self.outDir,iter))
+				f.run()
 				
 			# 終了判定
 			if(iter>=self.iterMax):
@@ -368,12 +369,11 @@ c,d
 
 		# 上記iterationで収束したマイクロクラスタグラフを元の節点文字列に直して出力する
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
-		os.system("tr ' ' ',' < %s > %s"%(xxpair,xxtmmp))
-
-		f0 = nm.mcut(i=xxtmmp,f="0:num1,1:num2",nfni=True)
-		f1 = f0.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1)).mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2))
-		f2 = f1.mcut(f=para).mfsort(f=para).msortf(f=para,o=self.eo)
-		f2.run()
+		f =   nm.cmd("tr ' ' ',' < " + xxpair)
+		f <<= nm.mcut(f="0:num1,1:num2",nfni=True)
+		f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1)).mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2))
+		f <<= nm.mcut(f=para).mfsort(f=para).msortf(f=para,o=self.eo)
+		f.run()
 
 		if(self.no):
 			if(self.nf):

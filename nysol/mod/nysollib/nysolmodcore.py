@@ -101,7 +101,11 @@ class NysolMOD_CORE(object):
 		return self
 
 	def __ilshift__(self, other):
-		other.addPre(self)
+		pre = other
+		while len(pre.inplist["i"])!=0:
+			pre = pre.inplist["i"][0]
+
+		pre.addPre(self)
 		return other
 
 	def __rlshift__(self, other):

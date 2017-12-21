@@ -43,10 +43,7 @@ class LcmIs(object):
 
 		xxrt = tf.file
 		taxo=items.taxonomy
-		f=""
-		f << "mtrafld f=#{taxo.itemFN},#{taxo.taxoFN} -valOnly a=__fld i=#{taxo.file} o=#{xxrt}"
-		system(f)
-
+		nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN,valOnly=True,a="__fld",i=taxo.file,o=xxrt).run()
 		# xxrtの内容：oyakoに親子関係にあるアイテム集合のリストが格納される
 		# __fld
 		# A X

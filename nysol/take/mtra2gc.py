@@ -267,9 +267,9 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# $ xxminSup 
 		# 1 0 (3)
 		# 2 0 (3)
-		xxtmmp = temp.file()
-		os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
-		f = nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",i=xxtmmp,nfni=True)
+		#os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
+		f =   nm.cmd("tr ' ()' ',' < " + xxsspcout) 
+		f <<= nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",nfni=True)
 		if self.num :
 			f <<= nm.mfldname(f="i1:node1,i2:node2")
 			if self.sim!="C":
@@ -310,7 +310,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 
 		# ログファイル出力
 		if self.logFile :
-			kv=[["key","val"]]
+			kv=[["key","value"]]
 			kv.extend(self.args.getKeyValue())
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
