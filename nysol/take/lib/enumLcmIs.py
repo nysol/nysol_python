@@ -74,6 +74,7 @@ class LcmIs(object):
 		self.tFile =None
 		self.type =None
 		self.top =None
+		self.msgoff = True
 
 		self.temp=mtemp.Mtemp()
 		self.db = db # 入力データベース
@@ -112,7 +113,11 @@ class LcmIs(object):
 
 
 		params = {}
-		params["type"] = "%sIf"%(self.type)
+		if self.msgoff:
+			params["type"] ="%sIf_"%(self.type)
+		else:
+			params["type"] ="%sIf"%(self.type)
+
 
 		if self.maxCnt :
 			params["U"] = str(self.maxCnt)
@@ -136,6 +141,8 @@ class LcmIs(object):
 			top_params["sup"] = "1"
 			top_params["K"] = str(self.top)
 			top_params["so"] = xxtop
+			import re
+			top_params["type"] = re.sub('_$', '', top_params["type"] )
 
 			ntlcm.lcm_runByDict(top_params)
 
@@ -164,7 +171,9 @@ class LcmIs(object):
 
 		# caliculate one itemset for lift value
 		xxone= tf.file()
-		ntlcm.lcm_run(type="FIf",i=self.file,sup="1",o=xxone,l="1",u="1")
+		tpstr = "FIf_" if self.msgoff else "FIf"
+
+		ntlcm.lcm_run(type=tpstr,i=self.file,sup="1",o=xxone,l="1",u="1")
 
 
 		# パターンのサポートを計算しCSV出力する

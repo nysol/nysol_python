@@ -143,6 +143,7 @@ c,d
 
 	def __init__(self,args):
 		self.args = args
+		self.msgoff = True
 
 		# mcmdのメッセージは警告とエラーのみ
 		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
@@ -266,7 +267,7 @@ c,d
 
 	def g2pair(self,ni,nf,ei,ef1,ef2,ipair,mapFile):
 		#MCMD::msgLog("converting graph files into a pair of numbered nodes ...")
-		print("converting graph files into a pair of numbered nodes ...")
+		#print("converting graph files into a pair of numbered nodes ...")
 		wf = mtemp.Mtemp()
 		wf1=wf.file()
 		wf2=wf.file()
@@ -317,6 +318,7 @@ c,d
 		xxpair = wf.file() # sscpの出力(pair形式)
 		xxtra  = wf.file() # sscpの入力(tra形式)
 		xxprev = wf.file() # 前回のxxtra
+		xxtmmp = wf.file()
 
 		shutil.copyfile(input,xxpair)
 
@@ -335,15 +337,19 @@ c,d
 
 			# node pairをsspc入力形式に変換
 			if(self.indirect):
-				ntgrhfil.grhfil_run(type="ue",i=xxpair,o=xxtra)
+				gtpstri = "ue_" if self.msgoff else "ue"
+
+				ntgrhfil.grhfil_run(type=gtpstri,i=xxpair,o=xxtra)
 			else:
-				ntgrhfil.grhfil_run(type="ue0",i=xxpair,o=xxtra)
+				gtpstri0 = "ue0_" if self.msgoff else "ue0"
+				ntgrhfil.grhfil_run(type=gtpstri0,i=xxpair,o=xxtra)
 				
 			para = "%s,%s"%(self.ef1,self.ef2)
 
 			if(self.outDir):
-				f =   nm.cmd("tr ' ' ',' < " + xxpair)
-				f <<= nm.mcut(f="0:num1,1:num2",nfni=True)
+				os.system("tr ' ' ',' < %s > %s "%(xxpair,xxtmmp))
+				#f =   nm.cmd("tr ' ' ',' < " + xxpair)
+				f = nm.mcut(f="0:num1,1:num2",nfni=True,i=xxtmmp)
 				f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1))
 				f <<= nm.mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2)).mcut(f=para).mfsort(f=para)
 				f <<= nm.msortf(f=para,o="%s/pair_%s.csv"%(self.outDir,iter))
@@ -360,8 +366,12 @@ c,d
 			shutil.copyfile(xxtra,xxprev)
 
 			#puts "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
-			ntsspc.sspc_run(type=self.measure,l=str(self.minSupp),i=xxtra,th=str(self.th),o=xxpair)
-			ntgrhfil.grhfil_run(type="ue0",i=xxpair,o=xxtra)
+			tpstr = self.measure+"_"		if self.msgoff else self.measure
+			ntsspc.sspc_run(type=tpstr,l=str(self.minSupp),i=xxtra,th=str(self.th),o=xxpair)
+
+			gtpstr = "ue0_" if self.msgoff else "ue0"
+
+			ntgrhfil.grhfil_run(type=gtpstr,i=xxpair,o=xxtra)
 
 
 			iter+=1
@@ -369,8 +379,9 @@ c,d
 
 		# 上記iterationで収束したマイクロクラスタグラフを元の節点文字列に直して出力する
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
-		f =   nm.cmd("tr ' ' ',' < " + xxpair)
-		f <<= nm.mcut(f="0:num1,1:num2",nfni=True)
+		os.system("tr ' ' ',' < %s > %s"%(xxpair,xxtmmp))
+		#f =   nm.cmd("tr ' ' ',' < " + xxpair)
+		f = nm.mcut(f="0:num1,1:num2",nfni=True,i=xxtmmp)
 		f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1)).mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2))
 		f <<= nm.mcut(f=para).mfsort(f=para).msortf(f=para,o=self.eo)
 		f.run()

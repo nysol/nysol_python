@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
-import nysol.take.margs as margs
+import nysol.util.margs as margs
 import nysol.take.mitemset as mitemset
 
 

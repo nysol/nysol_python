@@ -24,7 +24,6 @@ def mrecount(**kw_args):
 	import sys
 	import subprocess
 	if sys.version_info < (3, 0, 0) :
-		print kw_args["i"]
 		res = subprocess.check_output(["wc","-l",kw_args["i"]])
 		cnt = int(res.strip().split()[0])
 

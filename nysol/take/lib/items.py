@@ -7,8 +7,8 @@ import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 
 import nysol.mod as nm
+import nysol.take.lib.taxonomy as taxolib
 
-import taxonomy
 #=アイテムクラス
 # 頻出パターンマイニングで使われるアイテムを扱うクラス。
 #

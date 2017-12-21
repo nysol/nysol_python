@@ -100,8 +100,8 @@ PyObject* lcm_run_dict(PyObject* self, PyObject* args){
 		vv[pos++]=pval[2];
 	  if(pval[3]!=NULL){ vv[pos++]=pval[3];}
 
-		for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		printf("\n");
+		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+		//printf("\n");
 
 		//return PyLong_FromLong(0);
 		int backup, fd;

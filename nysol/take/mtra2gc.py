@@ -155,7 +155,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		#if args.str("T=")!=nil then
 		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
 		#end
-
+		self.msgoff = True
 		self.iFile   = args.file("i=","r")
 		self.onFile  = args. file("no=", "w")
 		self.oeFile  = args. file("eo=", "w")
@@ -262,14 +262,16 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			self.th=0
 
 		############ 列挙本体 ############
-		ntsspc.sspc_run(type=sspcSim+"ft",TT=str(minSupp),i=xxsspcin,th=str(self.th),o=xxsspcout)
+		tpstr =  sspcSim+"ft_" if self.msgoff else sspcSim+"ft"
+		ntsspc.sspc_run(type=tpstr,TT=str(minSupp),i=xxsspcin,th=str(self.th),o=xxsspcout)
 		##################################
 		# $ xxminSup 
 		# 1 0 (3)
 		# 2 0 (3)
-		#os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
-		f =   nm.cmd("tr ' ()' ',' < " + xxsspcout) 
-		f <<= nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",nfni=True)
+		xxtmmp=temp.file()
+		os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
+		#f =   nm.cmd("tr ' ()' ',' < " + xxsspcout) 
+		f = nm.mcut(i=xxtmmp,f="1:i1,2:i2,0:frequency,4:sim",nfni=True)
 		if self.num :
 			f <<= nm.mfldname(f="i1:node1,i2:node2")
 			if self.sim!="C":

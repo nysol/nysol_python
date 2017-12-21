@@ -42,7 +42,7 @@ class LcmSeq(object):
 		items=self.db.items
 		self.outtf = outtf
 		self.top =None
-
+		self.msgoff = True
 		# アイテムをシンボルから番号に変換する。
 		f = nm.mjoin(k=self.db.itemFN , K=items.itemFN, m=items.file,f=items.idFN,i=self.db.file)
 		f <<= nm.mcut(f=self.db.idFN+","+self.db.timeFN+","+items.idFN)
@@ -82,6 +82,7 @@ class LcmSeq(object):
 		if self.top and self.top>0 :
 
 			xxtop = tf.file()
+			 
 			ntseq.lcmseq_run(type="Cf",K=str(self.top),i=self.file,sup="1" ,so=xxtop)
 
 			with open(xxtop, "r") as rfile:
@@ -97,7 +98,11 @@ class LcmSeq(object):
 
 		# lcm_seqのパラメータ設定と実行
 		params = {}
-		params["type"] ="CIf"
+		if self.msgoff:
+			params["type"] ="CIf_"
+		else:
+			params["type"] ="CIf"
+
 		if self.maxCnt :
 			params["U"] = str(self.maxCnt)
 		if "minLen" in eArgs:
@@ -114,7 +119,6 @@ class LcmSeq(object):
 		params["o"] = lcmout
 
 
-		print params
 		# lcm_seq実行
 		#MCMD::msgLog("#{run}")
 		if 'padding' in eArgs and eArgs["padding"] : # padding指定時は、0アイテムを出力しないlcm_seqを実行

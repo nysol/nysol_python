@@ -93,6 +93,7 @@ class LcmEp(object):
 		self.weightFile = {}
 		self.posWeight  = {}
 		self.sigma      = {}
+		self.msgoff = True
 		
 		items      = self.db.items
 		for cName,posSize in db.clsNameRecSize.items(): 
@@ -171,7 +172,12 @@ class LcmEp(object):
 
 
 			runPara={}			
-			runPara["type"] = eArgs["type"]+"IA"
+
+			if self.msgoff:
+				runPara["type"] = eArgs["type"]+"IA_"
+			else:
+				runPara["type"] = eArgs["type"]+"IA"
+
 			if self.maxPos: #rubyだとif @maxCntなってる（どこにも設定されてないので）動いてないはず
 				runPara["U"] = self.maxPos
 

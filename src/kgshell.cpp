@@ -734,6 +734,7 @@ int kgshell::run(
 
 	return 0;
 }catch(...){
+	cerr << "script RUN ERROR" << endl;
 	return 1;
 }
 

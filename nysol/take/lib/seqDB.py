@@ -113,7 +113,6 @@ class SeqDB(object):
 
 		# padding指定の場合は、asciiコードの先頭文字列を挿入
 		f=None
-		print self.padding
 		if self.padding :
 			f <<= nm.mcut(f=self.idFN+","+self.timeFN+","+self.itemFN,i=self.iFile)
 			f <<= nm.msortf(f=self.idFN+","+self.timeFN+"%n,"+self.itemFN)

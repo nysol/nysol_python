@@ -71,6 +71,7 @@ class LcmEsp(object):
 
 	def __init__(self,db,outtf=True):
 		self.size  = None
+		self.msgoff = True
 
 		self.temp  = mtemp.Mtemp()
 		self.db    = db # 入力データベース
@@ -173,7 +174,11 @@ class LcmEsp(object):
 				pass
 
 			params = {}
-			params["type"] ="CIA"
+			if self.msgoff:
+				params["type"] ="CIA_"
+			else:
+				params["type"] ="CIA"
+
 			if self.maxCnt: # windowサイズ上限
 				params["U"] = str(self.maxCnt)
 			if "minLen" in eArgs:
