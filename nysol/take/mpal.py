@@ -343,7 +343,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			f <<= nm.mselstr(f="dir",v="D",r=True)
 			f <<= nm.mcal(c='if($s{dir}==\"W\",$s{s1},$s{%s})'%(self.simStr[i]),a="sim")
 			f <<= nm.mchgstr(f="dir:color",c='W:%s,F:%s'%(col[i][0],col[i][1]),A=True)
-			f <<= nm.msetstr(v=self.simStr[i]+","+str(i),a="simType,simPriority")
+			f <<= nm.msetstr(v=[self.simStr[i],str(i)],a="simType,simPriority")
 			f <<= nm.mcut(f="simType,simPriority,node1,node2,sim,dir,color",o=xxfriends+"/e_"+str(i))
 			f.run()
 			# node1%1,node2%0,simType,sim,dir,color
@@ -368,7 +368,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			f <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=xxw,o=xxff)
 			f.run()
 			f = nm.mcat(i=xxw+","+xxff).mbest(k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile).run()
-			
+
 		else:
 			nm.mcat(i=xxfriends+"/e_*",o=self.oeFile).run()
 

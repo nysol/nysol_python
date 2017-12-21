@@ -127,6 +127,14 @@ class NysolMOD_CORE(object):
 				rtnStr += k + "=" + str(v) + " "
 			elif isinstance(v,int) :
 				rtnStr += k + "=" + str(v) + " "
+			elif isinstance(v,list) :
+				plist = []
+				for val in v:
+					if isinstance(val,str) :
+						plist.append(val)
+					elif isinstance(val,float) or isinstance(v,int) :
+						plist.append(str(val))
+				rtnStr += k + "=" + ",".join(plist) + " "
 				
 		return rtnStr
 	
