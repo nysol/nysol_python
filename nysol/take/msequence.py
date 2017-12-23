@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import nysol.take.lib.seqDB as sdb
+import nysol.take.lib.base.seqDB as sdb
 import nysol.take.lib.taxonomy as taxolib
 import nysol.take.lib.enumLcmSeq as elcmSeq
 import nysol.take.lib.enumLcmEsp as elcmEsp

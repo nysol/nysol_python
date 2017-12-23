@@ -4,7 +4,7 @@ import os
 import os.path
 import nysol.mod as nm
 import nysol.util.margs as margs
-import nysol.take.lib.traDB as tdb
+import nysol.take.lib.base.traDB as tdb
 import nysol.take.lib.taxonomy as taxolib
 import nysol.take.lib.enumLcmIs as elcmIs
 import nysol.take.lib.enumLcmEp as elcmEp
