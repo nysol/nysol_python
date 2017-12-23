@@ -23,7 +23,7 @@ static const char * paraLIST[]={
 			"w","W","d","m","M","p","Q",NULL
 		};//20
 
-static const char *  paraLIST_i[]={
+static const char * paraLIST_i[]={
 			"","","",
 			"-t","-T","-i","-I","-o","-O","-r","-R","-n","-X",
 			"-w","-W","-d","-m","-M","-P","-Q",""
@@ -69,7 +69,7 @@ PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
 		vv[pos++]= pval[0];
 		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
 			if(pval[i]!=NULL){
-				vv[pos++]=(char **)paraLIST_i[i]; 
+				vv[pos++]=(char *)paraLIST_i[i]; 
 				vv[pos++]=pval[i];
 			}
 		}
