@@ -138,10 +138,11 @@ PyObject* simset_run_dict(PyObject* self, PyObject* args){
 		}
 		vv[pos++]=pval[1];
 		vv[pos++]=pval[2];
-	  if(pval[3]!=NULL){ vv[pos++]=pval[3];}
+		vv[pos++]=pval[3];
+		vv[pos++]=pval[4];
 
-		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		//printf("\n");
+		for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+		printf("\n");
 
 		int sts = SIMSET_main(vsize,vv);
 
@@ -166,12 +167,12 @@ PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
 	 char * pval[30];
 	 
 	 unsigned int maxParaCnt=30;
-	 unsigned int singleParaCnt=4;
+	 unsigned int singleParaCnt=5;
 	 unsigned int vsize=1;
 
  	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sss|sssssssssssssssssssssssssss", 
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "sssss|sssssssssssssssssssssssss", 
 					(char**)paraLIST, 
 					&pval[0],&pval[1],&pval[2],&pval[3],&pval[4],
 					&pval[5],&pval[6],&pval[7],&pval[8],&pval[9],
@@ -202,10 +203,11 @@ PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
 		}
 		vv[pos++]=pval[1];
 		vv[pos++]=pval[2];
-	  if(pval[3]!=NULL){ vv[pos++]=pval[3];}
+		vv[pos++]=pval[3];
+		vv[pos++]=pval[4];
 
-		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		//printf("\n");
+		for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+		printf("\n");
 
 		int sts = SIMSET_main(vsize,vv);
 		if(vv){ free(vv);}
