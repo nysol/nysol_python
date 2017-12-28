@@ -51,17 +51,17 @@ module1 = Extension('nysol/_nysolshell_core',
 										)
 
 lcmmod = Extension('nysol/take/_lcmlib',
-                    sources = ['src/take/lcmrap.cpp'],
+                    sources = ['src/take/lcmrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcm']
 										)
 
 seqmod = Extension('nysol/take/_lcmseqlib',
-                    sources = ['src/take/lcmseqrap.cpp'],
+                    sources = ['src/take/lcmseqrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq']
 										)
 
 seqmodzero = Extension('nysol/take/_lcmseq_zerolib',
-                    sources = ['src/take/lcmseq_zerorap.cpp'],
+                    sources = ['src/take/lcmseq_zerorap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq_zero']
 										)
 
@@ -72,7 +72,7 @@ lcmtransmod = Extension('nysol/take/_lcmtranslib',
 
 
 sspcmod = Extension('nysol/take/_sspclib',
-                    sources = ['src/take/sspcrap.cpp'],
+                    sources = ['src/take/sspcrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/sspc']
 										)
 grhfilmod = Extension('nysol/take/_grhfillib',
@@ -80,18 +80,21 @@ grhfilmod = Extension('nysol/take/_grhfillib',
 										include_dirs=['src','src/kgmod','src/mod','src/take/grhfil']
 										)
 macemod = Extension('nysol/take/_macelib',
-                    sources = ['src/take/macerap.cpp'],
+                    sources = ['src/take/macerap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/mace']
 										)
 simsetmod = Extension('nysol/take/_simsetlib',
                     sources = ['src/take/simsetrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/simset']
 										)
-										
+medsetmod = Extension('nysol/take/_medsetlib',
+                    sources = ['src/take/medsetrap.c'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/medset']
+										)
 setup (name = 'nysol',
       packages=['nysol','nysol/util','nysol/mod','nysol/mod/submod','nysol/mod/nysollib','nysol/take','nysol/take/lib','nysol/take/lib/base'],
        version = '0.1',
        description = 'This is a demo package',
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py','scripts/take/mpolishing.py','scripts/take/msequence.py','scripts/take/mtra2gc.py','scripts/take/mpal.py'],
-       ext_modules = [module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,seqmodzero,lcmtransmod,macemod,simsetmod])
+       ext_modules = [module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod])
        

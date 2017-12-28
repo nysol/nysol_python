@@ -1,6 +1,4 @@
-
 #include "Python.h"
-
 #include "simset/simset.c"
 
 
@@ -29,6 +27,7 @@ static char* strGET(PyObject* data){
 #endif
 
 }
+
 /*
 simset ISCMOt [options] similarity-graph-filename similarity-threshold degree-threshold output-filename
 %:show progress, _:no message, +:write solutions in append mode, =:do not remove temporal files
@@ -92,73 +91,86 @@ static const char * paraLIST_i[]={
 
 PyObject* simset_run_dict(PyObject* self, PyObject* args){
 
-//	try{
-		PyObject *params;
+	PyObject *params;
 
-		char * pval[30];
+	char * pval[30];
 	 
-		unsigned int maxParaCnt=30;
-		unsigned int singleParaCnt=5;
-		unsigned int vsize=1;
+	const unsigned int maxParaCnt=30;
+	const unsigned int singleParaCnt=5;
+	const unsigned int nlimit=5;
 
-		for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
+	unsigned int vsize=1;
 
-		if (!PyArg_ParseTuple(args, "O", &params)){ return NULL;}//err
-		if(!PyDict_Check(params)){ return NULL; }//err
+	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
-		PyObject *key, *value;
-		Py_ssize_t ppos = 0;
-		while (PyDict_Next(params, &ppos, &key, &value)) {
-			if(strCHECK(key)&&strCHECK(value)){
-				char *k = strGET(key);
-				char *v = strGET(value);
-				//パラメータチェック
-				for(unsigned int i=0;i<maxParaCnt+1;i++ ){
-					if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
-				}
+	if(!PyArg_ParseTuple(args, "O", &params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyDict_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	PyObject *key, *value;
+	Py_ssize_t ppos = 0;
+	while (PyDict_Next(params, &ppos, &key, &value)) {
+		if(strCHECK(key)&&strCHECK(value)){
+			char *k = strGET(key);
+			char *v = strGET(value);
+			//パラメータチェック
+			for(unsigned int i=0;i<maxParaCnt;i++ ){
+				if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
 			}
 		}
-		for(unsigned int i=0;i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				if(i<singleParaCnt){vsize++;}
-				else{ vsize +=2;}
-			}
+	}
+	for(unsigned int i=0;i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			if(i<singleParaCnt){vsize++;}
+			else{ vsize +=2;}
 		}
+		else if(i<nlimit){
+			PyErr_SetString(PyExc_RuntimeError,"nessaery parameter ERROR");
+			PyErr_Print();
+			return PyLong_FromLong(1);
+		}
+	}
 
 		// ここ以下は同じ
-		char** vv = (char**)malloc(sizeof(char*)*(vsize));
-		unsigned int pos = 0;
-		vv[pos++]="simset";
-		vv[pos++]= pval[0];
-		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				vv[pos++]=(char *)(paraLIST_i[i]); 
-				vv[pos++]=pval[i];
-			}
+	char** vv = (char**)malloc(sizeof(char*)*(vsize));
+	unsigned int pos = 0;
+	vv[pos++]="simset";
+	vv[pos++]= pval[0];
+	for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			vv[pos++]=(char *)(paraLIST_i[i]); 
+			vv[pos++]=pval[i];
 		}
-		vv[pos++]=pval[1];
-		vv[pos++]=pval[2];
-		vv[pos++]=pval[3];
-		vv[pos++]=pval[4];
-
-		for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		printf("\n");
-
-		int sts = SIMSET_main(vsize,vv);
-
-		if(vv){ free(vv);}
-		return PyLong_FromLong(sts);
-
-
-/*	}catch(...){
-//		std::cerr << "exceptipn" << std::endl;
-		return PyLong_FromLong(1);
 	}
-*/
+	vv[pos++]=pval[1];
+	vv[pos++]=pval[2];
+	vv[pos++]=pval[3];
+	vv[pos++]=pval[4];
+
+	//DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int sts = SIMSET_main(vsize,vv);
+	if(sts){
+		PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+		PyErr_Print();
+	}
+
+	if(vv){ free(vv);}
+	return PyLong_FromLong(sts);
+
 }
 
 
-
+/*
 PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
 
 //	try{
@@ -214,18 +226,17 @@ PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
 
 		return PyLong_FromLong(sts);
 
-/*	}
+	}
 	catch(...){
 		//	std::cerr << "exceptipn" << std::endl;
 		return PyLong_FromLong(1);
 	}
-*/
 }
 
-
+*/
 static PyMethodDef takemethods_simset[] = {
-	{"simset_run", (PyCFunction)simset_run, METH_VARARGS|METH_KEYWORDS },
-	{"simset_runByDict", (PyCFunction)simset_run_dict, METH_VARARGS  },
+//	{"simset_run", (PyCFunction)simset_run, METH_VARARGS|METH_KEYWORDS },
+	{"simset_run", (PyCFunction)simset_run_dict, METH_VARARGS  },
 	{NULL}
 };
 

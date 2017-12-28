@@ -4,7 +4,7 @@ import os
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
-import nysol.take._sspclib as ntsspc
+import nysol.take.extcore as extTake
 
 
 class mtra2gc(object):
@@ -263,7 +263,8 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 
 		############ 列挙本体 ############
 		tpstr =  sspcSim+"ft_" if self.msgoff else sspcSim+"ft"
-		ntsspc.sspc_run(type=tpstr,TT=str(minSupp),i=xxsspcin,th=str(self.th),o=xxsspcout)
+		extTake.sspc(type=tpstr,TT=minSupp,i=xxsspcin,th=self.th,o=xxsspcout)
+
 		##################################
 		# $ xxminSup 
 		# 1 0 (3)

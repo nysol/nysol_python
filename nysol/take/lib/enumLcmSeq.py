@@ -23,9 +23,7 @@ import os
 import shutil
 import nysol.util.mtemp as mtemp
 import nysol.mod as nm
-import nysol.take._lcmseqlib as ntseq
-import nysol.take._lcmseq_zerolib as ntseq0
-import nysol.take._lcmtranslib as ntrans
+import nysol.take.extcore as extTake
 
 
 #========================================================================
@@ -83,7 +81,7 @@ class LcmSeq(object):
 
 			xxtop = tf.file()
 			 
-			ntseq.lcmseq_run(type="Cf",K=str(self.top),i=self.file,sup="1" ,so=xxtop)
+			extTake.lcmseq(type="Cf",K=str(self.top),i=self.file,sup="1" ,so=xxtop)
 
 			with open(xxtop, "r") as rfile:
 				self.minCnt = int(rfile.read().strip())
@@ -122,16 +120,16 @@ class LcmSeq(object):
 		# lcm_seq実行
 		#MCMD::msgLog("#{run}")
 		if 'padding' in eArgs and eArgs["padding"] : # padding指定時は、0アイテムを出力しないlcm_seqを実行
-			ntseq0.lcmseq_zero_runByDict(params)
+			extTake.lcmseq_zero(params)
 		else:
-			ntseq.lcmseq_runByDict(params)
+			extTake.lcmseq(params)
 
 		# パターンのサポートを計算しCSV出力する
 		self.pFile = self.temp.file()
 		items=self.db.items
 
 		transl = self.temp.file()
-		ntrans.lcmtrans_run(lcmout,"p",transl)
+		extTake.lcmtrans(lcmout,"p",transl)
 
 
 		f = nm.mdelnull(f="pattern",i=transl)
@@ -157,7 +155,7 @@ class LcmSeq(object):
 			f.run()
 
 			translt = self.temp.file()
-			ntrans.lcmtrans_run(lcmout,"t",translt)
+			extTake.lcmtrans(lcmout,"t",translt)
 
 			f=None
 			f <<= nm.msortf(f="__tid",i=translt)

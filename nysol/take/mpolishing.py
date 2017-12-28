@@ -8,8 +8,8 @@ import shutil
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
-import nysol.take._sspclib as ntsspc
-import nysol.take._grhfillib as ntgrhfil
+import nysol.take.extcore as extTake
+
 
 #require "rubygems"
 #require "nysol/mcmd"
@@ -339,10 +339,10 @@ c,d
 			if(self.indirect):
 				gtpstri = "ue_" if self.msgoff else "ue"
 
-				ntgrhfil.grhfil_run(type=gtpstri,i=xxpair,o=xxtra)
+				extTake.grhfil(type=gtpstri,i=xxpair,o=xxtra)
 			else:
 				gtpstri0 = "ue0_" if self.msgoff else "ue0"
-				ntgrhfil.grhfil_run(type=gtpstri0,i=xxpair,o=xxtra)
+				extTake.grhfil(type=gtpstri0,i=xxpair,o=xxtra)
 				
 			para = "%s,%s"%(self.ef1,self.ef2)
 
@@ -367,11 +367,11 @@ c,d
 
 			#puts "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
 			tpstr = self.measure+"_"		if self.msgoff else self.measure
-			ntsspc.sspc_run(type=tpstr,l=str(self.minSupp),i=xxtra,th=str(self.th),o=xxpair)
+			extTake.sspc(type=tpstr,l=self.minSupp,i=xxtra,th=self.th,o=xxpair)
 
 			gtpstr = "ue0_" if self.msgoff else "ue0"
 
-			ntgrhfil.grhfil_run(type=gtpstr,i=xxpair,o=xxtra)
+			extTake.grhfil(type=gtpstr,i=xxpair,o=xxtra)
 
 
 			iter+=1

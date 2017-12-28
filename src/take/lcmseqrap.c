@@ -1,22 +1,14 @@
-
 #include "Python.h"
-#include <stdarg.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-namespace {
-extern "C" {
+#include <stdio.h>
 #include "lcmseq/lcm_seq.c"
-}
-}
 
 #if PY_MAJOR_VERSION >= 3
-extern "C" {
 	PyMODINIT_FUNC PyInit__lcmseqlib(void);
-}
 #else
-extern "C" {
 	void init_lcmseqlib(void);
-}
 #endif
 
 static char* strGET(PyObject* data){
@@ -28,7 +20,7 @@ static char* strGET(PyObject* data){
 }
 
 
-static bool strCHECK(PyObject* data){
+static int strCHECK(PyObject* data){
 
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_Check(data);
@@ -37,9 +29,6 @@ static bool strCHECK(PyObject* data){
 #endif
 
 }
-
-
-
 /*
 LCMseq: [FCfQIq] [options] input-filename support [output-filename]
 %:show progress, _:no message, +:write solutions in append mode
@@ -87,83 +76,110 @@ static const char * paraLIST_i[]={
 
 PyObject* lcmseq_run_dict(PyObject* self, PyObject* args){
 
-	try{
-		PyObject *params;
+	PyObject *params;
 
-		char * pval[29];
+	char * pval[29];
 	 
-		unsigned int maxParaCnt=28;
-		unsigned int singleParaCnt=4;
-		unsigned int vsize=1;
+	const unsigned int maxParaCnt=28;
+	const unsigned int singleParaCnt=4;
+	const unsigned int nlimit=3;
 
-		for(unsigned int i=0;i<maxParaCnt+1;i++){ pval[i]=NULL;}
+	unsigned int vsize=1;
 
-		if (!PyArg_ParseTuple(args, "O", &params)){ return NULL;}//err
-		if(!PyDict_Check(params)){ return NULL; }//err
+	for(unsigned int i=0;i<maxParaCnt+1;i++){ pval[i]=NULL;}
 
-		PyObject *key, *value;
-		Py_ssize_t ppos = 0;
-		while (PyDict_Next(params, &ppos, &key, &value)) {
-			if(strCHECK(key)&&strCHECK(value)){
-				char *k = strGET(key);
-				char *v = strGET(value);
-				//パラメータチェック
-				for(unsigned int i=0;i<maxParaCnt+1;i++ ){
-					if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
-				}
+	if (!PyArg_ParseTuple(args, "O", &params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyDict_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	PyObject *key, *value;
+	Py_ssize_t ppos = 0;
+	while (PyDict_Next(params, &ppos, &key, &value)) {
+		if(strCHECK(key)&&strCHECK(value)){
+			char *k = strGET(key);
+			char *v = strGET(value);
+			//パラメータチェック
+			for(unsigned int i=0;i<maxParaCnt+1;i++ ){
+				if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
 			}
 		}
-		for(unsigned int i=0;i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				if(i<singleParaCnt){vsize++;}
-				else{ vsize +=2;}
-			}
+	}
+	for(unsigned int i=0;i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			if(i<singleParaCnt){vsize++;}
+			else{ vsize +=2;}
 		}
+		else if(i<nlimit){
+			PyErr_SetString(PyExc_RuntimeError,"nessaery parameter ERROR");
+			PyErr_Print();
+			return PyLong_FromLong(1);
+		}
+	}
 
 		// ここ以下は同じ
-		char** vv = new char*[vsize];
-		unsigned int pos = 0;
-		vv[pos++]=const_cast<char*>("lcm_seq");
-		vv[pos++]= pval[0];
-		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
-				vv[pos++]=pval[i];
-			}
-		}
-		vv[pos++]=pval[1];
-		vv[pos++]=pval[2];
-	  if(pval[3]!=NULL){ vv[pos++]=pval[3];}
-
-		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		//printf("\n");
-
-		int backup, fd;
-		if(pval[28]!=NULL){		// 標準出力きりかえ
-			backup = dup(1);
-			fd = open(pval[28], O_WRONLY|O_TRUNC|O_CREAT|O_APPEND, S_IRWXU);
-			dup2(fd, 1);
- 			stdout = fdopen(fd, "w");
-		}
-		int sts = LCMseq_main(vsize,vv);
-		if(pval[28]!=NULL){		// 標準出力きりかえ
-			fflush (stdout);
-			dup2(backup, 1); 
-		 	stdout = fdopen(backup, "w");
-			close(backup);
-		}
-		if(vv){ delete[] vv;}
-		return PyLong_FromLong(sts);
-
-
-	}catch(...){
-//		std::cerr << "exceptipn" << std::endl;
+	char** vv = (char**)malloc(sizeof(char*)*(vsize));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
 		return PyLong_FromLong(1);
 	}
+	unsigned int pos = 0;
+	vv[pos++]="lcm_seq";
+	vv[pos++]= pval[0];
+	for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			vv[pos++]=(char*)paraLIST_i[i]; 
+			vv[pos++]=pval[i];
+		}
+	}
+	vv[pos++]=pval[1];
+	vv[pos++]=pval[2];
+	if(pval[3]!=NULL){ vv[pos++]=pval[3];}
+
+	// DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int backup, fd;
+	if(pval[28]!=NULL){		// 標準出力きりかえ
+		backup = dup(1);
+		if(backup<0) { return PyLong_FromLong(errno); }
+		fd = open(pval[28], O_WRONLY|O_TRUNC|O_CREAT|O_APPEND, S_IRWXU);
+		if(fd<0) { return PyLong_FromLong(errno); }
+		int dp2 = dup2(fd, 1);
+		if(dp2<0) { return PyLong_FromLong(errno); }
+		FILE* newfp = fdopen(fd, "w");
+		if(!newfp){return PyLong_FromLong(errno); } 
+		stdout = newfp;
+	}
+	int sts = LCMseq_main(vsize,vv);
+	if(sts){
+		PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+		PyErr_Print();
+	}
+	if(pval[28]!=NULL){		// 標準出力きりかえ
+		if(fflush(stdout)){ return PyLong_FromLong(errno); }
+		if(dup2(backup, 1)){ return PyLong_FromLong(errno); } 
+		FILE* bfp = fdopen(backup, "w");
+		if(!bfp){return PyLong_FromLong(errno); } 
+		stdout = bfp;
+		if(close(backup)<0){return PyLong_FromLong(errno); } 
+	}
+	if(vv){ free(vv); }
+	return PyLong_FromLong(sts);
+
 }
 
 
-
+/*
 PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 	try{
 
@@ -235,10 +251,10 @@ PyObject* lcmseq_run(PyObject* self, PyObject* args, PyObject* kwds){
 		return PyLong_FromLong(1);
 	}
 }
-
+*/
 static PyMethodDef takemethods[] = {
-	{"lcmseq_run", reinterpret_cast<PyCFunction>(lcmseq_run), METH_VARARGS|METH_KEYWORDS  },
-	{"lcmseq_runByDict", reinterpret_cast<PyCFunction>(lcmseq_run_dict), METH_VARARGS  },
+//	{"lcmseq_run", reinterpret_cast<PyCFunction>(lcmseq_run), METH_VARARGS|METH_KEYWORDS  },
+	{"lcmseq_run", (PyCFunction)lcmseq_run_dict, METH_VARARGS  },
 	{NULL}
 };
 

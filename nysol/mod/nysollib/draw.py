@@ -40,6 +40,8 @@ def dicisionPos(mlist,iolist):
 	#	dicisionPosSub(mlist,iolist,newlist,dsppos,x,y)
 
 def chageSVG(mlist,iolist,linklist,fname=None):
+	print(mlist)
+	print(iolist)
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
 
 	if fname == None:
@@ -53,7 +55,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 	f.write("<polygon points='0,0 5,5 0,10 10,5 ' fill='black'/>\n")
 	f.write("</marker>\n")
 	f.write("</defs>\n")
-
+	print(dsppos)
 	for i , mm in enumerate(dsppos):
 		modobj = mlist[i]
 		x,y = mm

@@ -1,19 +1,10 @@
-
 #include "Python.h"
-namespace {
-extern "C" {
 #include "lcmseq/lcm_seq_zero.c"
-}
-}
 
 #if PY_MAJOR_VERSION >= 3
-extern "C" {
-	PyMODINIT_FUNC PyInit__lcmseq_zerolib(void);
-}
+PyMODINIT_FUNC PyInit__lcmseq_zerolib(void);
 #else
-extern "C" {
-	void init_lcmseq_zerolib(void);
-}
+void init_lcmseq_zerolib(void);
 #endif
 
 static char* strGET(PyObject* data){
@@ -24,14 +15,12 @@ static char* strGET(PyObject* data){
 #endif
 }
 
-static bool strCHECK(PyObject* data){
-
+static int strCHECK(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_Check(data);
 #else		
 	return PyString_Check(data);
 #endif
-
 }
 
 
@@ -83,70 +72,86 @@ static const char * paraLIST_i[]={
 
 PyObject* lcmseq_zero_run_dict(PyObject* self, PyObject* args){
 
-	try{
-		PyObject *params;
+	PyObject *params;
 
-		char * pval[28];
+	char * pval[28];
 	 
-		unsigned int maxParaCnt=28;
-		unsigned int singleParaCnt=4;
-		unsigned int vsize=1;
+	const unsigned int maxParaCnt=28;
+	const unsigned int singleParaCnt=4;
+	const unsigned int nlimit=3;
 
-		for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
+	unsigned int vsize=1;
 
-		if (!PyArg_ParseTuple(args, "O", &params)){ return NULL;}//err
-		if(!PyDict_Check(params)){ return NULL; }//err
+	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
-		PyObject *key, *value;
-		Py_ssize_t ppos = 0;
-		while (PyDict_Next(params, &ppos, &key, &value)) {
-			if(strCHECK(key)&&strCHECK(value)){
-				char *k = strGET(key);
-				char *v = strGET(value);
-				//パラメータチェック
-				for(unsigned int i=0;i<maxParaCnt;i++ ){
-					if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
-				}
-			}
-		}
-		for(unsigned int i=0;i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				if(i<singleParaCnt){vsize++;}
-				else{ vsize +=2;}
-			}
-		}
-
-		// ここ以下は同じ
-		char** vv = new char*[vsize];
-		unsigned int pos = 0;
-		vv[pos++]=const_cast<char*>("lcm_seq");
-		vv[pos++]= pval[0];
-		for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
-			if(pval[i]!=NULL){
-				vv[pos++]=const_cast<char*>(paraLIST_i[i]); 
-				vv[pos++]=pval[i];
-			}
-		}
-		vv[pos++]=pval[1];
-		vv[pos++]=pval[2];
-	  if(pval[3]!=NULL){ vv[pos++]=pval[3];}
-
-		//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
-		//printf("\n");
-
-		int sts = LCMseq_main(vsize,vv);
-
-		if(vv){ delete[] vv;}
-		return PyLong_FromLong(sts);
-
-
-	}catch(...){
-		//std::cerr << "exceptipn" << std::endl;
+	if(!PyArg_ParseTuple(args, "O", &params)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
 		return PyLong_FromLong(1);
+	}//err
+	if(!PyDict_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	PyObject *key, *value;
+	Py_ssize_t ppos = 0;
+	while (PyDict_Next(params, &ppos, &key, &value)) {
+		if(strCHECK(key)&&strCHECK(value)){
+			char *k = strGET(key);
+			char *v = strGET(value);
+			//パラメータチェック
+			for(unsigned int i=0;i<maxParaCnt;i++ ){
+				if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
+			}
+		}
 	}
+	for(unsigned int i=0;i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			if(i<singleParaCnt){vsize++;}
+			else{ vsize +=2;}
+		}
+		else if(i<nlimit){
+			PyErr_SetString(PyExc_RuntimeError,"nessaery parameter ERROR");
+			PyErr_Print();
+			return PyLong_FromLong(1);
+		}
+	}
+
+	// ここ以下は同じ
+	char** vv = (char**)malloc(sizeof(char*)*(vsize));
+
+	unsigned int pos = 0;
+	vv[pos++]="lcm_seq";
+	vv[pos++]= pval[0];
+	for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
+		if(pval[i]!=NULL){
+			vv[pos++]=(char*)paraLIST_i[i]; 
+			vv[pos++]=pval[i];
+		}
+	}
+	vv[pos++]=pval[1];
+	vv[pos++]=pval[2];
+	if(pval[3]!=NULL){ vv[pos++]=pval[3];}
+
+	// DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int sts = LCMseq_main(vsize,vv);
+	if(sts){
+		PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+		PyErr_Print();
+	}
+
+	if(vv){ free(vv);}
+
+	return PyLong_FromLong(sts);
+
 }
 
-
+/*
 
 PyObject* lcmseq_zero_run(PyObject* self, PyObject* args, PyObject* kwds){
 	try{
@@ -206,10 +211,11 @@ PyObject* lcmseq_zero_run(PyObject* self, PyObject* args, PyObject* kwds){
 		return PyLong_FromLong(1);
 	}
 }
+*/
 
 static PyMethodDef takemethods[] = {
-	{"lcmseq_zero_run", reinterpret_cast<PyCFunction>(lcmseq_zero_run), METH_VARARGS|METH_KEYWORDS  },
-	{"lcmseq_zero_runByDict", reinterpret_cast<PyCFunction>(lcmseq_zero_run_dict), METH_VARARGS  },
+//	{"lcmseq_zero_run", reinterpret_cast<PyCFunction>(lcmseq_zero_run), METH_VARARGS|METH_KEYWORDS  },
+	{"lcmseq_zero_run", (PyCFunction)lcmseq_zero_run_dict, METH_VARARGS  },
 	{NULL}
 };
 

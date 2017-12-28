@@ -23,8 +23,7 @@ import shutil
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 import nysol.mod as nm
-import nysol.take._lcmlib as ntlcm
-import nysol.take._lcmtranslib as ntrans
+import nysol.take.extcore as extTake
 
 #========================================================================
 # 列挙関数:lcm 利用DB:TraDB
@@ -144,7 +143,7 @@ class LcmIs(object):
 			import re
 			top_params["type"] = re.sub('_$', '', top_params["type"] )
 
-			ntlcm.lcm_runByDict(top_params)
+			extTake.lcm(top_params)
 
 			with open(xxtop, "r") as rfile:
 				self.minCnt = int(rfile.read().strip())
@@ -167,13 +166,13 @@ class LcmIs(object):
 		params["i"] = self.file
 		params["sup"] = str(self.minCnt)
 		params["o"] = lcmout
-		ntlcm.lcm_runByDict(params)
+		extTake.lcm(params)
 
 		# caliculate one itemset for lift value
 		xxone= tf.file()
 		tpstr = "FIf_" if self.msgoff else "FIf"
 
-		ntlcm.lcm_run(type=tpstr,i=self.file,sup="1",o=xxone,l="1",u="1")
+		extTake.lcm(type=tpstr,i=self.file,sup=1,o=xxone,l=1,u=1)
 
 
 		# パターンのサポートを計算しCSV出力する
@@ -184,7 +183,7 @@ class LcmIs(object):
 		items=self.db.items
 		trans0 = self.temp.file()
 
-		ntrans.lcmtrans_run(lcmout,"p",trans0)
+		extTake.lcmtrans(lcmout,"p",trans0)
 		f =   nm.mdelnull(i=trans0,f="pattern")
 		f <<= nm.mvreplace(vf="pattern",m=self.items.file,K=self.items.idFN,f=self.items.itemFN)
 		f <<= nm.msetstr(v=self.db.size,a="total")
@@ -237,7 +236,7 @@ class LcmIs(object):
 
 		# lift値の計算		
 		transl = tf.file()
-		ntrans.lcmtrans_run(xxone,"p",transl)
+		extTake.lcmtrans(xxone,"p",transl)
 
 		xxp2 =   nm.mdelnull(i=transl,f="pattern")
 		xxp2 <<= nm.mvreplace(vf="pattern",m=self.items.file,K=self.items.idFN,f=self.items.itemFN)
@@ -272,7 +271,7 @@ class LcmIs(object):
 
 			self.tFile = self.temp.file()
 			xxw3i = tf.file()
-			ntrans.lcmtrans_run(lcmout,"t",xxw3i)
+			extTake.lcmtrans(lcmout,"t",xxw3i)
 
 			xxw1 = nm.mcut(f=self.db.idFN,i=self.db.file).muniq(k=self.db.idFN).mnumber(S=0,a="__tid",q=True).msortf(f="__tid")
 			xxw2 = nm.mcut(f="pid",i=self.pFile)

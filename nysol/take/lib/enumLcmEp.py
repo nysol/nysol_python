@@ -11,8 +11,7 @@ import os
 import shutil
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
-import nysol.take._lcmlib as ntlcm
-import nysol.take._lcmtranslib as ntrans
+import nysol.take.extcore as extTake
 
 #========================================================================
 # 列挙関数:lcm 利用DB:TraDB
@@ -158,7 +157,7 @@ class LcmEp(object):
 				else:
 					self.maxPos = int(eArgs["maxSup"] * float(posSize) + 0.99)
 			else:
-				self.maxPos = int(posSize)
+				self.maxPos = None
 
 
 			self.sigma[cName] = self.calSigma(self.minPos,self.minGR,posSize,negSize)
@@ -178,7 +177,8 @@ class LcmEp(object):
 			else:
 				runPara["type"] = eArgs["type"]+"IA"
 
-			if self.maxPos: #rubyだとif @maxCntなってる（どこにも設定されてないので）動いてないはず
+			#if self.maxPos: #rubyだとif @maxCntなってる（どこにも設定されてないので）動いてないはず
+			if self.maxPos:
 				runPara["U"] = self.maxPos
 
 			if "minLen" in eArgs:
@@ -202,12 +202,12 @@ class LcmEp(object):
 			#print(runPara)
 			#MCMD::msgLog("output patterns to CSV file ...")
 
-			ntlcm.lcm_runByDict(runPara)
+			extTake.lcm(runPara)
 
 			pFiles.append(self.temp.file())
 
 			transle = tf.file()
-			ntrans.lcmtrans_run(lcmout,"e",transle)
+			extTake.lcmtrans(lcmout,"e",transle)
 
 			f =   nm.mdelnull(f="pattern",i=transle)
 			f <<= nm.mcal(c='round(${countN},1)',a="neg")
@@ -233,7 +233,7 @@ class LcmEp(object):
 				xxw <<= nm.mnumber(S=0,a="__tid",q=True)
 
 				translt = self.temp.file()
-				ntrans.lcmtrans_run(lcmout,"t",translt)
+				extTake.lcmtrans(lcmout,"t",translt)
 
 				f =   nm.mjoin(k="__tid",m=xxw,f=self.db.idFN,i=translt)
 				f <<= nm.msetstr(v=cName,a="class")

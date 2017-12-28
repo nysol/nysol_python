@@ -23,9 +23,7 @@ import shutil
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 import nysol.mod as nm
-import nysol.take._lcmseqlib as ntseq
-import nysol.take._lcmseq_zerolib as ntseq0
-import nysol.take._lcmtranslib as ntrans
+import nysol.take.extcore as extTake
 
 
 #========================================================================
@@ -198,16 +196,16 @@ class LcmEsp(object):
 			# lcm_seq実行
 			#MCMD::msgLog("#{run}")
 			if 'padding' in eArgs and eArgs["padding"]: # padding指定時は、0アイテムを出力しないlcm_seqを実行
-				ntseq0.lcmseq_zero_runByDict(params)
+				extTake.lcmseq_zero(params)
 			else:
-				ntseq.lcmseq_runByDict(params)
+				extTake.lcmseq(params)
 
 			# パターンのサポートを計算しCSV出力する
 			#MCMD::msgLog("output patterns to CSV file ...")
 			pFiles.append(self.temp.file())
 			transle = self.temp.file()
 
-			ntrans.lcmtrans_run(lcmout,"e",transle) # pattern,countP,countN,size,pid
+			extTake.lcmtrans(lcmout,"e",transle) # pattern,countP,countN,size,pid
 
 			f=None
 			f <<= nm.mdelnull(f="pattern",i=transle)
@@ -238,7 +236,7 @@ class LcmEsp(object):
 
 				nm.mcut(f=self.db.idFN,i=self.db.file).muniq(k=self.db.idFN).mnumber(S=0,a="__tid",q=True,o=xxw).run()
 				translt = self.temp.file()
-				ntrans.lcmtrans_run(lcmout,"t",translt)
+				extTake.lcmtrans(lcmout,"t",translt)
 				nm.mjoin(k="__tid",m=xxw,f=self.db.idFN,i=translt).msetstr(v=cName,a="class").mcut(f=self.db.idFN+",class,pid",o=tFiles[-1]).run()
 
 
