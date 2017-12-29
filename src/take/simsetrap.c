@@ -76,7 +76,7 @@ t:transpose the input database, so that each line will be considered as a record
 # the 1st letter of input-filename cannot be '-'.
 if similarity-threshold is 0, skip the similarity graph construction phase
 */
-
+/*
 static const char * paraLIST[]={ 
 		"type","i","th_s","th_d","o","G","k","M","m","v","u","l","U",
 		"L","Iig","iig","II","ii","T","t","O","9","X","x","y",
@@ -88,7 +88,61 @@ static const char * paraLIST_i[]={
 	"-L","-I","-i","-II","-ii","-T","-t","-O","-9","-X",
 	"-x","-y","-w","-!","-W","-,","-Q",""
 };//24
+*/
+PyObject* simset_run(PyObject* self, PyObject* args){
 
+
+	PyObject *params;
+
+	if(!PyArg_ParseTuple(args, "O", &params)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyList_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}
+
+	vv[0] = "simset";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
+		}
+	}
+
+	//DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int sts = SIMSET_main(psize+1,vv);
+	//if(sts){//ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
+
+	if(vv){ free(vv);}
+	return PyLong_FromLong(sts);
+
+}
+
+/*
 PyObject* simset_run_dict(PyObject* self, PyObject* args){
 
 	PyObject *params;
@@ -168,7 +222,7 @@ PyObject* simset_run_dict(PyObject* self, PyObject* args){
 	return PyLong_FromLong(sts);
 
 }
-
+*/
 
 /*
 PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
@@ -236,7 +290,7 @@ PyObject* simset_run(PyObject* self, PyObject* args, PyObject* kwds){
 */
 static PyMethodDef takemethods_simset[] = {
 //	{"simset_run", (PyCFunction)simset_run, METH_VARARGS|METH_KEYWORDS },
-	{"simset_run", (PyCFunction)simset_run_dict, METH_VARARGS  },
+	{"simset_run", (PyCFunction)simset_run, METH_VARARGS  },
 	{NULL}
 };
 

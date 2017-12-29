@@ -26,7 +26,7 @@ static int strCHECK(PyObject* data){
 	return PyString_Check(data);
 #endif
 }
-
+/*
 static const char * paraLIST[]={ 
 	"type","i","sup","o","K","l","u","U","w","c","C","item","a","A","r","R",
 	"f","F","p","P","n","N","opos","Opos",
@@ -38,7 +38,81 @@ static const char * paraLIST_i[]={
 	"-K","-l","-u","-U","-w","-c","-C","-i","-a","-A","-r","-R",
 	"-f","-F","-p","-P","-n","-N","-o","-O","-m","-M","-Q","-#","-,",""
 };//26
+*/
 
+PyObject* lcm_run(PyObject* self, PyObject* args){
+
+	PyObject *params;
+	char *newstdout=NULL;
+	if(!PyArg_ParseTuple(args, "O|s", &params,&newstdout)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyList_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+
+
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}
+
+	vv[0] = "lcm";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
+		}
+	}
+
+	// DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int backup, fd;
+	if(newstdout!=NULL){		// 標準出力きりかえ
+		backup = dup(1);
+		if(backup<0) { return PyLong_FromLong(errno); }
+		fd = open(newstdout, O_WRONLY|O_TRUNC|O_CREAT|O_APPEND, S_IRWXU);
+		if(fd<0) { return PyLong_FromLong(errno); }
+		int dp2 = dup2(fd, 1);
+		if(dp2<0) { return PyLong_FromLong(errno); }
+		FILE* newfp = fdopen(fd, "w");
+		if(!newfp){return PyLong_FromLong(errno); } 
+		stdout = newfp;
+	}
+	int sts = LCM_main(psize+1,vv);
+	//if(sts){ //ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
+	if(newstdout!=NULL){		// 標準出力きりかえ
+		if(fflush(stdout)){ return PyLong_FromLong(errno); }
+		if(dup2(backup, 1)){ return PyLong_FromLong(errno); } 
+		FILE* bfp = fdopen(backup, "w");
+		if(!bfp){return PyLong_FromLong(errno); } 
+		stdout = bfp;
+		if(close(backup)<0){return PyLong_FromLong(errno); } 
+	}
+	if(vv){ free(vv); }
+	return PyLong_FromLong(sts);
+}
+
+/*
 
 PyObject* lcm_run_dict(PyObject* self, PyObject* args){
 
@@ -141,6 +215,7 @@ PyObject* lcm_run_dict(PyObject* self, PyObject* args){
 	if(vv){ free(vv); }
 	return PyLong_FromLong(sts);
 }
+*/
 /*
 PyObject* lcm_run(PyObject* self, PyObject* args, PyObject* kwds){
 	try{
@@ -215,7 +290,7 @@ PyObject* lcm_run(PyObject* self, PyObject* args, PyObject* kwds){
 
 static PyMethodDef takemethods[] = {
 //	{"lcm_run", reinterpret_cast<PyCFunction>(lcm_run), METH_VARARGS|METH_KEYWORDS  },
-	{"lcm_run", (PyCFunction)lcm_run_dict, METH_VARARGS  },
+	{"lcm_run", (PyCFunction)lcm_run, METH_VARARGS  },
 	{NULL}
 };
 

@@ -22,7 +22,7 @@ static int strCHECK(PyObject* data){
 	return PyString_Check(data);
 #endif
 }
-
+/*
 const char * paraLIST[]={ 
 	"type","i","o","l","u","stop","Q","separator",NULL
 };//8
@@ -31,7 +31,7 @@ const char * paraLIST_i[]={
 	"","","",
 	"-l","-u","-#","-,","-Q",""
 };
-
+*/
 /*
 mace MCqVe [options] input-filename [output-filename]
 %:show progress, _:no message, +:write solutions in append mode
@@ -45,57 +45,23 @@ C:enumerate cliques, M:enumerate maximal cliques, e:edge_list format
 if the 1st letter of input-filename is '-', be considered as 'parameter list'
 */
 
-PyObject* mace_run_dict(PyObject* self, PyObject* args){
+PyObject* mace_run(PyObject* self, PyObject* args){
 
 	PyObject *params;
-	// stop=> # , separator => ,
-	char * pval[8];
-	 
-	const unsigned int maxParaCnt=8;
-	const unsigned int singleParaCnt=3;
-	const unsigned int nlimit=2;
-
-	unsigned int vsize=1;
-
- 	for(unsigned int i=0;i<maxParaCnt;i++){ pval[i]=NULL;}
 
 	if(!PyArg_ParseTuple(args, "O", &params)){ 
 		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
 		PyErr_Print();
 		return PyLong_FromLong(1);
 	}//err
-	if(!PyDict_Check(params)){
+	if(!PyList_Check(params)){
 		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
 		PyErr_Print();
 		return PyLong_FromLong(1); 
 	}//err
 
-	PyObject *key, *value;
-	Py_ssize_t ppos = 0;
-	while (PyDict_Next(params, &ppos, &key, &value)) {
-		if(strCHECK(key)&&strCHECK(value)){
-			char *k = strGET(key);
-			char *v = strGET(value);
-			//パラメータチェック
-			for(unsigned int i=0;i<maxParaCnt;i++ ){
-				if(!strcmp(k,paraLIST[i])){ pval[i] = v; break;}
-			}
-		}
-	}
-	for(unsigned int i=0;i<maxParaCnt;i++ ){
-		if(pval[i]!=NULL){
-			if(i<singleParaCnt){vsize++;}
-			else{ vsize +=2;}
-		}
-		else if(i<nlimit){
-			PyErr_SetString(PyExc_RuntimeError,"nessaery parameter ERROR");
-			PyErr_Print();
-			return PyLong_FromLong(1);
-		}
-	}
-
-	// ここ以下は同じ
-	char** vv = (char**)malloc(sizeof(char*)*(vsize));
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
 	if(vv==NULL){
 		// ERROR
 		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
@@ -103,28 +69,28 @@ PyObject* mace_run_dict(PyObject* self, PyObject* args){
 		return PyLong_FromLong(1);
 	}
 
-
-	unsigned int pos = 0;
-	vv[pos++]="mace";
-	vv[pos++]= pval[0];
-	for(unsigned int i=singleParaCnt; i<maxParaCnt;i++ ){
-		if(pval[i]!=NULL){
-			vv[pos++]=(char*)paraLIST_i[i]; 
-			vv[pos++]=pval[i];
+	vv[0] = "mace";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
 		}
 	}
-	vv[pos++]=pval[1];
-	if(pval[2]!=NULL){ vv[pos++]=pval[2];}
 
 	//DEBUG
 	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
 	//printf("\n");
 
-	int sts = MACE_main(vsize,vv);
-	if(sts){
-		PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
-		PyErr_Print();
-	}
+	int sts = MACE_main(psize+1,vv);
+	//if(sts){//ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
 
 	if(vv){ free(vv);}
 
@@ -200,7 +166,7 @@ PyObject* mace_run(PyObject* self, PyObject* args, PyObject* kwds){
 */
 
 static PyMethodDef takemethods_mace[] = {
-	{"mace_run", (PyCFunction)mace_run_dict, METH_VARARGS|METH_KEYWORDS  },
+	{"mace_run", (PyCFunction)mace_run, METH_VARARGS },
 	{NULL}
 };
 

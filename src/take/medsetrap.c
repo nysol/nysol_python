@@ -28,7 +28,7 @@ static int strCHECK(PyObject* data){
 
 }
 
-
+/*
 static const char * paraLIST[]={ 
 			"ci","si","th","o",
 			"H","R","V","T","I","i","t",
@@ -40,6 +40,60 @@ static const char * paraLIST_i[]={
 	"-H","-R","-V","-T","-I","-i",
 	"-t","-%","-_","-l",""
 };
+
+*/
+
+PyObject* medset_run(PyObject* self, PyObject* args){
+
+	PyObject *params;
+
+	if(!PyArg_ParseTuple(args, "O", &params)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyList_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}
+
+	vv[0] = "medset";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
+		}
+	}
+
+	// DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int sts = MEDSET_main(psize+1,vv);
+	//if(sts){//ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
+
+	if(vv){ free(vv);}
+	return PyLong_FromLong(sts);
+
+}
 
 
 /*
@@ -56,7 +110,7 @@ if threshold is negative, output the items whose frequencies are no more than th
 -l [num]: output clusters of size at least [num]
 # the 1st letter of input-filename cannot be '-'.
 */
-
+/*
 PyObject* medset_run_dict(PyObject* self, PyObject* args){
 
 	PyObject *params;
@@ -145,7 +199,7 @@ PyObject* medset_run_dict(PyObject* self, PyObject* args){
 	return PyLong_FromLong(sts);
 
 }
-
+*/
 
 /*
 PyObject* medset_run(PyObject* self, PyObject* args, PyObject* kwds){
@@ -225,8 +279,8 @@ PyObject* medset_run(PyObject* self, PyObject* args, PyObject* kwds){
 
 }
 */
-static PyMethodDef takemethods_medest[] = {
-	{"medset_run", (PyCFunction)medset_run_dict, METH_VARARGS|METH_KEYWORDS  },
+static PyMethodDef takemethods_medset[] = {
+	{"medset_run", (PyCFunction)medset_run, METH_VARARGS  },
 //	{"medset_runByDict", reinterpret_cast<PyCFunction>(medset_run_dict), METH_VARARGS  },
 	{NULL}
 };
@@ -237,7 +291,7 @@ static struct PyModuleDef moduledef = {
     "_medsetlib",      /* m_name */
     NULL,							     /* m_doc */
     -1,                  /* m_size */
-    takemethods_medest,      /* m_methods */
+    takemethods_medset,      /* m_methods */
     NULL,                /* m_reload */
     NULL,                /* m_traverse */
     NULL,                /* m_clear */
@@ -253,7 +307,7 @@ PyInit__medsetlib(void){
 
 #else
 
-void init_medestlib(void){
+void init_medsetlib(void){
 	Py_InitModule("_medsetlib", takemethods_medset);
 }
 

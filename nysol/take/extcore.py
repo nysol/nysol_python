@@ -3,7 +3,6 @@
 """
 	TAKE LIBRARY call Function
 """
-
 import nysol.take._grhfillib as lib_grhfil
 import nysol.take._lcmlib as lib_lcm
 import nysol.take._lcmseq_zerolib as lib_lcmseq0
@@ -11,15 +10,15 @@ import nysol.take._lcmseqlib  as lib_lcmseq
 import nysol.take._lcmtranslib  as lib_lcmtarns
 import nysol.take._macelib as lib_mace
 import nysol.take._medsetlib as lib_medset
-import nysol.take._simsetlib as lib_somset
+import nysol.take._simsetlib as lib_simset
 import nysol.take._sspclib as lib_sspc
 
-def kwd2strkwd(args, kw_args):
+
+def kwd2list(args, kw_args,paraConf,extpara=None):
 	"""
 kwdをstingのkwdに変換
 
 	"""
-
 	def tostr(val):
 		if isinstance(val,list):
 			newlist=[]
@@ -32,26 +31,124 @@ kwdをstingのkwdに変換
 		else:
 			return str(val)
 
-	newkwd={}
 	if len(args)>1:
-		raise Exception("args only one dict")
-		return None
+		raise Exception("args zero or one ")
 
+	if len(args)==1 and not isinstance(args[0],dict) :
+		raise Exception("args is not dict")
+
+	# dict Merge		
 	if len(args)==1:
-		if isinstance(args[0],dict):
-			for k,v in args[0].items():
-				newval = tostr(v)
-				if newval:
-					newkwd[str(k)]=	newval
-		else :
-			raise Exception("args only one dict")
-			
-	for k,v in kw_args.items():
-		newval = tostr(v)
-		if newval:
-			newkwd[str(k)]=	newval
+		kw_args.update(args[0])
 
-	return newkwd
+	# 可能パラメータ設定
+	enablePara = set([])
+	for v in paraConf.values():
+		for vv in v:
+			enablePara.add(vv[0])
+
+	# 可能パラメータCHECK
+	for k in kw_args.keys():
+		if not k in enablePara:
+			raise Exception("Unknown parameter")
+
+	newargs=[]
+	if "saki" in paraConf:
+		for paraInfo in paraConf["saki"]:
+			if paraInfo[0] in kw_args:
+				newargs.append(tostr(kw_args[paraInfo[0]]))
+			elif paraInfo[1] == 1:
+				raise Exception("not find necceary parameter")
+				
+	if "opt" in paraConf:
+		for paraInfo in paraConf["opt"]:
+			if paraInfo[0] in kw_args:
+				newargs.append(tostr(paraInfo[1]))
+				newargs.append(tostr(kw_args[paraInfo[0]]))
+
+	if "opts" in paraConf:
+		for paraInfo in paraConf["opts"]:
+
+			if paraInfo[0] in kw_args:
+
+				newargs.append(tostr(paraInfo[1]))
+
+				if isinstance(kw_args[paraInfo[0]],list):
+					if len(kw_args[paraInfo[0]])!=paraInfo[2] :
+						raise Exception("not valid parameter")
+					for val in kw_args[paraInfo[0]]:
+						newargs.append(tostr(val))
+
+				elif isinstance(kw_args[paraInfo[0]],str):
+					optsub = kw_args[paraInfo[0]].split(",") 
+					if len(optsub)!=paraInfo[2] :
+						raise Exception("not valid parameter")
+					for val in optsub:
+						newargs.append(tostr(val))
+				
+				else:
+					raise Exception("not valid parameter")
+
+
+	if "addkw" in paraConf:
+		for paraInfo in paraConf["addkw"]:
+
+			if paraInfo[0] in kw_args:
+
+				if isinstance(kw_args[paraInfo[0]],list):
+
+					if len(kw_args[paraInfo[0]])==1:
+						newargs.append( tostr(paraInfo[1]) )
+					elif len(kw_args[paraInfo[0]])==2:
+						newargs.append( tostr(paraInfo[1])+tostr(kw_args[paraInfo[0]][1]))
+					else:
+						raise Exception("not valid parameter")
+
+					newargs.append(tostr(kw_args[paraInfo[0]][0]))
+
+
+				elif isinstance(kw_args[paraInfo[0]],str):
+					optsub = kw_args[paraInfo[0]].split(",") 
+					if len(optsub)==1:
+						newargs.append(tostr(paraInfo[1]) )
+					elif len(optsub)==2:
+						newargs.append(tostr(paraInfo[1])+tostr(optsub[1]) )
+					else:
+						raise Exception("not valid parameter")
+
+					newargs.append(tostr(optsub[0]))
+				
+				else:
+					raise Exception("not valid parameter")
+
+	if "optB" in paraConf:
+		for paraInfo in paraConf["optB"]:
+			if paraInfo[0] in kw_args:
+				if kw_args[paraInfo[0]]:
+					 newargs.append(tostr(paraInfo[1]))
+
+
+	if "optato" in paraConf:
+		for paraInfo in paraConf["optato"]:
+			if paraInfo[0] in kw_args:
+				newargs.append(tostr(paraInfo[1]))
+				newargs.append(tostr(kw_args[paraInfo[0]]))
+
+	if "ato" in paraConf:
+		for paraInfo in paraConf["ato"]:
+			if paraInfo[0] in kw_args:
+				newargs.append(tostr(kw_args[paraInfo[0]]))
+			elif paraInfo[1] == 1:
+				raise Exception("not find necceary parameter")
+
+
+
+	if isinstance(extpara,dict) and "ext" in paraConf:
+		for paraInfo in paraConf["ext"]:
+			if paraInfo[0] in kw_args:
+				extpara[paraInfo[1]] = tostr(kw_args[paraInfo[0]])
+	
+	return newargs
 
 
 def lcm (*args,**kw_args):
@@ -59,7 +156,7 @@ def lcm (*args,**kw_args):
 Linear time Closed itemset Miner
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -122,15 +219,31 @@ so=[filename]
   standard output to [filename]
 # the 1st letter of input-filename cannot be '-'.
 	"""
-	kwd = kwd2strkwd(args,kw_args)
-	return lib_lcm.lcm_run(kwd)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("sup",1),("o",0)],
+		"opt":[("K","-K"),("l","-l"),("u","-u"),("U","-U"),("w","-w"),("c","-c"),("C","-C"),
+					("item","-i"),("a","-a"),("A","-A"),("r","-r"),("R","-R"),("f","-f"),("F","-F"),
+					("p","-p"),("P","-P"),("n","-n"),("N","-N"),("opos","-o"),("Opos","-O"),
+					("m","-m"),("M","-M"),("Q","-Q"),("stop","-#"),("separator","-,")],
+		"ext":[("so","so")]
+	}
+	extpara={}
+	kwd = kwd2list(args,kw_args,paraLIST,extpara)
+	if "so" in extpara:
+		return lib_lcm.lcm_run(kwd,extpara["so"])
+	else:
+		return lib_lcm.lcm_run(kwd)
+
+
 	
 def lcmseq (*args, **kw_args):
 	"""
 LCM algorithm for enumerating all frequently appearing sequences
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -194,8 +307,22 @@ so=[filename]
   standard output to [filename]
 # the 1st letter of input-filename cannot be '-'.
 	"""
-	kwd = kwd2strkwd(args,kw_args)
-	return lib_lcmseq.lcmseq_run(kwd)
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("sup",1),("o",0)],
+		"opt":[("K","-K"),("l","-l"),("u","-u"),("U","-U"),("g","-g"),("G","-G"),("w","-w"),
+					("item","-i"),("a","-a"),("A","-A"),("r","-r"),("R","-R"),("f","-f"),("F","-F"),
+					("p","-p"),("P","-P"),("n","-n"),("N","-N"),("opos","-o"),("Opos","-O"),
+					("s","-s"),("Q","-Q"),("stop","-#"),("separator","-,")],
+		"ext":[("so","so")]
+	}
+
+	extpara={}
+	kwd = kwd2list(args,kw_args,paraLIST,extpara)
+	if "so" in extpara:
+		return lib_lcmseq.lcmseq_run(kwd,extpara["so"])
+	else:
+		return lib_lcmseq.lcmseq_run(kwd)
 
 def lcmseq_zero (*args, **kw_args):
 	"""
@@ -203,7 +330,7 @@ LCM algorithm for enumerating all frequently appearing sequences
 0アイテムを出力しないVersion
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -268,7 +395,16 @@ so=[filename]
   standard output to [filename]
 # the 1st letter of input-filename cannot be '-'.
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("sup",1),("o",0)],
+		"opt":[("K","-K"),("l","-l"),("u","-u"),("U","-U"),("g","-g"),("G","-G"),("w","-w"),
+					("item","-i"),("a","-a"),("A","-A"),("r","-r"),("R","-R"),("f","-f"),("F","-F"),
+					("p","-p"),("P","-P"),("n","-n"),("N","-N"),("opos","-o"),("Opos","-O"),
+					("s","-s"),("Q","-Q"),("stop","-#"),("separator","-,")]
+	}
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_lcmseq0.lcmseq_zero_run(kwd)
 
 def mace(*args, **kw_args):
@@ -276,7 +412,7 @@ def mace(*args, **kw_args):
 MAximal Clique Enumerator
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -298,7 +434,14 @@ separator=[char]
 Q=[filename] 
   replace the output numbers according to the permutation table given by [filename]
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("o",0)],
+		"opt":[("l","-l"),("u","-u"),("Q","-Q"),("stop","-#"),("separator","-,")]
+	}
+
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_mace.mace_run(kwd)
 
 
@@ -307,7 +450,7 @@ def sspc(*args, **kw_args):
 Similar Set Pair Comparison
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -339,7 +482,7 @@ o=[filename]
   output-filename
 2=[filename]
   2nd input file name
-9=[th],[filename](特殊処理)
+9=[th],[filename]
   write pairs satisfies 2nd threshold [th] to file [filename]
 K=[num]
   output [num] pairs of most large similarities
@@ -372,11 +515,22 @@ Q=[filename]
   replace the output numbers according to the permutation table given by [filename]
 # the 1st letter of input-filename cannot be '-'.
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("th",1),("o",0)],
+		"opt":[("2","-2"),("K","-K"),("k","-k"),("w","-w"),("W","-W"),("l","-l"),("u","-u"),
+					("L","-L"),("U","-U"),("c","-c"),("b","-b"),("B","-B"),("T","-T"),("TT","-TT"),
+					("Q","-Q"),("stop","-#"),("separator","-,")],
+		"opts":[("9","-9",2)]
+	}
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_sspc.sspc_run(kwd)
 	
 def medset(*args, **kw_args):
 	"""
+compute the intersection of each set of sets
+
 keyword
 ci=[filename] 必須
   cluster-filename
@@ -410,7 +564,15 @@ nomsg=True
 # the 1st letter of input-filename cannot be '-'.
 # if threshold is negative, output the items whose frequencies are no more than the threshold
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+	paraLIST={
+		"ato":[("ci",1),("si",1),("th",1),("o",1)],
+		"opt":[("l","-l")],
+		"optB":[("H","-H"),("R","-R"),("V","-V"),("T","-T"),
+						("I","-I"),("i","-i"),("t","-t"),
+						("progress","-%"),("nomsg","-_")]
+	}
+
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_medset.medset_run(kwd)
 
 
@@ -420,7 +582,7 @@ def simset(*args, **kw_args):
 similarity set
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -444,13 +606,13 @@ type=以下参照 必須
   1:do not remove the same items in a record (with -G)
   W:load weight of each element
   t:transpose the input database, so that each line will be considered as a record
-i=[filename]
+i=[filename] 必須
   similarity-graph-filename
-th_s=[threshold]
+th_s=[threshold] 必須
   similarity-threshold
-th_d=[threshold]
+th_d=[threshold] 必須
   degree-threshold
-o=[filename]
+o=[filename]  必須
   output-filename
 G=[similarity],[threshold]:
   use [similarity] of [threshold] in the first phase (file is regarded as a transaction database)
@@ -505,7 +667,21 @@ Q=
 # the 1st letter of input-filename cannot be '-'.
 if similarity-threshold is 0, skip the similarity graph construction phase
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("th_s",1),("th_d",1),("o",1)],
+
+		"opt":[("k","-k"),("v","-v"),("u","-u"),("l","-l"),("U","-U"),("L","-L"),
+					("Iig","-I"),("iig","-i"),("II","-II"),("ii","-ii"),("T","-T"),("t","-t"),
+					("O","-O"),("9","-9"),("X","-X"),("x","-x"),("y","-y"),
+					("w","-w"),("multi","-!"),("W","-W"),("Q","-Q"),("separator","-,")],
+		"opts":[("G","-G",2)],
+		"addkw":[("m","-m"),("M","-M")],
+	}
+
+
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_simset.simset_run(kwd)
 
 
@@ -514,7 +690,7 @@ def grhfil(*args, **kw_args):
 graph filtering: transform/convert/extract graph/subgraph
 
 keyword
-type=以下参照 必須
+type=以下の組み合わせ 必須
   %:show progress
   _:no message
   +:write solutions in append mode
@@ -548,16 +724,33 @@ X=[num1],[num2]
   multiply each weight by [num1] and trancate by [num2]
 w,W=[filename]
   weight file to be read/write
-d=[filename]
-  take difference with graph of [filename] (2nd -d: specify the threshold value)
-m=,M=[filename]
+d=[filename],[type]
+  take difference with graph of [filename] 
+  [type]はtype=の'u','U','B','D','d','e','s','S','n','w','v'を組み合わせる  
+dth=[threshold]
+ specify the threshold value (d=が必要)
+m=,M=[filename],[type]
   take intersection/union with graph of [filename]
+  [type]はtype=の'u','U','B','D','d','e','s','S','n','w','v'を組み合わせる  
 p=[filename]
   permute the vertex ID to coutinuous numbering and output the permutation table to the file
+separator=[char]
+  give the separator of the numbers in the output
 Q=[filename]
   permute the numbers in the file according to the table 
 	"""
-	kwd = kwd2strkwd(args,kw_args)
+
+	paraLIST={
+		"saki":[("type",1)],
+		"ato":[("i",1),("o",1)],
+		"opt":[("t","-t"),("T","-T"),("ideg","-i"),("Ideg","-I"),
+					("odeg","-o"),("Odeg","-O"),("r","-r"),("r","-R"),("n","-n"),
+					("w","-w"),("W","-W"),("P","-P"),("Q","-Q"),("separator","-,")],
+		"opts":[("X","-X",2)],
+		"addkw":[("d","-d"),("m","-m"),("M","-M")],
+		"optato":[("dth","-d")]
+	}
+	kwd = kwd2list(args,kw_args,paraLIST)
 	return lib_grhfil.grhfil_run(kwd)
 
 def lcmtrans(inf,ptn,outf):

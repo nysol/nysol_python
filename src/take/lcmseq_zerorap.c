@@ -57,7 +57,7 @@ t:transpose the input database (item i will be i-th transaction, and i-th transa
 # the 1st letter of input-filename cannot be '-'.
 # if the output file name is -, the solutions will be output to standard output.
 */
-static const char * paraLIST[]={ 
+/*static const char * paraLIST[]={ 
 	"type","i","sup","o","K","l","u","U","g","G","w","item","a","A","r","R",
 	"f","F","p","P","n","N","opos","Opos","s",
 	"Q","stop","separator",NULL
@@ -68,8 +68,59 @@ static const char * paraLIST_i[]={
 	"-K","-l","-u","-U","-g","-G","-w","-i","-a","-A","-r","-R",
 	"-f","-F","-p","-P","-n","-N","-o","-O","-s","-Q","-#","-,",""
 };//26
+*/
+
+PyObject* lcmseq_zero_run(PyObject* self, PyObject* args)
+{
+
+	PyObject *params;
+	if(!PyArg_ParseTuple(args, "O", &params)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyList_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
 
 
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}
+
+	vv[0] = "lcm_seq";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
+		}
+	}
+
+	int sts = LCMseq_main(psize+1,vv);
+	//if(sts){//ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
+
+	if(vv){ free(vv);}
+
+	return PyLong_FromLong(sts);
+
+}
+
+/*
 PyObject* lcmseq_zero_run_dict(PyObject* self, PyObject* args){
 
 	PyObject *params;
@@ -150,7 +201,7 @@ PyObject* lcmseq_zero_run_dict(PyObject* self, PyObject* args){
 	return PyLong_FromLong(sts);
 
 }
-
+*/
 /*
 
 PyObject* lcmseq_zero_run(PyObject* self, PyObject* args, PyObject* kwds){
@@ -215,7 +266,7 @@ PyObject* lcmseq_zero_run(PyObject* self, PyObject* args, PyObject* kwds){
 
 static PyMethodDef takemethods[] = {
 //	{"lcmseq_zero_run", reinterpret_cast<PyCFunction>(lcmseq_zero_run), METH_VARARGS|METH_KEYWORDS  },
-	{"lcmseq_zero_run", (PyCFunction)lcmseq_zero_run_dict, METH_VARARGS  },
+	{"lcmseq_zero_run", (PyCFunction)lcmseq_zero_run, METH_VARARGS  },
 	{NULL}
 };
 

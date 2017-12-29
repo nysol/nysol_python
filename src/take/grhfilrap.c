@@ -25,7 +25,7 @@ static int strCHECK(PyObject* data){
 #endif
 }
 
-
+/*
 static const char * paraLIST[]={ 
 	"type","i","o","t","T","ideg","Ideg","odeg","Odeg","r","R","n","X",
 	"w","W","d","m","M","p","Q",NULL
@@ -37,6 +37,61 @@ static const char * paraLIST_i[]={
 "-w","-W","-d","-m","-M","-P","-Q",""
 };//18
 
+*/
+
+PyObject* grhfil_run(PyObject* self, PyObject* args){
+
+	PyObject *params;
+
+	if(!PyArg_ParseTuple(args, "O", &params)){ 
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}//err
+	if(!PyList_Check(params)){
+		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1); 
+	}//err
+
+	Py_ssize_t psize = PyList_Size(params);
+	char** vv = (char**)malloc(sizeof(char*)*(psize+1));
+	if(vv==NULL){
+		// ERROR
+		PyErr_SetString(PyExc_RuntimeError,"Memory alloc ERROR");
+		PyErr_Print();
+		return PyLong_FromLong(1);
+	}
+	vv[0] = "grhfil";
+	for(Py_ssize_t i=0 ; i< psize;i++){
+		PyObject *param = PyList_GetItem(params ,i);
+		if(strCHECK(param)){
+			vv[i+1] = strGET(param);
+		}
+		else{
+			PyErr_SetString(PyExc_RuntimeError,"parameter ERROR : not str");
+			if(vv){ free(vv); }
+			return PyLong_FromLong(1); 
+		}
+	}
+	
+	// DEBUG
+	//for(int i=0; i<pos;i++){ printf("%s ",vv[i]); }
+	//printf("\n");
+
+	int sts= GRHFIL_main(psize+1,vv);
+
+	//if(sts){//ERRORにはしない
+	//	PyErr_SetString(PyExc_RuntimeError,"TAKE Module RUN ERROR");
+	//	PyErr_Print();
+	//}
+	if(vv){ free(vv);}
+	return PyLong_FromLong(sts);
+
+}
+
+
+/*
 PyObject* grhfil_run_dict(PyObject* self, PyObject* args, PyObject* kwds){
 
 	PyObject *params;
@@ -121,7 +176,7 @@ PyObject* grhfil_run_dict(PyObject* self, PyObject* args, PyObject* kwds){
 
 	return PyLong_FromLong(sts);
 
-}
+}*/
 /*
 PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
 
@@ -183,7 +238,7 @@ PyObject* grhfil_run(PyObject* self, PyObject* args, PyObject* kwds){
 */
 
 static PyMethodDef takemethods_grhfil[] = {
-	{"grhfil_run",(PyCFunction)grhfil_run_dict, METH_VARARGS|METH_KEYWORDS  },
+	{"grhfil_run",(PyCFunction)grhfil_run, METH_VARARGS },
 	{NULL}
 };
 
