@@ -76,6 +76,7 @@ class NysolMOD_CORE(object):
 
 		self.msg=False
 
+
 	def direction(self,dir) :
 		self.nowdir = dir
 		return self
@@ -96,8 +97,8 @@ class NysolMOD_CORE(object):
 	def addPre(self,pre):
 		self.inplist["i"].append(pre) 
 		pre.outlist[pre.nowdir].append(self)
-		if len(self.inplist["m"]) != 0 and isinstance(self.inplist["m"][0],NysolMOD_CORE):			
-			self.inplist["m"][0].outlist[self.inplist["m"][0].nowdir].append(self)
+		#if len(self.inplist["m"]) != 0 and isinstance(self.inplist["m"][0],NysolMOD_CORE):			
+		#	self.inplist["m"][0].outlist[self.inplist["m"][0].nowdir].append(self)
 		return self
 
 	def __ilshift__(self, other):
@@ -161,6 +162,21 @@ class NysolMOD_CORE(object):
 	
 	@classmethod
 	def check_dupObjSub(self,sumiobj,dupobj,obj):
+		#if not isinstance(obj,str):
+		#	print("------mod---------")
+		#	print(obj)
+		#	print(obj.name)
+		#	print(obj.para2str())
+		#	print("i=",obj.inplist["i"])
+		#	print("m=",obj.inplist["m"])
+		#	print("o=",obj.outlist["o"])
+		#	print("u=",obj.outlist["u"])
+		#	print("------mod---------")			
+		#else:
+		#	print("------mod---------")			
+		#	print(obj)
+		#	print("------mod---------")			
+
 		if obj in sumiobj:
 			if obj in dupobj:
 				dupobj[obj] += 1
@@ -174,6 +190,7 @@ class NysolMOD_CORE(object):
 	
 
 	def check_dupObj(self,sumiobj,dupobj):
+		#o=でチェックできるはずなので　いらなくなるはず 
 
 		if NysolMOD_CORE.check_dupObjSub(sumiobj,dupobj,self) ==True :
 			return
@@ -206,7 +223,17 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		for obj in dupobj:
+			#print("----add tee----") 
+			#print(obj)
+			#print(obj.name)
+			#print(obj.para2str())
+			#print("i=",obj.inplist["i"])
+			#print("m=",obj.inplist["m"])
+			#print("o=",obj.outlist["o"])
+			#print("u=",obj.outlist["u"])
+			#print("----add tee----") 
 			for k in obj.outlist.keys():
+				#print(k,obj.outlist[k])
 				if len(obj.outlist[k])==0:
 					continue
 				elif len(obj.outlist[k])==1: #fifoのみ追加
@@ -221,9 +248,28 @@ class NysolMOD_CORE(object):
 
 				else:
 					outll = obj.outlist[k]
+					obj.outlist[k] = []
+					#print("aaaaaa1")
+					#print(outll)
+					#print("aaaaaa2")
 					teexxx = m2tee(i=obj)
-					obj.outlist[k]= [teexxx]
 					teexxx.outlist["o"] = [] 
+					obj.outlist[k].append(teexxx)
+					#print(outll)
+
+					"""これだとだめ
+					print(obj.outlist)
+					outll = obj.outlist[k]
+					print("aaaaaa1")
+					print(outll)
+					print("aaaaaa2")
+					teexxx = m2tee(i=obj)
+					teexxx.outlist["o"] = [] 
+					obj.outlist[k] = [teexxx]
+					print(outll)
+					print("aaaaaa3")
+					"""
+
 					for outin in outll:
 						if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
 							fifoxxx=mfifo(i=teexxx)
@@ -318,6 +364,9 @@ class NysolMOD_CORE(object):
 
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
+		#print("dup")
+		#print(dupobj)
+		#print("dup")
 		if len(dupobj)!=0:
 			NysolMOD_CORE.addTee(dupobj)
 			
@@ -350,7 +399,15 @@ class NysolMOD_CORE(object):
 	def makeModList(self,uniqmod,modlist,iolist):
 
 		for obj,no in uniqmod.items():
-
+			#print("---------------")
+			#print(obj)
+			#print(obj.name)
+			#print(obj.para2str())
+			#print("i=",obj.inplist["i"])
+			#print("m=",obj.inplist["m"])
+			#print("o=",obj.outlist["o"])
+			#print("u=",obj.outlist["u"])
+			#print("---------------")
 			modlist[no]= [obj.name,obj.para2str(),{},obj.tag]
 			iolist[no]=[[],[],[],[]]
 

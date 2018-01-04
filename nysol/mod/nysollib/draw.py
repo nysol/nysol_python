@@ -40,8 +40,8 @@ def dicisionPos(mlist,iolist):
 	#	dicisionPosSub(mlist,iolist,newlist,dsppos,x,y)
 
 def chageSVG(mlist,iolist,linklist,fname=None):
-	print(mlist)
-	print(iolist)
+	#print(mlist)
+	#print(iolist)
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
 
 	if fname == None:
