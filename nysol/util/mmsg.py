@@ -22,30 +22,26 @@ import os
 import datetime
 
 def errorLog(msg=""):
-	#vbl=ENV["KG_ScpVerboseLevel"]
-	vbl=None
+	vbl = os.getenv("KG_ScpVerboseLevel")
 	if not vbl or int(vbl)>=1 :
 		t = datetime.datetime.today()
 		print("#ERROR# %s; %s"%( msg , t.strftime('%Y/%m/%d %H:%M:%S') ) )
 
 def warningLog(msg=""):
-	#vbl=ENV["KG_ScpVerboseLevel"]
-	vbl=None
+	vbl = os.getenv("KG_ScpVerboseLevel")
 	if not vbl or int(vbl) >= 2 :
 		t = datetime.datetime.today()
 		print("#WARNING# %s; %s"%( msg , t.strftime('%Y/%m/%d %H:%M:%S') ) )
 
 def endLog(msg=""):
-	#vbl=ENV["KG_ScpVerboseLevel"]
-	vbl=None
+	vbl = os.getenv("KG_ScpVerboseLevel")
 	if not vbl or int(vbl) >=3 :
 		t = datetime.datetime.today()
 		print("#END# %s; %s"%( msg , t.strftime('%Y/%m/%d %H:%M:%S') ) )
 
 
 def msgLog(msg="",time=True,header=True):
-	#vbl=ENV["KG_ScpVerboseLevel"]
-	vbl=None
+	vbl = os.getenv("KG_ScpVerboseLevel")
 	if not vbl or int(vbl) >=4 :
 		str = ""
 		str = "#MSG# " if header else ""
