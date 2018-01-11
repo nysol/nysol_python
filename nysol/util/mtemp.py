@@ -200,7 +200,7 @@ class Mtemp(object):
  	# 以下のコマンドを実行することで一時ファイルを全て削除する。
 	# system "rm -rf #{path}/__MTEMP_#{@pid}_#{@oid}_*"
 	def rm(self):
-		delAllFiles(self.path,self.pid,self.oid)
+		self.delAllFiles(self.path,self.pid,self.oid)
 
 	# ワークファイル強制削除#{path}
 	def forceDel(self,save=False):
