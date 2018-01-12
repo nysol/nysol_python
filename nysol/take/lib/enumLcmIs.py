@@ -24,6 +24,7 @@ import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 import nysol.mod as nm
 import nysol.take.extcore as extTake
+import nysol.vsop._vsoplib as VSOP
 
 #========================================================================
 # 列挙関数:lcm 利用DB:TraDB
@@ -31,18 +32,15 @@ import nysol.take.extcore as extTake
 class LcmIs(object):
 
 	def reduceTaxo(self,pat,items):
-		#未実装 ZDD作成してから
-		pass
-		"""
-		tf=MCMD::Mtemp.new
 
-		if items.taxonomy==nil then
+
+		#tf=MCMD::Mtemp.new
+
+		if items.taxonomy==None:
 			return pat
-		end
 
-		xxrt = tf.file
 		taxo=items.taxonomy
-		nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN,valOnly=True,a="__fld",i=taxo.file,o=xxrt).run()
+		xxrt = nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN,valOnly=True,a="__fld",i=taxo.file).mcut(f="__fld")
 		# xxrtの内容：oyakoに親子関係にあるアイテム集合のリストが格納される
 		# __fld
 		# A X
@@ -51,20 +49,19 @@ class LcmIs(object):
 		# D Z
 		# E Z
 		# F Z
-		oyako=ZDD.constant(0)
-		MCMD::Mcsvin.new("i=#{xxrt}"){|csv|
-			csv.each{|fldVal|
-				items=fldVal["__fld"]
-				oyako=oyako+ZDD.itemset(items)
-			}
-		}
 
-		# 親子リストにあるアイテム集合を含むパターンを削除する
+		oyako=VSOP.constant(0)
+		for fldVal in xxrt: 
+			oyako=oyako+VSOP.itemset(fldVal[0])
+
+		#print("-------")
+		#pat.Print()
 		pat=pat.restrict(oyako).iif(0,pat)
+		#print("-------")
+		#pat.Print()
 
 		return pat
-	end
-	"""
+
 
 	def __init__(self,db,outtf=True):
 
@@ -78,14 +75,14 @@ class LcmIs(object):
 		self.temp=mtemp.Mtemp()
 		self.db = db # 入力データベース
 		self.file=self.temp.file()
-		self.items=self.db.items
+		items=self.db.items
 		self.outtf = outtf
 
 		# アイテムをシンボルから番号に変換する。
-		f =   nm.mjoin(k=self.db.itemFN,K=self.items.itemFN,m=self.items.file,f=self.items.idFN,i=self.db.file)
-		f <<= nm.mcut(f=self.db.idFN+","+self.items.idFN)
-		f <<= nm.mtra(k=self.db.idFN,f=self.items.idFN)
-		f <<= nm.mcut(f=self.items.idFN,nfno=True,o=self.file)
+		f =   nm.mjoin(k=self.db.itemFN,K=items.itemFN,m=items.file,f=items.idFN,i=self.db.file)
+		f <<= nm.mcut(f=self.db.idFN+","+items.idFN)
+		f <<= nm.mtra(k=self.db.idFN,f=items.idFN)
+		f <<= nm.mcut(f=items.idFN,nfno=True,o=self.file)
 		f.run()
 
 	def enumerate(self,eArgs):
@@ -184,14 +181,16 @@ class LcmIs(object):
 		trans0 = self.temp.file()
 
 		extTake.lcmtrans(lcmout,"p",trans0)
+
 		f =   nm.mdelnull(i=trans0,f="pattern")
-		f <<= nm.mvreplace(vf="pattern",m=self.items.file,K=self.items.idFN,f=self.items.itemFN)
+		f <<= nm.mvreplace(vf="pattern",m=items.file,K=items.idFN,f=items.itemFN)
 		f <<= nm.msetstr(v=self.db.size,a="total")
 		f <<= nm.mcal(c='${count}/${total}',a="support")
 		f <<= nm.mcut(f="pid,pattern,size,count,total,support")
 		f <<= nm.mvsort(vf="pattern")
 		f <<= nm.msortf(f="pid",o=xxp0)
 		f.run()
+
 
 		# xxp0
 		# pid,count,total,support,pattern
@@ -205,33 +204,28 @@ class LcmIs(object):
 		# taxonomy指定がある場合
 		else:
 			#MCMD::msgLog("reducing redundant rules in terms of taxonomy ...")
-			#未実装
-			shutil.move(xxp0,xxp1)
-			"""
-			zdd=ZDD.constant(0)
-			MCMD::Mcsvin.new("i=#{xxp0}"){|csv|
-				csv.each{|fldVal|
-					pat=fldVal['pattern']
-					zdd=zdd+ZDD.itemset(pat)
-				}
-			}
 
-			zdd=reduceTaxo(zdd,@db.items)
-			xxz1=tf.file
-			xxz2=tf.file
+			zdd=VSOP.constant(0)
+			fobj = nm.mcut(i=xxp0,f='pattern')
+			for fldVal in fobj:
+				zdd=zdd+VSOP.itemset(fldVal[0])
+
+			
+			zdd=self.reduceTaxo(zdd,self.db.items)
+			xxz1=tf.file()
+			xxz2=tf.file()
 			zdd.csvout(xxz1)
 
 			f0=None
-			f0 << nm.mcut(nfni=True,f="1:pattern" i=xxz1)
-			f0 << nm.mvsort(vf="pattern")
-			f0 << nm.msortf(f="pattern")
+			f0 <<= nm.mcut(nfni=True,f="1:pattern",i=xxz1)
+			f0 <<= nm.mvsort(vf="pattern")
+			f0 <<= nm.msortf(f="pattern")
 
-			f=""
-			f << nm.msortf(f="pattern",i=xxp0)
-			f << nm.mcommon(k="pattern",m=f0)
-			f << nm.msortf(f="pid",o=xxp1)
+			f=None
+			f <<= nm.msortf(f="pattern",i=xxp0)
+			f <<= nm.mcommon(k="pattern",m=f0)
+			f <<= nm.msortf(f="pid",o=xxp1)
 			f.run()
-			"""
 
 
 		# lift値の計算		
@@ -239,7 +233,7 @@ class LcmIs(object):
 		extTake.lcmtrans(xxone,"p",transl)
 
 		xxp2 =   nm.mdelnull(i=transl,f="pattern")
-		xxp2 <<= nm.mvreplace(vf="pattern",m=self.items.file,K=self.items.idFN,f=self.items.itemFN)
+		xxp2 <<= nm.mvreplace(vf="pattern",m=items.file,K=items.idFN,f=items.itemFN)
 		xxp2 <<= nm.msortf(f="pattern")
 
 		xxp3 =   nm.mcut(f="pid,pattern",i=xxp1)

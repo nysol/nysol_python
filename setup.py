@@ -91,8 +91,26 @@ medsetmod = Extension('nysol/take/_medsetlib',
                     sources = ['src/take/medsetrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/medset']
 										)
+
+vsopmod = Extension('nysol/vsop/_vsoplib',
+                    sources = [ 'src/vsop/vsop.cpp',
+                    'src/vsop/SAPPOROBDD/src/BDDc/bddc.c',
+                    'src/vsop/SAPPOROBDD/src/BDD+/BDD.cc',
+                    'src/vsop/SAPPOROBDD/src/BDD+/CtoI.cc',
+                    'src/vsop/SAPPOROBDD/src/BDD+/ZBDD.cc',
+                    'src/vsop/SAPPOROBDD/src/BDD+/ZBDDDG.cc',
+										'src/vsop/SAPPOROBDD/app/VSOP/table.cc',
+										'src/vsop/SAPPOROBDD/app/VSOP/print.cc'
+                    ],
+										define_macros=[('B_64', None)],
+										include_dirs=[
+											'src/vsop/SAPPOROBDD/include',
+											'src/vsop/SAPPOROBDD/app/VSOP'
+											]
+										)
+
 setup(name = 'nysol',
-			packages=['nysol','nysol/util','nysol/mod','nysol/mod/submod','nysol/mod/nysollib','nysol/take','nysol/take/lib','nysol/take/lib/base'],
+			packages=['nysol','nysol/util','nysol/mod','nysol/mod/submod','nysol/mod/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
 			version = '0.1',
 			description = 'This is a demo package',
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py',
@@ -100,6 +118,6 @@ setup(name = 'nysol',
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',
 								'scripts/take/mclique.py'],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
-											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod]
+											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod]
 			)
        

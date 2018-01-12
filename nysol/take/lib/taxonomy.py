@@ -67,6 +67,7 @@ class Taxonomy(object):
 		self.temp = mtemp.Mtemp()
 
 		self.iFile  = iFile
+
 		self.iPath  = os.path.abspath(self.iFile)
 		self.itemFN  = itemFN
 		self.taxoFN  = taxoFN
@@ -74,7 +75,8 @@ class Taxonomy(object):
 		# item順に並べ替えてpathに書き出す
 		self.file = self.temp.file()
 		para_it = self.itemFN +"," + self.taxoFN
-		nm.mcut(f=para_it,i=self.iFile).muniq(k=para_it,o=self.file).run()
+		nm.mcut(f=para_it,i=self.iFile).muniq(k=para_it,o=self.file).run(msg="on")
+	
 
 		f = nm.mcut(f=self.itemFN,i=self.iFile)
 		f <<= nm.mtrafld(f=self.itemFN,a="__fld",valOnly=True)
@@ -82,15 +84,11 @@ class Taxonomy(object):
 		f <<= nm.muniq(k="__fld")
 		f <<= nm.mcount(a="size")
 		f <<= nm.mcut(f="size")
-		xx1 = f.run()
+		xx1 = f.run(msg="on")
 
 		self.itemSize = int(xx1[0][0])
 
-
 		xx2 = nm.mcut(f=self.taxoFN+":item",i=self.file).muniq(k="item").mcount(a="size").mcut(f="size").run()
-
-		self.itemSize = int(xx2[0][0])
-
-		self.taxoSize = xx1[0][0]
+		self.taxoSize = int(xx2[0][0])
 
 

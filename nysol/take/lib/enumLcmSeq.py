@@ -31,7 +31,6 @@ import nysol.take.extcore as extTake
 #========================================================================
 class LcmSeq(object):
 
-
 	def __init__(self,db,outtf=True):
 		self.size =None
 		self.temp=mtemp.Mtemp()

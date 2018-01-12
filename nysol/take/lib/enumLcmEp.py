@@ -12,6 +12,7 @@ import shutil
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
 import nysol.take.extcore as extTake
+import nysol.vsop._vsoplib as VSOP
 
 #========================================================================
 # 列挙関数:lcm 利用DB:TraDB
@@ -19,17 +20,14 @@ import nysol.take.extcore as extTake
 class LcmEp(object):
 	#未実装zddつくってから
 	def reduceTaxo(self,pat,items):
-		pass
-		"""
-		tf=MCMD::Mtemp.new
+		#tf=mtemp.Mtemp()
 
-		if items.taxonomy==nil then
+		if items.taxonomy==None:
 			return pat
-		end
 
-		xxrt = tf.file
+		#xxrt = tf.file
 		taxo=items.taxonomy
-		nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN ,valOnly=True a="__fld" i=taxo.file o=xxrt).run()
+		xxrt = nm.mtrafld(f=taxo.itemFN+","+taxo.taxoFN ,valOnly=True,a="__fld",i=taxo.file).mcut(f="__fld")
 
 		# xxrtの内容：oyakoに親子関係にあるアイテム集合のリストが格納される
 		# __fld
@@ -39,20 +37,16 @@ class LcmEp(object):
 		# D Z
 		# E Z
 		# F Z
-		oyako=ZDD.constant(0)
-		MCMD::Mcsvin.new("i=#{xxrt}"){|csv|
-			csv.each{|fldVal|
-				items=fldVal["__fld"]
-				oyako=oyako+ZDD.itemset(items)
-			}
-		}
+		oyako=VSOP.constant(0)
 
+		for fldVal in xxrt:
+			oyako=oyako+VSOP.itemset(fldVal[0])
 		# 親子リストにあるアイテム集合を含むパターンを削除する
 		pat=pat.restrict(oyako).iif(0,pat)
 
 		return pat
-	end
-	"""
+
+
 
 	intMax=2147483646
 
@@ -274,26 +268,24 @@ class LcmEp(object):
 
 		# アイテムを包含している冗長なタクソノミを削除
 		if items.taxonomy:
-			pass
 			#MCMD::msgLog("reducing redundant rules in terms of taxonomy ...")
 			##ここは後で
-			#zdd=ZDD.constant(0)
-			#MCMD::Mcsvin.new("i=#{@pFile}"){|csv|
-			#	csv.each{|fldVal|
-			#		pat=fldVal['pattern']
-			#		zdd=zdd+ZDD.itemset(pat)
-			#	}
-			#}
-			#zdd=reduceTaxo(zdd,@db.items)
+			zdd=VSOP.constant(0)
+			dt = nm.mcut(i=self.pFile,f="pattern")
 
-			#xxp1=tf.file()
-			#xxp2=tf.file()
-			#xxp3=tf.file()
-			#zdd.csvout(xxp1)
+			for fldVal in dt:
+				zdd=zdd+VSOP.itemset(fldVal[0])
+
+			zdd=self.reduceTaxo(zdd,self.db.items)
+
+			xxp1=tf.file()
+			xxp2=tf.file()
+			xxp3=tf.file()
+			zdd.csvout(xxp1)
 			
-			#nm.mcut(nfni=True,f="1:pattern",i=xxp1).mvsort(vf="pattern").msortf(f="pattern",o=xxp2).run()
-			#nm.msortf(f=pattern,i=self.pFile).mcommon(k="pattern",m=xxp2).msortf(f="class%nr,postProb%nr,pos%nr",o=xxp3).run()
-			#shutil.move(xxp3,self.pFile)
+			nm.mcut(nfni=True,f="1:pattern",i=xxp1).mvsort(vf="pattern").msortf(f="pattern",o=xxp2).run()
+			nm.msortf(f="pattern",i=self.pFile).mcommon(k="pattern",m=xxp2).msortf(f="class%nr,postProb%nr,pos%nr",o=xxp3).run()
+			shutil.move(xxp3,self.pFile)
 
 		
 

@@ -172,15 +172,21 @@ class TraDB(object):
 		tf=mtemp.Mtemp()
 		xx1=tf.file()
 		cpara = "%s,%s:%s"%(self.idFN,taxoFN,self.itemFN)
-		nm.mnjoin(i=self.file,k=self.itemFN,K=itemFN,f=taxoFN,m=tFile).mcut(f=cpara,o=xx1).run()
+		f=None
+		f <<= nm.mnjoin(i=self.file,k=self.itemFN,K=itemFN,f=taxoFN,m=tFile)
+		f <<= nm.mcut(f=cpara,o=xx1)
+		f.run()
+
 
 		ipara ="%s,%s"%(self.file,xx1)
 		kpara ="%s,%s"%(self.idFN,self.itemFN)
 		xx2=tf.file()
-		nm.mcat(i=ipara).muniq(k=kpara,o=xx2).run()
+		nm.mcat(i=ipara).muniq(k=kpara,o=xx2).run(msg="on")
 
 		self.file = self.temp.file()
 		shutil.move(xx2,self.file)
+
+
 
 	def repTaxo(self,taxonomy):
 
@@ -196,7 +202,7 @@ class TraDB(object):
 		xx1=tf.file()
 		cpara = "%s,%s:%s"%(self.idFN,taxoFN,self.itemFN)
 		kpara = "%s,%s"%(self.idFN,self.itemFN)
-
+		
 		nm.mjoin(i=self.file,k=self.itemFN,K=itemFN,f=taxoFN,m=tFile).mcut(f=cpara).muniq(k=kpara,o=xx1).run()
 
 		self.file = self.temp.file()

@@ -139,7 +139,7 @@ class Items(object):
 		xx1=xx.file()
 		xx2=xx.file()
 		x0 =   nm.mcommon(k=self.itemFN,i=iFile,m=self.file)
-		x0 <<= nm.mcut(f=itemFN+","+self.itemFN)
+		x0 <<= nm.mcut(f=itemFN+":"+self.itemFN)
 		x0 <<= nm.muniq(k=self.itemFN)
 		x0 <<= nm.mnumber(s=self.itemFN,S=self.size+1,a=self.idFN,o=xx1)
 		x0.run()
