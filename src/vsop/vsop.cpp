@@ -114,6 +114,55 @@ static const char BC_VSOP_MINCOST = 53;
 static const char BC_VSOP_PRODUCT = 54;
 
 
+//この値はBDDライブラリとかぶらないよう注意すること
+// キャッシュがおかしくなる
+static const char BC_CtoI_DELTA =  50;
+
+CtoI CtoI_Delta(CtoI a, CtoI b)
+{
+  if(a == CtoI_Null())  return a;
+  if(b == CtoI_Null()) return b;
+  if(a == 0) return 0;
+  if(b == 0) return 0;
+  if(a == 1 && b==1) return 1;
+
+
+  int atop = a.Top();
+  int btop = b.Top();
+  if(BDD_LevOfVar(atop) < BDD_LevOfVar(btop)) return CtoI_Delta(b, a);
+
+  bddword ax = a.GetZBDD().GetID();
+  bddword bx = b.GetZBDD().GetID();
+  if(atop == btop && ax < bx) return CtoI_Delta(b, a);
+
+  ZBDD z = BDD_CacheZBDD(BC_CtoI_DELTA, ax, bx);
+  if(z != -1) return CtoI(z);
+
+  CtoI a0 = a.Factor0(atop);
+  CtoI a1 = a.Factor1(atop);
+  CtoI c;
+  if(atop != btop)
+  {
+		if(a.IsBool()) c =  CtoI_Union( CtoI_Delta(a0, b), CtoI_Delta(a1, b).AffixVar(atop) );
+    else c = CtoI_Delta(a0, b) + CtoI_Delta(a1, b).TimesSysVar(atop);
+  }
+  else
+  {
+    CtoI b0 = b.Factor0(atop);
+    CtoI b1 = b.Factor1(atop);
+    if(a.IsBool())
+      c = CtoI_Union( CtoI_Delta(a0, b0) + CtoI_Delta(a1, b1),
+             (CtoI_Delta(a1, b0)+ CtoI_Delta(a0, b1)).AffixVar(atop) ) ;
+		else if(atop > 1)
+      c = CtoI_Delta(a0, b0)
+        + (CtoI_Delta(a1, b0) + CtoI_Delta(a0, b1)).TimesSysVar(atop)
+        + CtoI_Delta(a1, b1).TimesSysVar(atop-1);
+    else BDDerr("CtoI_Delta(): SysVar overflow.");
+  }
+  BDD_CacheEnt(BC_CtoI_DELTA, ax, bx, c.GetZBDD().GetID());
+  return c;
+}
+
 
 static CtoI Product(CtoI, CtoI);
 CtoI Product(CtoI ac, CtoI bc)
@@ -1050,6 +1099,44 @@ PyObject* vsop_termsLE(PyCtoIObject* self, PyObject* args){
 	return  reinterpret_cast<PyObject*>(ret);
 }
 
+/*##vsop_meet##*/
+PyObject* vsop_meet(PyCtoIObject* self, PyObject* args){
+
+  PyObject* v = NULL;
+  if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
+
+	CtoI *ctoi_moda = new CtoI(*self->ss);
+	CtoI *ctoi_modc = value2ctoi(v);
+	CtoI *ctoi_fin; 
+	*ctoi_moda = CtoI_Meet(*ctoi_moda, *ctoi_modc);
+  ctoi_fin = ctoi_moda;
+  delete ctoi_modc;
+
+  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+	ret->ss = ctoi_fin;
+	return  reinterpret_cast<PyObject*>(ret);
+}
+
+/*##vsop_delta##*/
+PyObject* vsop_delta(PyCtoIObject* self, PyObject* args){
+
+  PyObject* v = NULL;
+  if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
+
+	CtoI *ctoi_moda = new CtoI(*self->ss);
+	CtoI *ctoi_modc = value2ctoi(v);
+	CtoI *ctoi_fin; 
+	*ctoi_moda = CtoI_Delta(*ctoi_moda, *ctoi_modc);
+  ctoi_fin = ctoi_moda;
+  delete ctoi_modc;
+
+  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+	ret->ss = ctoi_fin;
+	return  reinterpret_cast<PyObject*>(ret);
+}
+
 
 /*##vsop_iif##*/
 static PyObject* vsop_iif(PyCtoIObject* self, PyObject* args){
@@ -1673,6 +1760,8 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"termsGT",reinterpret_cast<PyCFunction>(vsop_termsGT), METH_VARARGS, ""},
   {"termsNE",reinterpret_cast<PyCFunction>(vsop_termsNE), METH_VARARGS, ""},
   {"termsEQ",reinterpret_cast<PyCFunction>(vsop_termsEQ), METH_VARARGS, ""},
+  {"meet",reinterpret_cast<PyCFunction>(vsop_meet), METH_VARARGS, ""},
+  {"delta",reinterpret_cast<PyCFunction>(vsop_delta), METH_VARARGS, ""},
 	{"import",reinterpret_cast<PyCFunction>(vsop_import),METH_VARARGS,""},
 //	{"hashout",reinterpret_cast<PyCFunction>(vsop_hashout), METH_NOARGS,""},
 	{"maxweight",reinterpret_cast<PyCFunction>(vsop_maxval),METH_NOARGS,""},
