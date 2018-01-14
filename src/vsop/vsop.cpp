@@ -80,6 +80,8 @@ static void num_check(char *str)
 }
 
 
+
+
 typedef struct {
   PyObject_HEAD
   CtoI* ss;
@@ -360,6 +362,249 @@ int MinCost(ZBDD f)
 
 
 
+struct VsopEachNode{
+	CtoI * val;
+	int pos ; 
+};
+
+class VsopEach{
+
+	int Depth_e;
+	int * S_Var_e;
+	std::stack<VsopEachNode*> _stk;
+	bool err;
+	
+  public:
+		VsopEach(CtoI* base){
+			if(*base == CtoI_Null()) return ;
+			if(*base == 0) return ;
+			VsopEachNode *val = new VsopEachNode;
+			val->val = new CtoI(*base);
+			val->pos = 0;
+			_stk.push(val);
+			int lev = BDD_LevOfVar(base->TopItem());
+			err =false;
+			Depth_e = 0;
+			S_Var_e = new int[lev];
+		}
+
+
+		int PF(VsopEachNode *a){
+		  if(a->val->IsConst()){
+		  	return 1;
+		  }
+		  if(a->pos==0){
+			  int v = a->val->TopItem();
+  			CtoI b = a->val->Factor1(v);
+			  if(b == CtoI_Null()) { err=true;  return 1;}
+				VsopEachNode *val = new VsopEachNode;
+				val->val = new CtoI(b);
+				val->pos = 0;
+				_stk.push(val);
+  			S_Var_e[Depth_e] = v;
+				Depth_e++;
+				int sts = PF(val);
+				a->pos=1;
+				if(sts == 1){ return 1; }
+				_stk.pop();
+			}
+		  if(a->pos==1){
+	 			Depth_e--;
+			  CtoI b = a->val->Factor0(S_Var_e[Depth_e]);
+  			if(b == 0) return 0;
+  			if(b == CtoI_Null()){ err=true; return 1;}
+				VsopEachNode *val = new VsopEachNode;
+				val->val = new CtoI(b);
+				val->pos = 0;
+				_stk.push(val);
+				int sts = PF(val);
+				a->pos=2;
+				if(sts == 0){ _stk.pop();}
+				return sts;
+  		}
+  		return 0;
+		}
+
+		CtoI * next(){
+			while(!_stk.empty()){
+				//if(_stk.empty()){ return NULL;} 
+				VsopEachNode *now = _stk.top();
+				if(PF(now))break;
+				_stk.pop();
+			}
+			if(_stk.empty()){ return NULL;} 
+			VsopEachNode *out = _stk.top();
+				
+
+			CtoI a(*out->val);
+			int sign=1;
+			if(a.TopDigit() & 1) {sign= -1 ; a = -a; }
+			CtoI rtn;
+			int c1 = (a != 1);
+			char *valrtn;
+			if(c1 || Depth_e == 0){
+				if(a.TopItem() > 0) a = a.MaxVal();
+				int d = a.TopDigit() / 3 + 14;
+				valrtn = new char[d];
+				int  err = a.StrNum10(valrtn);
+				if(err == 1){
+					return NULL;
+				}
+				rtn = CtoI(CtoI_atoi(valrtn));
+			}
+			else if(!c1){
+				rtn = CtoI(CtoI_atoi("1"));;
+			}
+			for(int i=0; i<Depth_e; i++)
+			{
+				char *str = VTable.GetName(S_Var_e[i]);
+				int ckck = VTable.GetID(str);
+				rtn =Product(rtn, CtoI(1).AffixVar( ckck));
+			}		
+			_stk.pop();
+			return new CtoI(rtn);
+		}
+};
+
+
+struct VsopRtnInfo{
+	CtoI * val;
+	int weight ; 
+	bool top ; 
+	bool bot ; 
+};
+
+class VsopItemEach{
+
+	int Depth_e;
+	int * S_Var_e;
+	std::stack<VsopEachNode*> _stk;
+	bool err;
+	bool _top;
+	bool _bot;
+	bool _interrupt;
+	int _weight;
+	int _ipos;
+	
+  public:
+		VsopItemEach(CtoI* base){
+			if(*base == CtoI_Null()) return ;
+			if(*base == 0) return ;
+			VsopEachNode *val = new VsopEachNode;
+			val->val = new CtoI(*base);
+			val->pos = 0;
+			_stk.push(val);
+			int lev = BDD_LevOfVar(base->TopItem());
+			err =false;
+			Depth_e = 0;
+			S_Var_e = new int[lev];
+			_top =true;
+			_bot =false;
+			_interrupt = false;
+			_ipos =0;
+		}
+
+		VsopRtnInfo * rtnval(){
+			bool top = true;
+			bool bot = false;
+			if(_ipos<Depth_e){
+				VsopRtnInfo * vrinfo = new VsopRtnInfo;
+				char *str = VTable.GetName(S_Var_e[_ipos]);
+				vrinfo->val = new CtoI (CtoI(1).AffixVar(VTable.GetID(str))) ;
+				if( _ipos>0 ){ vrinfo->top=false;}
+				else     { vrinfo->top=true; }
+				_ipos++;
+				_interrupt = true;
+				if( _ipos==Depth_e ){ vrinfo->bot =true; } 
+				else                   { vrinfo->bot =false; } 
+				vrinfo->weight = _weight;
+				return vrinfo;
+			}
+			_interrupt = false;
+			_ipos=0;
+			return NULL;
+		}
+
+
+		int PF(VsopEachNode *a){
+		  if(a->val->IsConst()){
+		  	return 1;
+		  }
+		  if(a->pos==0){
+			  int v = a->val->TopItem();
+  			CtoI b = a->val->Factor1(v);
+			  if(b == CtoI_Null()) { err=true;  return 1;}
+				VsopEachNode *val = new VsopEachNode;
+				val->val = new CtoI(b);
+				val->pos = 0;
+				_stk.push(val);
+  			S_Var_e[Depth_e] = v;
+				Depth_e++;
+				int sts = PF(val);
+				a->pos=1;
+				if(sts == 1){ return 1; }
+				_stk.pop();
+			}
+		  if(a->pos==1){
+	 			Depth_e--;
+			  CtoI b = a->val->Factor0(S_Var_e[Depth_e]);
+  			if(b == 0) return 0;
+  			if(b == CtoI_Null()){ err=true; return 1;}
+				VsopEachNode *val = new VsopEachNode;
+				val->val = new CtoI(b);
+				val->pos = 0;
+				_stk.push(val);
+				int sts = PF(val);
+				a->pos=2;
+				if(sts == 0){ _stk.pop();}
+				return sts;
+  		}
+  		return 0;
+		}
+
+		VsopRtnInfo * next(){
+			if(_interrupt){
+				VsopRtnInfo * rval = rtnval();
+				if(rval==NULL){ _stk.pop();}
+				else{ return rval ;}
+			}
+			while(!_stk.empty()){
+				VsopEachNode *now = _stk.top();
+				if(PF(now))break;
+				_stk.pop();
+			}
+			if(_stk.empty()){ return NULL;} 
+			VsopEachNode *out = _stk.top();
+				
+
+			CtoI a(*out->val);
+			int sign=1;
+			if(a.TopDigit() & 1) {sign= -1 ; a = -a; }
+			CtoI rtn;
+			int c1 = (a != 1);
+			char *valrtn;
+			if(c1 || Depth_e == 0){
+				if(a.TopItem() > 0) a = a.MaxVal();
+				int d = a.TopDigit() / 3 + 14;
+				valrtn = new char[d];
+				int  err = a.StrNum10(valrtn);
+				if(err == 1){
+					return NULL;
+				}
+				_weight = atoi(valrtn);
+			}
+			else if(!c1){
+				_weight = 1;
+			}
+			_ipos=0;
+			return rtnval();
+		}
+};
+
+
+
+
+
 CtoI * int2ctoi(int val)
 {
 	//初回呼び出し時のみBDDの初期化
@@ -511,6 +756,201 @@ static PyObject* vsop_totalsize(PyCtoIObject* self){
 	BDD_GC();
 	return PyLong_FromLong(BDD_Used());
 }
+
+typedef struct {
+  PyObject_HEAD
+  VsopItemEach* it;
+} PyCtoI_ItemIterObject;
+
+typedef struct {
+  PyObject_HEAD
+  VsopEach* it;
+} PyCtoIIterObject;
+
+
+static PyObject* ctoiiter_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
+  PyCtoIIterObject* self;
+  self = reinterpret_cast<PyCtoIIterObject*>(type->tp_alloc(type, 0));
+  if (self == NULL) return NULL;
+  return reinterpret_cast<PyObject*>(self);
+}
+
+static PyObject* ctoiitemiter_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
+  PyCtoI_ItemIterObject* self;
+  self = reinterpret_cast<PyCtoI_ItemIterObject*>(type->tp_alloc(type, 0));
+  if (self == NULL) return NULL;
+  return reinterpret_cast<PyObject*>(self);
+}
+
+
+static void ctoiiter_dealloc(PyCtoIIterObject* self) {
+  delete self->it;
+  PyObject_Del(self);
+}
+static void ctoiitemiter_dealloc(PyCtoI_ItemIterObject* self) {
+  delete self->it;
+  PyObject_Del(self);
+}
+
+
+static PyObject* ctoiiter_next(PyCtoIIterObject* self) {
+	CtoI *v = self->it->next(); 
+	if ( v ){
+	  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+		ret->ss = v;
+		return  reinterpret_cast<PyObject*>(ret);
+	}
+	return NULL;
+}
+
+static PyObject* ctoiitemiter_next(PyCtoI_ItemIterObject* self) {
+	VsopRtnInfo *v = self->it->next(); 
+	if ( v ){
+	  PyCtoIObject* ctoiobj = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+		ctoiobj->ss = v->val;
+		return Py_BuildValue("[iOOO]",v->weight,ctoiobj,PyBool_FromLong(v->top),PyBool_FromLong(v->bot));
+	}
+	return NULL;
+}
+
+
+static PyMethodDef setsetiter_methods[] = {
+  {NULL,           NULL}           /* sentinel */
+};
+
+
+
+
+static PyTypeObject PyCtoIIter_Type = {
+  PyVarObject_HEAD_INIT(&PyType_Type, 0)
+  "ctoi_iterator",                          /* tp_name */
+  sizeof(PyCtoIIterObject),                 /* tp_basicsize */
+  0,                                          /* tp_itemsize */
+  /* methods */
+  reinterpret_cast<destructor>(ctoiiter_dealloc), /* tp_dealloc */
+  0,                                          /* tp_print */
+  0,                                          /* tp_getattr */
+  0,                                          /* tp_setattr */
+  0,                                          /* tp_compare or *tp_reserved */
+  0,                                          /* tp_repr */
+  0,                                          /* tp_as_number */
+  0,                                          /* tp_as_sequence */
+  0,                                          /* tp_as_mapping */
+  0,                                          /* tp_hash */
+  0,                                          /* tp_call */
+  0,                                          /* tp_str */
+  PyObject_GenericGetAttr,                    /* tp_getattro */
+  0,                                          /* tp_setattro */
+  0,                                          /* tp_as_buffer */
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /* tp_flags */
+  0,                                          /* tp_doc */
+  0,                                          /* tp_traverse */
+  0,                                          /* tp_clear */
+  0,                                          /* tp_richcompare */
+  0,                                          /* tp_weaklistoffset */
+  PyObject_SelfIter,                          /* tp_iter */
+  reinterpret_cast<iternextfunc>(ctoiiter_next), /* tp_iternext */
+  setsetiter_methods,                         /* tp_methods */
+  0,                                          /* tp_members */
+  0,                                          /* tp_getset */
+  0,                                          /* tp_base */
+  0,                                          /* tp_dict */
+  0,                                          /* tp_descr_get */
+  0,                                          /* tp_descr_set */
+  0,                                          /* tp_dictoffset */
+  0,                                          /* tp_init */
+  PyType_GenericAlloc,                        /* tp_alloc */
+  ctoiiter_new,                             /* tp_new */
+#if PY_MAJOR_VERSION >= 3
+  0, /* tp_free */
+  0, /* tp_is_gc */
+  0, /* *tp_bases */
+  0, /* *tp_mro */
+  0, /* *tp_cache */
+  0, /* *tp_subclasses */
+  0, /* *tp_weaklist */
+  0, /* tp_version_tag */
+  0, /* tp_finalize */
+#endif
+};
+
+static PyTypeObject PyCtoI_ItemIter_Type = {
+  PyVarObject_HEAD_INIT(&PyType_Type, 0)
+  "ctoi_iterator",                          /* tp_name */
+  sizeof(PyCtoIIterObject),                 /* tp_basicsize */
+  0,                                          /* tp_itemsize */
+  /* methods */
+  reinterpret_cast<destructor>(ctoiitemiter_dealloc), /* tp_dealloc */
+  0,                                          /* tp_print */
+  0,                                          /* tp_getattr */
+  0,                                          /* tp_setattr */
+  0,                                          /* tp_compare or *tp_reserved */
+  0,                                          /* tp_repr */
+  0,                                          /* tp_as_number */
+  0,                                          /* tp_as_sequence */
+  0,                                          /* tp_as_mapping */
+  0,                                          /* tp_hash */
+  0,                                          /* tp_call */
+  0,                                          /* tp_str */
+  PyObject_GenericGetAttr,                    /* tp_getattro */
+  0,                                          /* tp_setattro */
+  0,                                          /* tp_as_buffer */
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /* tp_flags */
+  0,                                          /* tp_doc */
+  0,                                          /* tp_traverse */
+  0,                                          /* tp_clear */
+  0,                                          /* tp_richcompare */
+  0,                                          /* tp_weaklistoffset */
+  PyObject_SelfIter,                          /* tp_iter */
+  reinterpret_cast<iternextfunc>(ctoiitemiter_next), /* tp_iternext */
+  setsetiter_methods,                         /* tp_methods */
+  0,                                          /* tp_members */
+  0,                                          /* tp_getset */
+  0,                                          /* tp_base */
+  0,                                          /* tp_dict */
+  0,                                          /* tp_descr_get */
+  0,                                          /* tp_descr_set */
+  0,                                          /* tp_dictoffset */
+  0,                                          /* tp_init */
+  PyType_GenericAlloc,                        /* tp_alloc */
+  ctoiiter_new,                             /* tp_new */
+#if PY_MAJOR_VERSION >= 3
+  0, /* tp_free */
+  0, /* tp_is_gc */
+  0, /* *tp_bases */
+  0, /* *tp_mro */
+  0, /* *tp_cache */
+  0, /* *tp_subclasses */
+  0, /* *tp_weaklist */
+  0, /* tp_version_tag */
+  0, /* tp_finalize */
+#endif
+};
+
+static PyObject* vsop_iter(PyObject* self) {
+  PyCtoIIterObject* ssi = PyObject_New(PyCtoIIterObject, &PyCtoIIter_Type);
+  if (ssi == NULL) return NULL;
+  ssi->it = new VsopEach(reinterpret_cast<PyCtoIObject*>(self)->ss);
+  if (ssi->it == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+  return reinterpret_cast<PyObject*>(ssi);
+}
+
+static PyObject* vsop_itemiter(PyObject* self) {
+  PyCtoI_ItemIterObject* ssi = PyObject_New(PyCtoI_ItemIterObject, &PyCtoI_ItemIter_Type);
+  if (ssi == NULL) return NULL;
+  ssi->it = new VsopItemEach(reinterpret_cast<PyCtoIObject*>(self)->ss);
+  if (ssi->it == NULL) {
+    PyErr_NoMemory();
+    return NULL;
+  }
+  return reinterpret_cast<PyObject*>(ssi);
+}
+
 
 static PyMethodDef ctoi_methods[] = {
 	{"itemset", reinterpret_cast<PyCFunction>(vsop_itemset), METH_VARARGS },
@@ -1194,10 +1634,127 @@ PyObject* vsop_diff(PyCtoIObject* self, PyObject* args){
 }
 
 
+#define MAX_LEN 409600
+#define HASH_MAX 4096000
 
 static int* S_Var;
 static int  PFflag;
 static int  Depth;
+static int  hashcnt;
+
+
+//----------------------- vsop_hashout -------------------------------
+static int PF_hash(CtoI a, PyObject* hash)
+{
+	if(a.IsConst())
+	{
+		char *valstr = new char[MAX_LEN];
+		if(a.TopDigit() & 1) {strcpy(valstr,"-") ; a = -a; }
+		else{ strcpy(valstr,"");}
+
+		PFflag = 1;
+		int c1 = (a != 1);
+		if(c1 || Depth == 0)
+		{
+			if(a.TopItem() > 0) a = a.MaxVal();
+			int d = a.TopDigit() / 3 + 14;
+			char *valrtn = new char[d];
+			int err = a.StrNum10(valrtn);
+			if(err == 1)
+			{
+				yyerror("memory over flow");
+				return 1;
+			}
+			strcat(valstr,valrtn);
+			delete [] valrtn;
+		}
+		else if(!c1){
+			strcat(valstr,"1");
+		}
+		char *keystr = new char[MAX_LEN];
+		*keystr = '\0';
+		for(int i=0; i<Depth; i++)
+		{
+			int size = strlen(keystr)+strlen(VTable.GetName(S_Var[i]))+2;
+			if(size>MAX_LEN){
+				yyerror("string size over flow");
+			}
+			if(i==0){
+				strcpy(keystr,VTable.GetName(S_Var[i]));
+			}
+			else{
+				strcat(keystr," ");
+				strcat(keystr,VTable.GetName(S_Var[i]));
+			}
+		}
+		PyDict_SetItemString(hash , keystr,PyLong_FromString(valstr,NULL,0));
+		hashcnt++;
+		if(hashcnt> HASH_MAX){return 2;}
+		return 0;
+	}
+	int v = a.TopItem();
+	CtoI b = a.Factor1(v);
+	if(b == CtoI_Null()) return 1;
+	S_Var[Depth] = v;
+	Depth++;
+	int chk=PF_hash(b, hash);
+	if(chk > 0) return chk;
+	Depth--;
+	b = a.Factor0(v);
+	if(b == 0) return 0;
+	if(b == CtoI_Null()) return 1;
+
+	return PF_hash(b,hash);
+}
+
+
+static int HashoutCtoI(CtoI a,PyObject* hash)
+{
+	int rtn=0;
+	hashcnt=0;
+	if(a == CtoI_Null()) return 1;
+	if(a == 0) return 0;
+	else
+	{
+		int lev = BDD_LevOfVar(a.TopItem());
+		Depth = 0;
+		S_Var = new int[lev];
+		PFflag = 0;
+		rtn = PF_hash(a,hash);
+		if(rtn == 1){ 
+			delete [] S_Var;
+			return rtn; 
+		}
+	}
+	delete [] S_Var;
+	return rtn;
+}
+/*##vsop_hashout##*/
+PyObject* vsop_hashout(PyCtoIObject* self){
+
+	PyObject* hash = PyDict_New();
+	int rtnflg = HashoutCtoI(*self->ss,hash);
+/*
+	if(rtnflg==2){
+		rb_iv_set(self,"@partly", Qtrue );
+	}
+	else{
+		rb_iv_set(self,"@partly", Qfalse);
+	}
+*/
+	return hash;
+}
+
+
+//----------------------- vsop_hashout -------------------------------
+
+
+
+
+
+
+
+
 
 //----------------------- vsop_csvout -------------------------------
 static int PutNum(CtoI a, int base,ofstream &fs)
@@ -1745,6 +2302,7 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"same", reinterpret_cast<PyCFunction>(vsop_same), METH_VARARGS, ""},
   {"diff", reinterpret_cast<PyCFunction>(vsop_diff), METH_VARARGS, ""},
   {"csvout", reinterpret_cast<PyCFunction>(vsop_csvout), METH_VARARGS, ""},
+  {"hashout", reinterpret_cast<PyCFunction>(vsop_hashout),METH_NOARGS, ""},
   {"export", reinterpret_cast<PyCFunction>(vsop_export), METH_VARARGS, ""},
   {"show",reinterpret_cast<PyCFunction>(vsop_show), METH_VARARGS, ""},
 //  {"lcm",reinterpret_cast<PyCFunction>(vsop_restrict), METH_VARARGS, ""},
@@ -1778,6 +2336,7 @@ static PyMethodDef ctoi_obj_methods[] = {
 	{"maxcost",reinterpret_cast<PyCFunction>(vsop_maxcost), METH_NOARGS, ""},
 	{"mincover",reinterpret_cast<PyCFunction>(vsop_mincover), METH_NOARGS, ""},
 	{"mincost",reinterpret_cast<PyCFunction>(vsop_mincost), METH_NOARGS, ""},
+  {"itemiter", reinterpret_cast<PyCFunction>(vsop_itemiter), METH_NOARGS, ""},
   {NULL}  /* Sentinel */
 };
 
@@ -1819,8 +2378,8 @@ PyTypeObject PyCtoI_Type = {
   0,		                      /* tp_clear */
   reinterpret_cast<richcmpfunc>(ctoi_richcompare), /* tp_richcompare */
   0,		                      /* tp_weaklistoffset */
-  0,                                  /* tp_iter */
-  0,                                  /* tp_iternext */
+  vsop_iter,                          /* tp_iter */
+  reinterpret_cast<iternextfunc>(ctoiiter_next), /* tp_iternext */
   ctoi_obj_methods,                     /* tp_methods */
   0,//ctoi_members,                     /* tp_members */
   0,                                  /* tp_getset */
@@ -1863,7 +2422,14 @@ PyMODINIT_FUNC
 PyInit__vsoplib(void){
 	PyObject* m;
   if (PyType_Ready(&PyCtoI_Type) < 0) return NULL;
+  if (PyType_Ready(&PyCtoIIter_Type) < 0) return NULL;
   m = PyModule_Create(&moduledef);
+	if(m==NULL){ return ; }
+  Py_INCREF(&PyCtoI_Type);
+  Py_INCREF(&PyCtoIIter_Type);
+	PyModule_AddObject(m, "ctoi", reinterpret_cast<PyObject*>(&PyCtoI_Type));
+  PyModule_AddObject(m, "ctoi_iterator",
+                     reinterpret_cast<PyObject*>(&PyCtoIIter_Type));
 	return m;
 }
 
@@ -1872,10 +2438,15 @@ PyInit__vsoplib(void){
 void init_vsoplib(void){
 	PyObject* m;
   if (PyType_Ready(&PyCtoI_Type) < 0) return ;
+  if (PyType_Ready(&PyCtoIIter_Type) < 0) return;
 	m = Py_InitModule("_vsoplib", ctoi_methods);
 	if(m==NULL){ return ; }
   Py_INCREF(&PyCtoI_Type);
+  Py_INCREF(&PyCtoIIter_Type);
 	PyModule_AddObject(m, "ctoi", reinterpret_cast<PyObject*>(&PyCtoI_Type));
+  PyModule_AddObject(m, "ctoi_iterator",
+                     reinterpret_cast<PyObject*>(&PyCtoIIter_Type));
+
 	return ;
 }
 
