@@ -99,12 +99,14 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
                     'src/vsop/SAPPOROBDD/src/BDD+/CtoI.cc',
                     'src/vsop/SAPPOROBDD/src/BDD+/ZBDD.cc',
                     'src/vsop/SAPPOROBDD/src/BDD+/ZBDDDG.cc',
+                    'src/vsop/SAPPOROBDD/src/BDDLCM/lcm-vsop.cc',
 										'src/vsop/SAPPOROBDD/app/VSOP/table.cc',
 										'src/vsop/SAPPOROBDD/app/VSOP/print.cc'
                     ],
-										define_macros=[('B_64', None)],
+										define_macros=[('B_64', None),('_NO_MAIN_',None)],
 										include_dirs=[
 											'src/vsop/SAPPOROBDD/include',
+											'src/vsop/SAPPOROBDD/src/BDDLCM/',
 											'src/vsop/SAPPOROBDD/app/VSOP'
 											]
 										)

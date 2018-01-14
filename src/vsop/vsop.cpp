@@ -11,8 +11,10 @@
 #include <stack>
 
 #include"CtoI.h"
-#include "ZBDDDG.h"
+#include"ZBDDDG.h"
 #include"vsop.h"
+
+extern int CtoI_Lcm1_ub(char *, char *, int, int, int); // by ham
 
 using namespace std;
 
@@ -952,11 +954,108 @@ static PyObject* vsop_itemiter(PyObject* self) {
 }
 
 
+
+
+static PyObject* vsop_lcm_nomal(char *tp,char *fname,int th,char *order=NULL){
+
+	CtoI *ctoi_fin; 
+
+	if(init_cnt==0){ BDDV_Init(256, env_nmax);}
+	init_cnt++;
+	if(strcmp(tp, "F") == 0) CtoI_Lcm1(fname, order, th, 0);
+	else if(strcmp(tp, "C") == 0) CtoI_Lcm1(fname, order, th, 1);
+	else if(strcmp(tp, "M") == 0) CtoI_Lcm1(fname, order, th, 2);
+	else if(strcmp(tp, "FQ") == 0) CtoI_Lcm1(fname, order, th, 10);
+	else if(strcmp(tp, "CQ") == 0) CtoI_Lcm1(fname, order, th, 11);
+	else if(strcmp(tp, "MQ") == 0) CtoI_Lcm1(fname, order, th, 12);
+	else { yyerror("type ERROR\n"); return NULL;}
+	for(int i=VTable.Used(); i<CtoI_LcmItems(); i++){
+		char s[32];
+		int x = CtoI_LcmPerm(i);
+		sprintf(s, "x%d", i+1);
+		VTable.SetT(s, power16/2);
+  }
+  CtoI a = CtoI_Lcm2();
+  ctoi_fin = new CtoI(a);
+
+  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+	ret->ss = ctoi_fin;
+	return  reinterpret_cast<PyObject*>(ret);
+
+}
+
+
+
+static PyObject* vsop_lcm_ub(char *tp,char *fname,int th,int ub,char *order=NULL)
+{
+	if(init_cnt==0){ BDDV_Init(256, env_nmax);}
+	init_cnt++;
+
+	CtoI *ctoi_fin; 
+	if(strcmp(tp, "F" ) == 0) CtoI_Lcm1_ub(fname, order, th,  0, ub);
+	else if(strcmp(tp, "C" ) == 0) CtoI_Lcm1_ub(fname, order, th,  1, ub);
+	else if(strcmp(tp, "M" ) == 0) CtoI_Lcm1_ub(fname, order, th,  2, ub);
+	else if(strcmp(tp, "FQ") == 0) CtoI_Lcm1_ub(fname, order, th, 10, ub);
+	else if(strcmp(tp, "CQ") == 0) CtoI_Lcm1_ub(fname, order, th, 11, ub);
+	else if(strcmp(tp, "MQ") == 0) CtoI_Lcm1_ub(fname, order, th, 12, ub);
+	else { yyerror("type ERROR\n"); return NULL;}
+
+  for(int i=VTable.Used(); i<CtoI_LcmItems(); i++){
+		int t = 1;
+		char s[32];
+		int x = CtoI_LcmPerm(i);
+		sprintf(s, "x%d", x);
+		while(VTable.GetID(s) != 0)
+		{
+	  	t++;
+	  	sprintf(s, "x%d_%d", x, t);
+		}
+		VTable.SetT(s, power16/2);
+  }
+  
+  CtoI a = CtoI_Lcm2();
+  ctoi_fin = new CtoI(a);
+
+  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+	ret->ss = ctoi_fin;
+	return  reinterpret_cast<PyObject*>(ret);
+}
+
+
+
+/*##vsop_lcm##*/
+static PyObject* vsop_lcm(PyCtoIObject* self, PyObject* args)
+{
+
+	char *tp=NULL;
+	char *tfname=NULL;
+	int minsup=0;
+	char *order=NULL;
+	int ub=0;
+	PyObject* rtnval ; 
+
+  if (!PyArg_ParseTuple(args, "ssi|si", &tp, &tfname,&minsup, &order,&ub)) return NULL;
+
+	int argc = PyTuple_Size(args);
+	if(argc==5){
+		if(*order=='\0'){ order = NULL;}
+		rtnval = vsop_lcm_ub(tp,tfname,minsup,ub,order);
+	}
+	else{
+		rtnval = vsop_lcm_nomal(tp,tfname,minsup,order);
+	}
+	return rtnval;
+}
+
+
 static PyMethodDef ctoi_methods[] = {
 	{"itemset", reinterpret_cast<PyCFunction>(vsop_itemset), METH_VARARGS },
 	{"symbol", reinterpret_cast<PyCFunction>(vsop_symbol), METH_VARARGS },
 	{"constant", reinterpret_cast<PyCFunction>(vsop_constant), METH_VARARGS },
 	{"totalsize", reinterpret_cast<PyCFunction>(vsop_totalsize), METH_VARARGS },
+  {"lcm",reinterpret_cast<PyCFunction>(vsop_lcm), METH_VARARGS, ""},
 	{NULL}
 };
 
@@ -1052,13 +1151,19 @@ static void vsop_print_arg(PyCtoIObject* self,char *arg1,char *arg2){
 static PyObject* vsop_print(PyCtoIObject* self){
 
 	CtoI *ctoi_modb =new CtoI(*(self->ss));
+
 	if(*ctoi_modb == CtoI_Null()){
+
 		*ctoi_modb = 0;
 		yyerror("<WARNING> Memory overflow\n");
+		Py_RETURN_TRUE;
 	}
   if(PrintCtoI(*ctoi_modb) == 1){
+
 		yyerror("<WARNING> Memory overflow\n");
+		Py_RETURN_TRUE;
 	}
+
 	delete ctoi_modb;
 	Py_RETURN_TRUE;
 }
@@ -1078,10 +1183,10 @@ CtoI *value2ctoi(PyObject* v)
 		rtnctoi=int2ctoi(PyLong_AsLong(v));
 	}
 	else if(v==Py_None){
-		printf("None err1\n");
+		yyerror("None err1\n");
 	}
 	else{
-		printf("errzzz2\n");
+		yyerror("Unknow type err\n");
 	}
 	return rtnctoi; 
 }
@@ -1359,6 +1464,7 @@ PyObject* vsop_symgrp(PyCtoIObject* self){
 	CtoI *ctoi_moda =new CtoI(*self->ss);
 	CtoI *ctoi_fin; 
 	*ctoi_moda = ctoi_moda -> NonZero().GetZBDD().SymGrp();
+
   ctoi_fin = ctoi_moda;
 
   PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
@@ -1707,7 +1813,6 @@ static int PF_hash(CtoI a, PyObject* hash)
 	return PF_hash(b,hash);
 }
 
-
 static int HashoutCtoI(CtoI a,PyObject* hash)
 {
 	int rtn=0;
@@ -1820,9 +1925,9 @@ int CsvoutCtoI(CtoI a,ofstream &fs)
 		PFflag = 0;
 		int err = PF(a, 10,fs);
 		if(err == 1){ 
-			printf("memory over flow\n");
-			 delete [] S_Var ;
-			 S_Var =NULL;
+			yyerror("memory over flow\n");
+			delete [] S_Var ;
+			S_Var =NULL;
 			return 1; 
 		}
 	}
@@ -1847,7 +1952,7 @@ PyObject* vsop_csvout(PyCtoIObject* self, PyObject* args){
 		fs.close();
 	}
 	else{
-		printf("file oepn error\n");
+		yyerror("file oepn error\n");
 	}
 	return PyLong_FromLong(0);
 }
@@ -1877,7 +1982,7 @@ PyObject* vsop_export(PyCtoIObject* self, PyObject* args){
 	}
 	if(ctoi_modd){ delete ctoi_modd; }
 
-	return  reinterpret_cast<PyObject*>(self);
+	Py_RETURN_TRUE;
 }
 /*##vsop_show##*/
 // bit,hex,map,rmap,case,decomp exportのみ動くようにする
@@ -2201,6 +2306,9 @@ static PyObject* vsop_mincost(PyCtoIObject* self){
 
 
 
+
+
+
 static PyObject* ctoi_richcompare(PyCtoIObject* self, PyObject* obj, int op) {
 
 	CtoI *ctoi_moda =new CtoI(*(self->ss));
@@ -2302,10 +2410,8 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"same", reinterpret_cast<PyCFunction>(vsop_same), METH_VARARGS, ""},
   {"diff", reinterpret_cast<PyCFunction>(vsop_diff), METH_VARARGS, ""},
   {"csvout", reinterpret_cast<PyCFunction>(vsop_csvout), METH_VARARGS, ""},
-  {"hashout", reinterpret_cast<PyCFunction>(vsop_hashout),METH_NOARGS, ""},
   {"export", reinterpret_cast<PyCFunction>(vsop_export), METH_VARARGS, ""},
   {"show",reinterpret_cast<PyCFunction>(vsop_show), METH_VARARGS, ""},
-//  {"lcm",reinterpret_cast<PyCFunction>(vsop_restrict), METH_VARARGS, ""},
  	{"permit",reinterpret_cast<PyCFunction>(vsop_permitsym), METH_VARARGS, ""},
   {"permitsym",reinterpret_cast<PyCFunction>(vsop_permitsym), METH_VARARGS, ""},
   {"restrict",reinterpret_cast<PyCFunction>(vsop_restrict), METH_VARARGS, ""},
@@ -2321,7 +2427,7 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"meet",reinterpret_cast<PyCFunction>(vsop_meet), METH_VARARGS, ""},
   {"delta",reinterpret_cast<PyCFunction>(vsop_delta), METH_VARARGS, ""},
 	{"import",reinterpret_cast<PyCFunction>(vsop_import),METH_VARARGS,""},
-//	{"hashout",reinterpret_cast<PyCFunction>(vsop_hashout), METH_NOARGS,""},
+	{"hashout",reinterpret_cast<PyCFunction>(vsop_hashout), METH_NOARGS,""},
 	{"maxweight",reinterpret_cast<PyCFunction>(vsop_maxval),METH_NOARGS,""},
 	{"minweight",reinterpret_cast<PyCFunction>(vsop_minval),METH_NOARGS,""},
 	{"totalweight",reinterpret_cast<PyCFunction>(vsop_totalval), METH_NOARGS,""},
