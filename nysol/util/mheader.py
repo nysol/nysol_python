@@ -32,4 +32,4 @@ def mheader(**kw_args):
 		res = subprocess.run(["head", "-n1", kw_args["i"]], stdout=subprocess.PIPE)
 		data = res.stdout.decode('utf-8').strip().split(",")
 
-	print(data)
+	return data
