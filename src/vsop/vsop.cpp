@@ -80,16 +80,6 @@ static void num_check(char *str)
 		p++;
 	}
 }
-
-
-
-
-typedef struct {
-  PyObject_HEAD
-  CtoI* ss;
-} PyCtoIObject;
-
-
 struct OV
 {
   char _ovf;
@@ -109,7 +99,8 @@ int init_cnt=0;
 int env_nmax=0;
 bool env_warning = false;
 
-extern PyTypeObject PyCtoI_Type;
+//この値はBDDライブラリとかぶらないよう注意すること
+// キャッシュがおかしくなる
 static const int power16 = 1 << 16;
 static const char BC_VSOP_VALUE = 50;
 static const char BC_VSOP_DENSITY = 51;
@@ -117,9 +108,6 @@ static const char BC_VSOP_MAXCOST = 52;
 static const char BC_VSOP_MINCOST = 53;
 static const char BC_VSOP_PRODUCT = 54;
 
-
-//この値はBDDライブラリとかぶらないよう注意すること
-// キャッシュがおかしくなる
 static const char BC_CtoI_DELTA =  50;
 
 CtoI CtoI_Delta(CtoI a, CtoI b)
@@ -607,6 +595,16 @@ class VsopItemEach{
 
 
 
+typedef struct {
+  PyObject_HEAD
+  CtoI* ss;
+} PyCtoIObject;
+
+
+
+
+extern PyTypeObject PyCtoI_Type;
+
 CtoI * int2ctoi(int val)
 {
 	//初回呼び出し時のみBDDの初期化
@@ -688,7 +686,7 @@ PyObject* vsop_symbol(PyObject*, PyObject* args)
 			if(PyFloat_Check(pyo2)){
 				val = (int)(PyFloat_AsDouble(pyo2)*power16);
 			}
-			if(numCHECK(pyo2)){
+			else if(numCHECK(pyo2)){
 				val = PyLong_AsLong(pyo2)*power16;
 			}
 			else{
@@ -821,8 +819,6 @@ static PyObject* ctoiitemiter_next(PyCtoI_ItemIterObject* self) {
 static PyMethodDef setsetiter_methods[] = {
   {NULL,           NULL}           /* sentinel */
 };
-
-
 
 
 static PyTypeObject PyCtoIIter_Type = {
@@ -1099,15 +1095,6 @@ static PyObject* ctoi_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
   if (self == NULL) return NULL;
   return reinterpret_cast<PyObject*>(self);
 }
-
-/*
-static PyMemberDef ctoi_as_number = {
-
-};
-static PyMemberDef ctoi_as_sequence = {
-
-};
-*/
 //static PyMemberDef ctoi_members[] = {
 // {NULL}  /* Sentinel */
 //};
@@ -1858,7 +1845,6 @@ PyObject* vsop_hashout(PyCtoIObject* self){
 	return hash;
 }
 
-
 //----------------------- vsop_hashout -------------------------------
 
 
@@ -2013,6 +1999,13 @@ PyObject* vsop_show(PyCtoIObject* self, PyObject* args){
 	}
 	Py_RETURN_TRUE;
 }
+
+
+PyObject* ctoi_repr(PyCtoIObject* self){
+	vsop_print(self);
+	Py_RETURN_TRUE;
+}
+
 
 /*##vsop_import##*/
 PyObject* vsop_import(PyCtoIObject* self, PyObject* args){
@@ -2370,15 +2363,15 @@ static PyNumberMethods ctoi_as_number = {
   reinterpret_cast<unaryfunc>(vsop_minus_op),/*nb_negative*/
   reinterpret_cast<unaryfunc>(vsop_plus_op),/*nb_positive*/
   0,                                  /*nb_absolute*/
-  0,//reinterpret_cast<inquiry>(setset_nonzero), /*nb_nonzero or nb_bool*/
-  0,//reinterpret_cast<unaryfunc>(setset_invert), /*nb_invert*/
+  0,                                  /*nb_nonzero or nb_bool*/
+  0,                                  /*nb_invert*/
   0,                                  /*nb_lshift*/
   0,                                  /*nb_rshift*/
-  0,//reinterpret_cast<binaryfunc>(setset_intersection), /*nb_and*/
-  0,//reinterpret_cast<binaryfunc>(setset_symmetric_difference), /*nb_xor*/
-  0,//reinterpret_cast<binaryfunc>(setset_union), /*nb_or*/
+  0,                                  /*nb_and*/
+  0,                                  /*nb_xor*/
+  0,                                  /*nb_or*/
 #if PY_MAJOR_VERSION < 3
-  0/*reinterpret_cast<coercion>(Py_TPFLAGS_CHECKTYPES)*/, /*nb_coerce*/
+  0, /*nb_coerce*/
 #endif
   0,                                  /*nb_int*/
   0,                                  /*nb_long or *nb_reserved*/
@@ -2388,27 +2381,27 @@ static PyNumberMethods ctoi_as_number = {
   0,                                  /*nb_hex*/
 #endif
   0,                                  /*nb_inplace_add*/
-  0,//reinterpret_cast<binaryfunc>(setset_difference_update), /*nb_inplace_subtract*/
+  0,                                  /*nb_inplace_subtract*/
   0,                                  /*nb_inplace_multiply*/
 #if PY_MAJOR_VERSION < 3
-  0,//reinterpret_cast<binaryfunc>(setset_quotient_update), /*nb_inplace_divide*/
+  0,                                  /*nb_inplace_divide*/
 #endif
-  0,//reinterpret_cast<binaryfunc>(setset_remainder_update), /*nb_inplace_remainder*/
+  0,                                  /*nb_inplace_remainder*/
   0,                                  /*nb_inplace_power*/
   0,                                  /*nb_inplace_lshift*/
   0,                                  /*nb_inplace_rshift*/
-  0,//reinterpret_cast<binaryfunc>(setset_intersection_update), /*nb_inplace_and*/
-  0,//reinterpret_cast<binaryfunc>(setset_symmetric_difference_update), /*nb_inplace_xor*/
-  0,//reinterpret_cast<binaryfunc>(setset_update), /*nb_inplace_or*/
+  0,                                  /*nb_inplace_and*/
+  0,                                  /*nb_inplace_xor*/
+  0,                                  /*nb_inplace_or*/
 #if PY_MAJOR_VERSION >= 3
-  0, /*nb_floor_divide*/
+  0,                                   /*nb_floor_divide*/
   reinterpret_cast<binaryfunc>(vsop_quotiment), /*nb_true_divide*/
-  0, /*nb_inplace_floor_divide*/
-  0,//reinterpret_cast<binaryfunc>(setset_quotient_update), /*nb_inplace_true_divide*/
-  0 /*nb_index*/
-// for 3.5?
-//  0, /*nb_matrix_multiply*/
-//  0 /*nb_inplace_matrix_multiply*/
+  0,                                   /*nb_inplace_floor_divide*/
+  0,                                   /*nb_inplace_true_divide*/
+  0                                   /*nb_index*/
+	// for 3.5?
+	//  0, /*nb_matrix_multiply*/
+	//  0 /*nb_inplace_matrix_multiply*/
 #endif
 };
 
@@ -2464,17 +2457,17 @@ PyTypeObject PyCtoI_Type = {
   sizeof(PyCtoIObject),             /*tp_basicsize*/
   0,                                  /*tp_itemsize*/
   reinterpret_cast<destructor>(ctoi_dealloc), /*tp_dealloc*/
-  0,                                  /*tp_print*/
+  0,  /*tp_print*/
   0,                                  /*tp_getattr*/
   0,                                  /*tp_setattr*/
 #if PY_MAJOR_VERSION >= 3
   0,                                  /*tp_reserved at 3.4*/
 #else
-  0,//ctoi_nocmp,                       /*tp_compare*/
+  0,                                  /*tp_compare*/
 #endif
-  0,//reinterpret_cast<reprfunc>(ctoi_repr), /*tp_repr*/
+  0, /*tp_repr*/
   &ctoi_as_number,                  /*tp_as_number*/
-  0,//ctoi_as_sequence,                /*tp_as_sequence*/
+  0,                                  /*tp_as_sequence*/
   0,                                  /*tp_as_mapping*/
   0,                                  /*tp_hash */
   0,                                  /*tp_call*/
