@@ -846,7 +846,11 @@ static PyTypeObject PyCtoIIter_Type = {
   PyObject_GenericGetAttr,                    /* tp_getattro */
   0,                                          /* tp_setattro */
   0,                                          /* tp_as_buffer */
+#if PY_MAJOR_VERSION >= 3
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE , /* tp_flags */
+#else
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /* tp_flags */
+#endif
   0,                                          /* tp_doc */
   0,                                          /* tp_traverse */
   0,                                          /* tp_clear */
@@ -899,7 +903,11 @@ static PyTypeObject PyCtoI_ItemIter_Type = {
   PyObject_GenericGetAttr,                    /* tp_getattro */
   0,                                          /* tp_setattro */
   0,                                          /* tp_as_buffer */
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE  ,/* tp_flags */
+#if PY_MAJOR_VERSION >= 3
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE , /* tp_flags */
+#else
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_ITER, /* tp_flags */
+#endif
   0,                                          /* tp_doc */
   0,                                          /* tp_traverse */
   0,                                          /* tp_clear */
@@ -2530,7 +2538,7 @@ PyInit__vsoplib(void){
   if (PyType_Ready(&PyCtoI_Type) < 0) return NULL;
   if (PyType_Ready(&PyCtoIIter_Type) < 0) return NULL;
   m = PyModule_Create(&moduledef);
-	if(m==NULL){ return NULL; }
+	if(m==NULL){ return m; }
   Py_INCREF(&PyCtoI_Type);
   Py_INCREF(&PyCtoIIter_Type);
 	PyModule_AddObject(m, "ctoi", reinterpret_cast<PyObject*>(&PyCtoI_Type));
