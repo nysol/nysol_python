@@ -91,6 +91,11 @@ medsetmod = Extension('nysol/take/_medsetlib',
                     sources = ['src/take/medsetrap.c'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/medset']
 										)
+utilmod = Extension('nysol/util/_utillib',
+                    sources = ['src/util/mmethods.cpp'],
+										include_dirs=['src','src/kgmod']
+										)
+
 
 vsopmod = Extension('nysol/vsop/_vsoplib',
                     sources = [ 'src/vsop/vsop.cpp',
@@ -120,6 +125,6 @@ setup(name = 'nysol',
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',
 								'scripts/take/mclique.py'],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
-											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod]
+											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod,utilmod]
 			)
        

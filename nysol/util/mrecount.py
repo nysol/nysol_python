@@ -18,24 +18,14 @@
 # * for more details.
 #
 # ////////// LICENSE INFO ////////////////////*/
+import nysol.util._utillib as ut
 
-#あとで作り直す
 def mrecount(**kw_args):
-	import sys
-	import subprocess
-	if sys.version_info < (3, 0, 0) :
-		res = subprocess.check_output(["wc","-l",kw_args["i"]])
-		cnt = int(res.strip().split()[0])
 
-	else:
-		import subprocess
-		res = subprocess.run(["wc", "-l", kw_args["i"]], stdout=subprocess.PIPE)
-		cnt = int(res.stdout.decode('utf-8').strip().split()[0])
+	nfnFlg = ("nfni" in kw_args and kw_args["nfni"] == True) or ("nfn" in kw_args and kw_args["nfn"] == True)
+	if not "i" in kw_args:
+		return None
+		
+	return ut.mrecount(kw_args["i"],nfnFlg)
 
-	if ("nfni" in kw_args and kw_args["nfni"] == True) or ("nfn" in kw_args and kw_args["nfn"] == True):
-		return cnt
-	else:
-		if cnt > 0:
-			cnt -=1
-		return cnt
 

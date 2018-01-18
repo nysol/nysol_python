@@ -19,17 +19,12 @@
 #
 # ////////// LICENSE INFO ////////////////////*/
 
-#あとで作り直す
+import nysol.util._utillib as ut
+
 def mheader(**kw_args):
-	import sys
-	import subprocess
-	if sys.version_info < (3, 0, 0) :
-		res = subprocess.check_output(["head","-n1",kw_args["i"]])
-		data = res.strip().split(",")
 
-	else:
-		import subprocess
-		res = subprocess.run(["head", "-n1", kw_args["i"]], stdout=subprocess.PIPE)
-		data = res.stdout.decode('utf-8').strip().split(",")
+	nfnFlg = ("nfni" in kw_args and kw_args["nfni"] == True) or ("nfn" in kw_args and kw_args["nfn"] == True)
+	if not "i" in kw_args:
+		return None
 
-	return data
+	return ut.mheader(kw_args["i"],nfnFlg)
