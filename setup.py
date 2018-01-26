@@ -47,7 +47,7 @@ module1 = Extension('nysol/_nysolshell_core',
 																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp'
                     	],
 										include_dirs=hedears,
-										libraries=['pthread','boost_filesystem','boost_regex','boost_system','xml2']
+										libraries=['pthread','boost_filesystem','boost_regex','boost_system','boost_thread','xml2']
 										)
 
 lcmmod = Extension('nysol/take/_lcmlib',
