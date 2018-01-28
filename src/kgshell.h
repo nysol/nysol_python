@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <kgEnv.h>
 #include <kgError.h>
+#include <kgMessage.h>
 #include <kgmod.h>
 #include <kgCSV.h>
 #include <kgshellfunc.h>
@@ -110,12 +111,18 @@ public:
 			vector<int> chk(_clen);
 			for(size_t i=0 ;i<_clen;i++){ 
 				chk[i] = pthread_cancel(_th_st_pp[i]);
-				if (chk[i]!=0&&chk[i]!=3){ cerr << "waring destruct fail thread cancel : " << chk[i] << endl;}
+				if (chk[i]!=0&&chk[i]!=3){
+					kgMsg msg(kgMsg::MSG, &_env);
+					msg.output("waring destruct fail thread cancel : "+chk[i]);
+				}
 			}
 			for(size_t i=0 ;i<_clen;i++){ 
 				if(chk[i]==0||chk[i]==3){
 					int rtn = pthread_join(_th_st_pp[i],NULL);
-					if(rtn!=0) { cerr << "waring destruct fail thread join : " << rtn << endl; }
+					if(rtn!=0) {
+						kgMsg msg(kgMsg::MSG, &_env);
+						msg.output("waring destruct fail thread join :  "+rtn);
+					}
 				}
 			}
 			delete[] _th_st_pp ;

@@ -1,12 +1,81 @@
 from distutils.core import setup, Extension
 import re
+import os
 import subprocess
+
 args = ['xml2-config','--cflags']
 xxxxs= subprocess.check_output(args).decode().rstrip().split()
 
 hedears = ['src','src/kgmod','src/mod']
 for xxx in xxxxs:
 	hedears.append(re.sub(r'^-I','',xxx))
+
+
+def checkLibRun(cc,fname,paras):
+	for para in paras:
+		try:
+			with open(os.devnull, 'w') as fnull:
+				exit_code = subprocess.call([cc, fname, "-l"+para],
+                                    stdout=fnull, stderr=fnull)
+		except OSError :
+			exit_code = 1
+
+		if exit_code == 0:
+			return para
+
+	return ""
+
+def check_for_boost():
+
+	import distutils.sysconfig
+	import tempfile
+	import shutil
+	
+	# Create a temporary directory
+	tmpdir = tempfile.mkdtemp()
+	curdir = os.getcwd()
+	os.chdir(tmpdir)
+
+	compiler = os.environ.get('CC', distutils.sysconfig.get_config_var('CC'))
+
+	# make sure to use just the compiler name without flags
+	compiler = compiler.split()[0]
+	filename = 'test.cpp'
+	with open(filename,'w') as f :
+		f.write("""
+			int main ()
+			{
+				return main ();
+			  return 0;
+			}
+			""")
+
+	boostFLG =[]
+	boostLibLists=[
+		['boost_thread-mt','boost_thread'],
+		['boost_filesystem-mt','boost_filesystem'],
+		['boost_regex-mt','boost_regex'],
+		['boost_system-mt','boost_system']
+	]
+	for boostlist in boostLibLists:
+
+		boostflg = checkLibRun(compiler,filename, boostlist)
+		if boostflg =="" : 	
+			#err
+			raise Exception("not find "+ " or ".join(boostlist))
+
+		boostFLG.append(boostflg)
+
+	# Clean up
+	os.chdir(curdir)
+	shutil.rmtree(tmpdir)
+
+	return boostFLG
+
+
+nmodLibs = ['pthread','xml2']
+nmodLibs.extend(check_for_boost())
+
 
 module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
@@ -47,7 +116,7 @@ module1 = Extension('nysol/_nysolshell_core',
 																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp'
                     	],
 										include_dirs=hedears,
-										libraries=['pthread','boost_filesystem','boost_regex','boost_system','boost_thread','xml2']
+										libraries=nmodLibs
 										)
 
 lcmmod = Extension('nysol/take/_lcmlib',
