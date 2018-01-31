@@ -166,6 +166,41 @@ PyObject* runP(PyObject* self, PyObject* args)
 
 }
 
+PyObject* runPK(PyObject* self, PyObject* args)
+{
+	PyObject *sh;
+	PyObject *mlist;
+	PyObject *linklist;
+	PyObject *keys;
+	if (!PyArg_ParseTuple(args, "OOOO", &sh , &mlist  ,&linklist,&keys)){
+    return NULL;
+  }
+
+	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+	if(!PyList_Check(mlist)){
+		cerr << "cannot run " << PyList_Check(mlist) << " " << PyList_Size(mlist)<< endl;
+		return Py_BuildValue("");
+	}
+	vector< cmdCapselST > cmdCapsel;
+	vector< linkST > p_list;
+	runCore(mlist,linklist,cmdCapsel,p_list);
+
+	vector< string > k_list;
+
+	//key set
+	Py_ssize_t ksize = PyList_Size(keys);
+	for(Py_ssize_t i=0 ; i<ksize;i++){
+		k_list.push_back(strGET(PyList_GetItem(keys ,i)));
+	}
+
+	kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
+
+	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+
+}
+
+
 PyObject* readline(PyObject* self, PyObject* args)
 {
 
@@ -185,6 +220,40 @@ PyObject* readline(PyObject* self, PyObject* args)
 	for(size_t j=0 ;j<fcnt;j++){
 		PyList_Append(rlist,Py_BuildValue("s", kcfld->getVal(j)));
 	}
+	return rlist;
+}
+
+PyObject* readkeyline(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	PyObject* rlist = PyList_New(0);
+	size_t fcnt = kcfld->fldSize();
+
+	if((kcfld->status() & kgCSV::End )){ return Py_BuildValue("");}
+
+	while(kcfld->read()!=EOF){
+
+		//一行目読み込み時は何もしない
+		if(( kcfld->status() & kgCSV::Begin )){continue;}
+
+		PyObject* rllist = PyList_New(0);
+		for(size_t j=0 ;j<fcnt;j++){
+			PyList_Append(rllist,Py_BuildValue("s", kcfld->getOldVal(j)));
+		}
+		PyList_Append(rlist,rllist);
+		if( kcfld->keybreak() ){
+			break;
+		}
+	}
+
 	return rlist;
 }
 
@@ -222,7 +291,9 @@ static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
 	{"runL", reinterpret_cast<PyCFunction>(runL), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
+	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
+	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{NULL}
 };

@@ -86,6 +86,7 @@ class kgshell{
   kgEnv _env;
 	bool _nfni;
  	kgCSVfld* _iterrtn;
+ 	kgCSVkey* _iterrtnk;
 	pthread_t* _th_st_pp;
 	size_t _clen;
 	kgMod **_modlist;
@@ -133,9 +134,8 @@ public:
 			}
 			delete[] _modlist;
 		}
-		if(_iterrtn){
-			delete _iterrtn;
-		}
+		if(_iterrtn){ delete _iterrtn;}
+		if(_iterrtnk){ delete _iterrtnk;}
 	}
 	//実行メソッド
 	static void *run_func(void *arg);
@@ -144,6 +144,7 @@ public:
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
+	kgCSVkey* runkeyiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,vector<string> & klist);
 	int getparams(kgstr_t cmdname,PyObject* list);
 
 

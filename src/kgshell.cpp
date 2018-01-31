@@ -207,6 +207,7 @@ kgshell::kgshell(int mflg){
 
 		_nfni = false;
  		_iterrtn= NULL;
+ 		_iterrtnk= NULL;
 		_th_st_pp = NULL;
 		_clen = 0;
 		_modlist=NULL;
@@ -910,6 +911,186 @@ kgCSVfld* kgshell::runiter(
 }catch(...){
 	return NULL;
 }
+
+
+kgCSVkey* kgshell::runkeyiter(
+	vector<cmdCapselST> &cmds,	
+	vector<linkST> & plist,
+	vector<string> & klist
+)try{
+
+	makePipeList(plist);
+	if( pipe(_csvpiped) < 0){ throw kgError("pipe open error on kgshell");}
+	// pipe2(piped,O_CLOEXEC) pipe2なら省略化
+	int flags0 = fcntl(_csvpiped[0], F_GETFD);
+	int flags1 = fcntl(_csvpiped[1], F_GETFD);
+	fcntl(_csvpiped[0], F_SETFD, flags0 | FD_CLOEXEC);
+	fcntl(_csvpiped[1], F_SETFD, flags1 | FD_CLOEXEC);
+
+	_clen = cmds.size();
+
+	_modlist = new kgMod*[_clen];
+	
+	for(size_t i=0;i<_clen;i++){
+		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
+			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
+			return NULL;
+		}
+		_modlist[i] = _kgmod_map.find(cmds[i].cmdname)->second() ;
+		kgArgs newArgs;
+		for(size_t j=0;j<cmds[i].paralist.size();j++){
+			newArgs.add(cmds[i].paralist[j]);
+		}
+		_modlist[i]->init(newArgs, &_env);
+	}
+	_th_st_pp = new pthread_t[_clen];
+	int _th_rtn[_clen];
+	argST *argst = new argST[_clen];
+
+	for(int i=_clen-1;i>=0;i--){
+
+		argst[i].mobj= _modlist[i];
+		argst[i].tag= cmds[i].tag;
+		argst[i].finflg = false;
+		argst[i].outputEND = false;
+		argst[i].status = 0;
+		argst[i].stMutex = &_stsMutex;
+		argst[i].stCond = &_stsCond;
+
+		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+
+		//	DEBIG
+		//	cerr << "-------------------" << endl;
+		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
+
+		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
+			if(typ==2){
+				argst[i].i_cnt= 1;
+				argst[i].list = cmds[i].iobj;
+			}
+			else{
+				argst[i].i_cnt= 0;
+				argst[i].i_p= NULL;
+			}
+		}
+		else{
+			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+			size_t cnt=0;
+			if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+				cnt += _ipipe_map[i]["i"].size();
+			}
+			if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+				cnt += _ipipe_map[i]["m"].size();
+			}
+			if(cnt==0){
+				argst[i].i_cnt= 0;
+				argst[i].i_p= NULL;
+			}
+			else{
+				argst[i].i_cnt= cnt;
+				argst[i].i_p= new int[cnt];
+				size_t pos = 0;
+				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
+						argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
+						pos++;
+					}
+				}
+				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
+						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
+						pos++;
+					}
+				}
+			}
+		}
+		if(i==0){ // kgcsv用
+			argst[i].o_cnt= 1;
+			argst[i].o_p= new int[1];
+			argst[i].o_p[0]= _csvpiped[1]; 
+		} 
+		else if( _opipe_map.find(i) == _opipe_map.end() ){ 
+			if(typ==1){
+				argst[i].o_cnt= 1;
+				argst[i].list = cmds[i].oobj;
+			}
+			else{
+				argst[i].o_cnt= 0;
+				argst[i].o_p= NULL;
+			}
+		}
+		else{
+			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+			size_t cnt=0;
+			if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+				cnt += _opipe_map[i]["o"].size();
+			}
+			if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
+				cnt += _opipe_map[i]["u"].size();
+			}
+			if(cnt==0){
+				argst[i].o_cnt= 0;
+				argst[i].o_p= NULL;
+			}
+			else{
+				argst[i].o_cnt= cnt;
+				argst[i].o_p= new int[cnt];
+				size_t pos = 0;
+				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
+						argst[i].o_p[pos] = _opipe_map[i]["o"][j];
+						pos++;
+					}
+				}
+				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
+					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
+						argst[i].o_p[pos] = _opipe_map[i]["u"][j];
+						pos++;
+					}
+				}
+			}
+		}
+		//debug
+		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
+		//if ( argst[i].i_cnt > 0){
+		//	cerr << " i:" ;
+		//	for(size_t j=0; j< argst[i].i_cnt;j++){
+		//		cerr <<  *(argst[i].i_p+j) << " " ;
+		//	}
+		//}
+		//if ( argst[i].o_cnt > 0){
+		//	cerr << " o:" ;
+		//	for(size_t j=0; j< argst[i].o_cnt;j++){
+		//		cerr <<  *(argst[i].o_p+j) << " " ;
+		//	}
+		//}
+		//cerr << endl;
+		if(typ==0){
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&argst[i]);
+		}
+		else if(typ==1){//これは使えないようにする
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
+		}
+		else if(typ==2){
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&argst[i]);
+		}
+	}
+	// データ出力
+	_iterrtnk = new kgCSVkey;
+ 
+	_iterrtnk->popen(_csvpiped[0], &_env,_nfni);
+	_iterrtnk->read_header();	
+	kgArgFld fField;
+	fField.set(klist, _iterrtnk, false);
+	// 入力ファイルにkey項目番号をセットする．
+	_iterrtnk->setKey(fField.getNum());
+
+	return _iterrtnk;
+
+}catch(...){
+	return NULL;
+}
+
 
 int kgshell::getparams(
 	kgstr_t cmdname,

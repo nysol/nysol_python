@@ -85,6 +85,11 @@ class NysolMOD_CORE(object):
 	def __iter__(self):
 		return Nysol_MeachIter(self)
 
+	def keyblock(self,keys):
+		x = Nysol_MeachKeyIter(self,keys)
+		while(True):
+			yield next(x)
+
 	def msgOn(self):
 		self.msg=True
 		return self
@@ -994,7 +999,6 @@ class NysolMOD_CORE(object):
 		return mjoin(nutil.args2dict(args,kw_args,mjoin.kwd)).addPre(self)
 
 
-#未実装 ITERAtOR
 class Nysol_MeachIter(object):
 
 	def __init__(self,obj):
@@ -1024,7 +1028,6 @@ class Nysol_MeachIter(object):
 		self.shobj = n_core.init(runobj.msg)
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
 
-
 	def next(self):
 		line = n_core.readline(self.csvin)
 		if line: 
@@ -1038,5 +1041,50 @@ class Nysol_MeachIter(object):
 			return line
 		raise StopIteration()
 
+
+
+class Nysol_MeachKeyIter(object):
+
+	def __init__(self,obj,keys):
+		
+		dupobj = copy.deepcopy(obj)
+
+		if len(dupobj.outlist["o"])==0:
+			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
+			runobj = msortf({"f":keys}).addPre(dupobj)
+
+		else:
+			print ("type ERORR")
+			return None
+			
+		
+		runobj.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+		runobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		runobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
+		# kgshell stock
+		self.shobj = n_core.init(runobj.msg)
+		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,keys)
+
+	def next(self):
+		line = n_core.readkeyline(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+	def __next__(self):
+		line = n_core.readkeyline(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
 
 
