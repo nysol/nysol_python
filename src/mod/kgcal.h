@@ -27,6 +27,7 @@
 #include <kgCSV.h>
 #include <kgCSVout.h>
 #include <kgFunction.h>
+#define BOOST_SPIRIT_THREADSAFE
 #include <boost/spirit/include/classic.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_utility.hpp>

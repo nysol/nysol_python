@@ -20,6 +20,7 @@
 // kgCalParser.h kgcal,kgselで用いる構文解析パーサークラス
 // =============================================================================
 #pragma once
+#define BOOST_SPIRIT_THREADSAFE
 #include <boost/spirit/include/classic.hpp>
 #include <boost/spirit/include/classic_utility.hpp>
 #include <boost/spirit/include/classic_ast.hpp>

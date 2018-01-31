@@ -18,14 +18,13 @@
 # * for more details.
 #
 # ////////// LICENSE INFO ////////////////////*/
+
 import nysol.util._utillib as ut
 
-def mrecount(**kw_args):
+def mheader(**kw_args):
 
 	nfnFlg = ("nfni" in kw_args and kw_args["nfni"] == True) or ("nfn" in kw_args and kw_args["nfn"] == True)
 	if not "i" in kw_args:
 		return None
-		
-	return ut.mrecount(kw_args["i"],nfnFlg)
 
-
+	return ut.mheader(kw_args["i"],nfnFlg)
