@@ -6,22 +6,9 @@ import os.path
 import shutil
 
 import nysol.mod as nm
-import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 import nysol.take.extcore as extTake
-
-
-#require "rubygems"
-#require "nysol/mcmd"
-#require "nysol/take"
-#require "set"
-
-# ver="1.0" # 初期リリース 2014/2/20
-# ver="1.1" # 節点データ対応、途中経過出力 2014/8/1
-# ver="1.2" # 出力nodeファイルの項目名をnf=の値にする 2016/11/11
-#$cmd=$0.sub(/.*\//,"")
-#$version="1.2"
-
+import nysol.take.graph as ntg
 
 
 class mpolishing(object):
@@ -133,56 +120,46 @@ b,c
 b,d
 c,d
 
-# Copyright(c) NYSOL 2012- All Rights Reserved.
+# Copyright(c) NYSOL 2018- All Rights Reserved.
 		"""
 
 	def ver(self):
 		print("version #{$version}")
 
+	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,minSup=0,iterMax=30,O=None,log=None):
+		self.gi				= None			# (graph object) input graph set
+		self.go				= None			# (graph object) output graph set
+		self.__eo			= None			# (string) output edge file name
+		self.__no			= None			# (string) output node file name
+		self.__nf			= None			# (string) output node file column title
+		self.th				= th				# (float) threshhold of degree of similarity
+		self.indirect	= indirect	# (boolean) exclude direct relationship from adjacent node set in similarity calculation
+		self.measure	= sim				# (string) similarity measure
+		self.minSupp	= minSup		# (float) minimum support
+		self.iterMax	= iterMax		# (int) upper bound of iterations
+		self.logFile	= log				# (string) log file name
+		self.outDir		= O					# (string) directory name for outputs in the process
+		self.msgoff		= True
+		self.__tempW	= mtemp.Mtemp()	# temp files created by this instance will be deleted, after self.run() executed.
 
-
-	def __init__(self,args):
-		self.args = args
-		self.msgoff = True
-
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
-
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
-
-
-		self.indirect=args.bool("-indirect")
-		self.ei = args. file("ei=","r") # edge file name
-		self.ni = args. file("ni=","r") # node file name
-
-		# ---- edge field names (two nodes) on ei=
-		self.ef1,self.ef2 = args.field("ef=", self.ei, "node1,node2",2,2)["names"]
-		self.nf = args.field("nf=", self.ni, "node",1,1)
-
-		if self.nf:
-			self.nf = self.nf["names"][0] 
-
-		self.measure = args.str("sim=","R")    # similarity measure
-		self.minSupp = args.int("sup=",0)      # mimam support
-		self.iterMax = args.int("iter=",30,1)  # upper bound of iterations
-		self.th      = args.float("th=")       # threashold for similarity measure
-
-		self.eo      = args.file("eo=", "w")
-		self.no      = args.file("no=", "w")
-		self.logFile = args.file("log=", "w")
-		self.outDir  = args.str("O=")	# 過程出力
+		if(gi):
+			self.gi = gi						# input graph object
+		else:
+			raise Exception("gi is mandatory.")
+		
+		if(go):
+			self.go = go
+		self.__eo = self.__tempW.file() 
+		self.__no = self.__tempW.file()
+		self.__nf = "n"
+		
+		if iterMax < 1:
+			raise Exception("iter must be 1 or more.")
 
 		if self.outDir and not os.path.isdir(self.outDir) :
 			os.makedirs(self.outDir)
 
-
-
-
-
-	# node数とedge数をカウント
+	# count node size and edge size for sspc's output file
 	def calGsize(self,file):
 		nodes = set([])
 		edgeSize=0
@@ -196,129 +173,42 @@ c,d
 
 		return len(nodes),edgeSize
 
-
-# graphの各種特徴量を計算する
-# orgNsizeが与えられなければ、node数は枝ファイル(file)から計算する。
-# 0,1
-# 0,2
-# 0,3
-# 1,2
-# 1,3
+	# calculate graph features of sspc's output file
 	def features(self,file,orgNsize=None):
-		nodes = set([])
-		graph={}
-		edgeSize=0
-		with open(file) as f:
-			for line in f:
-				line = line.rstrip('\r\n')
-				n1 , n2 = line.split(" ") 
-				#print(len(lin))
-				#n1=lin[0]
-				#n2=lin[1]
-				if int(n1)>int(n2):
-					nt=n1; 
-					n1=n2; 
-					n2=nt
-
-				if n1 in graph:
-					s=graph[n1]
-					if n2 not in s:
-						s << n2
- 
-				nodes.add(n1)
-				nodes.add(n2)			
-				edgeSize+=1
-
-		# 密度
-		dens=None
-		nSize=float(len(nodes))
-		if nSize>1.0 :
-			dens=float(edgeSize)/(nSize*(nSize-1.0)/2.0) 
-
-		# clustering coefficient
-		#for s in graph:意味ない？
-		#	size=s.size
-
 		nodeSize,edgeSize=self.calGsize(file)
-
 		nSize=float(nodeSize)
 		if(orgNsize):
 			nSize=float(orgNsize)
-
 		dens=None
 		if(nSize>1):
 			dens=float(edgeSize)/(nSize*(nSize-1)/2.0) 
-
 		return nSize,edgeSize,dens
 
+	# compare sspc' output files before and after
 	def same(self,file1,file2):
-		xxt = mtemp.Mtemp()
-		xx = xxt.file() 
-		
+		xx = self.__tempW.file()
 		if os.path.getsize(file1)!= os.path.getsize(file2):
 			return False
-			
 		os.system("diff -q %s %s > %s"%(file1,file2,xx))
-
 		if(os.path.getsize(xx) != 0):
 			return False
-
 		return True
 
-	def g2pair(self,ni,nf,ei,ef1,ef2,ipair,mapFile):
-		#MCMD::msgLog("converting graph files into a pair of numbered nodes ...")
-		#print("converting graph files into a pair of numbered nodes ...")
-		wf = mtemp.Mtemp()
-		wf1=wf.file()
-		wf2=wf.file()
-		wf3=wf.file()
-		
-		nm.mcut(f=str(ef1)+":node",i=ei,o=wf1).run()
-		nm.mcut(f=str(ef2)+":node",i=ei,o=wf2).run()
-		if(ni): 
-			nm.mcut(f=str(nf)+":node",i=ni,o=wf3).run()
 
-		if(ni): 
-			para="%s,%s,%s"%(wf1,wf2,wf3)
-		else:
-			para="%s,%s"%(wf1,wf2)
-		nm.mcat(i=para,f="node").muniq(k="node").mnumber(q=True,a="num",o=mapFile).run()
-
-		wf4=wf.file()
-
-		paraE="%s,%s"%(ef1,ef2)
-		f =   nm.mcut(f=paraE,i=ei)
-		f <<= nm.mjoin(k=ef1,K="node",m=mapFile,f="num:num1")
-		f <<= nm.mjoin(k=ef2,K="node",m=mapFile,f="num:num2")
-		f <<= nm.mcut(f="num1,num2")
-		f <<= nm.mfsort(f="num1,num2")
-		f <<= nm.msortf(f="num1%n,num2%n" , nfno=True,o=wf4)
-		f.run()
-		os.system("tr ',' ' ' < " + wf4 + ">"+ipair)
-
-
-# ============
-# entry point
+	# execute
 	def run(self):
 		from datetime import datetime	
 		t = datetime.now()
 
-		wf = mtemp.Mtemp()
-		xxinp    = wf.file()
-		xxmap    = wf.file()
-		xxmaprev = wf.file()
-		input    = self.ei
+		input=self.gi.eFileT
+		xxmap = self.gi.mFile
+		xxmaprev = self.__tempW.file()
+		nm.msortf(f="id",i=xxmap,o=xxmaprev).run()
 
-		self.g2pair(self.ni,self.nf,self.ei,self.ef1,self.ef2,xxinp,xxmap)
-
-		input=xxinp
-
-		nm.msortf(f="num",i=xxmap,o=xxmaprev).run()
-
-		xxpair = wf.file() # sscpの出力(pair形式)
-		xxtra  = wf.file() # sscpの入力(tra形式)
-		xxprev = wf.file() # 前回のxxtra
-		xxtmmp = wf.file()
+		xxpair = self.__tempW.file() # sscpの出力(pair形式)
+		xxtra  = self.__tempW.file() # sscpの入力(tra形式)
+		xxprev = self.__tempW.file() # 前回のxxtra
+		xxtmmp = self.__tempW.file()
 
 		shutil.copyfile(input,xxpair)
 
@@ -338,20 +228,18 @@ c,d
 			# node pairをsspc入力形式に変換
 			if(self.indirect):
 				gtpstri = "ue_" if self.msgoff else "ue"
-
 				extTake.grhfil(type=gtpstri,i=xxpair,o=xxtra)
 			else:
 				gtpstri0 = "ue0_" if self.msgoff else "ue0"
 				extTake.grhfil(type=gtpstri0,i=xxpair,o=xxtra)
 				
-			para = "%s,%s"%(self.ef1,self.ef2)
+			para = "%s,%s"%(self.gi.edgeFN1,self.gi.edgeFN2)
 
 			if(self.outDir):
 				os.system("tr ' ' ',' < %s > %s "%(xxpair,xxtmmp))
-				#f =   nm.cmd("tr ' ' ',' < " + xxpair)
 				f = nm.mcut(f="0:num1,1:num2",nfni=True,i=xxtmmp)
-				f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1))
-				f <<= nm.mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2)).mcut(f=para).mfsort(f=para)
+				f <<= nm.mjoin(k="num1",K="id",m=xxmaprev,f="node:%s"%(self.gi.edgeFN1))
+				f <<= nm.mjoin(k="num2",K="id",m=xxmaprev,f="node:%s"%(self.gi.edgeFN2)).mcut(f=para).mfsort(f=para)
 				f <<= nm.msortf(f=para,o="%s/pair_%s.csv"%(self.outDir,iter))
 				f.run()
 				
@@ -362,35 +250,35 @@ c,d
 			if iter!=0 and self.same(xxtra,xxprev):
 				break
 
-			#MCMD::msgLog("polishing iteration ##{iter} (tra size=#{File.size(xxtra)}")
 			shutil.copyfile(xxtra,xxprev)
 
-			#puts "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
+			#print "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
 			tpstr = self.measure+"_"		if self.msgoff else self.measure
 			extTake.sspc(type=tpstr,l=self.minSupp,i=xxtra,th=self.th,o=xxpair)
 
 			gtpstr = "ue0_" if self.msgoff else "ue0"
-
 			extTake.grhfil(type=gtpstr,i=xxpair,o=xxtra)
-
 
 			iter+=1
 
 
 		# 上記iterationで収束したマイクロクラスタグラフを元の節点文字列に直して出力する
-		#MCMD::msgLog("converting the numbered nodes into original name ...")
 		os.system("tr ' ' ',' < %s > %s"%(xxpair,xxtmmp))
-		#f =   nm.cmd("tr ' ' ',' < " + xxpair)
 		f = nm.mcut(f="0:num1,1:num2",nfni=True,i=xxtmmp)
-		f <<= nm.mjoin(k="num1",K="num",m=xxmaprev,f="node:%s"%(self.ef1)).mjoin(k="num2",K="num",m=xxmaprev,f="node:%s"%(self.ef2))
-		f <<= nm.mcut(f=para).mfsort(f=para).msortf(f=para,o=self.eo)
+		f <<= nm.mjoin(k="num1",K="id",m=xxmaprev,f="node:%s"%(self.gi.edgeFN1)).mjoin(k="num2",K="id",m=xxmaprev,f="node:%s"%(self.gi.edgeFN2))
+		f <<= nm.mcut(f=para).mfsort(f=para).msortf(f=para,o=self.__eo)
 		f.run()
 
-		if(self.no):
-			if(self.nf):
-				nm.mcut(f="node:%s"%(self.nf),i=xxmap,o=self.no).run()
+		if(self.__no):
+			if self.__nf:
+				nm.mcut(f="node:%s"%(self.__nf),i=xxmap,o=self.__no).run()
 			else:
-				nm.mcut(f="node",i=xxmap,o=self.no).run()
+				nm.mcut(f="node",i=xxmap,o=self.__no).run()
+
+		if(self.go):
+			self.go.readCSV(edgeFile=self.__eo,title1=self.gi.edgeFN1,title2=self.gi.edgeFN2,nodeFile=self.__no,title=self.__nf)
+		else:
+			self.go = ntg.graph(edgeFile=self.__eo,title1=self.gi.edgeFN1,title2=self.gi.edgeFN2,nodeFile=self.__no,title=self.__nf)
 
 
 		procTime = datetime.now()-t
@@ -407,16 +295,5 @@ c,d
 
 			nm.writecsv(i=kv,o=self.logFile).run()
 
-	
-# 終了メッセージ
-		#CMD::endLog(args.cmdline)
-		#print(MCMD::endLog(args.cmdline)
+		return self.go
 	 
-if __name__ == '__main__':
-	import sys
-	args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=")
-	mpolishing(args).run()
-	#"ei=,ef=,th="
-
-
-
