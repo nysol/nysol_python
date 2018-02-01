@@ -85,8 +85,8 @@ class NysolMOD_CORE(object):
 	def __iter__(self):
 		return Nysol_MeachIter(self)
 
-	def keyblock(self,keys):
-		x = Nysol_MeachKeyIter(self,keys)
+	def keyblock(self,keys,skeys):
+		x = Nysol_MeachKeyIter(self,keys,skeys)
 		while(True):
 			yield next(x)
 
@@ -1045,13 +1045,17 @@ class Nysol_MeachIter(object):
 
 class Nysol_MeachKeyIter(object):
 
-	def __init__(self,obj,keys):
+	def __init__(self,obj,keys,skeys=None):
 		
 		dupobj = copy.deepcopy(obj)
 
 		if len(dupobj.outlist["o"])==0:
 			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
-			runobj = msortf({"f":keys}).addPre(dupobj)
+			sortkeys = copy.deepcopy(keys)
+			if skeys != None:
+				sortkeys.extend(skeys)
+			
+			runobj = msortf({"f":sortkeys}).addPre(dupobj)
 
 		else:
 			print ("type ERORR")

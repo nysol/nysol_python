@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import numpy as np
 import nysol.util.margs as margs 
 import nysol.mod as nm
 
@@ -69,7 +70,9 @@ for lg in [5,10,50]:
 	f2_2 <<= nm.mnumber(k="id",q=True,a="x",i=f2_0)
 
 	f2_3 = None	
-	f2_3 <<= nm.msummary(i=f2_2,k="id",c="var,mean",f="x,max,min,mean,median",dlog="chk1")
+	f2_3 <<= nm.msummary(i=f2_2,k="id",c="var,mean",f="x,max,min,mean,median")
+	#f2_3 <<= nm.msummary(i=f2_2,k="id",c="var,mean",f="x,max,min,mean,median",dlog="chk1") 
+	#	<<=これだと #ERROR# vector (kgsummary); kgsummary c=var,mean f=x,max,min,mean,median k=id; IN=33 OUT=155; 2018/01/26 17:34:35になるときあり
 	f2_3 <<= nm.msortf(f="id,fld")
 
 	f2_4 = None
@@ -77,7 +80,8 @@ for lg in [5,10,50]:
 	f2_4 <<= nm.mselstr(f="fld1,fld2",v="x")
 	f2_4 <<= nm.mjoin(k="id,fld1",K="id,fld",f="var:var1,mean:mean1",m=f2_3)
 	f2_4 <<= nm.mjoin(k="id,fld2",K="id,fld",f="var:var2,mean:mean2",m=f2_3)
-	f2_4 <<= nm.mjoin(k="id",f="df",m=f2_1,dlog="chk")
+	#f2_4 <<= nm.mjoin(k="id",f="df",m=f2_1,dlog="chk")
+	f2_4 <<= nm.mjoin(k="id",f="df",m=f2_1)
 	f2_4 <<= nm.mcal(c="sqrt(${var1}*${var2})",a="mm")
 	f2_4 <<= nm.mcal(c="if(${mm}==0,0,${covar}/${mm})",a="rvalue")
 	f2_4 <<= nm.mcal(c="${rvalue}*sqrt(${df}/((1-${rvalue})*(1+${rvalue})))",a="t")
@@ -87,9 +91,13 @@ for lg in [5,10,50]:
 
 	#まとめて動かそうとするとエラーになるとき有り(runsおかしい?)
 	funcList.append(f2_4)
-	f2_4.run()
+	#f2_4.run()
 
+print("zzza")
 nm.runs(funcList)
+print("zzzb")
+
+#nm.drawModelsD3(funcList,"xxx.html")
 
 
 #approximate_entropy
@@ -154,10 +162,71 @@ print "zzz1"
 nm.runs(funcList2)
 print "zzz2"
 
+from statsmodels.tsa.ar_model import AR
 #ar_coefficient
-#augmented_dickey_fuller
-#あと
+k_s=[10]
+coeff_s=[1,2,3,4]
 
+basekey_1 = base.mcut(f="id,time,F_x")
+with open('rlsf_1.csv','w') as f:
+	f.write("id")
+	for k in k_s:
+		for coeff in coeff_s:
+			f.write(",ar_coefficient_k_{}__coeff_{}".format(k, coeff))
+	f.write("\n")
+
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		calculated_ar_params = {}
+
+		calculated_AR = AR(list(np.asarray(dlist,dtype="float").transpose()[2]))
+		id= dlist[0][0] 
+		f.write(id)
+		for k in k_s:
+			for coeff in coeff_s:
+				#以下
+				#/tsfresh/feature_extraction/feature_calculators.pyより
+				if k not in calculated_ar_params:
+					try:
+						calculated_ar_params[k] = calculated_AR.fit(maxlag=k, solver="mle").params
+					except:
+						calculated_ar_params[k] = [np.NaN]*k
+
+				mod = calculated_ar_params[k]
+				if coeff <= k:
+					try:
+						pass
+						f.write(",{}".format(mod[coeff]))
+					except IndexError:
+						f.write(",0") 
+				else:
+					f.write(",{}".format(np.NaN)) 
+
+		f.write("\n") 
+
+
+#augmented_dickey_fuller
+from statsmodels.tsa.stattools import adfuller
+
+with open('rlsf_2.csv','w') as rf2:
+	rf2.write("id,augmented_dickey_fuller__attr_teststat,augmented_dickey_fuller__attr_pvalue,augmented_dickey_fuller__attr_usedlag\n")
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		res = None
+		try:
+			res = adfuller(np.asarray(dlist,dtype="float").transpose()[2])
+		except LinAlgError:
+			res = np.NaN, np.NaN, np.NaN
+		except ValueError:  # occurs if sample size is too small
+			res = np.NaN, np.NaN, np.NaN
+		
+		rf2.write("{},{},{},{}\n".format(id,res[0],res[1],res[2]))
+
+
+
+
+#あと
 #autocorrelation agg ここはもっといい方法ありそう
 f5 = nm.mjoin(k="id",i=base,m="sumary.csv",f="mean,var,count") 
 lags=[1,2,3,4,5,6,7,8,9]
@@ -172,9 +241,9 @@ for lag in lags:
 
 maxbins=[10]
 for maxbin in maxbins:
-	f6 =   nm.mbucket(k=id,f="F_x:F_x_no",n=maxbin,i=base,rng=True) 
+	f6 =   nm.mbucket(k="id",f="F_x:F_x_no",n=maxbin,i=base,rng=True) 
 	f6 <<= nm.mcount(k="id,F_x_no",a="hcount")
-	f6 <<= nm.mjoin(k=id,m="sumary.csv",f="count")
+	f6 <<= nm.mjoin(k="id",m="sumary.csv",f="count")
 	f6 <<= nm.mcal(c='(${hcount}/${count})*ln(${hcount}/${count})',a="probs")
 	f6 <<= nm.msum(k="id",f="probs")
 	f6 <<= nm.mcal(c='${probs}*-1',a="binned_entropy",o="rls6_%d.csv"%(maxbin))
@@ -220,10 +289,9 @@ for ql,qh in quantile:
 		f8_1.run()
 		#funclist9.append(f8_1)
 
-print "zzz3"
-print funclist9
-#nm.runs(funclist9,msg="on")	<=これだめ
-print "zzz4"
+#nm.drawModels([funclist9],"check.html")	#<=これだめ
+#nm.runs(funclist9)	#<=これだめ
+
 
 
 #cid_ce normalise (normalizeのsdチェック)
@@ -239,7 +307,7 @@ f9 = nm.mjoin(k="id",i=base,m="sumary.csv",f="mean,sd")
 f9 <<= nm.mcal(c="(${F_x}-${mean})/${sd}",a="F_xn")
 f9 <<= nm.mslide(k="id",s="time%n",f="F_x:F_xx,F_xn:F_xxn")
 f9 <<= nm.mcal(c="(${F_xx}-${F_x})^2,(${F_xxn}-${F_xn})^2" , a="diff,diffn")
-f9 <<= nm.msum(k=id,f="diff,diffn")
+f9 <<= nm.msum(k="id",f="diff,diffn")
 f9 <<= nm.mcal(c="sqrt(${diff}),sqrt(${diffn})",a="cid_ce,cid_ce_n",o="rls9.csv")
 f9.run()
 
@@ -250,9 +318,43 @@ f10 <<= nm.mcal(c="${F_x}>${mean},${F_x}<${mean}",a="above,below")
 f10 <<= nm.msum(k="id",f="above,below",o="rls10.csv")
 f10.run()
 
-
 #Continuous WaveletTransform
-#あと
+widths_s=[[2, 5, 10, 20]]
+coeff_s = range(15)
+w_s=[2,5,10,20]
+
+from scipy.signal import cwt,ricker
+
+with open('rlsf_3.csv','w') as rf3:
+	rf3.write("id")
+	for widths in widths_s:
+		for coeff in coeff_s:
+			for w in w_s:
+				
+				rf3.write(",cwt_coefficients__widths_[{}]__coeff_{}__w_{}".format("_".join(list(map(str, widths))), coeff, w))
+	rf3.write("\n")
+
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		res = None
+
+		rf3.write(id)
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		for widths in widths_s:
+
+			calculated_cwt_for_widths = cwt(np.asarray(dlist,dtype="float").transpose()[2], ricker, widths)
+
+			for coeff in coeff_s:
+				for w in w_s:
+					i = widths.index(w)
+					if calculated_cwt_for_widths.shape[1] <= coeff:
+						rf3.write(",{}".format(np.NaN)) 
+					else:
+						rf3.write(",{}".format(calculated_cwt_for_widths[i, coeff]))
+
+		rf3.write("\n")
+
 
 #energy_ratio_by_chunks
 num_segments=[10]
@@ -273,10 +375,62 @@ for ns in num_segments:
 		f11.run()
 
 
-
+#フーリエ変換
 #fft_aggregated 
+with open('rlsf_4.csv','w') as rf4:
+	rf4.write("id,centroid,variance,skew,kurtosis\n")
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		res = None
+
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		y = np.abs(np.fft.rfft(np.asarray(dlist,dtype="float").transpose()[2]))
+		#msumaryでできる？
+		centroid = y.dot(np.arange(len(y))**1) / y.sum()
+		moment2 = y.dot(np.arange(len(y))**2) / y.sum()
+		variance = moment2 - centroid ** 2
+		if variance < 0.5:
+			skew = np.nan
+			kurtosis = np.nan
+		else:
+			moment3 = y.dot(np.arange(len(y))**3) / y.sum()
+			skew = ( moment3 - 3 * centroid * variance - centroid**3 ) / variance**(1.5)
+						
+			kurtosis =( (y.dot(np.arange(len(y))**4) / y.sum()) - 4 * centroid * moment3
+                + 6 * moment2 * centroid**2 - 3*centroid) / variance**2
+
+		rf4.write("{},{},{},{},{}\n".format(id,centroid,variance,skew,kurtosis))
+		
 #fft_coefficient__coeff_0
-#フーリエ変換必要　あと
+coeff_s =range(100)
+agg_s =["real","imag","abs","angle"]
+
+
+with open('rlsf_5.csv','w') as rf5:
+	rf5.write("id")
+	for coeff in coeff_s:
+		for agg in agg_s:
+			rf5.write(",fft_coefficient_coeff_{}__attr_{}".format(coeff,agg))
+
+	rf5.write("\n")
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		res = None
+
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		fft = np.fft.rfft(np.asarray(dlist,dtype="float").transpose()[2])
+		rf5.write(id)
+		for coeff in coeff_s:
+			if coeff < len(fft):
+				rf5.write(",{},{},{},{}".format(fft[coeff].real,fft[coeff].imag,np.abs(fft[coeff]),np.angle(fft[coeff], deg=True)))
+			else:
+				rf5.write(",{},{},{},{}".format(np.NaN,np.NaN,np.NaN,np.NaN))
+		rf5.write("\n")		
+
+
+
 
 
 #first_location_of_maximum
@@ -308,18 +462,56 @@ f12_4.run()
 
 
 #friedrich_coefficients
-"""
+#max_langevin_fixed_point
+#friedrich_coefficients必要　あとまわし
+
 m_s=[3]
 r_s=[30]
 for m in m_s:
 	for r in r_s:
-		f13 =   nm.mslide(k=id,s=time%n,f="F_x:F_xn")
+		f13 =   nm.mslide(k="id",s="time%n",f="F_x:F_xn",i=base)
 		f13 <<= nm.mcal(c="${F_xn}-${F_x}",a="diff")
-		f13 <<= nm.mbucket(k=id,f="F_x:F_x_no",n=r,rng=True) 
-		f13 <<= nm.mavg(k="id,F_x_no",f="F_x,diff") 
-線形回帰必要 あとまわし
-"""
+		f13 <<= nm.mbucket(k="id",f="F_x:F_x_no",n=r) 
 
+		f13_1 = nm.mcount(k="id,F_x_no",i=f13,a="maxcnt")
+		f13_1 <<= nm.mbest(k="id" ,s="maxcnt%nr",size=1)
+
+		f13_2 = nm.mcount(k="id",i=f13,a="tcnt")
+		f13_2 <<= nm.mjoin(k="id",f="maxcnt",m=f13_1)
+		f13_2 <<= nm.msel(c="${tcnt}<%d&&${maxcnt}!=1"%(r))
+		
+		f13_4 = nm.mcommon(k="id",m=f13_2,i=f13,r=True)
+		f13_4 <<= nm.mavg(k="id,F_x_no",f="F_x,diff") 
+		f13_4 <<= nm.mcut(f="id,F_x_no,F_x,diff") 
+		f13_4 <<= nm.mdelnull(f="F_x,diff")
+
+		with open('rlsf_13_{}_{}.csv'.format(m,r),'w') as rf13:
+			rf13.write("id")
+			for q in range(m, -1, -1):
+				rf13.write(",friedrich_coefficients_m_{}__r_{}__coeff_{}".format(m, r, q))
+		
+			rf13.write(",max_langevin_fixed_point")
+			rf13.write("\n")
+
+			for dlist in f13_4.keyblock(["id"],["F_x_no%n"]):
+				id= dlist[0][0] 
+				rf13.write(id)
+
+				try:
+					x= np.asarray(dlist,dtype="float").transpose()[2]
+					y= np.asarray(dlist,dtype="float").transpose()[3]
+					rls = np.polyfit(x, y, deg=m)
+				except (np.linalg.LinAlgError, ValueError):
+					rls = [np.NaN] * (m + 1)
+
+				for q in range(m+1):
+					rf13.write(",{}".format(rls[q]))
+
+				try:
+					rf13.write(",{}".format(np.max(np.real(np.roots(rls)))))
+
+				except (np.linalg.LinAlgError, ValueError):
+					rf13.write(",\n")
 
 #F_x__has_duplicate
 #F_x__has_duplicate_max
@@ -382,8 +574,17 @@ f17_2 <<= nm.mcal(c="if(${r_den}==0,0,${covar}/${r_den})",a="rvalue")
 f17_2 <<= nm.mcal(c="${covar}/${Sxx}",a="slope")
 f17_2 <<= nm.mcal(c="${ymean}-(${slope}*${xmean})",a="intercept")
 f17_2 <<= nm.mcal(c="${rvalue}*sqrt(${df}/((1-${rvalue})*(1+${rvalue})))",a="t")
-f17_2 <<= nm.mcal(c="sqrt((1-${rvalue}^2)*${Syy}/${Sxx}/${df})",a="stder",o="rls17.csv")
-f17_2.run()
+f17_2 <<= nm.mcal(c="sqrt((1-${rvalue}^2)*${Syy}/${Sxx}/${df})",a="stder")
+f17_2 <<= nm.mcut(f="id,Syy,Sxx,r_den,covar,count,xmean,ymean,df,rvalue,slope,intercept,t,stder")
+
+with open('rls17.csv','w') as rls17:
+	rls17.write("id,Syy,Sxx,r_den,covar,count,xmean,ymean,df,rvalue,slope,intercept,t,stder,pvalue\n")
+	from scipy.stats import distributions
+	for lin in f17_2:
+		t=float(lin[12])
+		df=float(lin[8])
+		prob = 2 * distributions.t.sf(np.abs(t), df)
+		rls17.write("{},{}\n".format(",".join(lin),prob))
 
 #covar=>r_num
 #mm=r_den
@@ -392,7 +593,6 @@ f17_2.run()
 #stdtr(df, t) 
 # gamma((df+1)/2)/(sqrt(df*pi)*gamma(df/2)) 
 # *integral((1+x**2/df)**(-df/2-1/2), x=-inf..t)
-#らしい あとまわし
 
 
 #longest_strike_above_mean
@@ -414,8 +614,9 @@ f18_2 <<= nm.mbest(k="id",s="below%nr,b_count%nr",size=1)
 f18_2 <<= nm.mcal(c="if(${below}==0,0,${b_count})",a="longest_strike_below_mean",o="rls18_2.csv")
 f18_2.run()
 
-#max_langevin_fixed_point
-#friedrich_coefficients必要　あとまわし
+
+
+
 
 #mean_abs_change
 #mean_change
@@ -445,6 +646,15 @@ for m in m_s:
 
 #number_cwt_peaks
 # webletは後
+from scipy.signal import find_peaks_cwt,ricker
+n_s=[1,5]
+for n in n_s:
+	with open('rlsf_6_%d.csv'%(n),'w') as rf6:
+		rf6.write("id,number_cwt_peaks\n")
+		for dlist in basekey_1.keyblock(["id"],["time%n"]):
+			id= dlist[0][0] 
+			val = len(find_peaks_cwt(vector=np.asarray(dlist,dtype="float").transpose()[2], widths=np.array(list(range(1, n + 1))), wavelet=ricker))
+			rf6.write("{},{}\n".format(id,val))
 
 #number_peaks
 n_s = [1,3,5,10,50]
@@ -459,9 +669,37 @@ for n in n_s:
 	f21.run()
 
 #partial_autocorrelation
-lag_s = [1,2,3,4,5,6,7,8,9]
-for lag in lag_s:
-	pass
+from statsmodels.tsa.stattools import pacf
+lag_s = [0,1,2,3,4,5,6,7,8,9]
+max_demanded_lag = max(lag_s)
+
+with open('rlsf_8.csv','w') as rf8:
+	rf8.write("id")
+	for lag in lag_s:
+		rf8.write(",lag{}".format(lag))
+	rf8.write("\n")
+
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		x=np.asarray(dlist,dtype="float").transpose()[2]
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		n = len(x)
+		if n <= 1:
+			pacf_coeffs = [np.nan] * (max_demanded_lag + 1)
+		else:
+			if (n <= max_demanded_lag):
+				max_lag = n - 1
+			else:
+				max_lag = max_demanded_lag
+			pacf_coeffs = list(pacf(x, method="ld", nlags=max_lag))
+			pacf_coeffs = pacf_coeffs + [np.nan] * max(0, (max_demanded_lag - max_lag))
+		rf8.write(id)
+		for lag in lag_s:
+			rf8.write(",{}".format(pacf_coeffs[lag]))
+		rf8.write("\n")
+
+
 	#f22_0   = nm.mslide(k="id",s="time%n",t=lag , l=True,f="F_x:F_xn",i=base)	
 	#f22_1   = nm.msim(k=id,f="F_x,F_xn",c="covar",i=f22_0)
 	#f22_2   = nm.mstats(k=id,f="F_x,F_xn",c="var",i=f22_0)
@@ -547,7 +785,37 @@ f28.run()
 
 #spkt_welch_density
 # welch　＝＞フーリエ変換必要
-#あと
+from scipy.signal import welch
+coeff_s=[2,5,8]
+with open('rlsf_9.csv','w') as rf9:
+	rf9.write("id")
+	for coeff in coeff_s:
+		rf9.write(",coeff_{}".format(coeff))
+	rf9.write("\n")
+
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+
+		id= dlist[0][0] 
+		#以下
+		#/tsfresh/feature_extraction/feature_calculators.pyより
+		freq, pxx = welch(np.asarray(dlist,dtype="float").transpose()[2])
+
+		if len(pxx) <= np.max(coeff_s):  # There are fewer data points in the time series than requested coefficients
+			# filter coefficients that are not contained in pxx
+			reduced_coeff = [coefficient for coefficient in coeff_s if len(pxx) > coefficient]
+			not_calculated_coefficients = [coefficient for coefficient in coeff_s
+																				if coefficient not in reduced_coeff]
+
+			# Fill up the rest of the requested coefficients with np.NaNs
+			rls = list(pxx[reduced_coeff]) + [np.NaN] * len(not_calculated_coefficients)
+		else:
+			rls = pxx[coeff_s]
+
+		rf9.write(id)
+		for val in rls:
+			rf9.write(",{}".format(val))
+		rf9.write("\n")
+
 
 
 #sum_of_reoccurring_data_points
@@ -585,6 +853,27 @@ for v in v_s:
 	f33 = nm.mcal(c='${F_x}==%g'%(v),a="value_count",i=base)
 	f33 <<= nm.msum(k="id",f="value_count",o="rls33_%g.csv"%(v))
 	f33.run()
+
+#value_count inf nan
+v_s = [float("nan"),float("-inf"),float("inf")] 
+
+with open('rlsf_10.csv','w') as rf10:
+	rf10.write("id")
+	for v in v_s:
+		rf10.write(",val_{}".format(v))
+	rf10.write("\n")
+
+	for dlist in basekey_1.keyblock(["id"],["time%n"]):
+		id= dlist[0][0] 
+		x= np.asarray(dlist,dtype="float").transpose()[2]
+		rf10.write(id)
+		for v in v_s:
+			if np.isnan(v):
+				rf10.write(",{}".format(np.isnan(x).sum()))
+			else :
+				rf10.write(",{}".format(x[x == v].size))
+		rf10.write("\n")
+		
 
 
 #variance_larger_than_standard_deviation
