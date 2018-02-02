@@ -155,12 +155,11 @@ for rval in rvals:
 	#f3_5.run() # << =たまにこける
 
 
-print "zzz1"
 
 #f3_1 =   nm.mslide(k="id",s="time%n",f="F_x",t=3,i=base)
 #ほんとにいけてる？＝＞こけてるばあいあり
 nm.runs(funcList2)
-print "zzz2"
+
 
 from statsmodels.tsa.ar_model import AR
 #ar_coefficient

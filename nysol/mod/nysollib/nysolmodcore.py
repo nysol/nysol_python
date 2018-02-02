@@ -85,7 +85,7 @@ class NysolMOD_CORE(object):
 	def __iter__(self):
 		return Nysol_MeachIter(self)
 
-	def keyblock(self,keys,skeys):
+	def keyblock(self,keys,skeys=None):
 		x = Nysol_MeachKeyIter(self,keys,skeys)
 		while(True):
 			yield next(x)
