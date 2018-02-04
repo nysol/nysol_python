@@ -75,7 +75,8 @@ def check_for_boost():
 
 nmodLibs = ['pthread','xml2']
 nmodLibs.extend(check_for_boost())
-
+umodLibs = ['pthread']
+umodLibs.extend(check_for_boost())
 
 module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
@@ -161,8 +162,20 @@ medsetmod = Extension('nysol/take/_medsetlib',
 										include_dirs=['src','src/kgmod','src/mod','src/take/medset']
 										)
 utilmod = Extension('nysol/util/_utillib',
-                    sources = ['src/util/mmethods.cpp'],
-										include_dirs=['src','src/kgmod']
+                    sources = ['src/util/mmethods.cpp',
+                    						'src/kgmod/kgArgFld.cpp',
+																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
+																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',
+																'src/kgmod/kgEnv.cpp','src/kgmod/kgError.cpp',
+																'src/kgmod/kgFldBuffer.cpp',
+																'src/kgmod/kgMessage.cpp',
+																'src/kgmod/kgMethod.cpp',
+																'src/kgmod/kgTempfile.cpp','src/kgmod/kgVal.cpp',
+																'src/kgmod/kgWildcard.cpp','src/kgmod/kgmod.cpp',
+																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp'
+										],
+										include_dirs=['src','src/kgmod'],
+										libraries=umodLibs
 										)
 
 

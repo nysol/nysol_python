@@ -112,8 +112,10 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 }
 
 
-PyObject* runL(PyObject* self, PyObject* args)try
+PyObject* runL(PyObject* self, PyObject* args)
 {
+	try {
+
 	PyObject *sh;
 	PyObject *mlist;
 	PyObject *linklist;
@@ -133,11 +135,22 @@ PyObject* runL(PyObject* self, PyObject* args)try
 
 
 	ksh->run(cmdCapsel,p_list);
-
 	return PyLong_FromLong(0);
 
-}catch(...){
-	cerr << "exceptipn" << endl;
+
+	}
+	catch(kgError& err){
+		cerr << "run Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "run Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "run Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "run Error [ unKnown ERROR ]" << endl;
+	}
 	return PyLong_FromLong(1);
 }
 

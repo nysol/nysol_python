@@ -486,7 +486,8 @@ void kgshell::makePipeList(vector<linkST> & plist)
 int kgshell::run(
 	vector<cmdCapselST> &cmds,	
 	vector<linkST> & plist
-)try
+)
+//try
 {
 
 	makePipeList(plist);
@@ -734,10 +735,12 @@ int kgshell::run(
 	_modlist = NULL;
 
 	return 0;
-}catch(...){
+}
+/*
+catch(...){
 	cerr << "script RUN ERROR" << endl;
 	return 1;
-}
+}*/
 
 kgCSVfld* kgshell::runiter(
 	vector<cmdCapselST> &cmds,	

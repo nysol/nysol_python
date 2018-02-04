@@ -19,7 +19,9 @@
 #include "Python.h"
 #include <fcntl.h>
 #include <kgmod.h>
+#include <kgEnv.h>
 #include <kgCSV.h>
+#include <kgCSVout.h>
 #include <kgMessage.h>
 #include <kgMethod.h>
 
@@ -33,6 +35,35 @@ extern "C" {
 	void init_utillib(void);
 }
 #endif
+
+static char* strGET(PyObject* data){
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_AsUTF8(data);
+#else		
+	return PyString_AsString(data);
+#endif
+
+}
+
+static bool strCHECK(PyObject* data){
+
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_Check(data);
+#else		
+	return PyString_Check(data);
+#endif
+
+}
+static bool numCHECK(PyObject* data){
+
+#if PY_MAJOR_VERSION >= 3
+	return PyLong_Check(data);
+#else		
+	return PyInt_Check(data) || PyLong_Check(data);
+#endif
+
+}
+
 
 // =============================================================================
 // mrecountメソッド
@@ -78,7 +109,6 @@ PyObject* mrecount(PyObject* self, PyObject* args){
 	return PyLong_FromLong(recNo);
 
 }
-
 // =============================================================================
 // mheaderメソッド
 // =============================================================================
@@ -135,6 +165,242 @@ PyObject* mheader(PyObject* self, PyObject* args){
 	}
 }
 
+typedef struct {
+  PyObject_HEAD
+  kgCSVout* ss;
+	kgEnv  *env;
+	int    fldcnt;
+	char * truestr;
+	char * falsestr;
+
+} PyMcsvoutObject;
+
+static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
+
+	PyObject* rcvobj = NULL;	
+  if (!PyArg_ParseTuple(args, "O", &rcvobj)) return NULL;
+
+	if(!PyList_Check(rcvobj)){
+		cerr << "cannot run " << endl;
+		return Py_BuildValue("");
+	}
+	
+	Py_ssize_t msize = PyList_Size(rcvobj);
+
+	size_t lastsize = (self->fldcnt==0) ? msize : self->fldcnt;
+	size_t osize = ( self->fldcnt==0 || self->fldcnt > msize )? msize :self->fldcnt;
+	
+	for(Py_ssize_t i=0 ; i< osize ; i++){
+		PyObject* v = PyList_GetItem(rcvobj ,i);
+		
+		if(strCHECK(v)){
+			self->ss->writeStr(strGET(v),i==lastsize-1); 
+		}
+		else if ( v== Py_True){
+			self->ss->writeStr(self->truestr,i==lastsize-1); 
+		}
+		else if ( v== Py_False){
+			self->ss->writeStr(self->falsestr,i==lastsize-1); 
+		}
+		else if(numCHECK(v)){
+			self->ss->writeLong(PyLong_AsLong(v),i==lastsize-1);
+		}
+		else if(PyFloat_Check(v)){
+			self->ss->writeDbl(PyFloat_AsDouble(v),i==lastsize-1);
+		}
+		else{
+			self->ss->writeStr("",i==lastsize-1);
+		}
+	}
+	// 配列のサイズが項目名サイズより小さい時は、null値を出力。
+	if(osize < lastsize){
+		for(size_t i=osize; i<lastsize; i++){
+			self->ss->writeStr("",i==lastsize-1);
+		}
+	}
+	return PyLong_FromLong(0);
+}        
+
+static PyObject* mcsvout_close(PyMcsvoutObject* self) {
+	self->ss->close();
+	Py_RETURN_TRUE;
+}        
+
+static PyObject* mcsvout_enter(PyMcsvoutObject* self) {
+	return reinterpret_cast<PyObject*>(self);
+}        
+
+static PyObject* mcsvout_exit(PyMcsvoutObject* self,PyObject* args) {
+	self->ss->close();
+	Py_RETURN_TRUE;
+}        
+
+static void mcsvout_dealloc(PyMcsvoutObject* self) {
+	if(self->ss){
+		self->ss->close();
+ 		delete self->ss;
+ 	}
+ 	if(self->env){ delete self->env; }
+ 	if(self->truestr){ delete [] self->truestr; }
+ 	if(self->falsestr){ delete [] self->falsestr; }
+
+  Py_TYPE(self)->tp_free(reinterpret_cast<PyObject*>(self));
+}
+
+static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds) 
+{
+
+	static char *kwlist[] = {"o","f", "size","precision","bool",NULL};
+  char *fname =NULL;
+  PyObject* head=NULL;
+  int fsize=0;
+  int precision=KG_PRECISION;
+  PyObject* boollist=NULL;
+
+	if (! PyArg_ParseTupleAndKeywords(
+					args, kwds, "s|OiiO", kwlist, 
+					&fname,&head,&fsize,&precision,&boollist))
+	{
+    return -1;
+  }
+	self->env = new kgEnv;
+
+	if(precision!=KG_PRECISION){
+		self->env->precision(precision);
+	}
+
+	self->ss = new kgCSVout;
+	self->ss->open(fname, self->env, false);
+	self->fldcnt = fsize;
+
+  if(head){
+  	if(strCHECK(head)){
+			vector<char *> heads = splitToken(strGET(head), ',');
+			if( self->fldcnt==0 || self->fldcnt > heads.size() ){
+				self->fldcnt = heads.size();
+			}					
+			for(size_t i=0 ; i< self->fldcnt; i++){
+				self->ss->writeStr(heads[i],i==self->fldcnt-1);
+			}
+  	}
+		else if(PyList_Check(head)){
+			if( self->fldcnt==0 || self->fldcnt > PyList_Size(head) ){
+				self->fldcnt = PyList_Size(head);
+			}
+			for(size_t i=0 ; i<self->fldcnt;i++){
+				char * v = strGET( PyList_GetItem(head ,i) );
+				self->ss->writeStr(v,i==self->fldcnt-1);
+			}
+		}
+		else{
+			cerr << "not suport TYPE" << endl;
+	    return -1;
+		}
+  }
+	char * tval="1";
+	char * fval="0";
+  if(boollist){
+  	if(strCHECK(boollist)){
+			vector<char *> blist = splitToken(strGET(boollist), ',');
+			if(blist.size()>0){ tval =blist[0];}
+			if(blist.size()>1){ fval =blist[1];}
+  	}
+		else if(PyList_Check(boollist)){
+			if(PyList_Size(boollist)>0){  tval = strGET( PyList_GetItem(boollist ,0)); } 
+			if(PyList_Size(boollist)>1){  fval = strGET( PyList_GetItem(boollist ,1)); } 
+		}
+		else{
+			cerr << "not suport TYPE" << endl;
+	    return -1;
+		}
+  }
+  self->truestr = new char[strlen(tval)+1];
+  self->falsestr = new char[strlen(fval)+1];
+  strcpy(self->truestr,tval);
+  strcpy(self->falsestr,fval);
+
+  return 0;
+}
+
+static PyObject* mcsvout_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
+  PyMcsvoutObject* self;
+  self = reinterpret_cast<PyMcsvoutObject*>(type->tp_alloc(type, 0));
+  if (self == NULL) return NULL;
+  self->ss=NULL;
+  self->env=NULL;
+  self->truestr=NULL;
+  self->falsestr=NULL;
+  return reinterpret_cast<PyObject*>(self);
+}
+
+static PyMethodDef mcsvout_obj_methods[] = {
+	{"write",reinterpret_cast<PyCFunction>(mcsvout_write),METH_VARARGS,""},
+	{"close",reinterpret_cast<PyCFunction>(mcsvout_close), METH_NOARGS,""},
+	{"__enter__",reinterpret_cast<PyCFunction>(mcsvout_enter), METH_NOARGS,""},
+	{"__exit__",reinterpret_cast<PyCFunction>(mcsvout_exit), METH_VARARGS,""},
+  {NULL}  /* Sentinel */
+};
+
+PyTypeObject PyMcsvout_Type = {
+  PyVarObject_HEAD_INIT(NULL, 0)
+  "_utillib.mcsvout",              /*tp_name*/
+  sizeof(PyMcsvoutObject),             /*tp_basicsize*/
+  0,                                  /*tp_itemsize*/
+  reinterpret_cast<destructor>(mcsvout_dealloc), /*tp_dealloc*/
+  0,  /*tp_print*/
+  0,                                  /*tp_getattr*/
+  0,                                  /*tp_setattr*/
+#if PY_MAJOR_VERSION >= 3
+  0,                                  /*tp_reserved at 3.4*/
+#else
+  0,                                  /*tp_compare*/
+#endif
+  0, /*tp_repr*/
+  0,                  /*tp_as_number*/
+  0,                                  /*tp_as_sequence*/
+  0,                                  /*tp_as_mapping*/
+  0,                                  /*tp_hash */
+  0,                                  /*tp_call*/
+  0,                                  /*tp_str*/
+  0,                                  /*tp_getattro*/
+  0,                                  /*tp_setattro*/
+  0,                                  /*tp_as_buffer*/
+#if PY_MAJOR_VERSION >= 3
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE , /*tp_flags*/
+#else
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
+#endif
+  0,                         /* tp_doc */
+  0,		                      /* tp_traverse */
+  0,		                      /* tp_clear */
+  0, /* tp_richcompare */
+  0,		                      /* tp_weaklistoffset */
+  0,                          /* tp_iter */
+  0, /* tp_iternext */
+  mcsvout_obj_methods,                     /* tp_methods */
+  0,//ctoi_members,                     /* tp_members */
+  0,                                  /* tp_getset */
+  0,                                  /* tp_base */
+  0,                                  /* tp_dict */
+  0,                                  /* tp_descr_get */
+  0,                                  /* tp_descr_set */
+  0,                                  /* tp_dictoffset */
+  reinterpret_cast<initproc>(mcsvout_init), /* tp_init */
+  PyType_GenericAlloc,                /* tp_alloc */
+  mcsvout_new,                         /* tp_new */
+#if PY_MAJOR_VERSION >= 3
+  0, /* tp_free */
+  0, /* tp_is_gc */
+  0, /* *tp_bases */
+  0, /* *tp_mro */
+  0, /* *tp_cache */
+  0, /* *tp_subclasses */
+  0, /* *tp_weaklist */
+  0, /* tp_version_tag */
+  0, /* tp_finalize */
+#endif
+};
+
 
 static PyMethodDef utilmethods[] = {
 	{"mrecount",(PyCFunction)mrecount, METH_VARARGS  },
@@ -159,14 +425,25 @@ static struct PyModuleDef moduledef = {
 PyMODINIT_FUNC
 PyInit__utillib(void){
 	PyObject* m;
+  if (PyType_Ready(&PyMcsvout_Type) < 0) return NULL;
 	m = PyModule_Create(&moduledef);
+	if(m==NULL){ return m; }
+  Py_INCREF(&PyMcsvout_Type);
+	PyModule_AddObject(m, "mcsvout", reinterpret_cast<PyObject*>(&PyMcsvout_Type));
+
 	return m;
 }
 
 #else
 
 void init_utillib(void){
-	Py_InitModule("_utillib", utilmethods);
+	PyObject* m;
+  if (PyType_Ready(&PyMcsvout_Type) < 0) return ;
+	m = Py_InitModule("_utillib", utilmethods);
+	if(m==NULL){ return ; }
+  Py_INCREF(&PyMcsvout_Type);
+	PyModule_AddObject(m, "mcsvout", reinterpret_cast<PyObject*>(&PyMcsvout_Type));
+
 }
 
 #endif
