@@ -227,11 +227,14 @@ static PyObject* mcsvout_close(PyMcsvoutObject* self) {
 }        
 
 static PyObject* mcsvout_enter(PyMcsvoutObject* self) {
+	Py_INCREF(self); 
 	return reinterpret_cast<PyObject*>(self);
 }        
 
 static PyObject* mcsvout_exit(PyMcsvoutObject* self,PyObject* args) {
-	self->ss->close();
+	if(self->ss){
+		self->ss->close();
+	}
 	Py_RETURN_TRUE;
 }        
 
@@ -249,7 +252,6 @@ static void mcsvout_dealloc(PyMcsvoutObject* self) {
 
 static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds) 
 {
-
 	static char *kwlist[] = {"o","f", "size","precision","bool",NULL};
   char *fname =NULL;
   PyObject* head=NULL;
@@ -275,12 +277,13 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 
   if(head){
   	if(strCHECK(head)){
-			vector<char *> heads = splitToken(strGET(head), ',');
+  		kgstr_t hstr(strGET(head));
+			vector<kgstr_t> heads = splitToken(hstr, ',');
 			if( self->fldcnt==0 || self->fldcnt > heads.size() ){
 				self->fldcnt = heads.size();
 			}					
 			for(size_t i=0 ; i< self->fldcnt; i++){
-				self->ss->writeStr(heads[i],i==self->fldcnt-1);
+				self->ss->writeStr(heads[i].c_str(),i==self->fldcnt-1);
 			}
   	}
 		else if(PyList_Check(head)){
@@ -288,6 +291,10 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 				self->fldcnt = PyList_Size(head);
 			}
 			for(size_t i=0 ; i<self->fldcnt;i++){
+				if(!strCHECK(PyList_GetItem(head ,i))){
+					cerr << "not suport TYPE" << endl;
+	 		   return -1;	
+				}
 				char * v = strGET( PyList_GetItem(head ,i) );
 				self->ss->writeStr(v,i==self->fldcnt-1);
 			}
