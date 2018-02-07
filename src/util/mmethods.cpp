@@ -232,10 +232,27 @@ static PyObject* mcsvout_enter(PyMcsvoutObject* self) {
 }        
 
 static PyObject* mcsvout_exit(PyMcsvoutObject* self,PyObject* args) {
+
+	PyObject* exc_type;
+	PyObject* exc_value;
+	PyObject* traceback;
+
 	if(self->ss){
 		self->ss->close();
 	}
+
+  if (!PyArg_ParseTuple(args, "OOO", &exc_type,&exc_value,&traceback)){
+  	return NULL;
+  }
+
+	if(exc_type != Py_None){ 
+		Py_RETURN_FALSE;
+	}
+	
 	Py_RETURN_TRUE;
+
+
+
 }        
 
 static void mcsvout_dealloc(PyMcsvoutObject* self) {
