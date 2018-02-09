@@ -82,6 +82,164 @@ class NysolMOD_CORE(object):
 		return self
 
 
+	def __str__(self):
+		import os
+		dsptp = os.getenv("NYSOL_MOD_DSP_TYPE", "0")
+		if dsptp == "1":
+			yLimit =40
+			xx = Nysol_MeachIter(self)
+			pre=[]
+			sufmax = int(yLimit/2)
+			suf=[ [] for i in range(sufmax) ]
+			cnt=0
+			sufpos=0
+			try:
+				while(True):
+					val = next(xx)
+					if cnt < yLimit :
+						pre.append(val)
+
+					cnt+=1
+					suf[sufpos]=val
+					sufpos+=1
+					if sufpos==sufmax :
+						sufpos=0
+			except:
+				pass
+
+			width=80
+			fldnameLimit =15
+
+			if hasattr(os,"get_terminal_size"):
+				width = os.get_terminal_size().columns
+			else:
+				_,width_str = os.popen('stty size').read().split()
+				width = int(width_str)
+			
+			def dsplen(data):
+				
+				if sys.version_info.major < 3:
+					datax = data.decode('utf-8')
+				else:
+					datax = data
+
+				fsize=0
+				for charstr in datax:
+					if ord(charstr)<128 :
+						fsize +=1
+					else:
+						fsize +=2
+				return fsize
+
+			def dspchg(data,size):
+
+				if sys.version_info.major < 3:
+					datax = data.decode('utf-8')
+				else:
+					datax = data
+
+				fsize=0
+				for i , charstr in enumerate(datax):
+					if ord(charstr)<128 :
+						fsize +=1
+					else:
+						fsize +=2
+					if fsize > size-3:
+						return data[0:i]+"..."
+
+				return data
+			
+			 
+			def sizeCHK(data,premax):
+				for lin in data:
+					for i, fdata in enumerate(lin):
+						fsize = dsplen(fdata)
+
+						if fsize > premax[i] :
+							premax[i] = fsize
+
+			if(cnt > yLimit): 
+				ppos = sufmax
+				spos = sufpos
+				for _ in range(sufmax):
+
+					pre[ppos] = suf[spos]
+					ppos += 1
+					spos += 1
+					if spos==sufmax :
+						spos=0
+
+			
+			fldmax = [ 0 for i in range(len(pre[0]))]
+			sizeCHK(pre,fldmax)
+			for i in range(len(fldmax)):
+				if fldmax[i] > fldnameLimit:
+					fldmax[i] = fldnameLimit
+
+			fldcut=False
+
+			if sum(fldmax) +len(fldmax) > width:
+				dspfldNo =[]
+				restW = width - (fldmax[-1]+5)
+				for i ,v in enumerate(fldmax):
+					if restW - v > 0 :
+						dspfldNo.append(i) 
+					else:
+						dspfldNo.append(len(fldmax)-1)
+						break 
+					restW -= (v+1)
+				fldcut = True
+			else:
+				dspfldNo =  [i for i in range(len(fldmax))]
+				
+			outstr=[]
+			for i,lin in enumerate(pre):
+				newstr=[]
+				for pos in dspfldNo:
+
+					if fldcut and pos == len(fldmax)-1:
+						newstr.append("...")   
+
+					dlen = dsplen(lin[pos])
+
+					if dlen <= fldmax[pos] :
+						fmtdlen = (fldmax[pos]-dlen)+len(lin[pos])
+						fmt = "%%%ds"%(fmtdlen)
+						newstr.append(fmt%(lin[pos]))
+					else:
+						newdata = dspchg(lin[pos],fldmax[pos])
+						fmtdlen = (fldmax[pos]-dsplen(newdata))+len(newdata)
+						fmt = "%%%ds"%(fmtdlen)
+						newstr.append(fmt%(newdata))
+
+				outstr.append(" ".join(newstr))
+				if cnt > yLimit and i == sufmax :
+					dmystr = []
+					for pos in dspfldNo:
+
+						if fldcut and pos == len(fldmax)-1:
+							dmystr.append("...")   
+
+
+						dmylen = fldmax[pos] if fldmax[pos]<3 else 3
+						fmt = "%%%ds"%(fldmax[pos])
+						dmystr.append(fmt%("."*dmylen))
+							
+					outstr.append(" ".join(dmystr))
+
+			return "\n".join(outstr)
+			
+
+		elif dsptp == 2:
+			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
+		
+		else:
+			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
+
+	def __repr__(self):
+		return str(self)
+
+
 	def __iter__(self):
 		return Nysol_MeachIter(self)
 

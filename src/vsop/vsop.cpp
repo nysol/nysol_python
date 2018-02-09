@@ -22,10 +22,16 @@ using namespace std;
 extern "C" {
 	PyMODINIT_FUNC PyInit__vsoplib(void);
 }
+#define PyStr_FromFormat PyUnicode_FromFormat
+
 #else
+
 extern "C" {
 	void init_vsoplib(void);
 }
+
+#define PyStr_FromFormat PyString_FromFormat
+
 #endif
 
 
@@ -98,6 +104,8 @@ struct OV
 int init_cnt=0;
 int env_nmax=0;
 bool env_warning = false;
+// global 
+PyObject* py_partly ;
 
 //この値はBDDライブラリとかぶらないよう注意すること
 // キャッシュがおかしくなる
@@ -1834,14 +1842,15 @@ PyObject* vsop_hashout(PyCtoIObject* self){
 
 	PyObject* hash = PyDict_New();
 	int rtnflg = HashoutCtoI(*self->ss,hash);
-/*
+
 	if(rtnflg==2){
-		rb_iv_set(self,"@partly", Qtrue );
+	  Py_INCREF(Py_True);
+ 		py_partly = Py_True; 
 	}
-	else{
-		rb_iv_set(self,"@partly", Qfalse);
+	else{ 
+	  Py_INCREF(Py_False);
+		py_partly =  Py_False;	
 	}
-*/
 	return hash;
 }
 
@@ -2002,10 +2011,9 @@ PyObject* vsop_show(PyCtoIObject* self, PyObject* args){
 
 
 PyObject* ctoi_repr(PyCtoIObject* self){
-	vsop_print(self);
-	Py_RETURN_TRUE;
+	return PyStr_FromFormat("<%s object of %p>", Py_TYPE(self)->tp_name,
+                             reinterpret_cast<void*>(self->ss));
 }
-
 
 /*##vsop_import##*/
 PyObject* vsop_import(PyCtoIObject* self, PyObject* args){
@@ -2450,7 +2458,6 @@ static PyMethodDef ctoi_obj_methods[] = {
 
 
 
-
 PyTypeObject PyCtoI_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
   "_vsoplib.ctoi",              /*tp_name*/
@@ -2465,7 +2472,7 @@ PyTypeObject PyCtoI_Type = {
 #else
   0,                                  /*tp_compare*/
 #endif
-  0, /*tp_repr*/
+  reinterpret_cast<reprfunc>(ctoi_repr), /*tp_repr*/
   &ctoi_as_number,                  /*tp_as_number*/
   0,                                  /*tp_as_sequence*/
   0,                                  /*tp_as_mapping*/
@@ -2531,12 +2538,18 @@ PyInit__vsoplib(void){
   if (PyType_Ready(&PyCtoI_Type) < 0) return NULL;
   if (PyType_Ready(&PyCtoIIter_Type) < 0) return NULL;
   m = PyModule_Create(&moduledef);
+
+  Py_INCREF(Py_False);
+	py_partly = Py_False;
+
 	if(m==NULL){ return m; }
   Py_INCREF(&PyCtoI_Type);
   Py_INCREF(&PyCtoIIter_Type);
 	PyModule_AddObject(m, "ctoi", reinterpret_cast<PyObject*>(&PyCtoI_Type));
   PyModule_AddObject(m, "ctoi_iterator",
                      reinterpret_cast<PyObject*>(&PyCtoIIter_Type));
+	PyModule_AddObject(m, "partly", reinterpret_cast<PyObject*>(py_partly));
+
 	return m;
 }
 
