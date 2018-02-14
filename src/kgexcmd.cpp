@@ -98,6 +98,7 @@ int kgExcmd::run(void)
 // -----------------------------------------------------------------------------
 int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 {
+
 	try{
 		setArgs();
 		if(inum>1 || onum>1){
@@ -110,10 +111,9 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		if(inum==1 && *i_p > 0){ i_p_t = *i_p; }
 		if(onum==1 && *o_p > 0){ o_p_t = *o_p; }
 
-		// FD_CLOSE_FLGを外す
-		if(i_p_t!=-1){ fcntl(i_p_t, F_SETFD, 0);}
-		if(o_p_t!=-1){ fcntl(o_p_t, F_SETFD, 0);}
-
+		// FD_CLOSE_FLGを外すほうがいい？（）
+		//if(i_p_t!=-1){ fcntl(i_p_t, F_SETFD, 0);}
+		//if(o_p_t!=-1){ fcntl(o_p_t, F_SETFD, 0);}
 
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
@@ -134,7 +134,6 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 			//int ret = 
 			waitpid(pid, &status, 0);
 
-
 			if(i_p_t>0){ close(i_p_t);}
 			if(o_p_t>0){ close(o_p_t);}
 			if(status==0){
@@ -142,10 +141,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 			}
 			else{
 				throw kgError("exec err errno:" + status);
-				
 			}
-
-
 			return status;
 		}
 		else {//err

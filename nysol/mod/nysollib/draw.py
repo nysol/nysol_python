@@ -16,18 +16,22 @@ def dicisionPosSub(mlist,iolist,baselist,dsppos,y,counter):
 	
 def dicisionPos(mlist,iolist):
 
-	startpos = []
+	startpos = set() 
 	for i , mm in enumerate(mlist):
 		if len(mm[2])!=0:
 			if "i" in mm[2]:
-				startpos.append(i)
+				startpos.add(i)
 			if "m" in mm[2]:
-				startpos.append(i)
+				startpos.add(i)
+
+	for i , mm in enumerate(iolist):
+		if len(mm[0]) == 0 and len(mm[1]) == 0 :
+			startpos.add(i)
 
 	dsppos   = [None]*len(mlist)
 	y=0
 	counter =[0]
-	dicisionPosSub(mlist,iolist,startpos,dsppos,y,counter)
+	dicisionPosSub(mlist,iolist,list(startpos),dsppos,y,counter)
 	
 	return dsppos , len(counter) ,max(counter)
 
@@ -55,8 +59,9 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 	f.write("<polygon points='0,0 5,5 0,10 10,5 ' fill='black'/>\n")
 	f.write("</marker>\n")
 	f.write("</defs>\n")
-	print(dsppos)
+	#print(dsppos)
 	for i , mm in enumerate(dsppos):
+		
 		modobj = mlist[i]
 		x,y = mm
 

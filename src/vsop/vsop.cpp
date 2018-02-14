@@ -626,10 +626,13 @@ CtoI * int2ctoi(int val)
 
 CtoI* string2ctoi(char *str)
 {
+	// 文字列複製する
+	char *org = new char [strlen(str)+1];
+	strcpy(org,str);
 	if(init_cnt==0){ BDDV_Init(256, env_nmax);}
 	init_cnt++;
 	int sep_cnt=0;
-	for(char *p=str;*p;p++){
+	for(char *p=org;*p;p++){
 		if(*p==' '){ 
 			sep_cnt++;
 		}
@@ -639,8 +642,8 @@ CtoI* string2ctoi(char *str)
 
 	int i=0;
 	char *p,*q;
-	p=str;
-	q=str;
+	p=org;
+	q=org;
 	while(1){
 		if(*p==' '){//区切り文字
 			*p='\0';
@@ -672,6 +675,7 @@ CtoI* string2ctoi(char *str)
 	}
 	CtoI *rtnctoi = new CtoI(ctmp);
 	if(ctoitmp) delete [] ctoitmp;
+	if(org) delete [] org;
 	return rtnctoi;
 }
 
@@ -731,7 +735,6 @@ PyObject* vsop_symbol(PyObject*, PyObject* args)
 /*##vsop_itemset##*/
 PyObject* vsop_itemset(PyObject*, PyObject* args)
 {
-
   char * str =NULL ;
   if (!PyArg_ParseTuple(args, "|s", &str)) return NULL;
 
