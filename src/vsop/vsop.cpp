@@ -1064,12 +1064,67 @@ static PyObject* vsop_lcm(PyCtoIObject* self, PyObject* args)
 	return rtnval;
 }
 
+/*##vsop_import##*/
+PyObject* vsop_import(PyCtoIObject* self, PyObject* args){
+
+	char *fname;
+  if (!PyArg_ParseTuple(args, "s", &fname)) return NULL;
+
+	if(init_cnt==0){ BDDV_Init(256, env_nmax);}
+	init_cnt++;
+
+	CtoI *ctoi_fin; 
+  FILE *fp;
+
+  fp = fopen(fname, "r");
+	if(fp == NULL){
+		yyerror("Can't open the file");
+		ctoi_fin = new CtoI(0);
+	}
+	else{
+		ZBDDV v = ZBDDV_Import(fp);
+		fclose(fp);
+		if(v != ZBDDV(-1)){
+		  int t = 1;
+		  char s[32];
+			while(BDD_LevOfVar(v.Top()) > VTable.Used()){
+		    sprintf(s, "x%d", t);
+		    while(VTable.GetID(s) != 0){
+					t++;
+					sprintf(s, "x%d", t);
+				}
+				VTable.SetT0(BDD_VarOfLev(t), s);
+			}
+			int len = v.Last()+1;
+			CtoI a = CtoI(0);
+			for(int i=0; i<len; i++){
+				a += CtoI(v.GetZBDD(i)).ShiftDigit(i);
+			}
+      ctoi_fin = new CtoI(a);
+		}
+		else{
+			yyerror("<WARNING> import error");
+			ctoi_fin = new CtoI(0);
+		}
+	}
+
+  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
+      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
+	ret->ss = ctoi_fin;
+	return reinterpret_cast<PyObject*>(ret);
+}
+
+
+
+
+
 
 static PyMethodDef ctoi_methods[] = {
 	{"itemset", reinterpret_cast<PyCFunction>(vsop_itemset), METH_VARARGS },
 	{"symbol", reinterpret_cast<PyCFunction>(vsop_symbol), METH_VARARGS },
 	{"constant", reinterpret_cast<PyCFunction>(vsop_constant), METH_VARARGS },
 	{"totalsize", reinterpret_cast<PyCFunction>(vsop_totalsize), METH_VARARGS },
+	{"zddread",reinterpret_cast<PyCFunction>(vsop_import),METH_VARARGS,""},
   {"lcm",reinterpret_cast<PyCFunction>(vsop_lcm), METH_VARARGS, ""},
 	{NULL}
 };
@@ -1416,7 +1471,7 @@ static PyObject* vsop_restrict(PyCtoIObject* self, PyObject* args){
 }
 /*##vsop_permit##*/
 PyObject* vsop_permit(PyCtoIObject* self, PyObject* args){
-
+	
   PyObject* v = NULL;
   if (!PyArg_ParseTuple(args, "O", &v)) return NULL;
 	CtoI *ctoi_moda = new CtoI(*self->ss);
@@ -2018,57 +2073,6 @@ PyObject* ctoi_repr(PyCtoIObject* self){
                              reinterpret_cast<void*>(self->ss));
 }
 
-/*##vsop_import##*/
-PyObject* vsop_import(PyCtoIObject* self, PyObject* args){
-
-	char *fname;
-  if (!PyArg_ParseTuple(args, "s", &fname)) return NULL;
-
-	if(init_cnt==0){ BDDV_Init(256, env_nmax);}
-	init_cnt++;
-
-	CtoI *ctoi_fin; 
-  FILE *fp;
-
-  fp = fopen(fname, "r");
-	if(fp == NULL){
-		yyerror("Can't open the file");
-		ctoi_fin = new CtoI(0);
-	}
-	else{
-		ZBDDV v = ZBDDV_Import(fp);
-		fclose(fp);
-		if(v != ZBDDV(-1)){
-		  int t = 1;
-		  char s[32];
-			while(BDD_LevOfVar(v.Top()) > VTable.Used()){
-		    sprintf(s, "x%d", t);
-		    while(VTable.GetID(s) != 0){
-					t++;
-					sprintf(s, "x%d", t);
-				}
-				VTable.SetT0(BDD_VarOfLev(t), s);
-			}
-			int len = v.Last()+1;
-			CtoI a = CtoI(0);
-			for(int i=0; i<len; i++){
-				a += CtoI(v.GetZBDD(i)).ShiftDigit(i);
-			}
-      ctoi_fin = new CtoI(a);
-		}
-		else{
-			yyerror("<WARNING> import error");
-			ctoi_fin = new CtoI(0);
-		}
-	}
-
-  PyCtoIObject* ret = reinterpret_cast<PyCtoIObject*>(
-      PyCtoI_Type.tp_alloc(&PyCtoI_Type, 0));
-	ret->ss = ctoi_fin;
-	return reinterpret_cast<PyObject*>(ret);
-}
-
-
 
 /*##vsop_print_size##*/
 static PyObject* vsop_size(PyCtoIObject* self) {
@@ -2424,7 +2428,7 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"csvout", reinterpret_cast<PyCFunction>(vsop_csvout), METH_VARARGS, ""},
   {"export", reinterpret_cast<PyCFunction>(vsop_export), METH_VARARGS, ""},
   {"show",reinterpret_cast<PyCFunction>(vsop_show), METH_VARARGS, ""},
- 	{"permit",reinterpret_cast<PyCFunction>(vsop_permitsym), METH_VARARGS, ""},
+ 	{"permit",reinterpret_cast<PyCFunction>(vsop_permit), METH_VARARGS, ""},
   {"permitsym",reinterpret_cast<PyCFunction>(vsop_permitsym), METH_VARARGS, ""},
   {"restrict",reinterpret_cast<PyCFunction>(vsop_restrict), METH_VARARGS, ""},
   {"freqpatC",reinterpret_cast<PyCFunction>(vsop_freqpatC), METH_VARARGS, ""},
@@ -2438,7 +2442,6 @@ static PyMethodDef ctoi_obj_methods[] = {
   {"termsEQ",reinterpret_cast<PyCFunction>(vsop_termsEQ), METH_VARARGS, ""},
   {"meet",reinterpret_cast<PyCFunction>(vsop_meet), METH_VARARGS, ""},
   {"delta",reinterpret_cast<PyCFunction>(vsop_delta), METH_VARARGS, ""},
-	{"import",reinterpret_cast<PyCFunction>(vsop_import),METH_VARARGS,""},
 	{"hashout",reinterpret_cast<PyCFunction>(vsop_hashout), METH_NOARGS,""},
 	{"maxweight",reinterpret_cast<PyCFunction>(vsop_maxval),METH_NOARGS,""},
 	{"minweight",reinterpret_cast<PyCFunction>(vsop_minval),METH_NOARGS,""},
