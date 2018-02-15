@@ -578,7 +578,8 @@ xa.show()
 #  a b + 2 b c + 3 d + 4
 xh=xa.hashout()
 
-#print(VSOP.partly)
+print(VSOP.partly)
+
 for kv in xh.items():
 	print(kv[0])
 	print(kv[1])

@@ -2566,12 +2566,17 @@ void init_vsoplib(void){
   if (PyType_Ready(&PyCtoI_Type) < 0) return ;
   if (PyType_Ready(&PyCtoIIter_Type) < 0) return;
 	m = Py_InitModule("_vsoplib", ctoi_methods);
+
+  Py_INCREF(Py_False);
+	py_partly = Py_False;
+
 	if(m==NULL){ return ; }
   Py_INCREF(&PyCtoI_Type);
   Py_INCREF(&PyCtoIIter_Type);
 	PyModule_AddObject(m, "ctoi", reinterpret_cast<PyObject*>(&PyCtoI_Type));
   PyModule_AddObject(m, "ctoi_iterator",
                      reinterpret_cast<PyObject*>(&PyCtoIIter_Type));
+	PyModule_AddObject(m, "partly", reinterpret_cast<PyObject*>(py_partly));
 
 	return ;
 }
