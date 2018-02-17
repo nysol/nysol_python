@@ -691,7 +691,7 @@ vector<string> kglib::splitTokenQ(string& str, char delim,bool skip)
     		pos++;
 				dq = true;
     	}
-    	else if(str[pos] == '\\'){
+    	/*else if(str[pos] == '\\'){
     		str.erase(pos,1);
     		if(str[pos] != L'\0'){
       		if(str[pos]=='t'){
@@ -701,7 +701,7 @@ vector<string> kglib::splitTokenQ(string& str, char delim,bool skip)
 					}
     			pos++;
 				}
-			}else if(str[pos] == delim){
+			}*/else if(str[pos] == delim){
 				if(skip && pos==0){
 					while(str[pos+1]==delim){ pos++; }			
 					prv=pos+1;

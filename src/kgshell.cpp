@@ -235,199 +235,208 @@ kgshell::kgshell(int mflg){
 
 
 
-void *kgshell::run_func(void *arg)try{
-	string msg;
-	argST *a =(argST*)arg; 
-	int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
-	pthread_mutex_lock(a->stMutex);
-	a->status =sts;
-	a->finflg=true;
-	a->msg.append(msg);
-	a->endtime=getNowTime(true);
+void *kgshell::run_func(void *arg){
+	try{
+		string msg;
+		argST *a =(argST*)arg; 
+		int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
+		pthread_mutex_lock(a->stMutex);
+		a->status =sts;
+		a->finflg=true;
+		a->msg.append(msg);
+		a->endtime=getNowTime(true);
 
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}
-catch(kgError& err){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR ");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(err.message(0));
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}
+	catch(kgError& err){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR ");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(err.message(0));
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch (const exception& e) {
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR ");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(e.what());
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch (const exception& e) {
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR ");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(e.what());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch(char * er){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR ");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(er);
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch(char * er){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR ");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(er);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch(...){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR ");
-	a->msg.append(a->mobj->name());
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
-}
-
-void *kgshell::run_writelist(void *arg)try{
-	string msg;
-	argST *a =(argST*)arg; 
-	int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
-	pthread_mutex_lock(a->stMutex);
-	a->status = sts;
-	a->finflg=true;
-	a->msg.append(msg);
-	a->endtime=getNowTime(true);
-
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
-
-}
-catch(kgError& err){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(err.message(0));
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
-
-}catch (const exception& e) {
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(e.what());
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
-
-}catch(char * er){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(er);
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
-
-}catch(...){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch(...){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR ");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+	return NULL;	
 }
 
-void *kgshell::run_readlist(void *arg)try{
-	string msg;
-	argST *a =(argST*)arg; 
-	int sts = a->mobj->run(a->list,a->o_cnt,a->o_p,msg);
-	pthread_mutex_lock(a->stMutex);
-	a->status = sts;
-	a->finflg=true;
-	a->msg.append(msg);
-	a->endtime=getNowTime(true);
+void *kgshell::run_writelist(void *arg){
+	try{
+		string msg;
+		argST *a =(argST*)arg; 
+		int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
+		pthread_mutex_lock(a->stMutex);
+		a->status = sts;
+		a->finflg=true;
+		a->msg.append(msg);
+		a->endtime=getNowTime(true);
 
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch(kgError& err){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(err.message(0));
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}
+	catch(kgError& err){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(err.message(0));
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch (const exception& e) {
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(e.what());
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch (const exception& e) {
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(e.what());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch(char * er){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	a->msg.append(" ");
-	a->msg.append(er);
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch(char * er){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(er);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
 
-}catch(...){
-	argST *a =(argST*)arg; 
-	pthread_mutex_lock(a->stMutex);
-	a->status = 1;
-	a->finflg=true;
-	a->endtime=getNowTime(true);
-	a->msg.append("unKnown ERROR");
-	a->msg.append(a->mobj->name());
-	pthread_cond_signal(a->stCond);
-	pthread_mutex_unlock(a->stMutex);
+	}catch(...){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+	return NULL;	
+}
+
+void *kgshell::run_readlist(void *arg){
+	try{
+		string msg;
+		argST *a =(argST*)arg; 
+		int sts = a->mobj->run(a->list,a->o_cnt,a->o_p,msg);
+		pthread_mutex_lock(a->stMutex);
+		a->status = sts;
+		a->finflg=true;
+		a->msg.append(msg);
+		a->endtime=getNowTime(true);
+
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(kgError& err){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(err.message(0));
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch (const exception& e) {
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(e.what());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(char * er){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(er);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(...){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+	return NULL;	
 }
 
 
@@ -487,260 +496,355 @@ int kgshell::run(
 	vector<cmdCapselST> &cmds,	
 	vector<linkST> & plist
 )
-//try
 {
+	try{
+		makePipeList(plist);
 
-	makePipeList(plist);
+		//DEBUG
+		//debugIOinfo_OUTPUT()
 
-	//DEBUG
-	/*
-	for(iomap_t::iterator it=_ipipe_map.begin() ;it!=_ipipe_map.end();it++){
-			cerr << it->first << "--|" << endl;
-			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
-				cerr << " " << it2->first << ": ";
-				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
-					cerr << *it3 << " ";
-				}
-				cerr << endl;
-			}
-	}
-	for(iomap_t::iterator it=_opipe_map.begin() ;it!=_opipe_map.end();it++){
-			cerr << it->first << "--|" << endl;
-			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
-				cerr << " " << it2->first << ": ";
-				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
-					cerr << *it3 << " ";
-				}
-				cerr << endl;
-			}
-	}
-	*/
-	_clen = cmds.size();
 
-	_modlist = new kgMod*[_clen];
+		_clen = cmds.size();
+		_modlist = new kgMod*[_clen];
 	
-	for(size_t i=0;i<_clen;i++){
-		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
-			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
-			return 1;
+		for(size_t i=0;i<_clen;i++){
+			if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
+				cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
+				return 1;
+			}
+			_modlist[i] = _kgmod_map.find(cmds[i].cmdname)->second() ;
+			kgArgs newArgs;
+			for(size_t j=0;j<cmds[i].paralist.size();j++){
+				newArgs.add(cmds[i].paralist[j]);
+			}
+			_modlist[i]->init(newArgs, &_env);
 		}
-		_modlist[i] = _kgmod_map.find(cmds[i].cmdname)->second() ;
-		kgArgs newArgs;
-		for(size_t j=0;j<cmds[i].paralist.size();j++){
-			newArgs.add(cmds[i].paralist[j]);
-		}
-		_modlist[i]->init(newArgs, &_env);
-	}
 
-	_th_st_pp = new pthread_t[_clen];
-	argST *argst = new argST[_clen];
-	int _th_rtn[_clen];
+		_th_st_pp = new pthread_t[_clen];
+		_argst = new argST[_clen];
+		int _th_rtn[_clen];
 
-	for(int i=_clen-1;i>=0;i--){
+		// before run 
+		for(int i=_clen-1;i>=0;i--){
 
-		argst[i].mobj= _modlist[i];
-		argst[i].tag= cmds[i].tag;
-		argst[i].finflg = false;
-		argst[i].outputEND = false;
-		argst[i].status = 0;
-		argst[i].stMutex = &_stsMutex;
-		argst[i].stCond = &_stsCond;
+			_argst[i].mobj= _modlist[i];
+			_argst[i].tag= cmds[i].tag;
+			_argst[i].finflg = false;
+			_argst[i].outputEND = false;
+			_argst[i].status = 0;
+			_argst[i].stMutex = &_stsMutex;
+			_argst[i].stCond = &_stsCond;
 
-		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 
-		//	DEBIG
-		//	cerr << "-------------------" << endl;
-		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
+			//	DEBIG
+			//	cerr << "-------------------" << endl;
+			//	cerr << i << ":"<< argst[i].mobj->name() << endl;
 
-		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
-			if(typ==2){
-				argst[i].i_cnt= 1;
-				argst[i].i_p= NULL;
-				argst[i].list = cmds[i].iobj;
+			if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
+				if(typ==2){
+					_argst[i].i_cnt= 1;
+					_argst[i].i_p= NULL;
+					_argst[i].list = cmds[i].iobj;
+				}
+				else{
+					_argst[i].i_cnt= 0;
+					_argst[i].i_p= NULL;
+				}
 			}
 			else{
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
-			}
-		}
-		else{
-			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
-			size_t cnt=0;
-			if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
-				cnt += _ipipe_map[i]["i"].size();
-			}
-			if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
-				cnt += _ipipe_map[i]["m"].size();
-				if(cnt==1) { cnt++; } //mのみの場合はdmy追加 
-			}
-			if(cnt==0){
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
-			}
-			else{
-				argst[i].i_cnt= cnt;
-				argst[i].i_p= new int[cnt];
-				size_t pos = 0;
+				// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+				size_t cnt=0;
 				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
-					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
-						pos++;
-					}
+					cnt += _ipipe_map[i]["i"].size();
 				}
 				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
-					if(pos==0 && cnt>1){ // mのみ対応
-						argst[i].i_p[pos]=-1; pos++;
+					cnt += _ipipe_map[i]["m"].size();
+					if(cnt==1) { cnt++; } //mのみの場合はdmy追加 
+				}
+				if(cnt==0){
+					_argst[i].i_cnt= 0;
+					_argst[i].i_p= NULL;
+				}
+				else{
+					_argst[i].i_cnt= cnt;
+					_argst[i].i_p= new int[cnt];
+					size_t pos = 0;
+					if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+						for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
+							_argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
+							pos++;
+						}
 					}
-					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
-						pos++;
+					if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+						if(pos==0 && cnt>1){ // mのみ対応
+							_argst[i].i_p[pos]=-1; pos++;
+						}
+						for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
+							_argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
+							pos++;
+						}
 					}
 				}
 			}
-		}
-
-		if( _opipe_map.find(i) == _opipe_map.end() ){ 
-			if(typ==1){
-				argst[i].o_cnt= 1;
-				argst[i].o_p = NULL;
-				argst[i].mutex = &_mutex;
-				argst[i].list = cmds[i].oobj;
+			if( _opipe_map.find(i) == _opipe_map.end() ){ 
+				if(typ==1){
+					_argst[i].o_cnt= 1;
+					_argst[i].o_p = NULL;
+					_argst[i].mutex = &_mutex;
+					_argst[i].list = cmds[i].oobj;
+				}
+				else{
+					_argst[i].o_cnt= 0;
+					_argst[i].o_p= NULL;
+				}
 			}
 			else{
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
-			}
-
-
-		}
-		else{
-			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
-			size_t cnt=0;
-			if( _opipe_map[i].find("o") != _opipe_map[i].end()){
-				cnt += _opipe_map[i]["o"].size();
-			}
-			if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
-				cnt += _opipe_map[i]["u"].size();
-			}
-			if(cnt==0){
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
-			}
-			else{
-				argst[i].o_cnt= cnt;
-				argst[i].o_p= new int[cnt];
-				size_t pos = 0;
+				// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+				size_t cnt=0;
 				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
-					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["o"][j];
-						pos++;
+					cnt += _opipe_map[i]["o"].size();
+				}
+				if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
+					cnt += _opipe_map[i]["u"].size();
+				}
+				if(cnt==0){
+					_argst[i].o_cnt= 0;
+					_argst[i].o_p= NULL;
+				}
+				else{
+					_argst[i].o_cnt= cnt;
+					_argst[i].o_p= new int[cnt];
+					size_t pos = 0;
+					if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+						for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
+							_argst[i].o_p[pos] = _opipe_map[i]["o"][j];
+							pos++;
+						}
+					}
+					if( _opipe_map[i].find("u") != _opipe_map[i].end()){
+						for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
+							_argst[i].o_p[pos] = _opipe_map[i]["u"][j];
+							pos++;
+						}
 					}
 				}
-				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
-					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["u"][j];
-						pos++;
-					}
-				}
 			}
-		}
-		//debug
-		/*
-		cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		if ( argst[i].i_cnt > 0&& argst[i].i_p!=NULL){
-			cerr << " i:" ;
-			for(size_t j=0; j< argst[i].i_cnt;j++){
-				cerr <<  *(argst[i].i_p+j) << " " ;
-			}
-		}
-		if ( argst[i].o_cnt > 0 && argst[i].o_p!=NULL){
-			cerr << " o:" ;
-			for(size_t j=0; j< argst[i].o_cnt;j++){
-				cerr <<  *(argst[i].o_p+j) << " " ;
-			}
-		}
-		cerr << endl;
-		*/
-		if(typ==0){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&argst[i]);
-		}
-		else if(typ==1){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
-		}
-		else if(typ==2){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&argst[i]);
-		}
-	}
-	// status check
-	pthread_mutex_lock(&_stsMutex);
-	while(1){
-		size_t pos = 0;
-		bool endFLG = true;
-		while(pos<_clen){
-			if(argst[pos].finflg==false){ endFLG=false;}
-			else if(argst[pos].outputEND==false){
-				if(!argst[pos].msg.empty()){
-					if(!argst[pos].tag.empty()){
-						cerr << argst[pos].msg << " " << argst[pos].tag << "(" << argst[pos].endtime << ")" << endl; 
-					}
-					else{
-						cerr << argst[pos].msg  << endl; 					
-					}
-				}
-				else if(!argst[pos].tag.empty()){
-					cerr  << argst[pos].tag << "(" << argst[pos].endtime << ")" << endl; 
-				}
-				argst[pos].outputEND = true;
-			}
-			if(argst[pos].status!=0){
-				//エラー発生時はthread cancel
-				for(size_t j=0;j<_clen;j++){
-					pthread_cancel(_th_st_pp[j]);	
-				}
-				endFLG=true;
-				break;
-			}
-			pos++;
-		}
-		if (endFLG) break;
-		pthread_cond_wait(&_stsCond,&_stsMutex);
-	}
-	pthread_mutex_unlock(&_stsMutex);
+			//debug
+			//debugOUTPUT(i);
 
-	for(size_t i=_clen;i>0;i--){
-		pthread_join(_th_st_pp[i-1],NULL);
-	}
-	if(_modlist){
-		for(size_t i=0 ;i<_clen;i++){
-			if(argst[i].outputEND == false){
-				if(!argst[i].msg.empty()){
-					if(!argst[i].tag.empty()){
-						cerr << argst[i].msg << " " << argst[i].tag << "(" << argst[i].endtime << ")" << endl; 
+			if(typ==0){
+				_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&_argst[i]);
+			}
+			else if(typ==1){
+				_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&_argst[i]);
+			}
+			else if(typ==2){
+				_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&_argst[i]);
+			}
+		}
+
+		// status check
+		pthread_mutex_lock(&_stsMutex);
+		while(1){
+			size_t pos = 0;
+			bool endFLG = true;
+			while(pos<_clen){
+				if(_argst[pos].finflg==false){ endFLG=false;}
+				else if(_argst[pos].outputEND==false){
+					if(!_argst[pos].msg.empty()){
+						if(!_argst[pos].tag.empty()){
+							cerr << _argst[pos].msg << " " << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
+						}
+						else{
+							cerr << _argst[pos].msg  << endl; 					
+						}
 					}
-					else{
-						cerr << argst[i].msg  << endl; 					
+					else if(!_argst[pos].tag.empty()){
+						cerr  << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
 					}
+					_argst[pos].outputEND = true;
 				}
-				else if(!argst[i].tag.empty()){
-					cerr << argst[i].tag  << "(" << argst[i].endtime << ")" <<  endl;
+				if(_argst[pos].status!=0){
+					//エラー発生時はthread cancel
+					for(size_t j=0;j<_clen;j++){
+						pthread_cancel(_th_st_pp[j]);	
+					}
+					endFLG=true;
+					break;
+				}
+				pos++;
+			}
+			if (endFLG) break;
+			pthread_cond_wait(&_stsCond,&_stsMutex);
+		}
+		pthread_mutex_unlock(&_stsMutex);
+
+		for(size_t i=_clen;i>0;i--){
+			pthread_join(_th_st_pp[i-1],NULL);
+		}
+
+		if(_modlist){
+			for(size_t i=0 ;i<_clen;i++){
+				try {
+					if(_argst[i].outputEND == false){
+						if(!_argst[i].msg.empty()){
+							if(!_argst[i].tag.empty()){
+								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+							}
+							else{
+								cerr << _argst[i].msg  << endl; 					
+							}
+						}
+						else if(!_argst[i].tag.empty()){
+							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+						}
+					}
+					_argst[i].outputEND = true;
+					delete _modlist[i];
+					_modlist[i] =NULL;
+				
+				}
+				catch(...){ 
+					cerr  << "ocuur final chatch " << endl; 
 				}
 			}
-			argst[i].outputEND = true;
-			delete _modlist[i];
+			delete[] _modlist;
 		}
-		delete[] _modlist;
-	}
-	delete[] _th_st_pp;
-	_th_st_pp = NULL;
-	_modlist = NULL;
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+		_modlist = NULL;
+		return 0;
 
-	return 0;
-}
-/*
-catch(...){
-	cerr << "script RUN ERROR" << endl;
+	}
+	catch(kgError& err){
+	
+		cerr << "script RUN KGERROR " << err.message(0) << endl;
+		//エラー発生時はthread cancel
+		for(size_t j=0;j<_clen;j++){
+			pthread_cancel(_th_st_pp[j]);	
+		}
+		for(size_t i=_clen;i>0;i--){
+			pthread_join(_th_st_pp[i-1],NULL);
+		}
+		if(_modlist){
+			for(size_t i=0 ;i<_clen;i++){
+				if(_argst[i].outputEND == false){
+					if(!_argst[i].msg.empty()){
+						if(!_argst[i].tag.empty()){
+							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+						}
+						else{
+							cerr << _argst[i].msg  << endl; 					
+						}
+					}
+					else if(!_argst[i].tag.empty()){
+						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+					}
+				}
+				_argst[i].outputEND = true;
+				if(_modlist[i]) { delete _modlist[i];}
+			}
+			delete[] _modlist;
+		}
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+		_modlist = NULL;
+		
+
+	}catch (const exception& e) {
+
+		cerr << "script RUN EX ERR " << e.what() << endl;
+		for(size_t i=_clen;i>0;i--){
+			pthread_join(_th_st_pp[i-1],NULL);
+		}
+		if(_modlist){
+			for(size_t i=0 ;i<_clen;i++){
+				if(_argst[i].outputEND == false){
+					if(!_argst[i].msg.empty()){
+						if(!_argst[i].tag.empty()){
+							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+						}
+						else{
+							cerr << _argst[i].msg  << endl; 					
+						}
+					}
+					else if(!_argst[i].tag.empty()){
+						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+					}
+				}
+				_argst[i].outputEND = true;
+				if(_modlist[i]) { delete _modlist[i];}
+			}
+			delete[] _modlist;
+		}
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+		_modlist = NULL;
+	
+	}catch(char * er){
+		cerr << "script RUN ERROR CHAR " << er << endl;
+			for(size_t i=_clen;i>0;i--){
+				pthread_join(_th_st_pp[i-1],NULL);
+			}
+			if(_modlist){
+				for(size_t i=0 ;i<_clen;i++){
+					if(_argst[i].outputEND == false){
+						if(!_argst[i].msg.empty()){
+							if(!_argst[i].tag.empty()){
+								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+							}
+							else{
+								cerr << _argst[i].msg  << endl; 					
+							}
+						}
+						else if(!_argst[i].tag.empty()){
+							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+						}
+					}
+					_argst[i].outputEND = true;
+					if(_modlist[i]) { delete _modlist[i];}
+				}
+				delete[] _modlist;
+			}
+			delete[] _th_st_pp;
+			_th_st_pp = NULL;
+			_modlist = NULL;
+
+	}catch(...){	
+		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
+		for(size_t i=_clen;i>0;i--){
+			pthread_join(_th_st_pp[i-1],NULL);
+		}
+		if(_modlist){
+			for(size_t i=0 ;i<_clen;i++){
+				if(_argst[i].outputEND == false){
+					if(!_argst[i].msg.empty()){
+						if(!_argst[i].tag.empty()){
+							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+						}
+						else{
+							cerr << _argst[i].msg  << endl; 					
+						}
+					}
+					else if(!_argst[i].tag.empty()){
+						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+					}
+				}
+				_argst[i].outputEND = true;
+				if(_modlist[i]) { delete _modlist[i];}
+			}
+			delete[] _modlist;
+		}
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+		_modlist = NULL;
+	}
+
 	return 1;
-}*/
+}
+
+
 
 kgCSVfld* kgshell::runiter(
 	vector<cmdCapselST> &cmds,	
@@ -773,17 +877,17 @@ kgCSVfld* kgshell::runiter(
 	}
 	_th_st_pp = new pthread_t[_clen];
 	int _th_rtn[_clen];
-	argST *argst = new argST[_clen];
+	_argst = new argST[_clen];
 
 	for(int i=_clen-1;i>=0;i--){
 
-		argst[i].mobj= _modlist[i];
-		argst[i].tag= cmds[i].tag;
-		argst[i].finflg = false;
-		argst[i].outputEND = false;
-		argst[i].status = 0;
-		argst[i].stMutex = &_stsMutex;
-		argst[i].stCond = &_stsCond;
+		_argst[i].mobj= _modlist[i];
+		_argst[i].tag= cmds[i].tag;
+		_argst[i].finflg = false;
+		_argst[i].outputEND = false;
+		_argst[i].status = 0;
+		_argst[i].stMutex = &_stsMutex;
+		_argst[i].stCond = &_stsCond;
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 
@@ -793,12 +897,12 @@ kgCSVfld* kgshell::runiter(
 
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 			if(typ==2){
-				argst[i].i_cnt= 1;
-				argst[i].list = cmds[i].iobj;
+				_argst[i].i_cnt= 1;
+				_argst[i].list = cmds[i].iobj;
 			}
 			else{
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 		}
 		else{
@@ -811,40 +915,40 @@ kgCSVfld* kgshell::runiter(
 				cnt += _ipipe_map[i]["m"].size();
 			}
 			if(cnt==0){
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 			else{
-				argst[i].i_cnt= cnt;
-				argst[i].i_p= new int[cnt];
+				_argst[i].i_cnt= cnt;
+				_argst[i].i_p= new int[cnt];
 				size_t pos = 0;
 				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
 					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
+						_argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
 						pos++;
 					}
 				}
 				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
 					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
+						_argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
 						pos++;
 					}
 				}
 			}
 		}
 		if(i==0){ // kgcsv用
-			argst[i].o_cnt= 1;
-			argst[i].o_p= new int[1];
-			argst[i].o_p[0]= _csvpiped[1]; 
+			_argst[i].o_cnt= 1;
+			_argst[i].o_p= new int[1];
+			_argst[i].o_p[0]= _csvpiped[1]; 
 		} 
 		else if( _opipe_map.find(i) == _opipe_map.end() ){ 
 			if(typ==1){
-				argst[i].o_cnt= 1;
-				argst[i].list = cmds[i].oobj;
+				_argst[i].o_cnt= 1;
+				_argst[i].list = cmds[i].oobj;
 			}
 			else{
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 		}
 		else{
@@ -857,22 +961,22 @@ kgCSVfld* kgshell::runiter(
 				cnt += _opipe_map[i]["u"].size();
 			}
 			if(cnt==0){
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 			else{
-				argst[i].o_cnt= cnt;
-				argst[i].o_p= new int[cnt];
+				_argst[i].o_cnt= cnt;
+				_argst[i].o_p= new int[cnt];
 				size_t pos = 0;
 				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
 					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["o"][j];
+						_argst[i].o_p[pos] = _opipe_map[i]["o"][j];
 						pos++;
 					}
 				}
 				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
 					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["u"][j];
+						_argst[i].o_p[pos] = _opipe_map[i]["u"][j];
 						pos++;
 					}
 				}
@@ -894,13 +998,13 @@ kgCSVfld* kgshell::runiter(
 		//}
 		//cerr << endl;
 		if(typ==0){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&_argst[i]);
 		}
 		else if(typ==1){//これは使えないようにする
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&_argst[i]);
 		}
 		else if(typ==2){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&_argst[i]);
 		}
 	}
 	// データ出力
@@ -948,17 +1052,17 @@ kgCSVkey* kgshell::runkeyiter(
 	}
 	_th_st_pp = new pthread_t[_clen];
 	int _th_rtn[_clen];
-	argST *argst = new argST[_clen];
+	_argst = new argST[_clen];
 
 	for(int i=_clen-1;i>=0;i--){
 
-		argst[i].mobj= _modlist[i];
-		argst[i].tag= cmds[i].tag;
-		argst[i].finflg = false;
-		argst[i].outputEND = false;
-		argst[i].status = 0;
-		argst[i].stMutex = &_stsMutex;
-		argst[i].stCond = &_stsCond;
+		_argst[i].mobj= _modlist[i];
+		_argst[i].tag= cmds[i].tag;
+		_argst[i].finflg = false;
+		_argst[i].outputEND = false;
+		_argst[i].status = 0;
+		_argst[i].stMutex = &_stsMutex;
+		_argst[i].stCond = &_stsCond;
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 
@@ -968,12 +1072,12 @@ kgCSVkey* kgshell::runkeyiter(
 
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 			if(typ==2){
-				argst[i].i_cnt= 1;
-				argst[i].list = cmds[i].iobj;
+				_argst[i].i_cnt= 1;
+				_argst[i].list = cmds[i].iobj;
 			}
 			else{
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 		}
 		else{
@@ -986,40 +1090,40 @@ kgCSVkey* kgshell::runkeyiter(
 				cnt += _ipipe_map[i]["m"].size();
 			}
 			if(cnt==0){
-				argst[i].i_cnt= 0;
-				argst[i].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 			else{
-				argst[i].i_cnt= cnt;
-				argst[i].i_p= new int[cnt];
+				_argst[i].i_cnt= cnt;
+				_argst[i].i_p= new int[cnt];
 				size_t pos = 0;
 				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
 					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
+						_argst[i].i_p[pos] = _ipipe_map[i]["i"][j];
 						pos++;
 					}
 				}
 				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
 					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
-						argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
+						_argst[i].i_p[pos] = _ipipe_map[i]["m"][j];
 						pos++;
 					}
 				}
 			}
 		}
 		if(i==0){ // kgcsv用
-			argst[i].o_cnt= 1;
-			argst[i].o_p= new int[1];
-			argst[i].o_p[0]= _csvpiped[1]; 
+			_argst[i].o_cnt= 1;
+			_argst[i].o_p= new int[1];
+			_argst[i].o_p[0]= _csvpiped[1]; 
 		} 
 		else if( _opipe_map.find(i) == _opipe_map.end() ){ 
 			if(typ==1){
-				argst[i].o_cnt= 1;
-				argst[i].list = cmds[i].oobj;
+				_argst[i].o_cnt= 1;
+				_argst[i].list = cmds[i].oobj;
 			}
 			else{
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 		}
 		else{
@@ -1032,22 +1136,22 @@ kgCSVkey* kgshell::runkeyiter(
 				cnt += _opipe_map[i]["u"].size();
 			}
 			if(cnt==0){
-				argst[i].o_cnt= 0;
-				argst[i].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 			else{
-				argst[i].o_cnt= cnt;
-				argst[i].o_p= new int[cnt];
+				_argst[i].o_cnt= cnt;
+				_argst[i].o_p= new int[cnt];
 				size_t pos = 0;
 				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
 					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["o"][j];
+						_argst[i].o_p[pos] = _opipe_map[i]["o"][j];
 						pos++;
 					}
 				}
 				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
 					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
-						argst[i].o_p[pos] = _opipe_map[i]["u"][j];
+						_argst[i].o_p[pos] = _opipe_map[i]["u"][j];
 						pos++;
 					}
 				}
@@ -1069,13 +1173,13 @@ kgCSVkey* kgshell::runkeyiter(
 		//}
 		//cerr << endl;
 		if(typ==0){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&_argst[i]);
 		}
 		else if(typ==1){//これは使えないようにする
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_writelist ,(void*)&_argst[i]);
 		}
 		else if(typ==2){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&argst[i]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_readlist ,(void*)&_argst[i]);
 		}
 	}
 	// データ出力
@@ -1095,29 +1199,35 @@ kgCSVkey* kgshell::runkeyiter(
 }
 
 
-int kgshell::getparams(
-	kgstr_t cmdname,
-	PyObject* list)try{
+int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 
 	kgMod *mod =NULL;
-	if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
-			cerr << "not kgmod " << cmdname << endl;
-			return 1;	
-	}
-	kgArgs newArgs;
-	mod	= _kgmod_map.find(cmdname)->second();
-	mod->init(newArgs, &_env);
-	vector < vector <kgstr_t> > paralist = mod->params();
 
-	for (size_t i=0;i<paralist.size();i++){
-		PyObject* tlist = PyList_New(0);
-		for(size_t j=0 ;j<paralist[i].size();j++){
-			PyList_Append(tlist,Py_BuildValue("s",paralist[i][j].c_str()));
+	try{
+		if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
+			cerr << "Not unspport mod " << cmdname << endl;
+			return 1;	
 		}
-		PyList_Append(list,tlist);
+
+		kgArgs newArgs;
+		mod	= _kgmod_map.find(cmdname)->second();
+		mod->init(newArgs, &_env);
+		vector < vector <kgstr_t> > paralist = mod->params();
+
+		for (size_t i=0;i<paralist.size();i++){
+			PyObject* tlist = PyList_New(0);
+			for(size_t j=0 ;j<paralist[i].size();j++){
+				PyList_Append(tlist,Py_BuildValue("s",paralist[i][j].c_str()));
+			}
+			PyList_Append(list,tlist);
+		}
+		if(mod) delete mod;
+		return 0;
+
+	}catch(...){
+		cerr << "UnKnown ERROR IN GET PARAMETER " << endl;
+		return 1;	
 	}
-	if(mod) delete mod;
-	return 0;
-}catch(...){
 	return 1;
+
 }

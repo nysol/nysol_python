@@ -181,9 +181,12 @@ void kgCSVout::close(void)
 {
 	if(!opened_) return;
 	opened_ = false;
-	flush();
 	try {
+		flush();
 		::close(fd_);
+	}catch(kgOPipeBreakError& err){// pipe brokenはskip
+		kgMsg msg(kgMsg::MSG, env_);
+		msg.output("msg : pipe broken when close ");
 	}catch(kgError& err){
 		ostringstream ss;
 		ss << "file write close error: " << fname_;

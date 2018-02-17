@@ -75,7 +75,9 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 		mstr = "<circle cx='" + str(x*60+20) + "' cy='" + str(y*60+20) + "' r='20' stroke='blue' fill='white' stroke-width='1'/>\n"
 		f.write(mstr)
 		mstr = "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>"
+
 		mstr +=  modobj[0]
+
 		mstr += " </text>\n"
 		f.write(mstr)
 		f.write("</g>\n")
@@ -134,7 +136,18 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		else:
 			f.write("{ title:\"%s %s @ %s\"," % (modobj[0],modobj[1],modobj[3]) ) 
 
-		f.write(" x:%d , y:%d , name:\"%s\"}" % (x*60+20,y*60+20, modobj[0]) ) 
+		if modobj[0] == "cmd":
+			import re
+			namevals =  re.sub(r'^cmdstr=\'(.*)\'',r'\1',modobj[1]).split()
+			if len(namevals)>0:
+				nameval = namevals[0]
+			else:
+				nameval = modobj[0]
+			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"excmd\"}" % (x*60+20,y*60+20, nameval) ) 
+		else:
+			f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0]) ) 
+		
+		
 		if mlastNo==i+1 :
 			f.write("]\n")
 		else:
@@ -261,7 +274,10 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 
 	node_g2.append('text')
 		.attr('x',function(d) { return -20})
-		.attr('fill','black')
+		.attr('fill',function(d) { 
+			if ( d.tp == 'excmd'){ return 'gray'; } 
+			else { return 'black'; }
+		})
 		.text(function(d) { return d.name})
 
  	edge_g2 = edge_g.enter().append('g')

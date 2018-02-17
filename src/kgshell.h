@@ -102,6 +102,57 @@ class kgshell{
 	int _csvpiped[2];
 
 	void makePipeList(vector<linkST>& plist);
+	argST *_argst;
+
+	// ####################################
+	// DEBUG TOOLS
+	// ####################################
+
+	void debugARGST_OUTPUT(size_t i){
+		if(_argst &&  i< _clen ){
+			cerr << i << ":"<< _argst[i].mobj->name() << " " << _argst[i].i_cnt << " " << _argst[i].o_cnt ;
+			if ( _argst[i].i_cnt > 0&& _argst[i].i_p!=NULL){
+				cerr << " i:" ;
+				for(size_t j=0; j< _argst[i].i_cnt;j++){
+					cerr <<  *(_argst[i].i_p+j) << " " ;
+				}
+			}
+			if ( _argst[i].o_cnt > 0 && _argst[i].o_p!=NULL){
+				cerr << " o:" ;
+				for(size_t j=0; j< _argst[i].o_cnt;j++){
+					cerr <<  *(_argst[i].o_p+j) << " " ;
+				}
+			}
+			cerr << endl;
+		}
+		else {
+			cerr << "yet alocate" << endl;
+		}
+	}
+	
+	void debugIOinfo_OUTPUT(){
+		for(iomap_t::iterator it=_ipipe_map.begin() ;it!=_ipipe_map.end();it++){
+			cerr << it->first << "--|" << endl;
+			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+				cerr << " " << it2->first << ": ";
+				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+					cerr << *it3 << " ";
+				}
+				cerr << endl;
+			}
+		}
+		for(iomap_t::iterator it=_opipe_map.begin() ;it!=_opipe_map.end();it++){
+			cerr << it->first << "--|" << endl;
+			for(map<string,vector<int> >::iterator it2=it->second.begin() ;it2!=it->second.end();it2++){
+				cerr << " " << it2->first << ": ";
+				for(vector<int>::iterator it3=it2->second.begin() ;it3!=it2->second.end();it3++){
+					cerr << *it3 << " ";
+				}
+				cerr << endl;
+			}
+		}
+	}
+	
 
 
 public:
@@ -130,7 +181,8 @@ public:
 		}
 		if(_modlist){
 			for(size_t i=0 ;i<_clen;i++){
-				delete _modlist[i];
+				if(_modlist[i]){ delete _modlist[i]; }
+				_modlist[i] =NULL;
 			}
 			delete[] _modlist;
 		}
