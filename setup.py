@@ -80,7 +80,7 @@ umodLibs.extend(check_for_boost())
 
 module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
-                    						'src/kgexcmd.cpp','nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
+                    						'src/kgexcmd.cpp','src/nysolshell.cpp','src/kgshell.cpp','src/kgload.cpp',
                     						'src/kgmod/kgArgFld.cpp',
 																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
 																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',
