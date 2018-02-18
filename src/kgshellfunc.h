@@ -64,6 +64,7 @@
 #include <kgrand.h>
 #include <kgrjoin.h>
 #include <kgsed.h>
+#include <kgsep.h>
 #include <kgsel.h>
 #include <kgselnum.h>
 #include <kgselrand.h>

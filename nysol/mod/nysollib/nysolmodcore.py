@@ -655,8 +655,10 @@ class NysolMOD_CORE(object):
 		#oが無ければlist出力追加
 		runobjs =[None]*len(dupobjs)
 
-		for i, dupobj in enumerate(dupobjs): 
-			if len(dupobj.outlist["o"])==0:
+		for i, dupobj in enumerate(dupobjs):
+			if dupobj.name == "msep" : #統一的にする
+				runobjs[i]= dupobj			
+			elif len(dupobj.outlist["o"])==0:
 				runobjs[i]= dupobj.writelist(list())
 			elif dupobj.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
 				runobj = dupobj.writelist(stocks[i])
@@ -669,7 +671,10 @@ class NysolMOD_CORE(object):
 			else:
 				runobjs[i]= dupobj
 	
-			outfs[i] = runobjs[i].outlist["o"][0]
+			if dupobj.name == "msep" : #統一的にする
+				outfs[i] = []
+			else:
+				outfs[i] = runobjs[i].outlist["o"][0]
 
 		self.change_modNetworks(runobjs)
 		
@@ -704,7 +709,9 @@ class NysolMOD_CORE(object):
 		showobjs =[]
 		rtnlist = []
 		for dupshowobj in dupshowobjs:
-			if len(dupshowobj.outlist["o"])==0:
+			if dupshowobj.name == "msep":
+				showobjs.append(dupshowobj)
+			elif len(dupshowobj.outlist["o"])==0:
 				showobjs.append(dupshowobj.writelist(rtnlist))
 			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
 				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
@@ -767,7 +774,9 @@ class NysolMOD_CORE(object):
 		rtnlist = []
 		# 最終形式チェック
 		for dupshowobj in dupshowobjs:
-			if len(dupshowobj.outlist["o"])==0:
+			if dupshowobj.name == "msep":
+				showobjs.append(dupshowobj)
+			elif len(dupshowobj.outlist["o"])==0:
 				showobjs.append(dupshowobj.writelist(rtnlist))
 			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
 				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
@@ -1131,6 +1140,10 @@ class NysolMOD_CORE(object):
 	def mcut(self,*args, **kw_args):
 		from nysol.mod.submod.mcut import Nysol_Mcut as mcut
 		return mcut(nutil.args2dict(args,kw_args,mcut.kwd)).addPre(self)
+
+	def msep(self,*args, **kw_args):
+		from nysol.mod.submod.msep import Nysol_Msep as msep
+		return msep(nutil.args2dict(args,kw_args,msep.kwd)).addPre(self)
 
 	def msum(self,*args, **kw_args):
 		from nysol.mod.submod.msum import Nysol_Msum as msum

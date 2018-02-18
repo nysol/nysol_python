@@ -73,6 +73,7 @@ from .submod.mcal import Nysol_Mcal as mcal
 from .submod.mcut import Nysol_Mcut as mcut
 from .submod.mcat import Nysol_Mcat as mcat
 from .submod.msum import Nysol_Msum as msum
+from .submod.msep import Nysol_Msep as msep
 from .submod.cmd import Nysol_Excmd as cmd
 from .submod.marff2csv import Nysol_Marff2csv as marff2csv
 from .submod.mtab2csv import Nysol_Mtab2csv as mtab2csv

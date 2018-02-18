@@ -113,7 +113,7 @@ module1 = Extension('nysol/_nysolshell_core',
 																'src/mod/kgvcat.cpp','src/mod/kgvcommon.cpp','src/mod/kgvcount.cpp',
 																'src/mod/kgvdelim.cpp','src/mod/kgvdelnull.cpp','src/mod/kgvjoin.cpp',
 																'src/mod/kgvnullto.cpp','src/mod/kgvreplace.cpp','src/mod/kgvsort.cpp',
-																'src/mod/kgvuniq.cpp','src/mod/kgwindow.cpp',
+																'src/mod/kgvuniq.cpp','src/mod/kgwindow.cpp','src/mod/kgsep.cpp',
 																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp'
                     	],
 										include_dirs=hedears,

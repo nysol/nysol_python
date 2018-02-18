@@ -39,6 +39,8 @@ kgSep::kgSep(void)
 {
 	_name    = "kgsep";
 	_version = "###VERSION###";
+	_paralist = "d=,i=,-p,-q,f=";
+	_paraflg = kgArgs::COMMON|kgArgs::NULL_IN;
 
 	#include <help/en/kgsepHelp.h>
 	_titleL = _title;
@@ -51,13 +53,8 @@ kgSep::kgSep(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgSep::setArgs(void)
+void kgSep::setArgsMain(void)
 {
-	// パラメータチェック
-	_args.paramcheck("d=,i=,-p,-q,f=",kgArgs::COMMON|kgArgs::NULL_IN);
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
 	_iFile.read_header();
 
 	// d= 項目のセット
@@ -78,6 +75,34 @@ void kgSep::setArgs(void)
 	_mkdir_flg = _args.toBool("-p");
 	
 }
+
+void kgSep::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+
+	_args.paramcheck(_paralist,_paraflg);
+	if(inum>1 || onum!=0){ throw kgError("no match IO");}
+
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+
+	setArgsMain();
+
+}
+
+// -----------------------------------------------------------------------------
+// パラメータチェック＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgSep::setArgs(void)
+{
+	_args.paramcheck(_paralist,_paraflg);
+
+	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+
+	setArgsMain();
+
+}
+
 void kgSep::writeFldName() throw(kgError)
 {
 	if( _oFile.noFldName( ) ) return;
@@ -89,14 +114,12 @@ void kgSep::writeFldName() throw(kgError)
 	}
 } 
 
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgSep::run(void) try 
+int kgSep::runMain(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 入力ファイルにkey項目番号をセットする．
 	_iFile.setKey(_dField);
 
@@ -136,22 +159,86 @@ int kgSep::run(void) try
 	th_cancel();
 	_oFile.close();
 	_iFile.close();
-	successEnd();
 	return 0;
 
-}catch(kgError& err){
-	errorEnd(err);
+}
+
+
+
+
+int kgSep::run(void) 
+{
+	try {
+		// パラメータセット＆入出力ファイルオープン
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		return 0;
+
+	}
+	catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+
+	}catch (const std::exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
 	return 1;
-}catch (const std::exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
+
+}
+
+
+int kgSep::run(int inum,int *i_p,int onum, int* o_p,string &msg)
+{
+	try {
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+	
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const std::exception& e) {
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+	}catch(char * er){
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+	}catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
 	return 1;
 }
+

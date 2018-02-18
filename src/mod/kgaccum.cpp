@@ -89,6 +89,7 @@ void kgAccum::setArgs(void)
 
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
 	_oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	setArgsMain();
 
 }
 void kgAccum::setArgs(int inum,int *i_p,int onum ,int *o_p)
