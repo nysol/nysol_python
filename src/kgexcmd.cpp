@@ -129,6 +129,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 			}
 		}
 		else if (pid>0){//parent
+
 			int status = 0;
 			//int ret = 
 			waitpid(pid, &status, 0);
@@ -139,7 +140,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 				msg.append(successEndMsg());
 			}
 			else{
-				throw kgError("exec err errno:" + status);
+				throw kgError("exec err errno:(" + toString(status) + ")");
 			}
 			return status;
 		}
@@ -149,8 +150,8 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		return 0;
 
 	}catch(kgError& err){
-
 		msg.append(errorEndMsg(err));
+
 
 	}catch (const exception& e) {
 

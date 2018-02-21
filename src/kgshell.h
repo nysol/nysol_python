@@ -152,8 +152,59 @@ class kgshell{
 			}
 		}
 	}
-	
+		//debug
+		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
+		//if ( argst[i].i_cnt > 0){
+		//	cerr << " i:" ;
+		//	for(size_t j=0; j< argst[i].i_cnt;j++){
+		//		cerr <<  *(argst[i].i_p+j) << " " ;
+		//	}
+		//}
+		//if ( argst[i].o_cnt > 0){
+		//	cerr << " o:" ;
+		//	for(size_t j=0; j< argst[i].o_cnt;j++){
+		//		cerr <<  *(argst[i].o_p+j) << " " ;
+		//	}
+		//}
+		//cerr << endl;
 
+
+	void runClean(void){
+
+		if(_th_st_pp){
+			//エラー発生時はthread cancel
+			for(size_t j=0;j<_clen;j++){
+				pthread_cancel(_th_st_pp[j]);	
+			}
+			for(size_t i=_clen;i>0;i--){
+				pthread_join(_th_st_pp[i-1],NULL);
+			}
+			if(_modlist){
+				for(size_t i=0 ;i<_clen;i++){
+					if(_argst[i].outputEND == false){
+						if(!_argst[i].msg.empty()){
+							if(!_argst[i].tag.empty()){
+								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+							}
+							else{
+								cerr << _argst[i].msg  << endl; 					
+							}
+						}
+						else if(!_argst[i].tag.empty()){
+							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+						}
+					}
+					_argst[i].outputEND = true;
+					if(_modlist[i]) { delete _modlist[i];}
+				}
+				delete[] _modlist;
+			}
+			delete[] _th_st_pp;
+			_th_st_pp = NULL;
+			_modlist = NULL;
+		}
+	}
+	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist);
 
 public:
 	// コンストラクタ
@@ -165,7 +216,7 @@ public:
 				chk[i] = pthread_cancel(_th_st_pp[i]);
 				if (chk[i]!=0&&chk[i]!=3){
 					kgMsg msg(kgMsg::MSG, &_env);
-					msg.output("waring destruct fail thread cancel : "+chk[i]);
+					msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
 				}
 			}
 			for(size_t i=0 ;i<_clen;i++){ 
@@ -173,7 +224,7 @@ public:
 					int rtn = pthread_join(_th_st_pp[i],NULL);
 					if(rtn!=0) {
 						kgMsg msg(kgMsg::MSG, &_env);
-						msg.output("waring destruct fail thread join :  "+rtn);
+						msg.output("waring destruct fail thread join :( " + toString(rtn) + ")");
 					}
 				}
 			}

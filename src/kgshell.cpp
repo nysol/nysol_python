@@ -463,12 +463,7 @@ void kgshell::makePipeList(vector<linkST> & plist)
 		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
 		fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
 
-		/*linkST{
-		kgstr_t frTP;
-		int frID;
-		kgstr_t toTP;
-		int toID;
-		};*/
+		/*linkST{ kgstr_t frTP; int frID; kgstr_t toTP; int toID;};*/
 		//typedef map<int, map<string,vector<int> > > iomap_t;
 		
 		if ( _ipipe_map.find(plist[i].toID) == _ipipe_map.end()){
@@ -494,17 +489,12 @@ void kgshell::makePipeList(vector<linkST> & plist)
 	}
 }
 
-int kgshell::run(
-	vector<cmdCapselST> &cmds,	
-	vector<linkST> & plist
-)
-{
-	try{
+int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist){
+
 		makePipeList(plist);
 
-		//DEBUG
-		//debugIOinfo_OUTPUT()
-
+		
+		//debugIOinfo_OUTPUT() //DEBUG
 
 		_clen = cmds.size();
 		_modlist = new kgMod*[_clen];
@@ -538,10 +528,6 @@ int kgshell::run(
 			_argst[i].stCond = &_stsCond;
 
 			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
-
-			//	DEBIG
-			//	cerr << "-------------------" << endl;
-			//	cerr << i << ":"<< argst[i].mobj->name() << endl;
 
 			if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 				if(typ==2){
@@ -632,6 +618,7 @@ int kgshell::run(
 					}
 				}
 			}
+
 			//debug
 			//debugOUTPUT(i);
 
@@ -718,129 +705,36 @@ int kgshell::run(
 		_modlist = NULL;
 		return 0;
 
+}
+
+
+int kgshell::run(
+	vector<cmdCapselST> &cmds,	
+	vector<linkST> & plist
+)
+{
+	try{
+
+		return runMain(cmds,plist);
+
 	}
 	catch(kgError& err){
 	
 		cerr << "script RUN KGERROR " << err.message(0) << endl;
-		//エラー発生時はthread cancel
-		for(size_t j=0;j<_clen;j++){
-			pthread_cancel(_th_st_pp[j]);	
-		}
-		for(size_t i=_clen;i>0;i--){
-			pthread_join(_th_st_pp[i-1],NULL);
-		}
-		if(_modlist){
-			for(size_t i=0 ;i<_clen;i++){
-				if(_argst[i].outputEND == false){
-					if(!_argst[i].msg.empty()){
-						if(!_argst[i].tag.empty()){
-							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
-						}
-						else{
-							cerr << _argst[i].msg  << endl; 					
-						}
-					}
-					else if(!_argst[i].tag.empty()){
-						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
-					}
-				}
-				_argst[i].outputEND = true;
-				if(_modlist[i]) { delete _modlist[i];}
-			}
-			delete[] _modlist;
-		}
-		delete[] _th_st_pp;
-		_th_st_pp = NULL;
-		_modlist = NULL;
-		
+		runClean();
 
 	}catch (const exception& e) {
 
 		cerr << "script RUN EX ERR " << e.what() << endl;
-		for(size_t i=_clen;i>0;i--){
-			pthread_join(_th_st_pp[i-1],NULL);
-		}
-		if(_modlist){
-			for(size_t i=0 ;i<_clen;i++){
-				if(_argst[i].outputEND == false){
-					if(!_argst[i].msg.empty()){
-						if(!_argst[i].tag.empty()){
-							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
-						}
-						else{
-							cerr << _argst[i].msg  << endl; 					
-						}
-					}
-					else if(!_argst[i].tag.empty()){
-						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
-					}
-				}
-				_argst[i].outputEND = true;
-				if(_modlist[i]) { delete _modlist[i];}
-			}
-			delete[] _modlist;
-		}
-		delete[] _th_st_pp;
-		_th_st_pp = NULL;
-		_modlist = NULL;
-	
+		runClean();
+
 	}catch(char * er){
 		cerr << "script RUN ERROR CHAR " << er << endl;
-			for(size_t i=_clen;i>0;i--){
-				pthread_join(_th_st_pp[i-1],NULL);
-			}
-			if(_modlist){
-				for(size_t i=0 ;i<_clen;i++){
-					if(_argst[i].outputEND == false){
-						if(!_argst[i].msg.empty()){
-							if(!_argst[i].tag.empty()){
-								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
-							}
-							else{
-								cerr << _argst[i].msg  << endl; 					
-							}
-						}
-						else if(!_argst[i].tag.empty()){
-							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
-						}
-					}
-					_argst[i].outputEND = true;
-					if(_modlist[i]) { delete _modlist[i];}
-				}
-				delete[] _modlist;
-			}
-			delete[] _th_st_pp;
-			_th_st_pp = NULL;
-			_modlist = NULL;
+		runClean();
 
 	}catch(...){	
 		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
-		for(size_t i=_clen;i>0;i--){
-			pthread_join(_th_st_pp[i-1],NULL);
-		}
-		if(_modlist){
-			for(size_t i=0 ;i<_clen;i++){
-				if(_argst[i].outputEND == false){
-					if(!_argst[i].msg.empty()){
-						if(!_argst[i].tag.empty()){
-							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
-						}
-						else{
-							cerr << _argst[i].msg  << endl; 					
-						}
-					}
-					else if(!_argst[i].tag.empty()){
-						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
-					}
-				}
-				_argst[i].outputEND = true;
-				if(_modlist[i]) { delete _modlist[i];}
-			}
-			delete[] _modlist;
-		}
-		delete[] _th_st_pp;
-		_th_st_pp = NULL;
-		_modlist = NULL;
+		runClean();
 	}
 
 	return 1;
@@ -892,10 +786,6 @@ kgCSVfld* kgshell::runiter(
 		_argst[i].stCond = &_stsCond;
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
-
-		//	DEBIG
-		//	cerr << "-------------------" << endl;
-		//	cerr << i << ":"<< argst[i].mobj->name() << endl;
 
 		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 			if(typ==2){
@@ -984,21 +874,7 @@ kgCSVfld* kgshell::runiter(
 				}
 			}
 		}
-		//debug
-		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		//if ( argst[i].i_cnt > 0){
-		//	cerr << " i:" ;
-		//	for(size_t j=0; j< argst[i].i_cnt;j++){
-		//		cerr <<  *(argst[i].i_p+j) << " " ;
-		//	}
-		//}
-		//if ( argst[i].o_cnt > 0){
-		//	cerr << " o:" ;
-		//	for(size_t j=0; j< argst[i].o_cnt;j++){
-		//		cerr <<  *(argst[i].o_p+j) << " " ;
-		//	}
-		//}
-		//cerr << endl;
+
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&_argst[i]);
 		}
@@ -1159,21 +1035,8 @@ kgCSVkey* kgshell::runkeyiter(
 				}
 			}
 		}
+		//debugOUTPUT(i);
 		//debug
-		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		//if ( argst[i].i_cnt > 0){
-		//	cerr << " i:" ;
-		//	for(size_t j=0; j< argst[i].i_cnt;j++){
-		//		cerr <<  *(argst[i].i_p+j) << " " ;
-		//	}
-		//}
-		//if ( argst[i].o_cnt > 0){
-		//	cerr << " o:" ;
-		//	for(size_t j=0; j< argst[i].o_cnt;j++){
-		//		cerr <<  *(argst[i].o_p+j) << " " ;
-		//	}
-		//}
-		//cerr << endl;
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_pp[i], NULL, kgshell::run_func ,(void*)&_argst[i]);
 		}
