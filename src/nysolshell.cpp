@@ -53,11 +53,19 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 		PyObject *modinfo = PyList_GetItem(mlist ,i);
 		cmdCapselST cmpcaplocal;
 		cmpcaplocal.cmdname  = strGET(PyList_GetItem(modinfo ,0));
-		kgstr_t para_part    = strGET(PyList_GetItem(modinfo ,1));
+		//kgstr_t para_part    = strGET(PyList_GetItem(modinfo ,1));
+
+		PyObject * para_LIST    = PyList_GetItem(modinfo ,1);
+
 		PyObject *addinfo    = PyList_GetItem(modinfo ,2);
 		cmpcaplocal.tag      = strGET(PyList_GetItem(modinfo ,3));
 
-		cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);
+		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
+		for(Py_ssize_t j=0 ; j<psize;j++){
+				cmpcaplocal.paralist.push_back(strGET(PyList_GetItem(para_LIST ,j)));
+		}
+
+		//cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);
 
 		PyObject *key, *value;
 		Py_ssize_t pos = 0;

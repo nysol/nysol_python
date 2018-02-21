@@ -279,7 +279,7 @@ class NysolMOD_CORE(object):
 		
 		
 	# PRIVATEにする？
-	def para2str(self):
+	def para2strStr(self):
 		rtnStr = ""
 		for k, v in self.kwd.items():
 			if isinstance(v,bool) :
@@ -301,6 +301,36 @@ class NysolMOD_CORE(object):
 				rtnStr += k + "=" + ",".join(plist) + " "
 				
 		return rtnStr
+
+	# PRIVATEにする？
+	def para2str(self):
+		rtnStr = []
+		for k, v in self.kwd.items():
+			if isinstance(v,bool) :
+				if v==True:
+					rtnStr.append("-" + k )
+
+			elif isinstance(v,str) :
+				rtnStr.append( k+"="+v)
+
+			elif isinstance(v,float) :
+				rtnStr.append(k + "=" + str(v))
+
+			elif isinstance(v,int) :
+				rtnStr.append(k + "=" + str(v) )
+
+			elif isinstance(v,list) :
+				plist = []
+				for val in v:
+					if isinstance(val,str) :
+						plist.append(val)
+					elif isinstance(val,float) or isinstance(v,int) :
+						plist.append(str(val))
+
+				rtnStr.append(k + "=" + ",".join(plist) )
+				
+		return rtnStr
+
 	
 	# f.w キーワードチェック入れる
 	def paraUpdate(self,kw):
