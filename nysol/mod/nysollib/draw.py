@@ -67,10 +67,12 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 
 		f.write("<g>\n")
+		modobj1 = ",".join(" ")
+
 		if  modobj[3] == "" :
-			f.write("<title>" + modobj[0] + " " + modobj[1] + "</title>\n" )
+			f.write("<title>" + modobj[0] + " " + modobj1 + "</title>\n" )
 		else:
-			f.write("<title>" + modobj[0] + " " + modobj[1] + "@" + modobj[3] + "</title>\n" )
+			f.write("<title>" + modobj[0] + " " + modobj1 + "@" + modobj[3] + "</title>\n" )
 		
 		mstr = "<circle cx='" + str(x*60+20) + "' cy='" + str(y*60+20) + "' r='20' stroke='blue' fill='white' stroke-width='1'/>\n"
 		f.write(mstr)
@@ -131,14 +133,15 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 
 		modobj = mlist[i]
 		x,y = mm
+		modobj1 = ",".join(" ")
 		if  modobj[3] == "" :
-			f.write("{ title:\"%s %s\"," % (modobj[0],modobj[1]) ) 
+			f.write("{ title:\"%s %s\"," % (modobj[0],modobj1) ) 
 		else:
-			f.write("{ title:\"%s %s @ %s\"," % (modobj[0],modobj[1],modobj[3]) ) 
+			f.write("{ title:\"%s %s @ %s\"," % (modobj[0],modobj1,modobj[3]) ) 
 
 		if modobj[0] == "cmd":
 			import re
-			namevals =  re.sub(r'^cmdstr=\'(.*)\'',r'\1',modobj[1]).split()
+			namevals =  re.sub(r'^cmdstr=\'(.*)\'',r'\1',modobj1).split()
 			if len(namevals)>0:
 				nameval = namevals[0]
 			else:
