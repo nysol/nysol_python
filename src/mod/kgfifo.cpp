@@ -48,14 +48,14 @@ private:
 	kgAutoPtr2<char> _buf_ap;
 	char* _buf;
 	vector<char*> _que;
-	size_t _enq;
-	size_t _deq;
+	volatile size_t _enq;
+	volatile size_t _deq;
 	vector<size_t> _readSize;
 	
 	// バッファFULL時、使用
 	kgTempfile    _tempFile; 
 	queue<string> _tmpname;
-	queue<size_t> _rest_no;
+	queue<volatile size_t> _rest_no;
 
 	
 	//ロックしてから動かすこと
@@ -106,6 +106,7 @@ public:
 			ss << "init cond mutex error";
 			throw kgError(ss.str());
 	  }
+
 		_queSize = queSize;
 		_blkSize = blkSize;
 		_enq = 0; // エンキュー
