@@ -663,7 +663,114 @@ class NysolMOD_CORE(object):
 					if rtn != None:
 						linklist.append([[rtn,v],["m",idx]])
 			
+
+
+	@classmethod
+	def separateblockSUB(self,modlist,elist,blist,visit,st):
+	
+		if st == None:
+			return 
+
+		if visit[st] ==  False:
+			visit[st] = True
+			blist.append(st)
+		else :
+			return ;
+
+		if elist[st] == None:
+			return 
+
+		for nownum in elist[st]:
+			self.separateblockSUB(modlist,elist,blist,visit,nownum)
+
+	@classmethod
+	def separateblock(self,modlist,linklist):
+
+		#cal startPos
+		stNum = []
+		for i,modobj in enumerate(modlist):
+			if len(modobj[2])>0 and "i" in modobj[2] :
+				stNum.append(i)
+
+		#edgeList
+		elist = [None]*len(modlist)
+
+
+		for linkD in linklist:
+			fr = linkD[0][1]
+			to = linkD[1][1]
+			if elist[fr] == None:
+				elist[fr] =[]
+			if elist[to] == None:
+				elist[to] =[]
+				
+			elist[fr].append(to)
+			elist[to].append(fr)
+
+
+		visit = [False]*len(modlist)
+		modblists = []
+
+		for st in stNum:
+			blist = []
+			self.separateblockSUB(modlist,elist,blist,visit,st)
+			if len(blist) > 0:
+				modblists.append(blist)
+
+
+
+		#visit = [False]*len(modlist)
+		#stNum=[]
+		#linkdictlist = [None]*len(modlist)
+
+		linkdictlistA = [None]*len(modlist)
+
+				
+		for iolist in linklist:
+
+			if linkdictlistA[iolist[0][1]] == None:
+				linkdictlistA[iolist[0][1]] =[]
+
+		#	#if linkdictlistA[iolist[1][1]] == None:
+		#	#	linkdictlistA[iolist[1][1]] =[]
+
+			linkdictlistA[iolist[0][1]].append(iolist)
+
+
+
+		#modblists = []
+		#for st in stNum:
+		#	blist = []
+		#	self.separateblockSUB(modlist,linkdictlist,blist,visit,st)
+		#	modblists.append(blist)
+
+
+		newModLists =[]
+		newLinkLists=[]
+		
+		
+		for modblist in modblists:
 			
+			newModListTMP =[]
+			newLinkListTMP =[]
+			convertMap ={}
+			
+			for i,b in enumerate(modblist):
+				convertMap[b]=i
+			
+			for b in modblist:
+				newModListTMP.append(modlist[b])
+				if linkdictlistA[b] != None:
+					for val in linkdictlistA[b]:
+						newlink = [[val[0][0],convertMap[val[0][1]]],[val[1][0],convertMap[val[1][1]]]]
+						newLinkListTMP.append(newlink)
+	
+			newModLists.append(newModListTMP)
+			newLinkLists.append(newLinkListTMP)
+
+		return newModLists,newLinkLists
+	
+	
 
 	@classmethod
 	def runs(self,mods,**kw_args):
@@ -724,8 +831,19 @@ class NysolMOD_CORE(object):
 		self.makeLinkList(iolist,linklist)
 
 		shobj = n_core.init(msgF)
-		
-		n_core.runL(shobj,modlist,linklist)
+		modlimt =300
+		if len(modlist) > modlimt:
+			newmod ,newlink = self.separateblock(modlist,linklist)
+			#print("ccccc1")
+			#print(newmod[0])
+			#print(newlink[0])
+			#print("ccccc2")
+			n_core.runLs(newmod,newlink)
+
+		else:
+			n_core.runL(shobj,modlist,linklist)
+			
+
 		return outfs
 
 	def run(self,**kw_args):
@@ -844,7 +962,6 @@ class NysolMOD_CORE(object):
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
 				self.msg = True
-
 
 		listd = []
 		runA = False

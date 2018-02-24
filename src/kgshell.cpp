@@ -457,7 +457,7 @@ void kgshell::makePipeList(vector<linkST> & plist)
 	for(size_t i=0;i<plist.size();i++){
 
 		int piped[2];
-		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell");}
+		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell :("+toString(errno)+")");}
 		int flags0 = fcntl(piped[0], F_GETFD);
 		int flags1 = fcntl(piped[1], F_GETFD);
 		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);

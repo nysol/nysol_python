@@ -162,6 +162,94 @@ PyObject* runL(PyObject* self, PyObject* args)
 	return PyLong_FromLong(1);
 }
 
+PyObject* runLs(PyObject* self, PyObject* args)
+{
+	try {
+
+	PyObject *sh;
+	PyObject *mlists;
+	PyObject *linklists;
+	if (!PyArg_ParseTuple(args, "OO",  &mlists  ,&linklists)){
+    return NULL;
+  }
+
+//	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+	if(!PyList_Check(mlists)){
+		cerr << "cannot run " << PyList_Check(mlists) << " "<<PyList_Size(mlists)<< endl;
+		return Py_BuildValue("");
+	}
+
+
+	Py_ssize_t lsize = PyList_Size(mlists);
+	Py_ssize_t limit = 1;
+	Py_ssize_t nowcount = 0;
+
+	PyObject *runmod =PyList_New(0);
+	PyObject *runlink =PyList_New(0);
+
+	for(Py_ssize_t i=0;i<lsize;i++){
+
+		PyObject *mlist = PyList_GetItem(mlists ,i);
+		PyObject *llist = PyList_GetItem(linklists ,i);
+		Py_ssize_t msize = PyList_Size(mlist);
+		Py_ssize_t llsize = PyList_Size(llist);
+
+
+		if(nowcount + msize >limit ){
+			vector< cmdCapselST > cmdCapsel;
+			vector< linkST > p_list;
+			runCore(runmod,runlink ,cmdCapsel,p_list);
+			kgshell *ksht =  new kgshell;
+			ksht->run(cmdCapsel,p_list);
+			delete ksht;
+			//ksh->run(cmdCapsel,p_list);
+			runmod =PyList_New(0);
+			runlink =PyList_New(0);
+			nowcount = 0;
+		}
+
+		nowcount += msize;
+		
+		for(Py_ssize_t j=0;j<msize;j++){
+			PyList_Append(runmod,PyList_GetItem(mlist,j));
+		}
+		for(Py_ssize_t j=0;j<llsize;j++){
+			PyList_Append(runlink,PyList_GetItem(llist,j));
+		}
+	}
+	if(PyList_Size(runmod)>0){
+		vector< cmdCapselST > cmdCapsel;
+		vector< linkST > p_list;
+		runCore(runmod,runlink,cmdCapsel,p_list);
+		kgshell *ksht =  new kgshell;
+		ksht->run(cmdCapsel,p_list);
+		delete ksht;
+	}
+
+
+	return PyLong_FromLong(0);
+
+
+	}
+	catch(kgError& err){
+		cerr << "run Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "run Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "run Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "run Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+
+
+
 PyObject* runP(PyObject* self, PyObject* args)
 {
 	PyObject *sh;
@@ -311,6 +399,7 @@ PyObject* start(PyObject* self, PyObject* args){
 static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
 	{"runL", reinterpret_cast<PyCFunction>(runL), METH_VARARGS },
+	{"runLs", reinterpret_cast<PyCFunction>(runLs), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
 	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },

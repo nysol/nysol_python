@@ -58,6 +58,7 @@ private:
 	queue<size_t> _rest_no;
 
 	
+	//ロックしてから動かすこと
 	size_t nextQue(size_t n){
 		n++;
 		return n % _queSize;
@@ -125,122 +126,148 @@ public:
 	// ===================================================
 	// データの読み込み
 	// ===================================================
-	int readData() try {
-		// mutexインスタンスにロックをかける
-
-		pthread_mutex_lock(&_mutex);
-		{
-			// enqがdeqに追いついたら拡張
-			size_t next=nextQue(_enq);
-			if(next==_deq){
-				extend_fileout();
-			}
-			else{// enqを一つ進める
-				_enq=next;
-			}
-		}
-		pthread_mutex_unlock(&_mutex);
-
-		// readしてenq位置に格納
-		size_t maxSize = _blkSize;
-		size_t accSize = 0;
-		size_t resSize = maxSize;
-    char* buf=_que.at(_enq);
-		while(accSize<maxSize){
-    	int rsize = ::read(_iFD, buf + accSize, resSize<_blkSize ? resSize : _blkSize);
-    	if( rsize < 0 ){
-    		//boost wThreadState_.notify_one();
-				pthread_cond_signal(&_threadState);
-      	throw kgError();
-    	}
-    	if( rsize == 0 ) break;
-
-			accSize+=static_cast<size_t>(rsize);
-			resSize-=static_cast<size_t>(rsize);
-		}
-		_readSize.at(_enq)=accSize;		
-		// read eof
-    if( accSize == 0 ){
+	int readData(){
+	
+		try{
+			// mutexインスタンスにロックをかける
 			pthread_mutex_lock(&_mutex);
 			{
-				_readEnd=true;
+				// enqがdeqに追いついたら拡張
+				size_t next=nextQue(_enq);
+				if(next==_deq){ extend_fileout(); }
+				else{ _enq=next; }// enqを一つ進める	
 			}
 			pthread_mutex_unlock(&_mutex);
-    	//boost wThreadState_.notify_one();
+
+			// readしてenq位置に格納
+			size_t maxSize = _blkSize;
+			size_t accSize = 0;
+			size_t resSize = maxSize;
+			char* buf=_que.at(_enq);
+			while(accSize<maxSize){
+ 		   	int rsize = ::read(_iFD, buf + accSize, resSize<_blkSize ? resSize : _blkSize);
+   		 	if( rsize < 0 ){
+    			//boost wThreadState_.notify_one();
+					pthread_cond_signal(&_threadState);
+     		 	throw kgError();
+    		}
+    		if( rsize == 0 ) break;
+				accSize+=static_cast<size_t>(rsize);
+				resSize-=static_cast<size_t>(rsize);
+			}
+			_readSize.at(_enq)=accSize;		
+			// read eof
+  	  if( accSize == 0 ){
+				pthread_mutex_lock(&_mutex);
+				{
+					_readEnd=true;
+				}
+				pthread_mutex_unlock(&_mutex);
+ 
+ 		   	//boost wThreadState_.notify_one();
+				pthread_cond_signal(&_threadState);
+				return 0;
+			}
+			// write側が待ち状態にあれば起こす
+			//boost wThreadState_.notify_one();
 			pthread_cond_signal(&_threadState);
-			
+			return 1;
+		}catch(...){
 			return 0;
 		}
-
-		// write側が待ち状態にあれば起こす
-		//boost wThreadState_.notify_one();
-		pthread_cond_signal(&_threadState);
-		return 1;
-	}catch(...){
-		return 1;
 	}
 
 	// ===================================================
 	// データの書き込み
 	// ===================================================
-	int writeData() try {
-		// mutexインスタンスにロックをかける
-		bool fout=false;
-		size_t deq_tmp=0;
+	int writeData(){
+		try{
+			
+			bool fout=false;
+			size_t deq_tmp=0;
 
-		pthread_mutex_lock(&_mutex);
-		{
-			if(_tmpname.size() ){
-				fout = true	;
-				deq_tmp = _rest_no.front();
-			}
-			// deqがenqに追いついたら休眠(buffer full)
-			if(_tmpname.size()==0 && _deq==_enq){
-				if(_readEnd){
-					//boost rThreadState_.notify_one();
-					pthread_cond_signal(&_threadState);
-					return 0;
-				}else{
-					//boost wThreadState_.wait(mutex_);
-					pthread_cond_wait(&_threadState, &_mutex);
-					
-				}
-			}
-		}
-		pthread_mutex_unlock(&_mutex);
-		//ファイル出力が存在すればそっちから先に処理する
-		if(fout && deq_tmp != _deq){
-			kgAutoPtr2<char> buf_tmp_ap; 
-			buf_tmp_ap.set( new char[_blkSize] );
-			char* buf = buf_tmp_ap.get();
-			int tFD;
 			pthread_mutex_lock(&_mutex);
 			{
-				tFD = ::open(_tmpname.front().c_str(), O_RDONLY);
-				_tmpname.pop();
-				_rest_no.pop();
+				if(_tmpname.size() ){
+					fout = true	;
+					deq_tmp = _rest_no.front();
+				}
+				// deqがenqに追いついたら休眠(buffer full)
+				if(_tmpname.size()==0 && _deq==_enq){
+					if(_readEnd){
+						//boost rThreadState_.notify_one();
+						pthread_cond_signal(&_threadState);
+						pthread_mutex_unlock(&_mutex);
+						return 0;
+					}else{
+						//boost wThreadState_.wait(mutex_);
+						pthread_cond_wait(&_threadState, &_mutex);
+					}
+				}
 			}
 			pthread_mutex_unlock(&_mutex);
-			while(1){
-	    	int rsize = ::read(tFD, buf, _blkSize);
-	    	if(rsize < 0){
-					ostringstream ss;
-					ss << "file read error";
-					throw kgError(ss.str());
+			//ファイル出力が存在すればそっちから先に処理する
+			if(fout && deq_tmp != _deq){
+				kgAutoPtr2<char> buf_tmp_ap; 
+				buf_tmp_ap.set( new char[_blkSize] );
+				char* buf = buf_tmp_ap.get();
+				int tFD;
+				pthread_mutex_lock(&_mutex);
+				{
+					tFD = ::open(_tmpname.front().c_str(), O_RDONLY);
+					_tmpname.pop();
+					_rest_no.pop();
 				}
-				if(rsize==0) { break;} 
-				size_t maxSize=rsize;
+				pthread_mutex_unlock(&_mutex);
+				while(1){
+	  	  	int rsize = ::read(tFD, buf, _blkSize);
+	   			if(rsize < 0){
+						ostringstream ss;
+						ss << "file read error";
+						throw kgError(ss.str());
+					}
+					if(rsize==0) { break;} 
+					size_t maxSize=rsize;
+					size_t accSize=0;
+					size_t resSize=maxSize;
+					// deq位置のデータをwrite
+ 					while(accSize<maxSize){
+  	  			int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
+  	  			if( wsize<0 ){
+							// boost rThreadState_.notify_one();
+							pthread_cond_signal(&_threadState);
+
+							if(32==errno){ // pipe broken
+								_oEnd = true;
+								return 0;
+							}else{
+								ostringstream ss;
+								ss << "file write error";
+								throw kgError(ss.str());
+							}
+						}
+   			 		if( wsize == 0 ){
+							_oEnd = true;
+							return 0;
+						}
+						accSize+=static_cast<size_t>(wsize);
+						resSize-=static_cast<size_t>(wsize);
+					}
+				}
+				::close(tFD);
+			}
+			else{
+				// deq位置のデータをwrite
+				size_t maxSize=_readSize.at(_deq);
 				size_t accSize=0;
 				size_t resSize=maxSize;
-				// deq位置のデータをwrite
- 				while(accSize<maxSize){
-  	  		int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
-  	  		if( wsize<0 ){
-						// boost rThreadState_.notify_one();
+				char* buf = _que.at(_deq);
+				while(accSize<maxSize){
+					int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
+					if( wsize<0 ){
+						//boost rThreadState_.notify_one();
 						pthread_cond_signal(&_threadState);
-
 						if(32==errno){ // pipe broken
-							_oEnd = true;
 							return 0;
 						}else{
 							ostringstream ss;
@@ -248,76 +275,55 @@ public:
 							throw kgError(ss.str());
 						}
 					}
-   		 		if( wsize == 0 ){
-						_oEnd = true;
-						return 0;
-					}
+					if( wsize == 0 ){ return 0; }
 					accSize+=static_cast<size_t>(wsize);
 					resSize-=static_cast<size_t>(wsize);
 				}
-			}
-			::close(tFD);
-		}
-		else{
-			// deq位置のデータをwrite
-			size_t maxSize=_readSize.at(_deq);
-			size_t accSize=0;
-			size_t resSize=maxSize;
-			char* buf = _que.at(_deq);
-			while(accSize<maxSize){
-				int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
-				if( wsize<0 ){
-					//boost rThreadState_.notify_one();
-					pthread_cond_signal(&_threadState);
-					if(32==errno){ // pipe broken
-						return 0;
-					}else{
-						ostringstream ss;
-						ss << "file write error";
-						throw kgError(ss.str());
+				pthread_mutex_lock(&_mutex);
+				{
+					// deqを一つ進める
+					if(_deq==_enq){
+						if(_readEnd){
+							pthread_mutex_unlock(&_mutex);
+							return 0;
+						}else{
+							//boostwThreadState_.wait(mutex_);
+							pthread_cond_wait(&_threadState, &_mutex);
+						}
 					}
+					_deq=nextQue(_deq);
 				}
-				if( wsize == 0 ){
-					return 0;
-				}
-				accSize+=static_cast<size_t>(wsize);
-				resSize-=static_cast<size_t>(wsize);
-			}
-			pthread_mutex_lock(&_mutex);
-			{
-				// deqを一つ進める
-				if(_deq==_enq){
-					if(_readEnd){
-						pthread_mutex_unlock(&_mutex);
-						return 0;
-					}else{
-						//boostwThreadState_.wait(mutex_);
-						pthread_cond_wait(&_threadState, &_mutex);
-					}
-				}
-				_deq=nextQue(_deq);
-			}
-			pthread_mutex_unlock(&_mutex);
+				pthread_mutex_unlock(&_mutex);
 
+			}
+			// read側が待ち状態にあれば起こす
+			pthread_cond_signal(&_threadState);
+			return 1;
+		}catch(...){
+			cerr << "writeTHREAD EXCPTIOIN ERROR 0" << endl;
+			return 0;
 		}
-		// read側が待ち状態にあれば起こす
-		pthread_cond_signal(&_threadState);
-		return 1;
-	}catch(...){
-		return 1;
 	}
 };
 
-static void *rThread(void *arg) try {
-	Queue *hd =(Queue *)arg; 
-	while(hd->readData()==1){}
-}catch(...){
+static void *rThread(void *arg){
+	try {
+		Queue *hd =(Queue *)arg; 
+		while(hd->readData()==1){}
+	}catch(...){
+		cerr << "readTHREAD EXCPTIOIN ERROR" << endl;
+	}	
+  return NULL;
 }
 
-static void *wThread(void *arg) try{
-	Queue *hd =(Queue *)arg; 
-	while(hd->writeData()==1){}
-}catch(...){
+static void *wThread(void *arg){
+	try {
+		Queue *hd =(Queue *)arg; 
+		while(hd->writeData()==1){}
+	}catch(...){
+		cerr << "writeTHREAD EXCPTIOIN ERROR" << endl;
+	}
+	return NULL;
 }
 
 // -----------------------------------------------------------------------------
