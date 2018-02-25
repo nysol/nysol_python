@@ -366,6 +366,54 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 	return rlist;
 }
 
+PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if((kcfld->status() & kgCSV::End )){ 
+		return Py_BuildValue("");
+	}
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+
+
+	if( kcfld->begin() ){ 
+		if( kcfld->read() == EOF){
+			return Py_BuildValue("");
+		}
+	}
+
+	PyObject* finlist = PyList_New(0);
+
+	PyObject* rllist = PyList_New(0);
+	size_t fcnt = kcfld->fldSize();
+
+	for(size_t j=0 ;j<fcnt;j++){
+		PyList_Append(rllist,Py_BuildValue("s", kcfld->getOldVal(j)));
+	}
+	PyList_Append(finlist,rllist);
+	if( kcfld->keybreak() ){
+		Py_INCREF(Py_True);
+		PyList_Append(finlist,Py_True);
+	}
+	else{
+		Py_INCREF(Py_False);
+		PyList_Append(finlist,Py_False);
+	}
+	return finlist;
+}
+
+
+
 void py_kgshell_free(PyObject *obj){
 	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(obj,"kgshellP");
 	if(ksh){
@@ -404,6 +452,7 @@ static PyMethodDef hellomethods[] = {
 	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
+	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{NULL}
 };
