@@ -38,7 +38,7 @@ kgBest::kgBest(void)
 	_name    = "kgbest";
 	_version = "###VERSION###";
 
-	_paralist = "R=,i=,o=,k=,u=,-r,to=,from=,size=,s=,-q";
+	_paralist = "R=,i=,o=,k=,u=,-r,to=,from=,fr=,size=,s=,-q";
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY;
 
 	#include <help/en/kgbestHelp.h>
@@ -71,14 +71,21 @@ void kgBest::setArgsMain(void)
 	// from=行No to=行No (Noは0開始) 
 	// size=行数 
 	_range_max=0;
-	kgstr_t fr_str = _args.toString("from=",false);
+	kgstr_t fr_str0 = _args.toString("from=",false);
+	kgstr_t fr_str1 = _args.toString("fr=",false);
+	if(!fr_str0.empty()&&!fr_str1.empty()){
+		throw kgError("fr= cannot be specified with from=");
+	}
+	kgstr_t fr_str= fr_str0;
+	if(!fr_str1.empty()){ fr_str= fr_str1;}
+	
 	kgstr_t to_str = _args.toString("to=",false);
 	kgstr_t sz_str = _args.toString("size=",false);
 	vector< vector<kgstr_t> > vvs = _args.toStringVecVec("R=","_:",2,false);
 
 	// エラーチェック
 	if( !vvs[0].empty() && ( !fr_str.empty()|| !to_str.empty()||!sz_str.empty())){
-		throw kgError("R= cannot be specified with from=,to=,size=");
+		throw kgError("R= cannot be specified with from=,fr=,to=,size=");
 	}
 	if(!to_str.empty()&&!sz_str.empty() ) {
 		throw kgError("to= cannot be specified with size=");
