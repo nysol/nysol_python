@@ -110,6 +110,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msortf"]    = boost::lambda::bind(boost::lambda::new_ptr<kgSortf>());
 		_kgmod_map["mtab2csv"]  = boost::lambda::bind(boost::lambda::new_ptr<kgTab2csv>());
 		_kgmod_map["msep"]  = boost::lambda::bind(boost::lambda::new_ptr<kgSep>());
+		_kgmod_map["mshuffle"]  = boost::lambda::bind(boost::lambda::new_ptr<kgShuffle>());
 
 
 		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
@@ -169,6 +170,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mselrand"] = 0;
 		_kgmod_run["mselstr"] = 0;
 		_kgmod_run["msep"] = 0;
+		_kgmod_run["mshuffle"] = 0;
 		_kgmod_run["msetstr"] = 0;
 		_kgmod_run["mshare"] = 0;
 		_kgmod_run["msim"] = 0;

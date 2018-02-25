@@ -38,6 +38,8 @@ kgShuffle::kgShuffle(void)
 {
 	_name    = "kgshuffle";
 	_version = "###VERSION###";
+	_paralist = "i=,f=,d=,v=,n=";
+
 	_outCount=0;
 
 	#include <help/en/kgshuffleHelp.h>
@@ -53,14 +55,8 @@ kgShuffle::kgShuffle(void)
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
 // -----------------------------------------------------------------------------
-void kgShuffle::setArgs(void)
+void kgShuffle::setArgsMain(void)
 {
-	// パラメータチェック
-	// i=データ d=出力先 n=分割数 v=重みリスト f=キー項目 を指定させる	
-	_args.paramcheck("i=,f=,d=,v=,n=");
-
-	// 入出力ファイルオープン
-	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
 	_iFile.read_header();
 
 	// f= 項目引数のセット
@@ -123,14 +119,42 @@ void kgShuffle::setArgs(void)
   }
 
 }
+
+// -----------------------------------------------------------------------------
+// パラメータセット＆入出力ファイルオープン
+// -----------------------------------------------------------------------------
+void kgShuffle::setArgs(void)
+{
+	// パラメータチェック
+	// i=データ d=出力先 n=分割数 v=重みリスト f=キー項目 を指定させる	
+	_args.paramcheck(_paralist);
+
+	// 入出力ファイルオープン
+	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
+
+	setArgsMain();
+
+}
+void kgShuffle::setArgs(int inum,int *i_p,int onum ,int *o_p)
+{
+
+	_args.paramcheck(_paralist);
+	if(inum>1 || onum!=0){ throw kgError("no match IO i:("+toString(inum) +" o:" +toString(onum) + ")");}
+
+	// 入出力ファイルオープン
+	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+
+	setArgsMain();
+
+}
+
+
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgShuffle::run(void) try 
+int kgShuffle::runMain(void) 
 {
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
 	// 項目名出力
 	for(size_t i=0; i<_oFile.size(); i++){
 		_oFile.at(i)->writeFldName(_iFile);
@@ -155,23 +179,89 @@ int kgShuffle::run(void) try
 	// 終了処理
 	_iFile.close();
 	for(size_t i=0; i<_oFile.size(); i++){ _oFile.at(i)->close(); }
-	successEnd();
+
 	return 0;
 
-}catch(kgError& err){
-	errorEnd(err);
+
+}
+int kgShuffle::run(void)  
+{
+	try{
+		// パラメータセット＆入出力ファイルオープン
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;		
+	}
+	catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		return 0;
+
+	}	catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+
+	}catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
 	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
+
+}
+
+int kgShuffle::run(int inum,int *i_p,int onum, int* o_p,string &msg)
+{
+	try {
+		setArgs(inum, i_p, onum,o_p);
+		int sts = runMain();
+		msg.append(successEndMsg());
+		return sts;
+	
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		return 0;
+
+	}catch(kgError& err){
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const std::exception& e) {
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}catch(...){
+
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+
+	}
 	return 1;
 }
+
+
 

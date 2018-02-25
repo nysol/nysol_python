@@ -65,6 +65,7 @@
 #include <kgrjoin.h>
 #include <kgsed.h>
 #include <kgsep.h>
+#include <kgshuffle.h>
 #include <kgsel.h>
 #include <kgselnum.h>
 #include <kgselrand.h>

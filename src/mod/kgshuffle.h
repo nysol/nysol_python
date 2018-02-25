@@ -45,6 +45,18 @@ class kgShuffle:public kgMod {
 	kgAutoPtr2<kgCSVout> _csvOut_ap;
 	// 引数セット
 	void setArgs(void);
+	void setArgs(int inum,int *i,int onum, int* o);
+	void setArgsMain(void);	
+
+	int runMain(void);
+
+	void runErrEnd(void){
+		_iFile.close();
+		for(size_t i=0; i<_oFile.size(); i++){
+			 if ( _oFile.at(i) ){ _oFile.at(i)->close(); }
+		}
+	}
+
 
 public:
 	// コンストラクタ&引数セット
@@ -57,6 +69,7 @@ public:
 
 	//実行メソッド
 	int run(void);
+	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 };
 
