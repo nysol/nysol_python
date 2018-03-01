@@ -48,14 +48,14 @@ private:
 	kgAutoPtr2<char> _buf_ap;
 	char* _buf;
 	vector<char*> _que;
-	volatile size_t _enq;
-	volatile size_t _deq;
+	size_t _enq;
+	size_t _deq;
 	vector<size_t> _readSize;
 	
 	// バッファFULL時、使用
 	kgTempfile    _tempFile; 
 	queue<string> _tmpname;
-	queue<volatile size_t> _rest_no;
+	queue<size_t> _rest_no;
 
 	
 	//ロックしてから動かすこと
