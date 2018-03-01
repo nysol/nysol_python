@@ -162,6 +162,73 @@ PyObject* runL(PyObject* self, PyObject* args)
 	return PyLong_FromLong(1);
 }
 
+
+PyObject* cancel(PyObject* self, PyObject* args)
+{
+	try {
+
+	PyObject *sh;
+	PyObject *mlist;
+	PyObject *linklist;
+	if (!PyArg_ParseTuple(args, "O", &sh )){
+    return NULL;
+  }
+	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+	ksh->cancel();
+	return PyLong_FromLong(0);
+
+
+	}
+	catch(kgError& err){
+		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "cancel Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "cancel Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "cancel Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+
+PyObject* csvclose(PyObject* self, PyObject* args)
+{
+	try {
+
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+	kcfld->close();
+
+	return PyLong_FromLong(0);
+
+
+	}
+	catch(kgError& err){
+		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "cancel Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "cancel Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "cancel Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+
 PyObject* runLs(PyObject* self, PyObject* args)
 {
 	try {
@@ -454,6 +521,8 @@ static PyMethodDef hellomethods[] = {
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
+	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
+	{"close", reinterpret_cast<PyCFunction>(csvclose), METH_VARARGS },
 	{NULL}
 };
 

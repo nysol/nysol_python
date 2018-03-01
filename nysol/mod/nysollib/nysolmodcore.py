@@ -15,6 +15,7 @@ import os, sys
 #	return n_core.runL(cc,val[0],val[1])
 
 
+
 def runs(val,**kw_args):
 	return NysolMOD_CORE.runs(val,**kw_args)
 
@@ -30,6 +31,7 @@ def modelInfos(val):
 
 class NysolMOD_CORE(object):
 	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
+
 	def __init__(self,name=None,kwd=None) :
 		if kwd == None:
 			kwd = {}
@@ -241,19 +243,42 @@ class NysolMOD_CORE(object):
 
 
 	def __iter__(self):
-		return Nysol_MeachIter(self)
+		#print("itet st")
+		#try:
+		#	return Nysol_MeachIter(self)
+		#except :
+		#	print("aaa")
+		try:
+			x = Nysol_MeachIter(self)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+		
 
 	def keyblock(self,keys,skeys=None):
-		x = Nysol_MeachKeyIter(self,keys,skeys)
-		while(True):
-			yield next(x)
+		try:
+			x = Nysol_MeachKeyIter(self,keys,skeys)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
 
 	def getline_with_keyflag(self,keys,skeys=None):
 		
-		x = Nysol_MeachKeyIterWithFlag(self,keys,skeys)
+		try:
+			x = Nysol_MeachKeyIterWithFlag(self,keys,skeys)
 
-		while(True):
-			yield next(x)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
 
 	def msgOn(self):
 		self.msg=True
@@ -1483,7 +1508,8 @@ class Nysol_MeachKeyIterWithFlag(object):
 		self.shobj = n_core.init(runobj.msg)
 		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
 		self.breakPre = True
-
+	
+	
 	def next(self):
 		data = n_core.readkeylineWithFlag(self.csvin)
 		if data: 

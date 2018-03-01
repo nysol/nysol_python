@@ -1535,7 +1535,7 @@ for k in k_s:
 
 
 rlsf_1 = temo.file()
-
+print("cccc")
 
 with mcsvout(rlsf_1,f=headL) as rf1:
 
@@ -1562,6 +1562,8 @@ with mcsvout(rlsf_1,f=headL) as rf1:
 						rls.append("0")
 				else:
 					rls.append("{}".format(np.NaN)) 
+		
+		exit()
 
 		rf1.write(rls) 
 

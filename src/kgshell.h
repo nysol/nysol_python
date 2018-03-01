@@ -249,6 +249,7 @@ public:
 	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	kgCSVkey* runkeyiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,vector<string> & klist);
 	int getparams(kgstr_t cmdname,PyObject* list);
+	void cancel(void){ runClean();}
 
 
 };
