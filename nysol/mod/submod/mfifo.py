@@ -8,3 +8,8 @@ class Nysol_Mfifo(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mfifo,self).__init__("mfifo",nutil.args2dict(args,kw_args,Nysol_Mfifo.kwd))
 
+
+def mfifo(self,*args, **kw_args):
+	return Nysol_Mfifo(nutil.args2dict(args,kw_args,Nysol_Mfifo.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mfifo", mfifo)

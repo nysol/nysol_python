@@ -1535,7 +1535,6 @@ for k in k_s:
 
 
 rlsf_1 = temo.file()
-print("cccc")
 
 with mcsvout(rlsf_1,f=headL) as rf1:
 
@@ -1563,7 +1562,6 @@ with mcsvout(rlsf_1,f=headL) as rf1:
 				else:
 					rls.append("{}".format(np.NaN)) 
 		
-		exit()
 
 		rf1.write(rls) 
 
@@ -2163,7 +2161,7 @@ f23_2 <<= nm.mcal(c="if(${cnt}>1,${cnt},0)",a="reocur")
 f23_2 <<= nm.msum(k=keyfld,f="reocur")
 f23_2 <<= nm.mjoin(k=keyfld,m=sumDATA,f="count")
 f23_2 <<= nm.mcal(c="${reocur}/${count}",a="percentage_of_reoccurring_values_to_all_values")
-f23_1 <<= nm.m2cross(k=keyfld,f="percentage_of_reoccurring_values_to_all_values",a="way,val",o=rlsDIR+"/rls23_2.csv")
+f23_2 <<= nm.m2cross(k=keyfld,f="percentage_of_reoccurring_values_to_all_values",a="way,val",o=rlsDIR+"/rls23_2.csv")
 f23_2.run()
 
 

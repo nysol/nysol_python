@@ -8,3 +8,7 @@ class Nysol_Mhashavg(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mhashavg,self).__init__("mhashavg",nutil.args2dict(args,kw_args,Nysol_Mhashavg.kwd))
 
+def mhashavg(self,*args, **kw_args):
+	return Nysol_Mhashavg(nutil.args2dict(args,kw_args,Nysol_Mhashavg.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mhashavg", mhashavg)

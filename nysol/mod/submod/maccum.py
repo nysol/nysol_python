@@ -8,3 +8,8 @@ class Nysol_Maccum(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Maccum,self).__init__("maccum",nutil.args2dict(args,kw_args,Nysol_Maccum.kwd))
 
+def maccum(self,*args, **kw_args):
+	return Nysol_Maccum(nutil.args2dict(args,kw_args,Nysol_Maccum.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "maccum", maccum)
+

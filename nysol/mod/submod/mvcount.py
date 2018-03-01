@@ -8,3 +8,8 @@ class Nysol_Mvcount(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvcount,self).__init__("mvcount",nutil.args2dict(args,kw_args,Nysol_Mvcount.kwd))
 
+
+def mvcount(self,*args, **kw_args):
+	return Nysol_Mvcount(nutil.args2dict(args,kw_args,Nysol_Mvcount.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mvcount", mvcount)

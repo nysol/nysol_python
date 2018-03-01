@@ -8,3 +8,8 @@ class Nysol_Mvreplace(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvreplace,self).__init__("mvreplace",nutil.args2dict(args,kw_args,Nysol_Mvreplace.kwd))
 
+
+def mvreplace(self,*args, **kw_args):
+	return Nysol_Mvreplace(nutil.args2dict(args,kw_args,Nysol_Mvreplace.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mvreplace", mvreplace)

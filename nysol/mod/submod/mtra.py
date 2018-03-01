@@ -8,3 +8,7 @@ class Nysol_Mtra(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mtra,self).__init__("mtra",nutil.args2dict(args,kw_args,Nysol_Mtra.kwd))
 
+def mtra(self,*args, **kw_args):
+	return Nysol_Mtra(nutil.args2dict(args,kw_args,Nysol_Mtra.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mtra", mtra)

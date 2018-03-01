@@ -8,3 +8,8 @@ class Nysol_Mwindow(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mwindow,self).__init__("mwindow",nutil.args2dict(args,kw_args,Nysol_Mwindow.kwd))
 
+def mwindow(self,*args, **kw_args):
+	return Nysol_Mwindow(nutil.args2dict(args,kw_args,Nysol_Mwindow.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mwindow", mwindow)
+

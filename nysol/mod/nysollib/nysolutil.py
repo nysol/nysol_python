@@ -31,6 +31,7 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 
 		else :
+			print(args)
 			print("args type str or dict")
 			return None
 
@@ -73,6 +74,7 @@ def arg2dict(args, kw_args,klist,uk=None):
 			pass
 
 		else :
+			print(args)
 			print("args type str or dict")
 			return None
 

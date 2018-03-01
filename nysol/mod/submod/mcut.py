@@ -10,3 +10,8 @@ class Nysol_Mcut(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcut,self).__init__("mcut",nutil.args2dict(args,kw_args,Nysol_Mcut.kwd))
 
+def mcut(self,*args, **kw_args):
+	return Nysol_Mcut(nutil.args2dict(args,kw_args,Nysol_Mcut.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mcut", mcut)
+

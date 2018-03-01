@@ -8,3 +8,7 @@ class Nysol_Mcross(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcross,self).__init__("mcross",nutil.args2dict(args,kw_args,Nysol_Mcross.kwd))
 
+def mcross(self,*args, **kw_args):
+	return Nysol_Mcross(nutil.args2dict(args,kw_args,Nysol_Mcross.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mcross", mcross)

@@ -8,3 +8,7 @@ class Nysol_Mcount(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcount,self).__init__("mcount",nutil.args2dict(args,kw_args,Nysol_Mcount.kwd))
 
+def mcount(self,*args, **kw_args):
+	return Nysol_Mcount(nutil.args2dict(args,kw_args,Nysol_Mcount.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mcount", mcount)

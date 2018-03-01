@@ -8,3 +8,8 @@ class Nysol_Mproduct(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mproduct,self).__init__("mproduct",nutil.args2dict(args,kw_args,Nysol_Mproduct.kwd))
 
+
+def mproduct(self,*args, **kw_args):
+	return Nysol_Mproduct(nutil.args2dict(args,kw_args,Nysol_Mproduct.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mproduct", mproduct)

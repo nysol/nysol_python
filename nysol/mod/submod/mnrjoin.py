@@ -8,3 +8,8 @@ class Nysol_Mnrjoin(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mnrjoin,self).__init__("mnrjoin",nutil.args2dict(args,kw_args,Nysol_Mnrjoin.kwd))
 
+
+def mnrjoin(self,*args, **kw_args):
+	return Nysol_Mnrjoin(nutil.args2dict(args,kw_args,Nysol_Mnrjoin.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mnrjoin", mnrjoin)

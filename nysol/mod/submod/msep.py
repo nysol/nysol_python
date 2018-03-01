@@ -8,3 +8,8 @@ class Nysol_Msep(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Msep,self).__init__("msep",nutil.args2dict(args,kw_args,Nysol_Msep.kwd))
 
+
+def msep(self,*args, **kw_args):
+	return Nysol_Msep(nutil.args2dict(args,kw_args,Nysol_Msep.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "msep", msep)

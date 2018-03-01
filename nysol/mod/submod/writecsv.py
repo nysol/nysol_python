@@ -8,3 +8,9 @@ class Nysol_Writecsv(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Writecsv,self).__init__("writecsv",nutil.args2dict(args,kw_args,Nysol_Writecsv.kwd,uk="o"))
 
+
+def writecsv(self,*args, **kw_args):
+	return Nysol_Writecsv(nutil.args2dict(args,kw_args,Nysol_Writecsv.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "writecsv", writecsv)
+
