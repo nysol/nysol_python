@@ -3369,6 +3369,33 @@ void kgFunction_tanh::run(void)
 		else 							_result.null(true);
 	}
 }
+
+// -----------------------------------------------------------------------------
+// hashval(文字列,数値) => 数値
+// -----------------------------------------------------------------------------
+void kgFunction_hashval::preprocess(void)
+{
+	if( _args.at(1)->null() ){
+		throw kgError("hashval must be a constant number");
+	}else{
+		_hashval = static_cast<unsigned int>(_args.at(1)->r());
+		if(_hashval==0){ throw kgError("hashval must not be zero"); }
+
+	}
+}
+
+void kgFunction_hashval::run(void)
+{	
+	if( _args.at(0)->null() ){
+		_result.null(true);
+	}else{
+		unsigned int v=0;
+		char* key=_args.at(0)->s();
+		while(*key != '\0') v+=v*137+static_cast<unsigned int>(*key++);
+		_result.r( v % _hashval );
+	}
+}
+
 // ============================================================================
 // 文字列関数クラス
 // ============================================================================
@@ -3786,6 +3813,17 @@ void kgFunction_strchr::run(void)
 		if(*s++==c) cnt++;
 	}
 	_result.r(static_cast<double>(cnt));
+}
+// -----------------------------------------------------------------------------
+// strcmp(文字列,文字列) => 数値 : 文字列の比較
+// -----------------------------------------------------------------------------
+void kgFunction_strcmp::run(void)
+{	
+	int cmp = strcmp(_args.at(0)->s(),_args.at(1)->s());
+
+	     if(cmp == 0) { _result.r(0); }
+	else if(cmp <  0) { _result.r(-1);}
+	else              { _result.r(1); }
 }
 // ============================================================================
 // 正規表現関連クラス
@@ -4250,6 +4288,7 @@ kgFuncMap::kgFuncMap(void){
 	_func_map["usecond_T"  ]= lambda::bind(lambda::new_ptr<kgFunction_usecond_t  >());
 	_func_map["useconds_T" ]= lambda::bind(lambda::new_ptr<kgFunction_useconds_t >());
 	_func_map["tuseconds_T"]= lambda::bind(lambda::new_ptr<kgFunction_tuseconds_t>());
+	_func_map["hashval_SN"]= lambda::bind(lambda::new_ptr<kgFunction_hashval>());
 
 	// 数学関数
 	_func_map["sum_N*"       ]= lambda::bind(lambda::new_ptr<kgFunction_sum       >());
@@ -4351,7 +4390,7 @@ kgFuncMap::kgFuncMap(void){
   _func_map["matchas_SS*" ]= lambda::bind(lambda::new_ptr<kgFunction_matchas   >());
   _func_map["hasspace_S"  ]= lambda::bind(lambda::new_ptr<kgFunction_hasspace  >());
   _func_map["hasspacew_S" ]= lambda::bind(lambda::new_ptr<kgFunction_hasspacew >());
-//  _func_map["strchr_SS"   ]= lambda::bind(lambda::new_ptr<kgFunction_strchr    >());
+  _func_map["strcmp_SS"   ]= lambda::bind(lambda::new_ptr<kgFunction_strcmp    >());
 
 	_func_vecREG.push_back("cat_SS*");
 	_func_vecREG.push_back("match_SS*");
