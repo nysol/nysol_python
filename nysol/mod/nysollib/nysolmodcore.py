@@ -4,6 +4,7 @@ import re
 import nysol._nysolshell_core as n_core
 from nysol.mod.nysollib import nysolutil as nutil
 from nysol.mod.nysollib import draw as ndraw
+from nysol.mod.nysollib import dspalign
 
 from multiprocessing import Pool
 import copy
@@ -86,16 +87,19 @@ class NysolMOD_CORE(object):
 
 	def __str__(self):
 		import os
+
 		dsptp = os.getenv("NYSOL_MOD_DSP_TYPE", "0")
+
 		if dsptp == "1":
+
 			yLimit =40
-			xx = Nysol_MeachIter(self)
 			pre=[]
 			sufmax = int(yLimit/2)
 			suf=[ [] for i in range(sufmax) ]
 			cnt=0
 			sufpos=0
 			try:
+				xx = Nysol_MeachIter(self)
 				while(True):
 					val = next(xx)
 					if cnt < yLimit :
@@ -109,57 +113,6 @@ class NysolMOD_CORE(object):
 			except:
 				pass
 
-			width=80
-			fldnameLimit =15
-
-			if hasattr(os,"get_terminal_size"):
-				width = os.get_terminal_size().columns
-			else:
-				_,width_str = os.popen('stty size').read().split()
-				width = int(width_str)
-			
-			def dsplen(data):
-				
-				if sys.version_info.major < 3:
-					datax = data.decode('utf-8')
-				else:
-					datax = data
-
-				fsize=0
-				for charstr in datax:
-					if ord(charstr)<128 :
-						fsize +=1
-					else:
-						fsize +=2
-				return fsize
-
-			def dspchg(data,size):
-
-				if sys.version_info.major < 3:
-					datax = data.decode('utf-8')
-				else:
-					datax = data
-
-				fsize=0
-				for i , charstr in enumerate(datax):
-					if ord(charstr)<128 :
-						fsize +=1
-					else:
-						fsize +=2
-					if fsize > size-3:
-						return data[0:i]+"..."
-
-				return data
-			
-			 
-			def sizeCHK(data,premax):
-				for lin in data:
-					for i, fdata in enumerate(lin):
-						fsize = dsplen(fdata)
-
-						if fsize > premax[i] :
-							premax[i] = fsize
-
 			if(cnt > yLimit): 
 				ppos = sufmax
 				spos = sufpos
@@ -171,72 +124,14 @@ class NysolMOD_CORE(object):
 					if spos==sufmax :
 						spos=0
 
-			
-			fldmax = [ 0 for i in range(len(pre[0]))]
-			sizeCHK(pre,fldmax)
-			for i in range(len(fldmax)):
-				if fldmax[i] > fldnameLimit:
-					fldmax[i] = fldnameLimit
+			outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
 
-			fldcut=False
+			return "\n".join(outstrList)
 
-			if sum(fldmax) +len(fldmax) > width:
-				dspfldNo =[]
-				restW = width - (fldmax[-1]+5)
-				for i ,v in enumerate(fldmax):
-					if restW - v > 0 :
-						dspfldNo.append(i) 
-					else:
-						dspfldNo.append(len(fldmax)-1)
-						break 
-					restW -= (v+1)
-				fldcut = True
-			else:
-				dspfldNo =  [i for i in range(len(fldmax))]
-				
-			outstr=[]
-			for i,lin in enumerate(pre):
-				newstr=[]
-				for pos in dspfldNo:
-
-					if fldcut and pos == len(fldmax)-1:
-						newstr.append("...")   
-
-					dlen = dsplen(lin[pos])
-
-					if dlen <= fldmax[pos] :
-						fmtdlen = (fldmax[pos]-dlen)+len(lin[pos])
-						fmt = "%%%ds"%(fmtdlen)
-						newstr.append(fmt%(lin[pos]))
-					else:
-						newdata = dspchg(lin[pos],fldmax[pos])
-						fmtdlen = (fldmax[pos]-dsplen(newdata))+len(newdata)
-						fmt = "%%%ds"%(fmtdlen)
-						newstr.append(fmt%(newdata))
-
-				outstr.append(" ".join(newstr))
-				if cnt > yLimit and i == sufmax :
-					dmystr = []
-					for pos in dspfldNo:
-
-						if fldcut and pos == len(fldmax)-1:
-							dmystr.append("...")   
-
-
-						dmylen = fldmax[pos] if fldmax[pos]<3 else 3
-						fmt = "%%%ds"%(fldmax[pos])
-						dmystr.append(fmt%("."*dmylen))
-							
-					outstr.append(" ".join(dmystr))
-
-			return "\n".join(outstr)
-			
-
-		elif dsptp == 2:
-			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
-		
 		else:
+
 			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
+
 
 	def __repr__(self):
 		return str(self)
@@ -310,60 +205,6 @@ class NysolMOD_CORE(object):
 		return self
 		
 		
-	# PRIVATEにする？
-	def para2strStr(self):
-		rtnStr = ""
-		for k, v in self.kwd.items():
-			if isinstance(v,bool) :
-				if v==True:
-					rtnStr += "-" + k + " "
-			elif isinstance(v,str) :
-				rtnStr += k + "=" + v + " "
-			elif isinstance(v,float) :
-				rtnStr += k + "=" + str(v) + " "
-			elif isinstance(v,int) :
-				rtnStr += k + "=" + str(v) + " "
-			elif isinstance(v,list) :
-				plist = []
-				for val in v:
-					if isinstance(val,str) :
-						plist.append(val)
-					elif isinstance(val,float) or isinstance(v,int) :
-						plist.append(str(val))
-				rtnStr += k + "=" + ",".join(plist) + " "
-				
-		return rtnStr
-
-	# PRIVATEにする？
-	def para2str(self):
-		rtnStr = []
-		for k, v in self.kwd.items():
-			if isinstance(v,bool) :
-				if v==True:
-					rtnStr.append("-" + k )
-
-			elif isinstance(v,str) :
-				rtnStr.append( k+"="+v)
-
-			elif isinstance(v,float) :
-				rtnStr.append(k + "=" + str(v))
-
-			elif isinstance(v,int) :
-				rtnStr.append(k + "=" + str(v) )
-
-			elif isinstance(v,list) :
-				plist = []
-				for val in v:
-					if isinstance(val,str) :
-						plist.append(val)
-					elif isinstance(val,float) or isinstance(v,int) :
-						plist.append(str(val))
-
-				rtnStr.append(k + "=" + ",".join(plist) )
-				
-		return rtnStr
-
-	
 	# f.w キーワードチェック入れる
 	def paraUpdate(self,kw):
 		self.kwd.update(kw)
@@ -391,7 +232,7 @@ class NysolMOD_CORE(object):
 		#	print("------mod---------")
 		#	print(obj)
 		#	print(obj.name)
-		#	print(obj.para2str())
+		#	print(nutil.para2str(obj.kwd))
 		#	print("i=",obj.inplist["i"])
 		#	print("m=",obj.inplist["m"])
 		#	print("o=",obj.outlist["o"])
@@ -451,7 +292,7 @@ class NysolMOD_CORE(object):
 			#print("----add tee----") 
 			#print(obj)
 			#print(obj.name)
-			#print(obj.para2str())
+			#print(nutil.para2str(obj.kwd))
 			#print("i=",obj.inplist["i"])
 			#print("m=",obj.inplist["m"])
 			#print("o=",obj.outlist["o"])
@@ -623,13 +464,13 @@ class NysolMOD_CORE(object):
 			#print("---------------")
 			#print(obj)
 			#print(obj.name)
-			#print(obj.para2str())
+			#print(nutil.para2str(obj.kwd))
 			#print("i=",obj.inplist["i"])
 			#print("m=",obj.inplist["m"])
 			#print("o=",obj.outlist["o"])
 			#print("u=",obj.outlist["u"])
 			#print("---------------")
-			modlist[no]= [obj.name,obj.para2str(),{},obj.tag]
+			modlist[no]= [obj.name,nutil.para2str(obj.kwd),{},obj.tag]
 			iolist[no]=[[],[],[],[]]
 
 			for ioobj in obj.inplist["i"]:
@@ -741,7 +582,7 @@ class NysolMOD_CORE(object):
 
 		for st in stNum:
 			blist = []
-			self.separateblockSUB(modlist,elist,blist,visit,st)
+			self.separateblockSUB(visit,st)
 			if len(blist) > 0:
 				modblists.append(blist)
 
@@ -866,10 +707,10 @@ class NysolMOD_CORE(object):
 			#print(newmod[0])
 			#print(newlink[0])
 			#print("ccccc2")
-			n_core.runLs(newmod,newlink)
+			n_core.runLx(newmod,newlink)
 
 		else:
-			n_core.runL(shobj,modlist,linklist)
+			n_core.runLx(shobj,modlist,linklist)
 			
 
 		return outfs

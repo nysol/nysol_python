@@ -457,6 +457,68 @@ void kgshell::makePipeList(vector<linkST> & plist)
 	}
 
 	for(size_t i=0;i<plist.size();i++){
+		
+
+		int piped[2];
+		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell :("+toString(errno)+")");}
+		int flags0 = fcntl(piped[0], F_GETFD);
+		int flags1 = fcntl(piped[1], F_GETFD);
+		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
+		fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
+
+		/*linkST{ kgstr_t frTP; int frID; kgstr_t toTP; int toID;};*/
+		//typedef map<int, map<string,vector<int> > > iomap_t;
+		
+		if ( _ipipe_map.find(plist[i].toID) == _ipipe_map.end()){
+			map< string,vector<int> > newmap;
+			_ipipe_map[plist[i].toID] = newmap; 
+		}
+		if ( _ipipe_map[plist[i].toID].find(plist[i].toTP) == _ipipe_map[plist[i].toID].end()){
+			vector<int> newvec;
+			_ipipe_map[plist[i].toID][plist[i].toTP] = newvec;
+		}
+		_ipipe_map[plist[i].toID][plist[i].toTP].push_back(piped[0]);
+
+		if ( _opipe_map.find(plist[i].frID) == _opipe_map.end()){
+			map< string,vector<int> > newmap;
+			_opipe_map[plist[i].frID] = newmap; 
+		}
+		if ( _opipe_map[plist[i].frID].find(plist[i].frTP) == _opipe_map[plist[i].frID].end()){
+			vector<int> newvec;
+			_opipe_map[plist[i].frID][plist[i].frTP] = newvec;
+		}
+		_opipe_map[plist[i].frID][plist[i].frTP].push_back(piped[1]);
+
+	}
+}
+
+
+void kgshell::makePipeList2(vector<linkST> & plist,int iblk)
+{
+
+	_ipipe_map.clear();
+	_opipe_map.clear();
+
+	
+	int pcnt = 0;
+	for(size_t i=0;i<plist.size();i++){
+		if(_likBLkNo[i]==iblk) pcnt++;
+	}
+	
+
+	rlimit rlim;
+	int chfFlg;
+	chfFlg = getrlimit(RLIMIT_NOFILE, &rlim);
+	size_t pfilecnt = pcnt * 32 ;
+	if(rlim.rlim_cur < pfilecnt ){
+		rlim.rlim_cur = pfilecnt;
+		chfFlg = setrlimit(RLIMIT_NOFILE, &rlim);
+		if (chfFlg <0 ) { throw kgError("change file limit on kgshell"); } 
+	}
+
+	for(size_t i=0;i<plist.size();i++){
+		if(_likBLkNo[i]!=iblk) continue;
+		
 
 		int piped[2];
 		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell :("+toString(errno)+")");}
@@ -707,6 +769,356 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 		_modlist = NULL;
 		return 0;
 
+}
+
+int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
+
+	for(int iblk=0;iblk<_blockmax;iblk++){
+
+		makePipeList2(plist,iblk);
+
+		_clen = 0;
+		for(size_t i=0;i<cmds.size();i++){
+			if(_modBLkNo[i]==iblk) _clen++;
+		}
+
+		
+		//debugIOinfo_OUTPUT() //DEBUG
+		//_clen = cmds.size();
+		_modlist = new kgMod*[_clen];
+		int clenpos= 0;
+		for(size_t i=0;i<cmds.size();i++){
+			if(_modBLkNo[i] != iblk) continue;
+			if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
+				cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
+				return 1;
+			}
+			_modlist[clenpos] = _kgmod_map.find(cmds[i].cmdname)->second() ;
+			kgArgs newArgs;
+			for(size_t j=0;j<cmds[i].paralist.size();j++){
+				newArgs.add(cmds[i].paralist[j]);
+			}
+			_modlist[clenpos]->init(newArgs, &_env);
+			clenpos++;
+		}
+
+
+		_th_st_pp = new pthread_t[clenpos];
+		_argst = new argST[clenpos];
+		int _th_rtn[clenpos];
+		int clenpos_a = clenpos;
+		// before run 
+
+		for(int i=cmds.size()-1;i>=0;i--){
+
+			if(_modBLkNo[i] != iblk) continue;
+
+			clenpos_a--;
+
+			_argst[clenpos_a].mobj= _modlist[clenpos_a];
+			_argst[clenpos_a].tag= cmds[i].tag;
+			_argst[clenpos_a].finflg = false;
+			_argst[clenpos_a].outputEND = false;
+			_argst[clenpos_a].status = 0;
+			_argst[clenpos_a].stMutex = &_stsMutex;
+			_argst[clenpos_a].stCond = &_stsCond;
+
+			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+
+			if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
+				if(typ==2){
+					_argst[clenpos_a].i_cnt= 1;
+					_argst[clenpos_a].i_p= NULL;
+					_argst[clenpos_a].list = cmds[i].iobj;
+				}
+				else{
+					_argst[clenpos_a].i_cnt= 0;
+					_argst[clenpos_a].i_p= NULL;
+				}
+			}
+			else{
+				// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+				size_t cnt=0;
+				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+					cnt += _ipipe_map[i]["i"].size();
+				}
+				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+					cnt += _ipipe_map[i]["m"].size();
+					if(cnt==1) { cnt++; } //mのみの場合はdmy追加 
+				}
+				if(cnt==0){
+					_argst[clenpos_a].i_cnt= 0;
+					_argst[clenpos_a].i_p= NULL;
+				}
+				else{
+					_argst[clenpos_a].i_cnt= cnt;
+					_argst[clenpos_a].i_p= new int[cnt];
+					size_t pos = 0;
+					if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
+						for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
+							_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["i"][j];
+							pos++;
+						}
+					}
+					if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+						if(pos==0 && cnt>1){ // mのみ対応
+							_argst[clenpos_a].i_p[pos]=-1; pos++;
+						}
+						for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
+							_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["m"][j];
+							pos++;
+						}
+					}
+				}
+			}
+			if( _opipe_map.find(i) == _opipe_map.end() ){ 
+				if(typ==1){
+					_argst[clenpos_a].o_cnt= 1;
+					_argst[clenpos_a].o_p = NULL;
+					_argst[clenpos_a].mutex = &_mutex;
+					_argst[clenpos_a].list = cmds[i].oobj;
+				}
+				else{
+					_argst[clenpos_a].o_cnt= 0;
+					_argst[clenpos_a].o_p= NULL;
+				}
+			}
+			else{
+				// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
+				size_t cnt=0;
+				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+					cnt += _opipe_map[i]["o"].size();
+				}
+				if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
+					cnt += _opipe_map[i]["u"].size();
+				}
+				if(cnt==0){
+					_argst[clenpos_a].o_cnt= 0;
+					_argst[clenpos_a].o_p= NULL;
+				}
+				else{
+					_argst[clenpos_a].o_cnt= cnt;
+					_argst[clenpos_a].o_p= new int[cnt];
+					size_t pos = 0;
+					if( _opipe_map[i].find("o") != _opipe_map[i].end()){
+						for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
+							_argst[clenpos_a].o_p[pos] = _opipe_map[i]["o"][j];
+							pos++;
+						}
+					}
+					if( _opipe_map[i].find("u") != _opipe_map[i].end()){
+						for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
+							_argst[clenpos_a].o_p[pos] = _opipe_map[i]["u"][j];
+							pos++;
+						}
+					}
+				}
+			}
+
+			//debug
+			//debugOUTPUT(i);
+
+			if(typ==0){
+				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_func ,(void*)&_argst[clenpos_a]);
+			}
+			else if(typ==1){
+				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_writelist ,(void*)&_argst[clenpos_a]);
+			}
+			else if(typ==2){
+				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_readlist ,(void*)&_argst[clenpos_a]);
+			}
+		}
+
+		// status check
+		pthread_mutex_lock(&_stsMutex);
+		while(1){
+			size_t pos = 0;
+			bool endFLG = true;
+			while(pos<clenpos){
+				if(_argst[pos].finflg==false){ endFLG=false;}
+				else if(_argst[pos].outputEND==false){
+					if(!_argst[pos].msg.empty()){
+						if(!_argst[pos].tag.empty()){
+							cerr << _argst[pos].msg << " " << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
+						}
+						else{
+							cerr << _argst[pos].msg  << endl; 					
+						}
+					}
+					else if(!_argst[pos].tag.empty()){
+						cerr  << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
+					}
+					_argst[pos].outputEND = true;
+				}
+				if(_argst[pos].status!=0){
+					//エラー発生時はthread cancel
+					for(size_t j=0;j<clenpos;j++){
+						pthread_cancel(_th_st_pp[j]);	
+					}
+					endFLG=true;
+					break;
+				}
+				pos++;
+			}
+			if (endFLG) break;
+			pthread_cond_wait(&_stsCond,&_stsMutex);
+		}
+		pthread_mutex_unlock(&_stsMutex);
+
+		for(size_t i=clenpos;i>0;i--){
+			pthread_join(_th_st_pp[i-1],NULL);
+		}
+
+		if(_modlist){
+			for(size_t i=0 ;i<clenpos;i++){
+				try {
+					if(_argst[i].outputEND == false){
+						if(!_argst[i].msg.empty()){
+							if(!_argst[i].tag.empty()){
+								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+							}
+							else{
+								cerr << _argst[i].msg  << endl; 					
+							}
+						}
+						else if(!_argst[i].tag.empty()){
+							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+						}
+					}
+					_argst[i].outputEND = true;
+					delete _modlist[i];
+					_modlist[i] =NULL;
+				
+				}
+				catch(...){ 
+					cerr  << "ocuur final chatch " << endl; 
+				}
+			}
+			delete[] _modlist;
+		}
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+		_modlist = NULL;
+		
+	}
+
+
+	return 0;
+
+}
+
+void kgshell::makeBLKSub(
+	vector<bool>& visit,
+	int st,
+	int blockNo
+){
+	if(visit[st]==true){ return ; }
+
+	visit[st] = true;
+	_modBLkNo[st] = blockNo;
+	_BLkcnt[blockNo]++;
+	
+	if(_edge_map.find(st) == _edge_map.end()){ return; } 
+
+	for ( size_t i=0 ; i<_edge_map[st].size();i++){
+		makeBLKSub(visit,_edge_map[st][i],blockNo);
+	}
+}
+
+void kgshell::makeBLK(
+	vector<cmdCapselST> &cmds,	
+	vector<linkST> & plist
+){
+	if(cmds.size()<100){
+		_modBLkNo = vector<int>(cmds.size(),0);
+		_likBLkNo = vector<int>(plist.size(),0);
+		_blockmax=1;
+		return ;
+	}
+	
+	// calc start point & edge map
+	vector<bool> notStart(cmds.size(),false);
+
+	for(int i=0;i<plist.size();i++){
+		notStart[plist[i].toID]=true;
+		if ( _edge_map.find(plist[i].toID) == _edge_map.end() ){
+			vector<int> newvec;
+			_edge_map[plist[i].toID] = newvec;
+		}
+		_edge_map[plist[i].toID].push_back(plist[i].frID);
+
+		if ( _edge_map.find(plist[i].frID) == _edge_map.end() ){
+			vector<int> newvec;
+			_edge_map[plist[i].frID] = newvec;
+		}
+		_edge_map[plist[i].frID].push_back(plist[i].toID);
+	}
+
+	//split BLOCK
+	vector<int> startPoint;
+	for(int i=0;i<cmds.size();i++){
+		if(notStart[i]==false){ startPoint.push_back(i); }
+	}
+
+	_modBLkNo = vector<int>(cmds.size(),-1);
+	_likBLkNo = vector<int>(plist.size(),-1);
+	_BLkcnt   = vector<int>(startPoint.size(),0);
+	vector<bool> visit(cmds.size(),false);
+
+	for(int i=0;i<startPoint.size();i++){
+		makeBLKSub(visit,startPoint[i],i);
+	}
+	for(int i=0;i<plist.size();i++){
+		//cerr << i << " " << _modBLkNo[i] << endl;
+		if(_modBLkNo[plist[i].toID]!=_modBLkNo[plist[i].frID]){
+			cerr << "no match id  " << plist[i].toID　<< " " << plist[i].frID ;
+			cerr << " " << _modBLkNo[plist[i].toID] << " " << _modBLkNo[plist[i].frID] << endl;
+		}
+		_likBLkNo[i] =  _modBLkNo[plist[i].toID];
+	}
+	//_modBLkNo = vector<int>(cmds.size(),0);
+	//_likBLkNo = vector<int>(plist.size(),0);
+	_blockmax=startPoint.size();
+	
+	//cerr << "- blkcnt |" << endl;
+	//for(int i=0;i<_blockmax;i++){
+	//	cerr << i << " : " << _BLkcnt[i] << endl;
+	//}
+	//cerr << "| blkcnt -" << endl;
+
+	
+}
+
+int kgshell::runx(
+	vector<cmdCapselST> &cmds,	
+	vector<linkST> & plist
+)
+{
+	try{
+		makeBLK(cmds,plist);
+		return runMain2(cmds,plist);
+
+	}
+	catch(kgError& err){
+	
+		cerr << "script RUN KGERROR " << err.message(0) << endl;
+		runClean();
+
+	}catch (const exception& e) {
+
+		cerr << "script RUN EX ERR " << e.what() << endl;
+		runClean();
+
+	}catch(char * er){
+		cerr << "script RUN ERROR CHAR " << er << endl;
+		runClean();
+
+	}catch(...){	
+		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
+		runClean();
+	}
+
+	return 1;
 }
 
 

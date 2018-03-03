@@ -1411,7 +1411,6 @@ f1.run()
 
 nm.m2cross(i=div2DATA,k=keyfld,a="way,val",f="absolute_sum_of_changes,abs_energy",o=rlsDIR+"/rls1.csv").run()
 
-
 #autocorrelation agg ここはもっといい方法ありそう
 f2 =   nm.mcut(f=keyfld+seqfldB,i=baseDATA)
 f2 <<= nm.mjoin(k=keyfld,m=sumDATA,f="mean,var,count") 
@@ -1634,7 +1633,6 @@ for lag in lags:
 	funcList7.append(f7)
 		
 nm.runs(funcList7)
-
 
 
 

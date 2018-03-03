@@ -2,6 +2,61 @@
 import shlex
 import re
 
+def para2strStr(vals):
+	rtnStr = ""
+	for k, v in vals.items():
+		if isinstance(v,bool) :
+			if v==True:
+				rtnStr += "-" + k + " "
+		elif isinstance(v,str) :
+			rtnStr += k + "=" + v + " "
+		elif isinstance(v,float) :
+			rtnStr += k + "=" + str(v) + " "
+		elif isinstance(v,int) :
+			rtnStr += k + "=" + str(v) + " "
+		elif isinstance(v,list) :
+			plist = []
+			for val in v:
+				if isinstance(val,str) :
+					plist.append(val)
+				elif isinstance(val,float) or isinstance(v,int) :
+					plist.append(str(val))
+			rtnStr += k + "=" + ",".join(plist) + " "
+			
+	return rtnStr
+
+
+def para2str(vals):
+	rtnStr = []
+	for k, v in vals.items():
+
+		if isinstance(v,bool) :
+			if v==True:
+				rtnStr.append("-" + k )
+
+		elif isinstance(v,str) :
+			rtnStr.append( k+"="+v)
+
+		elif isinstance(v,float) :
+			rtnStr.append(k + "=" + str(v))
+
+		elif isinstance(v,int) :
+			rtnStr.append(k + "=" + str(v) )
+
+		elif isinstance(v,list) :
+			plist = []
+			for val in v:
+				if isinstance(val,str) :
+					plist.append(val)
+				elif isinstance(val,float) or isinstance(v,int) :
+					plist.append(str(val))
+
+			rtnStr.append(k + "=" + ",".join(plist) )
+				
+	return rtnStr
+
+
+
 def args2dict(args, kw_args,klist,uk=None):
 
 	if len(args)>1:
@@ -31,9 +86,10 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 
 		else :
-			print(args)
-			print("args type str or dict")
-			return None
+			raise TypeError
+			#print(args)
+			#print("args type str or dict")
+			#return None
 
 	# check parameter
 	exval = []
@@ -74,9 +130,10 @@ def arg2dict(args, kw_args,klist,uk=None):
 			pass
 
 		else :
-			print(args)
-			print("args type str or dict")
-			return None
+			raise TypeError
+			#print(args)
+			#print("args type str or dict")
+			#return None
 
 	# check parameter
 	exval = []

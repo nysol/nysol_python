@@ -99,9 +99,22 @@ class kgshell{
 	typedef map<int, map<string,vector<int> > > iomap_t;
 	iomap_t _ipipe_map;
 	iomap_t _opipe_map;
+
+	typedef map<int, vector<int> > edgemap_t;
+	edgemap_t _edge_map;
+
+
 	int _csvpiped[2];
+	vector<int> _modBLkNo;
+	vector<int> _likBLkNo;
+	vector<int> _BLkcnt;
+	int _blockmax;
+
+	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
+	void makeBLK(vector<cmdCapselST> &cmds,	vector<linkST> & plist);
 
 	void makePipeList(vector<linkST>& plist);
+	void makePipeList2(vector<linkST>& plist,int iblk);
 	argST *_argst;
 
 	// ####################################
@@ -205,6 +218,7 @@ class kgshell{
 		}
 	}
 	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist);
+	int runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist);
 
 public:
 	// コンストラクタ
@@ -246,6 +260,9 @@ public:
 	static void *run_readlist(void *arg);
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
+	int runx(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
+
+
 	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	kgCSVkey* runkeyiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,vector<string> & klist);
 	int getparams(kgstr_t cmdname,PyObject* list);
