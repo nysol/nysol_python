@@ -1029,9 +1029,13 @@ void kgshell::makeBLK(
 	vector<cmdCapselST> &cmds,	
 	vector<linkST> & plist
 ){
-	if(cmds.size()<100){
+	#define BLOCKLIMIT 100
+	if(cmds.size()<BLOCKLIMIT){
 		_modBLkNo = vector<int>(cmds.size(),0);
 		_likBLkNo = vector<int>(plist.size(),0);
+		vector<int> firstblock;
+		_BLkRunlist.push_back(firstblock);
+		_BLkRunlist.back().push_back(0);
 		_blockmax=1;
 		return ;
 	}
@@ -1081,10 +1085,30 @@ void kgshell::makeBLK(
 	_blockmax=startPoint.size();
 	
 	//cerr << "- blkcnt |" << endl;
-	//for(int i=0;i<_blockmax;i++){
-	//	cerr << i << " : " << _BLkcnt[i] << endl;
-	//}
-	//cerr << "| blkcnt -" << endl;
+	int cnt =0;
+	bool first = true;
+
+	vector<int> firstblock;
+	_BLkRunlist.push_back(firstblock);
+	for(int i=0;i<_blockmax;i++){
+
+		if(_BLkcnt[i] ==0 ){ continue;}
+
+		if(cnt + _BLkcnt[i] > BLOCKLIMIT && !_BLkRunlist.back().empty()){
+			vector<int> newblock;
+			_BLkRunlist.push_back(newblock);
+			cnt=0;
+		}
+		_BLkRunlist.back().push_back(i);
+		cnt += _BLkcnt[i];
+	}
+	cerr << "runlist " << endl;
+	for(int i=0;i<_BLkRunlist.size();i++){
+		for(int j=0;j<_BLkRunlist[i].size();j++){
+			cerr << _BLkRunlist[i][j] << " ";
+		}
+		cerr << endl;
+	}
 
 	
 }

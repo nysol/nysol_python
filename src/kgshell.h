@@ -108,6 +108,7 @@ class kgshell{
 	vector<int> _modBLkNo;
 	vector<int> _likBLkNo;
 	vector<int> _BLkcnt;
+	vector< vector<int> > _BLkRunlist;
 	int _blockmax;
 
 	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
