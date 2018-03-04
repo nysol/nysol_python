@@ -1006,6 +1006,7 @@ int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
 }
 
+// このあたりは無駄が多いのでクラスでまとめる
 void kgshell::makeBLKSub(
 	vector<bool>& visit,
 	int st,
@@ -1023,6 +1024,46 @@ void kgshell::makeBLKSub(
 		makeBLKSub(visit,_edge_map[st][i],blockNo);
 	}
 }
+/*
+
+
+void kgshell::checkBRKpoint_forward(int st){
+	
+
+}
+
+void kgshell::checkBRKpoint_reverse(int st){
+	
+
+}*/
+//	edgemap_t _f2t_map;
+//	edgemap_t _t2f_map;
+
+void kgshell::checkBRKpoint(vector<bool>& visit,int st){
+	
+	if(visit[st]==true){ return ; }
+	visit[st]=true;
+	if(_f2t_map.find(st)!=_f2t_map.end()){
+		if(_f2t_map[st].size()>1){ 
+			cerr << "break point f2t " << st << "|";
+			for(int j=0;j<_f2t_map[st].size();j++){ cerr << _f2t_map[st][j] << " ";   }
+			cerr << endl;
+		}
+	}	
+	if(_t2f_map.find(st)!=_t2f_map.end()){
+		if(_t2f_map[st].size()>1){ 
+			cerr << "break point t2f " << st << "|";
+			for(int j=0;j<_t2f_map[st].size();j++){ cerr << _t2f_map[st][j] << " ";   }
+			cerr << endl;
+		}
+	}
+	if(_edge_map.find(st) == _edge_map.end()){ return; } 
+
+	for ( size_t i=0 ; i<_edge_map[st].size();i++){
+		checkBRKpoint(visit,_edge_map[st][i]);
+	}
+}
+
 
 void kgshell::makeBLK(
 	vector<cmdCapselST> &cmds,	
@@ -1054,13 +1095,24 @@ void kgshell::makeBLK(
 			vector<int> newvec;
 			_edge_map[plist[i].toID] = newvec;
 		}
+		if ( _t2f_map.find(plist[i].toID) == _t2f_map.end() ){
+			vector<int> newvec;
+			_t2f_map[plist[i].toID] = newvec;
+		}
 		_edge_map[plist[i].toID].push_back(plist[i].frID);
+		_t2f_map[plist[i].toID].push_back(plist[i].frID);
+
 
 		if ( _edge_map.find(plist[i].frID) == _edge_map.end() ){
 			vector<int> newvec;
 			_edge_map[plist[i].frID] = newvec;
 		}
+		if ( _f2t_map.find(plist[i].frID) == _f2t_map.end() ){
+			vector<int> newvec;
+			_f2t_map[plist[i].frID] = newvec;
+		}
 		_edge_map[plist[i].frID].push_back(plist[i].toID);
+		_f2t_map[plist[i].frID].push_back(plist[i].toID);
 	}
 
 	//split BLOCK
@@ -1092,8 +1144,13 @@ void kgshell::makeBLK(
 
 	// split limit over BLOCK
 	vector<int> limoverBLK;
+	vector<bool> visitx(cmds.size(),false);
+
 	for(int i=0;i<_blockmax;i++){
-		if(_BLkcnt[i] > blimit){ limoverBLK.push_back(i); cerr << "limover " << _BLkcnt[i] << endl;}
+		if(_BLkcnt[i] > blimit){ 			
+			limoverBLK.push_back(i); cerr << "limover " << _BLkcnt[i] << endl;
+			checkBRKpoint(visitx,startPoint[i]);
+		}
 	}
 
 	int cnt =0;
@@ -1106,7 +1163,7 @@ void kgshell::makeBLK(
 		if(_BLkcnt[i] ==0 ){ continue;}
 
 		if(_BLkcnt[i] > blimit ){ //単独でlimit超えは別処理
-		
+			
 		}
 
 		if(cnt + _BLkcnt[i] > blimit && !_BLkRunlist.back().empty()){
@@ -1117,14 +1174,13 @@ void kgshell::makeBLK(
 		_BLkRunlist.back().insert(i);
 		cnt += _BLkcnt[i];
 	}
-	for(int i=0;i<_BLkRunlist.size();i++){
-		for(set<int>::iterator j=_BLkRunlist[i].begin();j!=_BLkRunlist[i].end();j++){
-			cerr << *j << " ";
-		}
-		cerr << endl;
-	}
+	//for(int i=0;i<_BLkRunlist.size();i++){
+	//	for(set<int>::iterator j=_BLkRunlist[i].begin();j!=_BLkRunlist[i].end();j++){
+	//		cerr << *j << " ";
+	//	}
+	//	cerr << endl;
+	//}
 
-	
 }
 
 int kgshell::runx(

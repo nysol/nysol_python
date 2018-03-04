@@ -103,6 +103,8 @@ class kgshell{
 
 	typedef map<int, vector<int> > edgemap_t;
 	edgemap_t _edge_map;
+	edgemap_t _f2t_map;
+	edgemap_t _t2f_map;
 
 
 	int _csvpiped[2];
@@ -114,6 +116,8 @@ class kgshell{
 
 	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
 	void makeBLK(vector<cmdCapselST> &cmds,	vector<linkST> & plist);
+	void checkBRKpoint(vector<bool>& visit,int st);
+
 
 	void makePipeList(vector<linkST>& plist);
 	void makePipeList2(vector<linkST>& plist,int iblk);

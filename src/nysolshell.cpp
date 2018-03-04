@@ -472,9 +472,51 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 			break;
 		}
 	}
-
 	return rlist;
 }
+
+PyObject* readkeylineDict(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	size_t fcnt = kcfld->fldSize();
+
+
+	if((kcfld->status() & kgCSV::End )){ return Py_BuildValue("");}
+
+	vector< PyObject* > rlists(fcnt); 
+
+	for(size_t j=0 ;j<fcnt;j++){
+		rlists[j] = PyList_New(0);
+	}
+
+	while(kcfld->read()!=EOF){
+
+		//一行目読み込み時は何もしない
+		if(( kcfld->status() & kgCSV::Begin )){continue;}
+
+		for(size_t j=0 ;j<fcnt;j++){
+			PyList_Append(rlists[j],Py_BuildValue("s", kcfld->getOldVal(j)));
+		}
+		if( kcfld->keybreak() ){
+			break;
+		}
+	}
+
+  PyObject* rlist = PyDict_New();
+	for(size_t j=0 ;j<fcnt;j++){
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),rlists[j]);
+	}
+	return rlist;
+}
+
 
 PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 {
@@ -563,6 +605,7 @@ static PyMethodDef hellomethods[] = {
 	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
+	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
