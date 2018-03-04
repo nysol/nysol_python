@@ -1635,7 +1635,6 @@ for lag in lags:
 nm.runs(funcList7)
 
 
-
 #change_quantiles
 quantile=[ 
 [0.0,0.2],[0.0,0.4],[0.0,0.6],[0.0,0.8],[0.0,1.0],
@@ -1670,6 +1669,7 @@ for ql,qh in quantile:
 		funclist8.append(f8_1)
 	
 	if len(funclist8)>10:
+		print("c7x")
 		nm.runs(funclist8)	
 		funclist8=[]
 		

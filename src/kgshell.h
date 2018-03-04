@@ -26,6 +26,7 @@
 #include <kgCSV.h>
 #include <kgshellfunc.h>
 #include <vector>
+#include <set>
 #include <map>
 
 #include <pthread.h>
@@ -108,7 +109,7 @@ class kgshell{
 	vector<int> _modBLkNo;
 	vector<int> _likBLkNo;
 	vector<int> _BLkcnt;
-	vector< vector<int> > _BLkRunlist;
+	vector< set<int> > _BLkRunlist;
 	int _blockmax;
 
 	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
@@ -166,21 +167,7 @@ class kgshell{
 			}
 		}
 	}
-		//debug
-		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		//if ( argst[i].i_cnt > 0){
-		//	cerr << " i:" ;
-		//	for(size_t j=0; j< argst[i].i_cnt;j++){
-		//		cerr <<  *(argst[i].i_p+j) << " " ;
-		//	}
-		//}
-		//if ( argst[i].o_cnt > 0){
-		//	cerr << " o:" ;
-		//	for(size_t j=0; j< argst[i].o_cnt;j++){
-		//		cerr <<  *(argst[i].o_p+j) << " " ;
-		//	}
-		//}
-		//cerr << endl;
+
 
 
 	void runClean(void){

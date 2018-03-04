@@ -499,13 +499,10 @@ void kgshell::makePipeList2(vector<linkST> & plist,int iblk)
 	_ipipe_map.clear();
 	_opipe_map.clear();
 
-	
 	int pcnt = 0;
 	for(size_t i=0;i<plist.size();i++){
-		if(_likBLkNo[i]==iblk) pcnt++;
+		if(_BLkRunlist[iblk].find(_likBLkNo[i])!=_BLkRunlist[iblk].end()) pcnt++;
 	}
-	
-
 	rlimit rlim;
 	int chfFlg;
 	chfFlg = getrlimit(RLIMIT_NOFILE, &rlim);
@@ -517,9 +514,9 @@ void kgshell::makePipeList2(vector<linkST> & plist,int iblk)
 	}
 
 	for(size_t i=0;i<plist.size();i++){
-		if(_likBLkNo[i]!=iblk) continue;
-		
 
+		if(_BLkRunlist[iblk].find(_likBLkNo[i])==_BLkRunlist[iblk].end()) continue;
+		
 		int piped[2];
 		if( pipe(piped) < 0){ throw kgError("pipe open error on kgshell :("+toString(errno)+")");}
 		int flags0 = fcntl(piped[0], F_GETFD);
@@ -773,13 +770,13 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
 int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
-	for(int iblk=0;iblk<_blockmax;iblk++){
+	for(int iblk=0;iblk<_BLkRunlist.size();iblk++){
 
 		makePipeList2(plist,iblk);
 
 		_clen = 0;
 		for(size_t i=0;i<cmds.size();i++){
-			if(_modBLkNo[i]==iblk) _clen++;
+			if(_BLkRunlist[iblk].find(_modBLkNo[i])!=_BLkRunlist[iblk].end()) _clen++;
 		}
 
 		
@@ -788,7 +785,8 @@ int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 		_modlist = new kgMod*[_clen];
 		int clenpos= 0;
 		for(size_t i=0;i<cmds.size();i++){
-			if(_modBLkNo[i] != iblk) continue;
+			if(_BLkRunlist[iblk].find(_modBLkNo[i])==_BLkRunlist[iblk].end()) continue;
+
 			if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
 				cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
 				return 1;
@@ -811,7 +809,7 @@ int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
 		for(int i=cmds.size()-1;i>=0;i--){
 
-			if(_modBLkNo[i] != iblk) continue;
+			if(_BLkRunlist[iblk].find(_modBLkNo[i])==_BLkRunlist[iblk].end()) continue;
 
 			clenpos_a--;
 
@@ -916,7 +914,8 @@ int kgshell::runMain2(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			}
 
 			//debug
-			//debugOUTPUT(i);
+			
+			// debugARGST_OUTPUT(i);
 
 			if(typ==0){
 				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_func ,(void*)&_argst[clenpos_a]);
@@ -1029,13 +1028,19 @@ void kgshell::makeBLK(
 	vector<cmdCapselST> &cmds,	
 	vector<linkST> & plist
 ){
-	#define BLOCKLIMIT 100
-	if(cmds.size()<BLOCKLIMIT){
+	#define BLOCKLIMIT 300
+
+	int blimit = BLOCKLIMIT;
+	char *envstr=getenv("KGSHELL_BLOCKLIMIT");
+	if(envstr!=NULL){
+		blimit=atoi(envstr);
+	}
+	if(cmds.size()<blimit){
 		_modBLkNo = vector<int>(cmds.size(),0);
 		_likBLkNo = vector<int>(plist.size(),0);
-		vector<int> firstblock;
+		set<int> firstblock;
 		_BLkRunlist.push_back(firstblock);
-		_BLkRunlist.back().push_back(0);
+		_BLkRunlist.back().insert(0);
 		_blockmax=1;
 		return ;
 	}
@@ -1084,28 +1089,37 @@ void kgshell::makeBLK(
 	//_likBLkNo = vector<int>(plist.size(),0);
 	_blockmax=startPoint.size();
 	
-	//cerr << "- blkcnt |" << endl;
+
+	// split limit over BLOCK
+	vector<int> limoverBLK;
+	for(int i=0;i<_blockmax;i++){
+		if(_BLkcnt[i] > blimit){ limoverBLK.push_back(i); cerr << "limover " << _BLkcnt[i] << endl;}
+	}
+
 	int cnt =0;
 	bool first = true;
 
-	vector<int> firstblock;
+	set<int> firstblock;
 	_BLkRunlist.push_back(firstblock);
 	for(int i=0;i<_blockmax;i++){
 
 		if(_BLkcnt[i] ==0 ){ continue;}
 
-		if(cnt + _BLkcnt[i] > BLOCKLIMIT && !_BLkRunlist.back().empty()){
-			vector<int> newblock;
+		if(_BLkcnt[i] > blimit ){ //単独でlimit超えは別処理
+		
+		}
+
+		if(cnt + _BLkcnt[i] > blimit && !_BLkRunlist.back().empty()){
+			set<int> newblock;
 			_BLkRunlist.push_back(newblock);
 			cnt=0;
 		}
-		_BLkRunlist.back().push_back(i);
+		_BLkRunlist.back().insert(i);
 		cnt += _BLkcnt[i];
 	}
-	cerr << "runlist " << endl;
 	for(int i=0;i<_BLkRunlist.size();i++){
-		for(int j=0;j<_BLkRunlist[i].size();j++){
-			cerr << _BLkRunlist[i][j] << " ";
+		for(set<int>::iterator j=_BLkRunlist[i].begin();j!=_BLkRunlist[i].end();j++){
+			cerr << *j << " ";
 		}
 		cerr << endl;
 	}
