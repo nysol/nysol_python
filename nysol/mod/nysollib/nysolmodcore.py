@@ -1352,6 +1352,10 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.mjoin import Nysol_Mjoin as mjoin
 		return mjoin(nutil.args2dict(args,kw_args,mjoin.kwd)).addPre(self)
 
+	def m2tee(self,*args, **kw_args):
+		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
+		return m2tee(nutil.args2dict(args,kw_args,m2tee.kwd)).addPre(self)
+
 
 class Nysol_MeachIter(object):
 

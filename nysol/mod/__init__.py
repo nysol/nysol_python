@@ -81,4 +81,5 @@ from .submod.mtab2csv import Nysol_Mtab2csv as mtab2csv
 from .submod.mxml2csv import Nysol_Mxml2csv as mxml2csv
 from .submod.msortf import Nysol_Msortf as msortf
 from .submod.mjoin import Nysol_Mjoin as mjoin
+from .submod.m2tee import Nysol_M2tee as m2tee
 
