@@ -1398,6 +1398,9 @@ nm.msummary(k=keyfld,f="val",c=calfld,i=baseDATA,o=sumDATA).run()
 
 nm.m2cross(i=sumDATA,k=keyfld,f=calfld,a="way,val",o=rlsDIR+"/rls0.csv").run()
 
+#dict TEST
+for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
+	print(ddict)
 
 #baseDATAが元になるデータ
 #sumDATAがsummaryデータ
@@ -1468,7 +1471,6 @@ nm.runs(funcList3)
 mval =2
 rvals =[0.1,0.3,0.5,0.7,0.9]
 #rvals =[0.1]
-
 # m
 fpara1_0 = ",".join([ "val%d:val%d_t"%(i,i) for i in range(mval)])
 fpara1_1c = "max(%s)"%(",".join(["abs(${val%d}-${val%d_t})"%(i,i) for i in range(mval)]))
@@ -1520,7 +1522,6 @@ for rval in rvals:
 	funcList4.append(f4_5)
 
 nm.runs(funcList4)
-
 
 from statsmodels.tsa.ar_model import AR
 #ar_coefficient
@@ -1669,7 +1670,6 @@ for ql,qh in quantile:
 		funclist8.append(f8_1)
 	
 	if len(funclist8)>10:
-		print("c7x")
 		nm.runs(funclist8)	
 		funclist8=[]
 		

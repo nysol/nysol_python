@@ -10,7 +10,7 @@ class Nysol_M2tee(NysolMOD_CORE):
 
 
 def m2tee(self,*args, **kw_args):
-	return Nysol_M2tee(nutil.args2dict(args,kw_args,NNysol_M2teed.kwd)).addPre(self)
+	return Nysol_M2tee(nutil.args2dict(args,kw_args,Nysol_M2tee.kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "m2tee", m2tee)
 
