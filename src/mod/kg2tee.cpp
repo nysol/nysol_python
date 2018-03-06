@@ -124,17 +124,15 @@ void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 		ss << "o= is necessary";
 		throw kgError(ss.str());
 	}
-	else{
-		for(size_t i=0;i<_oName.size();i++){
-			int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
-			if( ofd == -1 ){
-				ostringstream ss;
-				ss << "file write open error: " << _oName[i];
-				throw kgError(ss.str());
-			}
-			_oFD.push_back(ofd);
-			_endFlg.push_back(false);
+	for(size_t i=0;i<_oName.size();i++){
+		int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+		if( ofd == -1 ){
+			ostringstream ss;
+			ss << "file write open error: " << _oName[i];
+			throw kgError(ss.str());
 		}
+		_oFD.push_back(ofd);
+		_endFlg.push_back(false);
 	}
 }
 
