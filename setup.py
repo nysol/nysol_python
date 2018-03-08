@@ -123,43 +123,52 @@ module1 = Extension('nysol/_nysolshell_core',
 
 lcmmod = Extension('nysol/take/_lcmlib',
                     sources = ['src/take/lcmrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcm']
 										)
 
 seqmod = Extension('nysol/take/_lcmseqlib',
                     sources = ['src/take/lcmseqrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq']
 										)
 
 seqmodzero = Extension('nysol/take/_lcmseq_zerolib',
                     sources = ['src/take/lcmseq_zerorap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/lcmseq_zero']
 										)
 
 lcmtransmod = Extension('nysol/take/_lcmtranslib',
                     sources = ['src/take/lcmtransrun.cpp'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod']
 										)
 
 
 sspcmod = Extension('nysol/take/_sspclib',
                     sources = ['src/take/sspcrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/sspc']
 										)
 grhfilmod = Extension('nysol/take/_grhfillib',
                     sources = ['src/take/grhfilrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/grhfil']
 										)
 macemod = Extension('nysol/take/_macelib',
                     sources = ['src/take/macerap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/mace']
 										)
 simsetmod = Extension('nysol/take/_simsetlib',
                     sources = ['src/take/simsetrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/simset']
 										)
 medsetmod = Extension('nysol/take/_medsetlib',
                     sources = ['src/take/medsetrap.c'],
+ 										extra_compile_args=['-Wno-format-security'],
 										include_dirs=['src','src/kgmod','src/mod','src/take/medset']
 										)
 utilmod = Extension('nysol/util/_utillib',
