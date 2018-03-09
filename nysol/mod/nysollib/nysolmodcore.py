@@ -712,12 +712,12 @@ class NysolMOD_CORE(object):
 		shobj = n_core.init(msgF)
 		modlimt =300
 		if len(modlist) > modlimt:
-			newmod ,newlink = self.separateblock(modlist,linklist)
+			#newmod ,newlink = self.separateblock(modlist,linklist)
 			#print("ccccc1")
 			#print(newmod[0])
 			#print(newlink[0])
 			#print("ccccc2")
-			n_core.runLx(newmod,newlink)
+			n_core.runLx(shobj,modlist,linklist)
 
 		else:
 			n_core.runLx(shobj,modlist,linklist)

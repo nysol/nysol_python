@@ -1644,11 +1644,17 @@ quantile=[
 ]
 absbool =[True,False]
 funclist8=[]
+funclist8_all=[]
+
+f8_00 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
+f8_00 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
+
+
 for ql,qh in quantile:
 	for abs_b in absbool:
-		f8_0 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
-		f8_0 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
-		f8_0 <<= nm.mcal(c="${count}*%g<=${qt}&&${count}*%g>${qt}"%(ql,qh),a="qtbool")
+		#f8_0 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
+		#f8_0 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
+		f8_0 = nm.mcal(c="${count}*%g<=${qt}&&${count}*%g>${qt}"%(ql,qh),i=f8_00,a="qtbool")
 		f8_0 <<= nm.mslide(k=keyfld,s=seqfld,r=True,f="qtbool:qtbool1")
 		f8_0 <<= nm.mcal(c="${qtbool}*${qtbool1}",a="ind")
 
@@ -1667,19 +1673,23 @@ for ql,qh in quantile:
 		f8_1 <<= nm.msetstr(a="abs_b,qh,ql",v=[float(abs_b),qh,ql])
 		f8_1 <<= nm.mcal(c='"change_quantiles_agg_"+$s{k}+"_isabs_"+$s{abs_b}+"_qh_"+$s{qh}+"_ql_"+$s{ql}',a="way")
 		f8_1 <<= nm.mcut(f=keyfld+["way","val"],o=rlsDIR+"/rls8_%s_%g_%g.csv"%(abs_b,qh,ql))
-		funclist8.append(f8_1)
+		#funclist8.append(f8_1)
+		funclist8_all.append(f8_1)
 	
-	if len(funclist8)>10:
-		nm.runs(funclist8)	
-		funclist8=[]
+	#if len(funclist8)>10:
+		#nm.runs(funclist8)	
+		#funclist8=[]
 		
 		
 #nm.drawModels(funclist9,"check.html")
 # 全部まとめ動かすファイルの数上限
 # (10240 on man 管理者でなくて変えれる上限っぽい)を超える
-if len(funclist8)>0:
-	nm.runs(funclist8) 
-
+#if len(funclist8)>0:
+#	nm.runs(funclist8) 
+#	nm.drawModelsD3(funclist8,"output.html") 
+#print("a st")
+nm.runs(funclist8_all) 
+#print("a ed")
 
 #cid_ce normalise (normalizeのsdチェック)
 
