@@ -1000,92 +1000,9 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 		_modlist = NULL;
 		
 	}
-
-
 	return 0;
-
 }
 
-
-/*
-
-
-void kgshell::checkBRKpoint_forward(int st){
-	
-
-}
-
-void kgshell::checkBRKpoint_reverse(int st){
-	
-
-}*/
-//	edgemap_t _f2t_map;
-//	edgemap_t _t2f_map;
-
-void kgshell::checkBRKpoint(vector<bool>& visit,int st){
-	
-	if(visit[st]==true){ return ; }
-	visit[st]=true;
-	int count = 0 ;
-	if(_f2t_map.find(st)!=_f2t_map.end()){
-		if(_f2t_map[st].size()>1){ 
-			//cerr << "break point f2t " << st << "|";
-			//for(int j=0;j<_f2t_map[st].size();j++){ cerr << _f2t_map[st][j] << " ";   }
-			//cerr << endl;
-			count += _f2t_map[st].size();
-		}
-	}	
-	if(_t2f_map.find(st)!=_t2f_map.end()){
-		if(_t2f_map[st].size()>1){ 
-			//cerr << "break point t2f " << st << "|";
-			//for(int j=0;j<_t2f_map[st].size();j++){ cerr << _t2f_map[st][j] << " ";   }
-			//cerr << endl;
-			count += _t2f_map[st].size();
-		}
-	}
-	if(count!=0){
-		_countRank.insert(multimap<int, int>::value_type(count,st));
-	}
-	if(_edge_map.find(st) == _edge_map.end()){ return; } 
-
-	for ( size_t i=0 ; i<_edge_map[st].size();i++){
-		checkBRKpoint(visit,_edge_map[st][i]);
-	}
-}
-void kgshell::splitBLOCKsub(vector<bool>& visit,vector< vector<int> > &stk,int st,int blk,int pos){
-
-	if(visit[st]==true){  return ; }
-	visit[st]=true;
-	stk[pos].push_back(st);
-	if(_edge_map.find(st) == _edge_map.end()){ return; } //<=単独点場合のみ
-	
-	
-	for ( size_t i=0 ; i<_t2f_map[st].size();i++){
-		splitBLOCKsub(visit,stk,_t2f_map[st][i],blk,pos);
-	}
-	if( st == blk ){ pos++; }
-
-	for ( size_t i=0 ; i<_f2t_map[st].size();i++){
-		splitBLOCKsub(visit,stk,_f2t_map[st][i],blk,pos);
-	}
-
-}
-
-void kgshell::splitBLOCK(int st,int blk,int cmdsize){
-	vector<bool> visit(cmdsize,false);
-	vector< vector<int> > stockblk ;
-
-	splitBLOCKsub(visit,stockblk,st,blk,0);
-	
-	for(int i=0;i<stockblk.size();i++){
-		cerr << "----- blsp st " << i << "-----"<< endl;
-		for(int j=0;j<stockblk[i].size();j++){
-			cerr << stockblk[i][j] << " ";
-		}
-		cerr << endl;
-		cerr << "----- blsp ed " << i << "-----"<< endl;
-	}
-}
 
 
 int kgshell::runx(
@@ -1102,7 +1019,6 @@ int kgshell::runx(
 		for(size_t i=0;i<spedge.size();i++){
 			kgstr_t tp = _tempFile.create(false,"kgshellspilt");
 
-			cerr << cmds[spedge[i].frID].cmdname << endl;
 			int pos = -1;
 			for(size_t j=0;j<cmds[spedge[i].frID].paralist.size();j++){
 				

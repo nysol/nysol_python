@@ -309,6 +309,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 						PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
 					}
 					PyList_Append(o_p,tlist);
+					Py_DECREF(tlist);
 				}
 				pthread_mutex_unlock(mtx);
 			}

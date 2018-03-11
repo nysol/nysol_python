@@ -110,7 +110,6 @@ int kgSplitBlock::reblock(int blockNo,int nowbpos){
 		if(nowsize + it->second.size() > _blockLimit){
 			nowbpos++;
 			nowsize = 0 ;
-			cerr << "---------" << endl;
 			for(size_t j=0;j<it->second.size();j++){
 				_splitNode.insert(it->second[j]);
 			}
@@ -119,29 +118,20 @@ int kgSplitBlock::reblock(int blockNo,int nowbpos){
 			int slot = it->second.size()/_blockLimit + 1 ;
 			int val = it->second.size()/slot+1;
 			int cnt=0;
-			cerr << "---------" << endl;
 			for(size_t j=0;j<it->second.size();j++){
 
-				if(cnt > val){  
-						cnt=0;  nowbpos++; 
-					cerr << "---------" << endl;
-				}
-				cerr << it->second.at(j) << " ";
-
+				if(cnt > val){  cnt=0;  nowbpos++; }
 				_modBLkNo[it->second.at(j)] = nowbpos;
 				cnt++;
 
 			}
 			nowbpos++;
 			nowsize = 0 ;
-			cerr << "---------" << endl;
 		}
 		else{
 			for(size_t j=0;j<it->second.size();j++){
-				cerr << it->second.at(j) << " ";
 				_modBLkNo[it->second.at(j)] = nowbpos;
 			}
-			cerr << endl;
 			nowsize += it->second.size();
 		}
 	}
@@ -264,9 +254,10 @@ void kgSplitBlock::blockSplit(int maxsize){
 	_BLkmodlist .resize(blockNo);
 	_BLklinklist.resize(blockNo);
 
-	for(set<int>::iterator j =_splitNode.begin();j!=_splitNode.end();j++){
-		cerr << *j << endl;
-	}
+
+//	for(set<int>::iterator j =_splitNode.begin();j!=_splitNode.end();j++){
+//		cerr << *j << endl;
+//	}
 
 	
 	// set block No (mod&link) 
