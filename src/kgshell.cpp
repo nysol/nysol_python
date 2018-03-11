@@ -1012,7 +1012,7 @@ int kgshell::runx(
 {
 	try{
 		kgSplitBlock spblk(cmds.size(),plist);
-		_spblk.blockSplit(100,cmds.size(),plist);
+		_spblk.blockSplit(KGMOD_RUN_LIMIT,cmds.size(),plist);
 
 		// パラメータ変更		
 		vector<linkST>&spedge = _spblk.getsplitEdge();

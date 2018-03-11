@@ -33,6 +33,7 @@
 
 #include <pthread.h>
 
+#define KGMOD_RUN_LIMIT 256
 
 using namespace kglib;
 using namespace kgmod;
