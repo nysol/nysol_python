@@ -8,3 +8,8 @@ class Nysol_Mnormalize(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mnormalize,self).__init__("mnormalize",nutil.args2dict(args,kw_args,Nysol_Mnormalize.kwd))
 
+
+def mnormalize(self,*args, **kw_args):
+	return Nysol_Mnormalize(nutil.args2dict(args,kw_args,Nysol_Mnormalize.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mnormalize", mnormalize)

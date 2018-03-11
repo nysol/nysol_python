@@ -8,3 +8,8 @@ class Nysol_Mshare(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mshare,self).__init__("mshare",nutil.args2dict(args,kw_args,Nysol_Mshare.kwd))
 
+
+def mshare(self,*args, **kw_args):
+	return Nysol_Mshare(nutil.args2dict(args,kw_args,Nysol_Mshare.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mshare", mshare)

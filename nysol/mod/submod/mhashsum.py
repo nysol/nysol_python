@@ -8,3 +8,8 @@ class Nysol_Mhashsum(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mhashsum,self).__init__("mhashsum",nutil.args2dict(args,kw_args,Nysol_Mhashsum.kwd))
 
+
+def mhashsum(self,*args, **kw_args):
+	return Nysol_Mhashsum(nutil.args2dict(args,kw_args,Nysol_Mhashsum.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mhashsum", mhashsum)

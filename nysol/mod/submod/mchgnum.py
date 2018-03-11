@@ -8,3 +8,8 @@ class Nysol_Mchgnum(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mchgnum,self).__init__("mchgnum",nutil.args2dict(args,kw_args,Nysol_Mchgnum.kwd))
 
+def mchgnum(self,*args, **kw_args):
+	return Nysol_Mchgnum(nutil.args2dict(args,kw_args,Nysol_Mchgnum.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mchgnum", mchgnum)
+

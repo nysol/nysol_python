@@ -24,8 +24,11 @@
 #include <kgMessage.h>
 #include <kgmod.h>
 #include <kgCSV.h>
+#include <kgshelltp.h>
 #include <kgshellfunc.h>
+#include <kgsplitblock.h>
 #include <vector>
+#include <set>
 #include <map>
 
 #include <pthread.h>
@@ -65,13 +68,6 @@ struct cmdCapselST{
 
 };
 
-struct linkST{
-	kgstr_t frTP;
-	int frID;
-	kgstr_t toTP;
-	int toID;
-};
-
 
 class kgshell{
 
@@ -96,12 +92,38 @@ class kgshell{
 	//map<int,int> _mpipe_map;
 	//map<int,int> _opipe_map;
 
+	kgTempfile _tempFile; 
+
 	typedef map<int, map<string,vector<int> > > iomap_t;
 	iomap_t _ipipe_map;
 	iomap_t _opipe_map;
+
+	typedef map<int, vector<int> > edgemap_t;
+	edgemap_t _edge_map;
+	edgemap_t _f2t_map;
+	edgemap_t _t2f_map;
+
+
 	int _csvpiped[2];
+	vector<int> _modBLkNo;
+	vector<int> _likBLkNo;
+	vector<int> _BLkcnt;
+	multimap<int, int> _countRank;
+	vector< set<int> > _BLkRunlist;
+	int _blockmax;
+	kgSplitBlock _spblk;
+
+	void splitBLOCK(int st,int blk,int cmdsize);
+	void splitBLOCKsub(vector<bool>& visit,vector< vector<int> > &stk,int st,int blk,int pos);
+
+
+	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
+	void makeBLK(vector<cmdCapselST> &cmds,	vector<linkST> & plist);
+	void checkBRKpoint(vector<bool>& visit,int st);
+
 
 	void makePipeList(vector<linkST>& plist);
+	void makePipeList3(vector<linkST>& plist,int iblk);
 	argST *_argst;
 
 	// ####################################
@@ -152,21 +174,7 @@ class kgshell{
 			}
 		}
 	}
-		//debug
-		//cerr << i << ":"<< argst[i].mobj->name() << " " << argst[i].i_cnt << " " << argst[i].o_cnt ;
-		//if ( argst[i].i_cnt > 0){
-		//	cerr << " i:" ;
-		//	for(size_t j=0; j< argst[i].i_cnt;j++){
-		//		cerr <<  *(argst[i].i_p+j) << " " ;
-		//	}
-		//}
-		//if ( argst[i].o_cnt > 0){
-		//	cerr << " o:" ;
-		//	for(size_t j=0; j< argst[i].o_cnt;j++){
-		//		cerr <<  *(argst[i].o_p+j) << " " ;
-		//	}
-		//}
-		//cerr << endl;
+
 
 
 	void runClean(void){
@@ -205,6 +213,7 @@ class kgshell{
 		}
 	}
 	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist);
+	int runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist);
 
 public:
 	// コンストラクタ
@@ -246,6 +255,9 @@ public:
 	static void *run_readlist(void *arg);
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
+	int runx(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
+
+
 	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	kgCSVkey* runkeyiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,vector<string> & klist);
 	int getparams(kgstr_t cmdname,PyObject* list);

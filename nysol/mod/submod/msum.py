@@ -8,3 +8,7 @@ class Nysol_Msum(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Msum,self).__init__("msum",nutil.args2dict(args,kw_args,Nysol_Msum.kwd))
 
+def msum(self,*args, **kw_args):
+	return Nysol_Msum(nutil.args2dict(args,kw_args,Nysol_Msum.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "msum", msum)

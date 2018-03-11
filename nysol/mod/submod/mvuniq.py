@@ -8,3 +8,8 @@ class Nysol_Mvuniq(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvuniq,self).__init__("mvuniq",nutil.args2dict(args,kw_args,Nysol_Mvuniq.kwd))
 
+def mvuniq(self,*args, **kw_args):
+	return Nysol_Mvuniq(nutil.args2dict(args,kw_args,Nysol_Mvuniq.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mvuniq", mvuniq)
+

@@ -8,3 +8,7 @@ class Nysol_Mduprec(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mduprec,self).__init__("mduprec",nutil.args2dict(args,kw_args,Nysol_Mduprec.kwd))
 
+def mduprec(self,*args, **kw_args):
+	return Nysol_Mduprec(nutil.args2dict(args,kw_args,Nysol_Mduprec.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mduprec", mduprec)

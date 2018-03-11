@@ -8,3 +8,7 @@ class Nysol_Msummary(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Msummary,self).__init__("msummary",nutil.args2dict(args,kw_args,Nysol_Msummary.kwd))
 
+def msummary(self,*args, **kw_args):
+	return Nysol_Msummary(nutil.args2dict(args,kw_args,Nysol_Msummary.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "msummary", msummary)

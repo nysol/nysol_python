@@ -8,3 +8,7 @@ class Nysol_Mselrand(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mselrand,self).__init__("mselrand",nutil.args2dict(args,kw_args,Nysol_Mselrand.kwd))
 
+def mselrand(self,*args, **kw_args):
+	return Nysol_Mselrand(nutil.args2dict(args,kw_args,Nysol_Mselrand.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mselrand", mselrand)

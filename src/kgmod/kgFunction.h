@@ -2356,6 +2356,20 @@ class kgFunction_tanh : public kgFunction
 	{_result.type('N');_name="tanh";_minArgc=1;_maxArgc=1;}
 	virtual void run(void);
 };
+
+// -----------------------------------------------------------------------------
+// hashval(文字列,数値) => 数値
+// -----------------------------------------------------------------------------
+class kgFunction_hashval: public kgFunction
+{
+	unsigned int _hashval;
+	public:
+	kgFunction_hashval(void)
+	{_result.type('N');_name="hashval";_minArgc=2;_maxArgc=2;}
+	virtual void run(void);
+	virtual void preprocess(void);
+};
+
 // ============================================================================
 // 文字列関数クラス
 // ============================================================================
@@ -2593,6 +2607,17 @@ class kgFunction_strchr : public kgFunction
 	{_result.type('N');_name="strchr";_minArgc=2;_maxArgc=2;}
 	virtual void run(void);
 };
+// -----------------------------------------------------------------------------
+// strcmp(文字列,文字列) => 数値 : 文字列の文字がある位置を調べる
+// -----------------------------------------------------------------------------
+class kgFunction_strcmp : public kgFunction
+{
+	public:
+	kgFunction_strcmp(void)
+	{_result.type('N');_name="strcmp";_minArgc=2;_maxArgc=2;}
+	virtual void run(void);
+};
+
 // ============================================================================
 // 正規表現関連クラス
 // ============================================================================

@@ -8,3 +8,7 @@ class Nysol_Mtab2csv(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mtab2csv,self).__init__("mtab2csv",nutil.args2dict(args,kw_args,Nysol_Mtab2csv.kwd))
 
+def mtab2csv(self,*args, **kw_args):
+	return Nysol_Mtab2csv(nutil.args2dict(args,kw_args,Nysol_Mtab2csv.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mtab2csv", mtab2csv)

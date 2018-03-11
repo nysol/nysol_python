@@ -8,3 +8,7 @@ class Nysol_Mmvsim(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mmvsim,self).__init__("mmvsim",nutil.args2dict(args,kw_args,Nysol_Mmvsim.kwd))
 
+def mmvsim(self,*args, **kw_args):
+	return Nysol_Mmvsim(nutil.args2dict(args,kw_args,Nysol_Mmvsim.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mmvsim", mmvsim)

@@ -1398,6 +1398,9 @@ nm.msummary(k=keyfld,f="val",c=calfld,i=baseDATA,o=sumDATA).run()
 
 nm.m2cross(i=sumDATA,k=keyfld,f=calfld,a="way,val",o=rlsDIR+"/rls0.csv").run()
 
+#dict TEST
+for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
+	print(ddict)
 
 #baseDATAが元になるデータ
 #sumDATAがsummaryデータ
@@ -1410,7 +1413,6 @@ f1 <<= nm.msum(k=keyfld,f="absolute_sum_of_changes,abs_energy",o=div2DATA)
 f1.run()
 
 nm.m2cross(i=div2DATA,k=keyfld,a="way,val",f="absolute_sum_of_changes,abs_energy",o=rlsDIR+"/rls1.csv").run()
-
 
 #autocorrelation agg ここはもっといい方法ありそう
 f2 =   nm.mcut(f=keyfld+seqfldB,i=baseDATA)
@@ -1469,7 +1471,6 @@ nm.runs(funcList3)
 mval =2
 rvals =[0.1,0.3,0.5,0.7,0.9]
 #rvals =[0.1]
-
 # m
 fpara1_0 = ",".join([ "val%d:val%d_t"%(i,i) for i in range(mval)])
 fpara1_1c = "max(%s)"%(",".join(["abs(${val%d}-${val%d_t})"%(i,i) for i in range(mval)]))
@@ -1522,7 +1523,6 @@ for rval in rvals:
 
 nm.runs(funcList4)
 
-
 from statsmodels.tsa.ar_model import AR
 #ar_coefficient
 k_s=[10]
@@ -1535,7 +1535,6 @@ for k in k_s:
 
 
 rlsf_1 = temo.file()
-print("cccc")
 
 with mcsvout(rlsf_1,f=headL) as rf1:
 
@@ -1563,7 +1562,6 @@ with mcsvout(rlsf_1,f=headL) as rf1:
 				else:
 					rls.append("{}".format(np.NaN)) 
 		
-		exit()
 
 		rf1.write(rls) 
 
@@ -1638,8 +1636,6 @@ for lag in lags:
 nm.runs(funcList7)
 
 
-
-
 #change_quantiles
 quantile=[ 
 [0.0,0.2],[0.0,0.4],[0.0,0.6],[0.0,0.8],[0.0,1.0],
@@ -1648,11 +1644,17 @@ quantile=[
 ]
 absbool =[True,False]
 funclist8=[]
+funclist8_all=[]
+
+f8_00 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
+f8_00 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
+
+
 for ql,qh in quantile:
 	for abs_b in absbool:
-		f8_0 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
-		f8_0 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
-		f8_0 <<= nm.mcal(c="${count}*%g<=${qt}&&${count}*%g>${qt}"%(ql,qh),a="qtbool")
+		#f8_0 =   nm.mjoin(i=baseDATA,k=keyfld,f="count",m=sumDATA)
+		#f8_0 <<= nm.mnumber(k=keyfld,s="val%n", a="qt",e="skip")
+		f8_0 = nm.mcal(c="${count}*%g<=${qt}&&${count}*%g>${qt}"%(ql,qh),i=f8_00,a="qtbool")
 		f8_0 <<= nm.mslide(k=keyfld,s=seqfld,r=True,f="qtbool:qtbool1")
 		f8_0 <<= nm.mcal(c="${qtbool}*${qtbool1}",a="ind")
 
@@ -1671,19 +1673,23 @@ for ql,qh in quantile:
 		f8_1 <<= nm.msetstr(a="abs_b,qh,ql",v=[float(abs_b),qh,ql])
 		f8_1 <<= nm.mcal(c='"change_quantiles_agg_"+$s{k}+"_isabs_"+$s{abs_b}+"_qh_"+$s{qh}+"_ql_"+$s{ql}',a="way")
 		f8_1 <<= nm.mcut(f=keyfld+["way","val"],o=rlsDIR+"/rls8_%s_%g_%g.csv"%(abs_b,qh,ql))
-		funclist8.append(f8_1)
+		#funclist8.append(f8_1)
+		funclist8_all.append(f8_1)
 	
-	if len(funclist8)>10:
-		nm.runs(funclist8)	
-		funclist8=[]
+	#if len(funclist8)>10:
+		#nm.runs(funclist8)	
+		#funclist8=[]
 		
 		
 #nm.drawModels(funclist9,"check.html")
 # 全部まとめ動かすファイルの数上限
 # (10240 on man 管理者でなくて変えれる上限っぽい)を超える
-if len(funclist8)>0:
-	nm.runs(funclist8) 
-
+#if len(funclist8)>0:
+#	nm.runs(funclist8) 
+#	nm.drawModelsD3(funclist8,"output.html") 
+#print("a st")
+nm.runs(funclist8_all) 
+#print("a ed")
 
 #cid_ce normalise (normalizeのsdチェック)
 
@@ -2163,7 +2169,7 @@ f23_2 <<= nm.mcal(c="if(${cnt}>1,${cnt},0)",a="reocur")
 f23_2 <<= nm.msum(k=keyfld,f="reocur")
 f23_2 <<= nm.mjoin(k=keyfld,m=sumDATA,f="count")
 f23_2 <<= nm.mcal(c="${reocur}/${count}",a="percentage_of_reoccurring_values_to_all_values")
-f23_1 <<= nm.m2cross(k=keyfld,f="percentage_of_reoccurring_values_to_all_values",a="way,val",o=rlsDIR+"/rls23_2.csv")
+f23_2 <<= nm.m2cross(k=keyfld,f="percentage_of_reoccurring_values_to_all_values",a="way,val",o=rlsDIR+"/rls23_2.csv")
 f23_2.run()
 
 

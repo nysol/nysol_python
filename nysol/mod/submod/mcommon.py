@@ -8,3 +8,7 @@ class Nysol_Mcommon(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcommon,self).__init__("mcommon",nutil.args2dict(args,kw_args,Nysol_Mcommon.kwd))
 
+def mcommon(self,*args, **kw_args):
+	return Nysol_Mcommon(nutil.args2dict(args,kw_args,Nysol_Mcommon.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mcommon", mcommon)

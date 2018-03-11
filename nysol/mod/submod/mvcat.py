@@ -8,3 +8,7 @@ class Nysol_Mvcat(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvcat,self).__init__("mvcat",nutil.args2dict(args,kw_args,Nysol_Mvcat.kwd))
 
+def mvcat(self,*args, **kw_args):
+	return Nysol_Mvcat(nutil.args2dict(args,kw_args,Nysol_Mvcat.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mvcat", mvcat)

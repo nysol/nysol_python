@@ -8,3 +8,7 @@ class Nysol_Mvnullto(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvnullto,self).__init__("mvnullto",nutil.args2dict(args,kw_args,Nysol_Mvnullto.kwd))
 
+def mvnullto(self,*args, **kw_args):
+	return Nysol_Mvnullto(nutil.args2dict(args,kw_args,Nysol_Mvnullto.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mvnullto", mvnullto)

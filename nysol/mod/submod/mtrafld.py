@@ -8,3 +8,7 @@ class Nysol_Mtrafld(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mtrafld,self).__init__("mtrafld",nutil.args2dict(args,kw_args,Nysol_Mtrafld.kwd))
 
+def mtrafld(self,*args, **kw_args):
+	return Nysol_Mtrafld(nutil.args2dict(args,kw_args,Nysol_Mtrafld.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mtrafld", mtrafld)

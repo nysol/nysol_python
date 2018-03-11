@@ -4,6 +4,7 @@ import re
 import nysol._nysolshell_core as n_core
 from nysol.mod.nysollib import nysolutil as nutil
 from nysol.mod.nysollib import draw as ndraw
+from nysol.mod.nysollib import dspalign
 
 from multiprocessing import Pool
 import copy
@@ -86,16 +87,19 @@ class NysolMOD_CORE(object):
 
 	def __str__(self):
 		import os
+
 		dsptp = os.getenv("NYSOL_MOD_DSP_TYPE", "0")
+
 		if dsptp == "1":
+
 			yLimit =40
-			xx = Nysol_MeachIter(self)
 			pre=[]
 			sufmax = int(yLimit/2)
 			suf=[ [] for i in range(sufmax) ]
 			cnt=0
 			sufpos=0
 			try:
+				xx = Nysol_MeachIter(self)
 				while(True):
 					val = next(xx)
 					if cnt < yLimit :
@@ -109,57 +113,6 @@ class NysolMOD_CORE(object):
 			except:
 				pass
 
-			width=80
-			fldnameLimit =15
-
-			if hasattr(os,"get_terminal_size"):
-				width = os.get_terminal_size().columns
-			else:
-				_,width_str = os.popen('stty size').read().split()
-				width = int(width_str)
-			
-			def dsplen(data):
-				
-				if sys.version_info.major < 3:
-					datax = data.decode('utf-8')
-				else:
-					datax = data
-
-				fsize=0
-				for charstr in datax:
-					if ord(charstr)<128 :
-						fsize +=1
-					else:
-						fsize +=2
-				return fsize
-
-			def dspchg(data,size):
-
-				if sys.version_info.major < 3:
-					datax = data.decode('utf-8')
-				else:
-					datax = data
-
-				fsize=0
-				for i , charstr in enumerate(datax):
-					if ord(charstr)<128 :
-						fsize +=1
-					else:
-						fsize +=2
-					if fsize > size-3:
-						return data[0:i]+"..."
-
-				return data
-			
-			 
-			def sizeCHK(data,premax):
-				for lin in data:
-					for i, fdata in enumerate(lin):
-						fsize = dsplen(fdata)
-
-						if fsize > premax[i] :
-							premax[i] = fsize
-
 			if(cnt > yLimit): 
 				ppos = sufmax
 				spos = sufpos
@@ -171,72 +124,14 @@ class NysolMOD_CORE(object):
 					if spos==sufmax :
 						spos=0
 
-			
-			fldmax = [ 0 for i in range(len(pre[0]))]
-			sizeCHK(pre,fldmax)
-			for i in range(len(fldmax)):
-				if fldmax[i] > fldnameLimit:
-					fldmax[i] = fldnameLimit
+			outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
 
-			fldcut=False
+			return "\n".join(outstrList)
 
-			if sum(fldmax) +len(fldmax) > width:
-				dspfldNo =[]
-				restW = width - (fldmax[-1]+5)
-				for i ,v in enumerate(fldmax):
-					if restW - v > 0 :
-						dspfldNo.append(i) 
-					else:
-						dspfldNo.append(len(fldmax)-1)
-						break 
-					restW -= (v+1)
-				fldcut = True
-			else:
-				dspfldNo =  [i for i in range(len(fldmax))]
-				
-			outstr=[]
-			for i,lin in enumerate(pre):
-				newstr=[]
-				for pos in dspfldNo:
-
-					if fldcut and pos == len(fldmax)-1:
-						newstr.append("...")   
-
-					dlen = dsplen(lin[pos])
-
-					if dlen <= fldmax[pos] :
-						fmtdlen = (fldmax[pos]-dlen)+len(lin[pos])
-						fmt = "%%%ds"%(fmtdlen)
-						newstr.append(fmt%(lin[pos]))
-					else:
-						newdata = dspchg(lin[pos],fldmax[pos])
-						fmtdlen = (fldmax[pos]-dsplen(newdata))+len(newdata)
-						fmt = "%%%ds"%(fmtdlen)
-						newstr.append(fmt%(newdata))
-
-				outstr.append(" ".join(newstr))
-				if cnt > yLimit and i == sufmax :
-					dmystr = []
-					for pos in dspfldNo:
-
-						if fldcut and pos == len(fldmax)-1:
-							dmystr.append("...")   
-
-
-						dmylen = fldmax[pos] if fldmax[pos]<3 else 3
-						fmt = "%%%ds"%(fldmax[pos])
-						dmystr.append(fmt%("."*dmylen))
-							
-					outstr.append(" ".join(dmystr))
-
-			return "\n".join(outstr)
-			
-
-		elif dsptp == 2:
-			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
-		
 		else:
+
 			return "<{} at {}>".format(self.__class__.__name__,hex(id(self)))
+
 
 	def __repr__(self):
 		return str(self)
@@ -266,6 +161,16 @@ class NysolMOD_CORE(object):
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
+
+	def keyblock_dict(self,keys,skeys=None):
+		try:
+			x = Nysol_MeachKeyDictIter(self,keys,skeys)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
 
 	def getline_with_keyflag(self,keys,skeys=None):
 		
@@ -310,60 +215,6 @@ class NysolMOD_CORE(object):
 		return self
 		
 		
-	# PRIVATEにする？
-	def para2strStr(self):
-		rtnStr = ""
-		for k, v in self.kwd.items():
-			if isinstance(v,bool) :
-				if v==True:
-					rtnStr += "-" + k + " "
-			elif isinstance(v,str) :
-				rtnStr += k + "=" + v + " "
-			elif isinstance(v,float) :
-				rtnStr += k + "=" + str(v) + " "
-			elif isinstance(v,int) :
-				rtnStr += k + "=" + str(v) + " "
-			elif isinstance(v,list) :
-				plist = []
-				for val in v:
-					if isinstance(val,str) :
-						plist.append(val)
-					elif isinstance(val,float) or isinstance(v,int) :
-						plist.append(str(val))
-				rtnStr += k + "=" + ",".join(plist) + " "
-				
-		return rtnStr
-
-	# PRIVATEにする？
-	def para2str(self):
-		rtnStr = []
-		for k, v in self.kwd.items():
-			if isinstance(v,bool) :
-				if v==True:
-					rtnStr.append("-" + k )
-
-			elif isinstance(v,str) :
-				rtnStr.append( k+"="+v)
-
-			elif isinstance(v,float) :
-				rtnStr.append(k + "=" + str(v))
-
-			elif isinstance(v,int) :
-				rtnStr.append(k + "=" + str(v) )
-
-			elif isinstance(v,list) :
-				plist = []
-				for val in v:
-					if isinstance(val,str) :
-						plist.append(val)
-					elif isinstance(val,float) or isinstance(v,int) :
-						plist.append(str(val))
-
-				rtnStr.append(k + "=" + ",".join(plist) )
-				
-		return rtnStr
-
-	
 	# f.w キーワードチェック入れる
 	def paraUpdate(self,kw):
 		self.kwd.update(kw)
@@ -391,7 +242,7 @@ class NysolMOD_CORE(object):
 		#	print("------mod---------")
 		#	print(obj)
 		#	print(obj.name)
-		#	print(obj.para2str())
+		#	print(nutil.para2str(obj.kwd))
 		#	print("i=",obj.inplist["i"])
 		#	print("m=",obj.inplist["m"])
 		#	print("o=",obj.outlist["o"])
@@ -451,7 +302,7 @@ class NysolMOD_CORE(object):
 			#print("----add tee----") 
 			#print(obj)
 			#print(obj.name)
-			#print(obj.para2str())
+			#print(nutil.para2str(obj.kwd))
 			#print("i=",obj.inplist["i"])
 			#print("m=",obj.inplist["m"])
 			#print("o=",obj.outlist["o"])
@@ -474,13 +325,9 @@ class NysolMOD_CORE(object):
 				else:
 					outll = obj.outlist[k]
 					obj.outlist[k] = []
-					#print("aaaaaa1")
-					#print(outll)
-					#print("aaaaaa2")
 					teexxx = m2tee(i=obj)
 					teexxx.outlist["o"] = [] 
 					obj.outlist[k].append(teexxx)
-					#print(outll)
 
 					"""これだとだめ
 					print(obj.outlist)
@@ -627,13 +474,13 @@ class NysolMOD_CORE(object):
 			#print("---------------")
 			#print(obj)
 			#print(obj.name)
-			#print(obj.para2str())
+			#print(nutil.para2str(obj.kwd))
 			#print("i=",obj.inplist["i"])
 			#print("m=",obj.inplist["m"])
 			#print("o=",obj.outlist["o"])
 			#print("u=",obj.outlist["u"])
 			#print("---------------")
-			modlist[no]= [obj.name,obj.para2str(),{},obj.tag]
+			modlist[no]= [obj.name,nutil.para2str(obj.kwd),{},obj.tag]
 			iolist[no]=[[],[],[],[]]
 
 			for ioobj in obj.inplist["i"]:
@@ -745,7 +592,7 @@ class NysolMOD_CORE(object):
 
 		for st in stNum:
 			blist = []
-			self.separateblockSUB(modlist,elist,blist,visit,st)
+			self.separateblockSUB(visit,st)
 			if len(blist) > 0:
 				modblists.append(blist)
 
@@ -865,15 +712,15 @@ class NysolMOD_CORE(object):
 		shobj = n_core.init(msgF)
 		modlimt =300
 		if len(modlist) > modlimt:
-			newmod ,newlink = self.separateblock(modlist,linklist)
+			#newmod ,newlink = self.separateblock(modlist,linklist)
 			#print("ccccc1")
 			#print(newmod[0])
 			#print(newlink[0])
 			#print("ccccc2")
-			n_core.runLs(newmod,newlink)
+			n_core.runLx(shobj,modlist,linklist)
 
 		else:
-			n_core.runL(shobj,modlist,linklist)
+			n_core.runLx(shobj,modlist,linklist)
 			
 
 		return outfs
@@ -1029,332 +876,6 @@ class NysolMOD_CORE(object):
 
 		return output
 
-	# 子クラス生成　	# ここうっとしい いい方法が有れば変更
-	def mfifo(self,*args, **kw_args):
-		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
-		return mfifo(nutil.args2dict(args,kw_args,mfifo.kwd)).addPre(self)
-
-	def writecsv(self,*args, **kw_args):
-		from nysol.mod.submod.writecsv import Nysol_Writecsv as writecsv
-		return writecsv(nutil.args2dict(args,kw_args,writecsv.kwd,uk="o")).addPre(self)
-
-	def writelist(self,*args, **kw_args):
-		from nysol.mod.submod.writelist import Nysol_Writelist as writelist
-		return writelist(nutil.args2dict(args,kw_args,writelist.kwd,uk="o")).addPre(self)
-
-	def cmd(self,*args, **kw_args):
-		from nysol.mod.submod.cmd import Nysol_Excmd as cmd
-		return cmd(nutil.arg2dict(args,kw_args,cmd.kwd)).addPre(self)
-
-	# 子クラス生成
-	def m2cross(self,*args, **kw_args):
-		from nysol.mod.submod.m2cross import Nysol_M2cross as m2cross
-		return m2cross(nutil.args2dict(args,kw_args,m2cross.kwd)).addPre(self)
-
-
-	def maccum(self,*args, **kw_args):
-		from nysol.mod.submod.maccum import Nysol_Maccum as maccum
-		return maccum(nutil.args2dict(args,kw_args,maccum.kwd)).addPre(self)
-
-	def mavg(self,*args, **kw_args):
-		from nysol.mod.submod.mavg import Nysol_Mavg as mavg
-		return mavg(nutil.args2dict(args,kw_args,mavg.kwd)).addPre(self)
-
-	def mbest(self,*args, **kw_args):
-		from nysol.mod.submod.mbest import Nysol_Mbest as mbest
-		return mbest(nutil.args2dict(args,kw_args,mbest.kwd)).addPre(self)
-
-	def mbucket(self,*args, **kw_args):
-		from nysol.mod.submod.mbucket import Nysol_Mbucket as mbucket
-		return mbucket(nutil.args2dict(args,kw_args,mbucket.kwd)).addPre(self)
-
-	def mchgnum(self,*args, **kw_args):
-		from nysol.mod.submod.mchgnum import Nysol_Mchgnum as mchgnum
-		return mchgnum(nutil.args2dict(args,kw_args,mchgnum.kwd)).addPre(self)
-
-	def mchgstr(self,*args, **kw_args):
-		from nysol.mod.submod.mchgstr import Nysol_Mchgstr as mchgstr
-		return mchgstr(nutil.args2dict(args,kw_args,mchgstr.kwd)).addPre(self)
-
-	def mcombi(self,*args, **kw_args):
-		from nysol.mod.submod.mcombi import Nysol_Mcombi as mcombi
-		return mcombi(nutil.args2dict(args,kw_args,mcombi.kwd)).addPre(self)
-
-	def mcommon(self,*args, **kw_args):
-		from nysol.mod.submod.mcommon import Nysol_Mcommon as mcommon
-		return mcommon(nutil.args2dict(args,kw_args,mcommon.kwd)).addPre(self)
-
-	def mcount(self,*args, **kw_args):
-		from nysol.mod.submod.mcount import Nysol_Mcount as mcount
-		return mcount(nutil.args2dict(args,kw_args,mcount.kwd)).addPre(self)
-
-	def mcross(self,*args, **kw_args):
-		from nysol.mod.submod.mcross import Nysol_Mcross as mcross
-		return mcross(nutil.args2dict(args,kw_args,mcross.kwd)).addPre(self)
-
-	def mdelnull(self,*args, **kw_args):
-		from nysol.mod.submod.mdelnull import Nysol_Mdelnull as mdelnull
-		return mdelnull(nutil.args2dict(args,kw_args,mdelnull.kwd)).addPre(self)
-
-	def mdformat(self,*args, **kw_args):
-		from nysol.mod.submod.mdformat import Nysol_Mdformat as mdformat
-		return mdformat(nutil.args2dict(args,kw_args,mdformat.kwd)).addPre(self)
-
-	def mduprec(self,*args, **kw_args):
-		from nysol.mod.submod.mduprec import Nysol_Mduprec as mduprec
-		return mduprec(nutil.args2dict(args,kw_args,mduprec.kwd)).addPre(self)
-
-	def mfldname(self,*args, **kw_args):
-		from nysol.mod.submod.mfldname import Nysol_Mfldname as mfldname
-		return mfldname(nutil.args2dict(args,kw_args,mfldname.kwd)).addPre(self)
-
-	def mfsort(self,*args, **kw_args):
-		from nysol.mod.submod.mfsort import Nysol_Mfsort as mfsort
-		return mfsort(nutil.args2dict(args,kw_args,mfsort.kwd)).addPre(self)
-
-	def mhashavg(self,*args, **kw_args):
-		from nysol.mod.submod.mhashavg import Nysol_Mhashavg as mhashavg
-		return mhashavg(nutil.args2dict(args,kw_args,mhashavg.kwd)).addPre(self)
-
-	def mhashsum(self,*args, **kw_args):
-		from nysol.mod.submod.mhashsum import Nysol_Mhashavg as mhashsum
-		return mhashsum(nutil.args2dict(args,kw_args,mhashsum.kwd)).addPre(self)
-
-	def mkeybreak(self,*args, **kw_args):
-		from nysol.mod.submod.mkeybreak import Nysol_Mkeybreak as mkeybreak
-		return mkeybreak(nutil.args2dict(args,kw_args,mkeybreak.kwd)).addPre(self)
-
-	def mmbucket(self,*args, **kw_args):
-		from nysol.mod.submod.mmbucket import Nysol_Mmbucket as mmbucket
-		return mmbucket(nutil.args2dict(args,kw_args,mmbucket.kwd)).addPre(self)
-
-	def mmvavg(self,*args, **kw_args):
-		from nysol.mod.submod.mmvavg import Nysol_Mmvavg as mmvavg
-		return mmvavg(nutil.args2dict(args,kw_args,mmvavg.kwd)).addPre(self)
-
-	def mmvsim(self,*args, **kw_args):
-		from nysol.mod.submod.mmvsim import Nysol_Mmvsim as mmvsim
-		return mmvsim(nutil.args2dict(args,kw_args,mmvsim.kwd)).addPre(self)
-
-	def mmvstats(self,*args, **kw_args):
-		from nysol.mod.submod.mmvstats import Nysol_Mmvstats as mmvstats
-		return mmvstats(nutil.args2dict(args,kw_args,mmvstats.kwd)).addPre(self)
-
-	def mnewnumber(self,*args, **kw_args):
-		from nysol.mod.submod.mnewnumber import Nysol_Mnewnumber as mnewnumber
-		return mnewnumber(nutil.args2dict(args,kw_args,mnewnumber.kwd)).addPre(self)
-
-	def mnewrand(self,*args, **kw_args):
-		from nysol.mod.submod.mnewrand import Nysol_Mnewrand as mnewrand
-		return mnewrand(nutil.args2dict(args,kw_args,mnewrand.kwd)).addPre(self)
-
-	def mnewstr(self,*args, **kw_args):
-		from nysol.mod.submod.mnewstr import Nysol_Mnewstr as mnewstr
-		return mnewstr(nutil.args2dict(args,kw_args,mnewstr.kwd)).addPre(self)
-
-	def mnjoin(self,*args, **kw_args):
-		from nysol.mod.submod.mnjoin import Nysol_Mnjoin as mnjoin
-		return mnjoin(nutil.args2dict(args,kw_args,mnjoin.kwd)).addPre(self)
-
-	def mnormalize(self,*args, **kw_args):
-		from nysol.mod.submod.mnormalize import Nysol_Mnormalize as mnormalize
-		return mnormalize(nutil.args2dict(args,kw_args,mnormalize.kwd)).addPre(self)
-
-	def mnrcommon(self,*args, **kw_args):
-		from nysol.mod.submod.mnrcommon import Nysol_Mnrcommon as mnrcommon
-		return mnrcommon(nutil.args2dict(args,kw_args,mnrcommon.kwd)).addPre(self)
-
-	def mnrjoin(self,*args, **kw_args):
-		from nysol.mod.submod.mnrjoin import Nysol_Mnrjoin as mnrjoin
-		return mnrjoin(nutil.args2dict(args,kw_args,mnrjoin.kwd)).addPre(self)
-
-	def mnullto(self,*args, **kw_args):
-		from nysol.mod.submod.mnullto import Nysol_Mnullto as mnullto
-		return mnullto(nutil.args2dict(args,kw_args,mnullto.kwd)).addPre(self)
-
-	def mnumber(self,*args, **kw_args):
-		from nysol.mod.submod.mnumber import Nysol_Mnumber as mnumber
-		return mnumber(nutil.args2dict(args,kw_args,mnumber.kwd)).addPre(self)
-
-	def mpadding(self,*args, **kw_args):
-		from nysol.mod.submod.mpadding import Nysol_Mpadding as mpadding
-		return mpadding(nutil.args2dict(args,kw_args,mpadding.kwd)).addPre(self)
-
-	def mpaste(self,*args, **kw_args):
-		from nysol.mod.submod.mpaste import Nysol_Mpaste as mpaste
-		return mpaste(nutil.args2dict(args,kw_args,mpaste.kwd)).addPre(self)
-
-	def mproduct(self,*args, **kw_args):
-		from nysol.mod.submod.mproduct import Nysol_Mproduct as mproduct
-		return mproduct(nutil.args2dict(args,kw_args,mproduct.kwd)).addPre(self)
-
-	def mrand(self,*args, **kw_args):
-		from nysol.mod.submod.mrand import Nysol_Mrand as mrand
-		return mrand(nutil.args2dict(args,kw_args,mrand.kwd)).addPre(self)
-
-	def mrjoin(self,*args, **kw_args):
-		from nysol.mod.submod.mrjoin import Nysol_Mrjoin as mrjoin
-		return mrjoin(nutil.args2dict(args,kw_args,mrjoin.kwd)).addPre(self)
-
-	def msed(self,*args, **kw_args):
-		from nysol.mod.submod.msed import Nysol_Msed as msed
-		return msed(nutil.args2dict(args,kw_args,msed.kwd)).addPre(self)
-
-	def msel(self,*args, **kw_args):
-		from nysol.mod.submod.msel import Nysol_Msel as msel
-		return msel(nutil.args2dict(args,kw_args,msel.kwd)).addPre(self)
-
-	def mselnum(self,*args, **kw_args):
-		from nysol.mod.submod.mselnum import Nysol_Mselnum as mselnum
-		return mselnum(nutil.args2dict(args,kw_args,mselnum.kwd)).addPre(self)
-
-	def mselrand(self,*args, **kw_args):
-		from nysol.mod.submod.mselrand import Nysol_Mselrand as mselrand
-		return mselrand(nutil.args2dict(args,kw_args,mselrand.kwd)).addPre(self)
-
-	def mselstr(self,*args, **kw_args):
-		from nysol.mod.submod.mselstr import Nysol_Mselstr as mselstr
-		return mselstr(nutil.args2dict(args,kw_args,mselstr.kwd)).addPre(self)
-
-	def msetstr(self,*args, **kw_args):
-		from nysol.mod.submod.msetstr import Nysol_Msetstr as msetstr
-		return msetstr(nutil.args2dict(args,kw_args,msetstr.kwd)).addPre(self)
-
-	def mshare(self,*args, **kw_args):
-		from nysol.mod.submod.mshare import Nysol_Mshare as mshare
-		return mshare(nutil.args2dict(args,kw_args,mshare.kwd)).addPre(self)
-
-	def msim(self,*args, **kw_args):
-		from nysol.mod.submod.msim import Nysol_Msim as msim
-		return msim(nutil.args2dict(args,kw_args,msim.kwd)).addPre(self)
-
-	def mslide(self,*args, **kw_args):
-		from nysol.mod.submod.mslide import Nysol_Mslide as mslide
-		return mslide(nutil.args2dict(args,kw_args,mslide.kwd)).addPre(self)
-
-	def msplit(self,*args, **kw_args):
-		from nysol.mod.submod.msplit import Nysol_Msplit as msplit
-		return msplit(nutil.args2dict(args,kw_args,msplit.kwd)).addPre(self)
-
-	def mstats(self,*args, **kw_args):
-		from nysol.mod.submod.mstats import Nysol_Mstats as mstats
-		return mstats(nutil.args2dict(args,kw_args,mstats.kwd)).addPre(self)
-
-	def msummary(self,*args, **kw_args):
-		from nysol.mod.submod.msummary import Nysol_Msummary as msummary
-		return msummary(nutil.args2dict(args,kw_args,msummary.kwd)).addPre(self)
-
-	def mtonull(self,*args, **kw_args):
-		from nysol.mod.submod.mtonull import Nysol_Mtonull as mtonull
-		return mtonull(nutil.args2dict(args,kw_args,mtonull.kwd)).addPre(self)
-
-	def mtra(self,*args, **kw_args):
-		from nysol.mod.submod.mtra import Nysol_Mtra as mtra
-		return mtra(nutil.args2dict(args,kw_args,mtra.kwd)).addPre(self)
-
-	def mtraflg(self,*args, **kw_args):
-		from nysol.mod.submod.mtraflg import Nysol_Mtraflg as mtraflg
-		return mtraflg(nutil.args2dict(args,kw_args,mtraflg.kwd)).addPre(self)
-
-	def mtrafld(self,*args, **kw_args):
-		from nysol.mod.submod.mtrafld import Nysol_Mtrafld as mtrafld
-		return mtrafld(nutil.args2dict(args,kw_args,mtrafld.kwd)).addPre(self)
-
-	def muniq(self,*args, **kw_args):
-		from nysol.mod.submod.muniq import Nysol_Muniq as muniq
-		return muniq(nutil.args2dict(args,kw_args,muniq.kwd)).addPre(self)
-
-	def mvcat(self,*args, **kw_args):
-		from nysol.mod.submod.mvcat import Nysol_Mvcat as mvcat
-		return mvcat(nutil.args2dict(args,kw_args,mvcat.kwd)).addPre(self)
-
-	def mvcommon(self,*args, **kw_args):
-		from nysol.mod.submod.mvcommon import Nysol_Mvcommon as mvcommon
-		return mvcommon(nutil.args2dict(args,kw_args,mvcommon.kwd)).addPre(self)
-
-	def mvcount(self,*args, **kw_args):
-		from nysol.mod.submod.mvcount import Nysol_Mvcount as mvcount
-		return mvcount(nutil.args2dict(args,kw_args,mvcount.kwd)).addPre(self)
-
-	def mvdelim(self,*args, **kw_args):
-		from nysol.mod.submod.mvdelim import Nysol_Mvdelim as mvdelim
-		return mvdelim(nutil.args2dict(args,kw_args,mvdelim.kwd)).addPre(self)
-
-	def mvdelnull(self,*args, **kw_args):
-		from nysol.mod.submod.mvdelnull import Nysol_Mvdelnull as mvdelnull
-		return mvdelnull(nutil.args2dict(args,kw_args,mvdelnull.kwd)).addPre(self)
-
-	def mvjoin(self,*args, **kw_args):
-		from nysol.mod.submod.mvjoin import Nysol_Mvjoin as mvjoin
-		return mvjoin(nutil.args2dict(args,kw_args,mvjoin.kwd)).addPre(self)
-
-	def mvnullto(self,*args, **kw_args):
-		from nysol.mod.submod.mvnullto import Nysol_Mvnullto as mvnullto
-		return mvnullto(nutil.args2dict(args,kw_args,mvnullto.kwd)).addPre(self)
-
-	def mvreplace(self,*args, **kw_args):
-		from nysol.mod.submod.mvreplace import Nysol_Mvreplace as mvreplace
-		return mvreplace(nutil.args2dict(args,kw_args,mvreplace.kwd)).addPre(self)
-
-	def mvsort(self,*args, **kw_args):
-		from nysol.mod.submod.mvsort import Nysol_Mvsort as mvsort
-		return mvsort(nutil.args2dict(args,kw_args,mvsort.kwd)).addPre(self)
-
-	def mvuniq(self,*args, **kw_args):
-		from nysol.mod.submod.mvuniq import Nysol_Mvuniq as mvuniq
-		return mvuniq(nutil.args2dict(args,kw_args,mvuniq.kwd)).addPre(self)
-
-	def mwindow(self,*args, **kw_args):
-		from nysol.mod.submod.mwindow import Nysol_Mwindow as mwindow
-		return mwindow(nutil.args2dict(args,kw_args,mwindow.kwd)).addPre(self)
-
-	def mcal(self,*args, **kw_args):
-		from nysol.mod.submod.mcal import Nysol_Mcal as mcal
-		return mcal(nutil.args2dict(args,kw_args,mcal.kwd)).addPre(self)
-
-	def mcat(self,*args, **kw_args):
-		from nysol.mod.submod.mcat import Nysol_Mcat as mcat
-		return mcat(nutil.args2dict(args,kw_args,mcat.kwd)).addPre(self)
-
-	def mcut(self,*args, **kw_args):
-		from nysol.mod.submod.mcut import Nysol_Mcut as mcut
-		return mcut(nutil.args2dict(args,kw_args,mcut.kwd)).addPre(self)
-
-	def msep(self,*args, **kw_args):
-		from nysol.mod.submod.msep import Nysol_Msep as msep
-		return msep(nutil.args2dict(args,kw_args,msep.kwd)).addPre(self)
-
-	def mshuffle(self,*args, **kw_args):
-		from nysol.mod.submod.mshuffle import Nysol_Mshuffle as mshuffle
-		return mshuffle(nutil.args2dict(args,kw_args,mshuffle.kwd)).addPre(self)
-
-	def msum(self,*args, **kw_args):
-		from nysol.mod.submod.msum import Nysol_Msum as msum
-		return msum(nutil.args2dict(args,kw_args,msum.kwd)).addPre(self)
-
-	def marff2csv(self,*args, **kw_args):
-		from nysol.mod.submod.marff2csv import Nysol_Marff2csv as marff2csv
-		return marff2csv(nutil.args2dict(args,kw_args,marff2csv.kwd)).addPre(self)
-
-	def mtab2csv(self,*args, **kw_args):
-		from nysol.mod.submod.mtab2csv import Nysol_Mtab2csv as mtab2csv
-		return mtab2csv(nutil.args2dict(args,kw_args,mtab2csv.kwd)).addPre(self)
-
-	def mxml2csv(self,*args, **kw_args):
-		from nysol.mod.submod.mxml2csv import Nysol_Mxml2csv as mxml2csv
-		return mxml2csv(nutil.args2dict(args,kw_args,mxml2csv.kwd)).addPre(self)
-
-	def msortf(self,*args, **kw_args):
-		from nysol.mod.submod.msortf import Nysol_Msortf as msortf
-		return msortf(nutil.args2dict(args,kw_args,msortf.kwd)).addPre(self)
-
-	def mjoin(self,*args, **kw_args):
-		from nysol.mod.submod.mjoin import Nysol_Mjoin as mjoin
-		return mjoin(nutil.args2dict(args,kw_args,mjoin.kwd)).addPre(self)
-
-	def m2tee(self,*args, **kw_args):
-		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
-		return m2tee(nutil.args2dict(args,kw_args,m2tee.kwd)).addPre(self)
 
 
 class Nysol_MeachIter(object):
@@ -1463,6 +984,68 @@ class Nysol_MeachKeyIter(object):
 		raise StopIteration()
 
 
+class Nysol_MeachKeyDictIter(object):
+
+	def __init__(self,obj,keys,skeys=None):
+
+		if isinstance(keys,str) :
+			newkeys = keys.split(",") 
+		elif isinstance(keys,list) :
+			newkeys = keys
+		else:
+			raise Exception("unsuport TYPE")
+
+		
+		dupobj = copy.deepcopy(obj)
+
+		if len(dupobj.outlist["o"])==0:
+			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
+			sortkeys = copy.deepcopy(newkeys)
+			if skeys != None:
+				if isinstance(keys,str) :
+					sortkeys.extend(skeys.split(","))
+				elif isinstance(keys,list) :
+					sortkeys.extend(skeys)
+				else:
+					raise Exception("unsuport TYPE")
+			
+			runobj = msortf({"f":sortkeys}).addPre(dupobj)
+
+		else:
+			print ("type ERORR")
+			return None
+			
+		
+		runobj.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+		runobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		runobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
+		# kgshell stock
+		self.shobj = n_core.init(runobj.msg)
+		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
+
+	def next(self):
+		line = n_core.readkeylineDict(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+	def __next__(self):
+		line = n_core.readkeylineDict(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
+
+
 
 class Nysol_MeachKeyIterWithFlag(object):
 
@@ -1534,5 +1117,6 @@ class Nysol_MeachKeyIterWithFlag(object):
 			return data[0],breakTop,data[1]
 
 		raise StopIteration()
+
 
 

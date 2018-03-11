@@ -8,3 +8,7 @@ class Nysol_Mstats(NysolMOD_CORE):
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mstats,self).__init__("mstats",nutil.args2dict(args,kw_args,Nysol_Mstats.kwd))
 
+def mstats(self,*args, **kw_args):
+	return Nysol_Mstats(nutil.args2dict(args,kw_args,Nysol_Mstats.kwd)).addPre(self)
+
+setattr(NysolMOD_CORE, "mstats", mstats)

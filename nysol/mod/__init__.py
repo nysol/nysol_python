@@ -77,6 +77,7 @@ from .submod.msep import Nysol_Msep as msep
 from .submod.mshuffle import Nysol_Mshuffle as mshuffle
 from .submod.cmd import Nysol_Excmd as cmd
 from .submod.marff2csv import Nysol_Marff2csv as marff2csv
+from .submod.m2tee import Nysol_M2tee as m2tee
 from .submod.mtab2csv import Nysol_Mtab2csv as mtab2csv
 from .submod.mxml2csv import Nysol_Mxml2csv as mxml2csv
 from .submod.msortf import Nysol_Msortf as msortf

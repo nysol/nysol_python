@@ -163,6 +163,49 @@ PyObject* runL(PyObject* self, PyObject* args)
 }
 
 
+PyObject* runLx(PyObject* self, PyObject* args)
+{
+	try {
+
+	PyObject *sh;
+	PyObject *mlist;
+	PyObject *linklist;
+	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+    return NULL;
+  }
+
+	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+	if(!PyList_Check(mlist)){
+		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+		return Py_BuildValue("");
+	}
+	vector< cmdCapselST > cmdCapsel;
+	vector< linkST > p_list;
+	runCore(mlist,linklist,cmdCapsel,p_list);
+
+
+	ksh->runx(cmdCapsel,p_list);
+	return PyLong_FromLong(0);
+
+
+	}
+	catch(kgError& err){
+		cerr << "run Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "run Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "run Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "run Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+
 PyObject* cancel(PyObject* self, PyObject* args)
 {
 	try {
@@ -429,9 +472,51 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 			break;
 		}
 	}
-
 	return rlist;
 }
+
+PyObject* readkeylineDict(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	size_t fcnt = kcfld->fldSize();
+
+
+	if((kcfld->status() & kgCSV::End )){ return Py_BuildValue("");}
+
+	vector< PyObject* > rlists(fcnt); 
+
+	for(size_t j=0 ;j<fcnt;j++){
+		rlists[j] = PyList_New(0);
+	}
+
+	while(kcfld->read()!=EOF){
+
+		//一行目読み込み時は何もしない
+		if(( kcfld->status() & kgCSV::Begin )){continue;}
+
+		for(size_t j=0 ;j<fcnt;j++){
+			PyList_Append(rlists[j],Py_BuildValue("s", kcfld->getOldVal(j)));
+		}
+		if( kcfld->keybreak() ){
+			break;
+		}
+	}
+
+  PyObject* rlist = PyDict_New();
+	for(size_t j=0 ;j<fcnt;j++){
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),rlists[j]);
+	}
+	return rlist;
+}
+
 
 PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 {
@@ -515,10 +600,12 @@ static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
 	{"runL", reinterpret_cast<PyCFunction>(runL), METH_VARARGS },
 	{"runLs", reinterpret_cast<PyCFunction>(runLs), METH_VARARGS },
+	{"runLx", reinterpret_cast<PyCFunction>(runLx), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
 	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
+	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
