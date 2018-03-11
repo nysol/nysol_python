@@ -1012,7 +1012,7 @@ int kgshell::runx(
 {
 	try{
 		kgSplitBlock spblk(cmds.size(),plist);
-		_spblk.blockSplit(100,cmds.size(),plist);
+		_spblk.blockSplit(KGMOD_RUN_LIMIT,cmds.size(),plist);
 
 		// パラメータ変更		
 		vector<linkST>&spedge = _spblk.getsplitEdge();
@@ -1450,11 +1450,13 @@ int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 		vector < vector <kgstr_t> > paralist = mod->params();
 
 		for (size_t i=0;i<paralist.size();i++){
-			PyObject* tlist = PyList_New(0);
+			PyObject* tlist = PyList_New(paralist[i].size());
 			for(size_t j=0 ;j<paralist[i].size();j++){
-				PyList_Append(tlist,Py_BuildValue("s",paralist[i][j].c_str()));
+				PyList_SetItem(tlist,j,Py_BuildValue("s",paralist[i][j].c_str()));
 			}
 			PyList_Append(list,tlist);
+			Py_DECREF(tlist);
+			
 		}
 		if(mod) delete mod;
 		return 0;

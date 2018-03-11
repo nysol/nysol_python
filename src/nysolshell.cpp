@@ -435,9 +435,9 @@ PyObject* readline(PyObject* self, PyObject* args)
 		return Py_BuildValue("");
 	}
 	size_t fcnt = kcfld->fldSize();
-	PyObject* rlist = PyList_New(0);
+	PyObject* rlist = PyList_New(fcnt);
 	for(size_t j=0 ;j<fcnt;j++){
-		PyList_Append(rlist,Py_BuildValue("s", kcfld->getVal(j)));
+		PyList_SetItem(rlist,j,Py_BuildValue("s", kcfld->getVal(j)));
 	}
 	return rlist;
 }
@@ -463,11 +463,13 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 		//一行目読み込み時は何もしない
 		if(( kcfld->status() & kgCSV::Begin )){continue;}
 
-		PyObject* rllist = PyList_New(0);
+		PyObject* rllist = PyList_New(fcnt);
 		for(size_t j=0 ;j<fcnt;j++){
-			PyList_Append(rllist,Py_BuildValue("s", kcfld->getOldVal(j)));
+			PyList_SetItem(rllist,j,Py_BuildValue("s", kcfld->getOldVal(j)));
 		}
 		PyList_Append(rlist,rllist);
+		Py_DECREF(rllist);
+
 		if( kcfld->keybreak() ){
 			break;
 		}
@@ -503,7 +505,9 @@ PyObject* readkeylineDict(PyObject* self, PyObject* args)
 		if(( kcfld->status() & kgCSV::Begin )){continue;}
 
 		for(size_t j=0 ;j<fcnt;j++){
-			PyList_Append(rlists[j],Py_BuildValue("s", kcfld->getOldVal(j)));
+			PyObject* setobj = Py_BuildValue("s", kcfld->getOldVal(j));
+			PyList_Append(rlists[j],setobj);
+			Py_DECREF(setobj);
 		}
 		if( kcfld->keybreak() ){
 			break;
@@ -513,7 +517,9 @@ PyObject* readkeylineDict(PyObject* self, PyObject* args)
   PyObject* rlist = PyDict_New();
 	for(size_t j=0 ;j<fcnt;j++){
 		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),rlists[j]);
+		Py_DECREF(rlists[j]);
 	}
+	
 	return rlist;
 }
 
@@ -544,22 +550,27 @@ PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 		}
 	}
 
-	PyObject* finlist = PyList_New(0);
+	PyObject* finlist = PyList_New(2);
 
-	PyObject* rllist = PyList_New(0);
 	size_t fcnt = kcfld->fldSize();
+	PyObject* rllist = PyList_New(fcnt);
 
 	for(size_t j=0 ;j<fcnt;j++){
-		PyList_Append(rllist,Py_BuildValue("s", kcfld->getOldVal(j)));
+		PyList_SetItem(rllist,j,Py_BuildValue("s", kcfld->getOldVal(j)));
 	}
-	PyList_Append(finlist,rllist);
+
+	PyList_SetItem(finlist,0,rllist);
+
 	if( kcfld->keybreak() ){
+		PyList_SetItem(finlist,1,Py_True);
 		Py_INCREF(Py_True);
-		PyList_Append(finlist,Py_True);
+
+		//PyList_Append(finlist,Py_True);
 	}
 	else{
+		PyList_SetItem(finlist,1,Py_False);
 		Py_INCREF(Py_False);
-		PyList_Append(finlist,Py_False);
+		//PyList_Append(finlist,Py_False);
 	}
 	return finlist;
 }
