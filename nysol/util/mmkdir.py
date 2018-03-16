@@ -18,17 +18,19 @@
 # * for more details.
 #
 # ////////// LICENSE INFO ////////////////////*/
-
 import os
 import shutil
 
 def mkDir(dname,rm=False):
-
-	if os.path.exists(dname):
-		if rm :
-			shutil.rmtree(dname)
-			os.makedirs(dname)
+	try:
+		if os.path.exists(dname):
+			if rm :
+				shutil.rmtree(dname)
+				os.makedirs(dname)
 			
-	else:
-		os.makedirs(dname)
+		else:
+			os.makedirs(dname)
 
+	except FileExistsError:
+		pass
+		
