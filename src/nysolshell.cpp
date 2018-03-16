@@ -62,7 +62,12 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 
 		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
 		for(Py_ssize_t j=0 ; j<psize;j++){
+			if( strCHECK(PyList_GetItem(para_LIST ,j)) ){
 				cmpcaplocal.paralist.push_back(strGET(PyList_GetItem(para_LIST ,j)));
+			}
+			else{
+				cmpcaplocal.iobj=PyList_GetItem(para_LIST ,j);
+			}
 		}
 
 		//cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);

@@ -37,6 +37,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["mfifo"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
 		_kgmod_map["mcut"] = boost::lambda::bind(boost::lambda::new_ptr<kgCut>());
 		_kgmod_map["cmd"] = boost::lambda::bind(boost::lambda::new_ptr<kgExcmd>());
+		_kgmod_map["runfunc"] = boost::lambda::bind(boost::lambda::new_ptr<kgPyfunc>());
 		_kgmod_map["mcat"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
 		_kgmod_map["msum"] = boost::lambda::bind(boost::lambda::new_ptr<kgSum>());
 		_kgmod_map["mcal"] = boost::lambda::bind(boost::lambda::new_ptr<kgCal>());
@@ -201,6 +202,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mtab2csv"] = 0;
 		_kgmod_run["writecsv"] = 0;
 		_kgmod_run["readcsv"] = 0;
+		_kgmod_run["runfunc"] = 2;
 
 
 
