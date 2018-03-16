@@ -22,15 +22,33 @@ import os
 import shutil
 
 def mkDir(dname,rm=False):
-	try:
-		if os.path.exists(dname):
-			if rm :
-				shutil.rmtree(dname)
-				os.makedirs(dname)
-			
-		else:
-			os.makedirs(dname)
+	import sys
+	if sys.version_info.major >= 3:
 
-	except FileExistsError:
-		pass
-		
+		try:
+			if os.path.exists(dname):
+				if rm :
+					shutil.rmtree(dname)
+					os.makedirs(dname)
+			
+			else:
+				os.makedirs(dname)
+
+		except FileExistsError:
+			pass
+
+	else:
+
+		try:
+			if os.path.exists(dname):
+				if rm :
+					shutil.rmtree(dname)
+					os.makedirs(dname)
+			
+			else:
+				os.makedirs(dname)
+
+		except OSError as err:
+			if err.errno != errno.EEXIST:
+				raise
+
