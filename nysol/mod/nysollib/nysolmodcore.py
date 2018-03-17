@@ -709,8 +709,6 @@ class NysolMOD_CORE(object):
 		linklist=[]
 		self.makeLinkList(iolist,linklist)
 
-		print(modlist)
-		print(linklist)
 		shobj = n_core.init(msgF)
 		modlimt =300
 		if len(modlist) > modlimt:

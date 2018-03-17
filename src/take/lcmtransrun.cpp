@@ -1,4 +1,8 @@
 #include "Python.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <stdio.h>
 
 #define MAXC 1024000
 
@@ -65,26 +69,46 @@ int lcmtrans(char *inf ,char * para ,char *outf){
 	if(outf==NULL){
 		ofp = stdout;
 	}
-	if((ofp=fopen(outf,"w"))==NULL){
+	else{
+		if((ofp=fopen(outf,"w"))==NULL){	
+			fprintf(stderr,"file open error\n");
+			return EXIT_FAILURE;
+		}	
+	}
+	/*
+	else if((ofp=fopen(outf,"w"))==NULL){	
 		fprintf(stderr,"file open error\n");
 		return EXIT_FAILURE;
 	}
+	*/
 
 	int odd=1; // 奇数行フラグ
+	char *buf =NULL; // 出力バッファ
+	char *buf2=NULL; // 出力バッファ
+	try{
+		buf = new char[MAXC];
+		buf2 = new char[MAXC];
+	}catch(...){
+		fprintf(stderr,"memory alloc error\n");
+		return -1;
+	}
 
 	// enumLcmSeq.rb,enumLcmIs.rbでのパターン
 	// 4 5 (2)
 	if(mode=='p'){
 		fprintf(ofp,"pattern,count,size,pid\n");
 		size_t recNo=0;
-		char buf[MAXC]; // 出力バッファ
-		char buf2[MAXC]; // 出力バッファ
+		//char buf[MAXC]; // 出力バッファ
+		//char buf2[MAXC]; // 出力バッファ
+
 		int spcCount=0; // スペースのカウント
 		int opos=-1;
 		while(1){
 			int rsize = fread(buf, sizeof(char), MAXC, fp);
 			if( rsize < 0 ){ 
 				fprintf(stderr,"file read error\n");
+				if(buf) { delete [] buf ;}
+				if(buf2) { delete [] buf2 ;}
 				return EXIT_FAILURE;
 			}
 			if( rsize == 0 ) { break;}
@@ -117,8 +141,8 @@ int lcmtrans(char *inf ,char * para ,char *outf){
 	else if(mode=='e'){
 		fprintf(ofp,"pattern,countP,countN,size,pid\n");
 		size_t recNo=0;
-		char buf[MAXC]; // 出力バッファ
-		char buf2[MAXC]; // 出力バッファ
+		//char buf[MAXC]; // 出力バッファ
+		//char buf2[MAXC]; // 出力バッファ
 		int spcCount=0; // スペースのカウント
 		int comCount=0; // スペースのカウント
 		int opos=-1;
@@ -127,6 +151,8 @@ int lcmtrans(char *inf ,char * para ,char *outf){
 			int rsize = fread(buf, sizeof(char), MAXC, fp);
 			if( rsize < 0 ){ 
 				fprintf(stderr,"file read error\n");
+				if(buf) { delete [] buf ;}
+				if(buf2) { delete [] buf2 ;}
 				return EXIT_FAILURE;
 			}
 			if( rsize == 0 ) { break;}
@@ -163,13 +189,15 @@ int lcmtrans(char *inf ,char * para ,char *outf){
 		fprintf(ofp,"__tid,pid\n");
 		size_t recNo=0;
 		int opos=-1;
-		char buf[MAXC]; // 出力バッファ
-		char buf2[MAXC]; // 出力バッファ
+		//char buf[MAXC]; // 出力バッファ
+		//char buf2[MAXC]; // 出力バッファ
 
 		while(1){
 			int rsize = fread(buf, sizeof(char), MAXC, fp);
 			if( rsize < 0 ){ 
 				fprintf(stderr,"file read error\n");
+				if(buf) { delete [] buf ;}
+				if(buf2) { delete [] buf2 ;}
 				return EXIT_FAILURE;
 			}
 			if( rsize == 0 ) { break;}
@@ -199,6 +227,8 @@ int lcmtrans(char *inf ,char * para ,char *outf){
 			}
 		}
 	}
+	if(buf) { delete [] buf ;}
+	if(buf2) { delete [] buf2 ;}
 	if(0!=fclose(fp)){
 		fprintf(stderr,"file close error\n");
 		return EXIT_FAILURE;
