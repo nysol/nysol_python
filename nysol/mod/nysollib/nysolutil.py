@@ -54,7 +54,7 @@ def para2str(vals):
 			rtnStr.append(k + "=" + ",".join(plist) )
 
 		else:
-			rtnStr.append(v)
+			rtnStr.append([k,v])
 							
 	return rtnStr
 

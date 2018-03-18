@@ -45,12 +45,15 @@ struct argST{
 	int *i_p;
 	int *o_p;
 	PyObject* list;
+	PyObject* fobj;
+	PyObject* aobj;
 	bool finflg;
 	bool outputEND;
 	int status;
 	kgstr_t msg;
 	kgstr_t tag;
 	kgstr_t endtime;
+	vector<int> fdlist;
 	pthread_mutex_t *mutex;
 	pthread_mutex_t *stMutex;
 	pthread_cond_t *stCond;
@@ -65,6 +68,8 @@ struct cmdCapselST{
 	kgstr_t mstr;
 	PyObject* mobj;
 	PyObject* oobj;
+	PyObject* fobj;
+	PyObject* aobj;
 	kgstr_t tag;
 
 };
@@ -109,6 +114,7 @@ class kgshell{
 	vector<int> _modBLkNo;
 	vector<int> _likBLkNo;
 	vector<int> _BLkcnt;
+	vector<int> _FDlist;
 	multimap<int, int> _countRank;
 	vector< set<int> > _BLkRunlist;
 	int _blockmax;
@@ -254,7 +260,7 @@ public:
 	static void *run_func(void *arg);
 	static void *run_writelist(void *arg);
 	static void *run_readlist(void *arg);
-
+	static void *run_pyfunc(void *arg);
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	int runx(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 

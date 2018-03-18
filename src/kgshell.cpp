@@ -120,6 +120,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
 		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 
+		_kgmod_map["mstdin"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 
 		_kgmod_run["m2tee"] = 0;
 		_kgmod_run["mfifo"] = 0;
@@ -202,7 +203,8 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mtab2csv"] = 0;
 		_kgmod_run["writecsv"] = 0;
 		_kgmod_run["readcsv"] = 0;
-		_kgmod_run["runfunc"] = 2;
+		_kgmod_run["runfunc"] = 3;
+		_kgmod_run["mstdin"] = 0;
 
 
 
@@ -447,6 +449,75 @@ void *kgshell::run_readlist(void *arg){
 }
 
 
+
+void *kgshell::run_pyfunc(void *arg){
+	try{
+		string msg;
+		argST *a =(argST*)arg; 
+		int sts = a->mobj->run(a->fobj,a->aobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->fdlist);
+		pthread_mutex_lock(a->stMutex);
+		a->status = sts;
+		a->finflg=true;
+		a->msg.append(msg);
+		a->endtime=getNowTime(true);
+
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(kgError& err){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(err.message(0));
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch (const exception& e) {
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(e.what());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(char * er){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ");
+		a->msg.append(er);
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+
+	}catch(...){
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 1;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("unKnown ERROR");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+	return NULL;	
+}
+
+
 void kgshell::makePipeList(vector<linkST> & plist)
 {
 	rlimit rlim;
@@ -468,7 +539,8 @@ void kgshell::makePipeList(vector<linkST> & plist)
 		int flags1 = fcntl(piped[1], F_GETFD);
 		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
 		fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
-
+		_FDlist.push_back(piped[0]);
+		_FDlist.push_back(piped[1]);
 		/*linkST{ kgstr_t frTP; int frID; kgstr_t toTP; int toID;};*/
 		//typedef map<int, map<string,vector<int> > > iomap_t;
 		
@@ -501,7 +573,7 @@ void kgshell::makePipeList3(vector<linkST> & plist,int iblk)
 
 	_ipipe_map.clear();
 	_opipe_map.clear();
-
+	_FDlist.clear();
 	
 	int pcnt = _spblk.getLinkBlkSize(iblk);
 	rlimit rlim;
@@ -525,6 +597,9 @@ void kgshell::makePipeList3(vector<linkST> & plist,int iblk)
 		int flags1 = fcntl(piped[1], F_GETFD);
 		fcntl(piped[0], F_SETFD, flags0 | FD_CLOEXEC);
 		fcntl(piped[1], F_SETFD, flags1 | FD_CLOEXEC);
+		_FDlist.push_back(piped[0]);
+		_FDlist.push_back(piped[1]);
+
 
 		/*linkST{ kgstr_t frTP; int frID; kgstr_t toTP; int toID;};*/
 		//typedef map<int, map<string,vector<int> > > iomap_t;
@@ -779,7 +854,7 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
 		_clen = _spblk.getModBlkSize(iblk);
 	
-		//debugIOinfo_OUTPUT() //DEBUG
+		//debugIOinfo_OUTPUT(); //DEBUG
 		//_clen = cmds.size();
 		_modlist = new kgMod*[_clen];
 		vector<int> cmdlist = _spblk.getModBlkInfo(iblk);
@@ -822,8 +897,13 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			_argst[clenpos_a].status = 0;
 			_argst[clenpos_a].stMutex = &_stsMutex;
 			_argst[clenpos_a].stCond = &_stsCond;
+			_argst[clenpos_a].fobj= cmds[i].fobj;
+			_argst[clenpos_a].aobj= cmds[i].aobj;
 
 			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+			if(typ==3){
+				_argst[clenpos_a].fdlist= _FDlist;
+			}
 
 			if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
 				if(typ==2){
@@ -917,7 +997,7 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 
 			//debug
 			
-			// debugARGST_OUTPUT(i);
+			//debugARGST_OUTPUT(i);
 
 			if(typ==0){
 				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_func ,(void*)&_argst[clenpos_a]);
@@ -927,6 +1007,9 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			}
 			else if(typ==2){
 				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_readlist ,(void*)&_argst[clenpos_a]);
+			}
+			else if(typ==3){
+				_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_pyfunc ,(void*)&_argst[clenpos_a]);
 			}
 		}
 

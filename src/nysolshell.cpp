@@ -62,11 +62,19 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 
 		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
 		for(Py_ssize_t j=0 ; j<psize;j++){
-			if( strCHECK(PyList_GetItem(para_LIST ,j)) ){
-				cmpcaplocal.paralist.push_back(strGET(PyList_GetItem(para_LIST ,j)));
+			PyObject *parainfo = PyList_GetItem(para_LIST ,j);
+
+			if( strCHECK(parainfo) ){
+				cmpcaplocal.paralist.push_back(strGET(parainfo));
 			}
-			else{
-				cmpcaplocal.iobj=PyList_GetItem(para_LIST ,j);
+			else if( PyList_Check( parainfo ) ){
+				char * kwd = strGET(PyList_GetItem(parainfo ,0));
+				if( !strcmp(kwd,"func") ){
+					cmpcaplocal.fobj=PyList_GetItem(parainfo ,1);
+				}
+				else if( !strcmp(kwd,"args") ){
+					cmpcaplocal.aobj=PyList_GetItem(parainfo ,1);
+				}
 			}
 		}
 

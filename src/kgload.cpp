@@ -81,7 +81,7 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 
 	// 入出力ファイルオープン
 	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
 	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
 	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
