@@ -171,7 +171,7 @@ class kgMod
 	virtual int run(int inum,int *i,int onum, int* o,string & msg){return 0;}
 	virtual int run(int inum,int *i,PyObject* o,pthread_mutex_t *mtx,string & msg){return 0;};
 	virtual int run(PyObject* i_p,int onum, int* o_p,string &msg){return 0;}
-	virtual int run(PyObject* f_p,PyObject* a_p,int inum,int *i,int onum, int* o,string & msg,vector<int> fdlist){return 0;}
+	virtual int run(PyObject* f_p,PyObject* a_p,int inum,int *i,int onum, int* o,string & msg,pthread_mutex_t *mtx,vector<int> fdlist){return 0;}
 
 
 

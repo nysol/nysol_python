@@ -30,14 +30,6 @@ using namespace std;
 using namespace kglib;
 using namespace kgmod;
 
-static char* strGET(PyObject* data){
-#if PY_MAJOR_VERSION >= 3
-	return PyUnicode_AsUTF8(data);
-#else		
-	return PyString_AsString(data);
-#endif
-
-}
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
@@ -49,7 +41,7 @@ kgPyfunc::kgPyfunc(void)
 	_paralist = "i=,o=,func=,args=";
 	_paraflg = kgArgs::COMMON;
 
-	_titleL = _title = "";
+	_titleL = _title = "kgpyfunc";
 	
 }
 // -----------------------------------------------------------------------------
@@ -90,8 +82,10 @@ int kgPyfunc::run(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o_p,string & msg,vector<int> fdlist)
+int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o_p,string & msg,pthread_mutex_t *mtx,vector<int> fdlist)
 {
+	cerr << "kgPyfunc::run" << endl;
+
 	try{
 		setArgs();
 		if(inum>1 || onum>1){
@@ -124,8 +118,25 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 		return 0;
 		*/
 
+
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
+			cerr << "kgPyfunc::run1" << endl;
+
+			if(!Py_IsInitialized()){
+				cerr << "kgPyfunc::run1-1" << endl;
+				Py_Initialize();
+			}
+			cerr << "kgPyfunc::run2" << endl;
+			if (!PyEval_ThreadsInitialized())	{ 
+				cerr << "kgPyfunc::run2-1" << endl;
+				PyEval_InitThreads();
+			}
+			cerr << "kgPyfunc::run3" << endl;
+
+			PyOS_AfterFork();
+			cerr << "kgPyfunc::run4" << endl;
+
 			for(size_t i=0; i<fdlist.size();i++){
 				if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
 					close(fdlist[i]);
@@ -139,7 +150,40 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 				dup2(o_p_t, 1);
 				close(o_p_t);
 			}
-			PyObject* rtn = PyObject_CallObject(f_p,a_p);
+			cerr << "kgPyfunc::run5" << endl;
+
+/*
+			PyInterpreterState* interp = PyInterpreterState_New();
+				cerr << "init5" << endl;
+			//PyThreadState *tstate = PyThreadState_New(interp);
+
+			//PyThreadState *tstate2 = PyThreadState_New(interp);
+
+
+				cerr << "init6" << endl;
+			if(!PyGILState_Check()){
+				cerr << "init6-0" << endl;
+				PyEval_AcquireThread(tstate);
+				cerr << "init6-1" << endl;
+			}
+	*/
+			cerr << "kgPyfunc::run6" << endl;
+			pthread_mutex_lock(mtx);
+			{
+			cerr << "kgPyfunc::run6-1" << endl;
+				//PyObject* rtn = PyObject_CallObject(f_p,a_p);
+				PyObject* rtn = PyObject_Call(f_p,a_p,NULL);
+			cerr << "kgPyfunc::run6-2" << endl;
+			}
+			pthread_mutex_unlock(mtx);
+			cerr << "kgPyfunc::run7" << endl;
+/*
+			PyEval_ReleaseThread(tstate);
+			cerr << "init9" << endl;
+			PyThreadState_Delete(tstate);
+			cerr << "init10" << endl;
+*/
+			cerr << "kgPyfunc::run8" << endl;
 			_exit(0);
 		}
 		else if (pid>0){//parent
@@ -162,6 +206,8 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 		else {//err
 			throw kgError("fork error" );
 		}
+		
+
 		return 0;
 
 	}catch(kgError& err){

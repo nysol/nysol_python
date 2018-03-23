@@ -180,6 +180,16 @@ PyObject* runLx(PyObject* self, PyObject* args)
 {
 	try {
 
+
+	cerr << "nysolshell::runLx" << endl;
+	if(!Py_IsInitialized()){
+		Py_Initialize();
+	}
+	if (!PyEval_ThreadsInitialized())	{ 
+		PyEval_InitThreads();
+	}
+
+
 	PyObject *sh;
 	PyObject *mlist;
 	PyObject *linklist;

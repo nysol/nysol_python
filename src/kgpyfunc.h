@@ -56,7 +56,7 @@ public:
 	//実行メソッド
 	int run(void);
 	//実行メソッド
-	int run(PyObject* f_p,PyObject* a_p,int inum,int *i,int onum, int* o,string & msg,vector<int>fdlist);
+	int run(PyObject* f_p,PyObject* a_p,int inum,int *i,int onum, int* o,string & msg,pthread_mutex_t *mtx,vector<int>fdlist);
 
 };
 

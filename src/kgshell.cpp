@@ -121,6 +121,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 
 		_kgmod_map["mstdin"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["mstdout"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 
 		_kgmod_run["m2tee"] = 0;
 		_kgmod_run["mfifo"] = 0;
@@ -205,6 +206,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["readcsv"] = 0;
 		_kgmod_run["runfunc"] = 3;
 		_kgmod_run["mstdin"] = 0;
+		_kgmod_run["mstdout"] = 0;
 
 
 
@@ -246,9 +248,13 @@ kgshell::kgshell(int mflg){
 
 void *kgshell::run_func(void *arg){
 	try{
+
+
 		string msg;
 		argST *a =(argST*)arg; 
+
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
+
 		pthread_mutex_lock(a->stMutex);
 		a->status =sts;
 		a->finflg=true;
@@ -454,7 +460,16 @@ void *kgshell::run_pyfunc(void *arg){
 	try{
 		string msg;
 		argST *a =(argST*)arg; 
-		int sts = a->mobj->run(a->fobj,a->aobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->fdlist);
+
+		//PyGILState_STATE gstate;
+		//cerr << "run_pyfunc:0" << endl;
+		//gstate = PyGILState_Ensure();
+		//cerr << "run_pyfunc:1" << endl;
+		int sts = a->mobj->run(a->fobj,a->aobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->mutex,a->fdlist);
+		//cerr << "run_pyfunc:2" << endl;
+		//PyGILState_Release(gstate);
+		//cerr << "run_pyfunc:3" << endl;
+
 		pthread_mutex_lock(a->stMutex);
 		a->status = sts;
 		a->finflg=true;
@@ -664,6 +679,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			_argst[i].status = 0;
 			_argst[i].stMutex = &_stsMutex;
 			_argst[i].stCond = &_stsCond;
+			_argst[i].mutex = &_mutex;
 
 			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 
@@ -899,6 +915,7 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			_argst[clenpos_a].stCond = &_stsCond;
 			_argst[clenpos_a].fobj= cmds[i].fobj;
 			_argst[clenpos_a].aobj= cmds[i].aobj;
+			_argst[i].mutex = &_mutex;
 
 			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 			if(typ==3){
@@ -1095,6 +1112,16 @@ int kgshell::runx(
 	vector<linkST> & plist
 )
 {
+	cerr << "kgshell::runx" << endl;
+	if(!Py_IsInitialized()){
+		cerr << "kgshell::runx ini" << endl;
+		Py_Initialize();
+	}
+	if (!PyEval_ThreadsInitialized())	{ 
+		cerr << "kgshell::runx thini" << endl;
+		PyEval_InitThreads();
+	}
+
 	try{
 		kgSplitBlock spblk(cmds.size(),plist);
 		_spblk.blockSplit(KGMOD_RUN_LIMIT,cmds.size(),plist);
