@@ -84,8 +84,6 @@ int kgPyfunc::run(void)
 // -----------------------------------------------------------------------------
 int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o_p,string & msg,pthread_mutex_t *mtx,vector<int> fdlist)
 {
-	cerr << "kgPyfunc::run" << endl;
-
 	try{
 		setArgs();
 		if(inum>1 || onum>1){
@@ -121,21 +119,10 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
-			cerr << "kgPyfunc::run1" << endl;
 
-			if(!Py_IsInitialized()){
-				cerr << "kgPyfunc::run1-1" << endl;
-				Py_Initialize();
-			}
-			cerr << "kgPyfunc::run2" << endl;
-			if (!PyEval_ThreadsInitialized())	{ 
-				cerr << "kgPyfunc::run2-1" << endl;
-				PyEval_InitThreads();
-			}
-			cerr << "kgPyfunc::run3" << endl;
-
+			if(!Py_IsInitialized()){ Py_Initialize(); }
+			if (!PyEval_ThreadsInitialized())	{  PyEval_InitThreads(); }
 			PyOS_AfterFork();
-			cerr << "kgPyfunc::run4" << endl;
 
 			for(size_t i=0; i<fdlist.size();i++){
 				if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
@@ -150,40 +137,24 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 				dup2(o_p_t, 1);
 				close(o_p_t);
 			}
-			cerr << "kgPyfunc::run5" << endl;
 
 /*
 			PyInterpreterState* interp = PyInterpreterState_New();
-				cerr << "init5" << endl;
 			//PyThreadState *tstate = PyThreadState_New(interp);
-
-			//PyThreadState *tstate2 = PyThreadState_New(interp);
-
-
-				cerr << "init6" << endl;
 			if(!PyGILState_Check()){
-				cerr << "init6-0" << endl;
 				PyEval_AcquireThread(tstate);
-				cerr << "init6-1" << endl;
 			}
-	*/
-			cerr << "kgPyfunc::run6" << endl;
-			pthread_mutex_lock(mtx);
-			{
-			cerr << "kgPyfunc::run6-1" << endl;
+*/
+//			pthread_mutex_lock(mtx);
+//			{
 				//PyObject* rtn = PyObject_CallObject(f_p,a_p);
 				PyObject* rtn = PyObject_Call(f_p,a_p,NULL);
-			cerr << "kgPyfunc::run6-2" << endl;
-			}
-			pthread_mutex_unlock(mtx);
-			cerr << "kgPyfunc::run7" << endl;
+//			}
+//			pthread_mutex_unlock(mtx);
 /*
 			PyEval_ReleaseThread(tstate);
-			cerr << "init9" << endl;
 			PyThreadState_Delete(tstate);
-			cerr << "init10" << endl;
 */
-			cerr << "kgPyfunc::run8" << endl;
 			_exit(0);
 		}
 		else if (pid>0){//parent

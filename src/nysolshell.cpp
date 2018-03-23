@@ -180,36 +180,35 @@ PyObject* runLx(PyObject* self, PyObject* args)
 {
 	try {
 
+		if(!Py_IsInitialized()){ 
+			Py_Initialize();
+		}
 
-	cerr << "nysolshell::runLx" << endl;
-	if(!Py_IsInitialized()){
-		Py_Initialize();
-	}
-	if (!PyEval_ThreadsInitialized())	{ 
-		PyEval_InitThreads();
-	}
-
-
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
-	}
-	vector< cmdCapselST > cmdCapsel;
-	vector< linkST > p_list;
-	runCore(mlist,linklist,cmdCapsel,p_list);
+		if (!PyEval_ThreadsInitialized())	{ 
+			PyEval_InitThreads();
+		}
 
 
-	ksh->runx(cmdCapsel,p_list);
-	return PyLong_FromLong(0);
+		PyObject *sh;
+		PyObject *mlist;
+		PyObject *linklist;
+		if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+ 	   return NULL;
+ 	 }
+
+		kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+		if(!PyList_Check(mlist)){
+			cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+			return Py_BuildValue("");
+		}
+		vector< cmdCapselST > cmdCapsel;
+		vector< linkST > p_list;
+		runCore(mlist,linklist,cmdCapsel,p_list);
+
+
+		ksh->runx(cmdCapsel,p_list);
+		return PyLong_FromLong(0);
 
 
 	}

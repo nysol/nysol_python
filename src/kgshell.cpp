@@ -1112,13 +1112,10 @@ int kgshell::runx(
 	vector<linkST> & plist
 )
 {
-	cerr << "kgshell::runx" << endl;
 	if(!Py_IsInitialized()){
-		cerr << "kgshell::runx ini" << endl;
 		Py_Initialize();
 	}
 	if (!PyEval_ThreadsInitialized())	{ 
-		cerr << "kgshell::runx thini" << endl;
 		PyEval_InitThreads();
 	}
 
