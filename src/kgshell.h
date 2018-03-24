@@ -47,6 +47,7 @@ struct argST{
 	PyObject* list;
 	PyObject* fobj;
 	PyObject* aobj;
+	PyObject* kobj;
 	bool finflg;
 	bool outputEND;
 	int status;
@@ -70,6 +71,7 @@ struct cmdCapselST{
 	PyObject* oobj;
 	PyObject* fobj;
 	PyObject* aobj;
+	PyObject* kobj;
 	kgstr_t tag;
 
 };

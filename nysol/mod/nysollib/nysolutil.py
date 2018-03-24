@@ -26,11 +26,16 @@ def para2strStr(vals):
 	return rtnStr
 
 
-def para2str(vals):
+def para2str(vals): #クラスごとにいれる?
+
 	rtnStr = []
 	for k, v in vals.items():
 
-		if isinstance(v,bool) :
+		#特殊パラメータ　runfunc_*
+		if k == "runfunc_func" or k == "runfunc_args" or k == "runfunc_kwd" :
+			rtnStr.append([k,v])
+
+		elif isinstance(v,bool) :
 			if v==True:
 				rtnStr.append("-" + k )
 
@@ -157,7 +162,6 @@ def arg2dict(args, kw_args,klist,uk=None):
 		del kw_args[k]
 
 	return kw_args
-
 
 
 

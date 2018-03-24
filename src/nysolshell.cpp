@@ -69,11 +69,14 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 			}
 			else if( PyList_Check( parainfo ) ){
 				char * kwd = strGET(PyList_GetItem(parainfo ,0));
-				if( !strcmp(kwd,"func") ){
+				if( !strcmp(kwd,"runfunc_func") ){
 					cmpcaplocal.fobj=PyList_GetItem(parainfo ,1);
 				}
-				else if( !strcmp(kwd,"args") ){
+				else if( !strcmp(kwd,"runfunc_args") ){
 					cmpcaplocal.aobj=PyList_GetItem(parainfo ,1);
+				}
+				else if( !strcmp(kwd,"runfunc_kwd") ){
+					cmpcaplocal.kobj=PyList_GetItem(parainfo ,1);
 				}
 			}
 		}

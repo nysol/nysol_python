@@ -82,7 +82,7 @@ int kgPyfunc::run(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o_p,string & msg,pthread_mutex_t *mtx,vector<int> fdlist)
+int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,int onum, int* o_p,string & msg,pthread_mutex_t *mtx,vector<int> fdlist)
 {
 	try{
 		setArgs();
@@ -148,14 +148,19 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 //			pthread_mutex_lock(mtx);
 //			{
 				//PyObject* rtn = PyObject_CallObject(f_p,a_p);
-				PyObject* rtn = PyObject_Call(f_p,a_p,NULL);
+				PyObject* rtn = PyObject_Call(f_p,a_p,k_p);
+				if(rtn == NULL){
+					_exit(1);
+				}
+				else{
+					_exit(0);
+				}
 //			}
 //			pthread_mutex_unlock(mtx);
 /*
 			PyEval_ReleaseThread(tstate);
 			PyThreadState_Delete(tstate);
 */
-			_exit(0);
 		}
 		else if (pid>0){//parent
 			int status = 0;
@@ -170,7 +175,7 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,int inum,int *i_p,int onum, int* o
 				msg.append(successEndMsg());
 			}
 			else{
-				throw kgError("exec err errno:(" + toString(status) + ")");
+				throw kgError("exec call python func");
 			}
 			return status;
 		}

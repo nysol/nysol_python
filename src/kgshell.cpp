@@ -465,7 +465,7 @@ void *kgshell::run_pyfunc(void *arg){
 		//cerr << "run_pyfunc:0" << endl;
 		//gstate = PyGILState_Ensure();
 		//cerr << "run_pyfunc:1" << endl;
-		int sts = a->mobj->run(a->fobj,a->aobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->mutex,a->fdlist);
+		int sts = a->mobj->run(a->fobj,a->aobj,a->kobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->mutex,a->fdlist);
 		//cerr << "run_pyfunc:2" << endl;
 		//PyGILState_Release(gstate);
 		//cerr << "run_pyfunc:3" << endl;
@@ -915,6 +915,7 @@ int kgshell::runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist){
 			_argst[clenpos_a].stCond = &_stsCond;
 			_argst[clenpos_a].fobj= cmds[i].fobj;
 			_argst[clenpos_a].aobj= cmds[i].aobj;
+			_argst[clenpos_a].kobj= cmds[i].kobj;
 			_argst[i].mutex = &_mutex;
 
 			int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
