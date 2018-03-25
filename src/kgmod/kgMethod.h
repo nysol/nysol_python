@@ -137,7 +137,10 @@ class kgAutoPtr2
   T* _ptr;
 public:
   kgAutoPtr2(T* ptr=0) : _ptr(ptr) {}
-  virtual ~kgAutoPtr2(void) { if(_ptr != 0) delete[] _ptr; _ptr=0;}
+  virtual ~kgAutoPtr2(void) {
+  	 if(_ptr != 0) delete[] _ptr; 
+  	 _ptr=0;
+  }
 	kgAutoPtr2<T>& operator=(T* ptr){_ptr=ptr; return *this;} 
   T* get(void) const throw() { return _ptr; }
   void set(T* ptr) throw() { if(_ptr!=0) delete[] _ptr; _ptr=ptr; }

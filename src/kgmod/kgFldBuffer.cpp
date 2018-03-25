@@ -63,10 +63,12 @@ void kgFldBuffer::write(char * start,size_t size)
 	}
 	else{
 		if(w_page_ >= limit_page_){
-			page_p_.at(limit_page_).set( new char[page_size_] );
+			//page_p_.at(limit_page_).set( new char[page_size_] );
+			page_p_[limit_page_] = new char[page_size_];
 			limit_page_++;
 		}
-		memcpy(page_p_.at(w_page_).get(), start, size);
+		//memcpy(page_p_.at(w_page_).get(), start, size);
+		memcpy(page_p_[w_page_], start, size);
 		end_pos_[w_page_] = size;
 		w_page_++;
 	}
@@ -106,7 +108,8 @@ char* kgFldBuffer::pageSet(void)
 		return fpage_p_.get();
 	}
 	else{
-		return page_p_.at(r_page_).get();
+		//return page_p_.at(r_page_).get();
+		return page_p_[r_page_];
 	}
 	return NULL;
 }

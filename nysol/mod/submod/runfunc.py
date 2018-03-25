@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import nysol._nysolshell_core as n_core
-from nysol.mod.nysollib.nysolmodcore import NysolMOD_CORE
+from nysol.mod.nysollib.core import NysolMOD_CORE
 from nysol.mod.nysollib import nysolutil as nutil
 
 def _para2dict(func,args,kw_args):

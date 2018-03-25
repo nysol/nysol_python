@@ -49,7 +49,9 @@ class kgFldBuffer{
 	size_t r_page_;			// 読込中ページ
 	size_t r_pos_;			// 読込位置
 
-	vector<kgAutoPtr2<char> > page_p_; // ページ領域へポインタ
+	//vector<kgAutoPtr2<char> > page_p_; // ページ領域へポインタ
+	char ** page_p_;
+
 	vector<size_t > end_pos_; 				 // データ終了位置
 
 	kgAutoPtr2<char> fpage_p_;	// ファイル読み込み領域
@@ -62,10 +64,19 @@ public:
 	//コンストラクタ	
 	kgFldBuffer(size_t pmax=10,size_t size=KG_iSize ,kgEnv* env=0):
 		max_page_(pmax),page_size_(size),limit_page_(0),w_page_(0),r_page_(0),r_pos_(0),tempFile_(env){
-		page_p_.resize(max_page_);	 		
+		//page_p_.resize(max_page_);	 		
+		page_p_ = new char*[max_page_];
 		end_pos_.resize(max_page_,0);
+		
 	}
-	~kgFldBuffer(void){};
+	~kgFldBuffer(void){ 
+		if( page_p_ ){ 
+			for(size_t i=0;i<limit_page_;i++){
+				delete page_p_[i];
+			}
+			delete [] page_p_; 
+		}
+	};
 	// バッファへの書き込み
 	void write(char * start,size_t size);
 	// データ項目セット

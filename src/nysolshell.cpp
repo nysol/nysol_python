@@ -1,12 +1,5 @@
 // helloWrapper.c
 #include "Python.h"
-//#undef tolower
-//#undef toupper
-//#undef isalpha
-//#undef islower
-//#undef isupper
-//#undef isspace
-//#undef isalnum
 #include <kgEnv.h>
 #include <kgMethod.h>
 #include <kgCSV.h>

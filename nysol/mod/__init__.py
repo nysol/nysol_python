@@ -1,4 +1,4 @@
-from .nysollib.nysolmodcore import runs, drawModels,drawModelsD3, modelInfos
+from .nysollib.core import runs, drawModels,drawModelsD3, modelInfos
 from .submod.readcsv import Nysol_Readcsv as readcsv
 from .submod.readlist import Nysol_Readlist as readlist
 from .submod.writecsv import Nysol_Writecsv as writecsv
