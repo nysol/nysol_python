@@ -32,9 +32,8 @@ def check(inf,tid,item,s,o):
 
 #a=("i=man1.csv","tid=tid","type=F","S=3","O=./vvv")
 #print ("aaaa")
-#f = nm.runfunc(check,"i=man1.csv","tid=tid","type=F","S=3","O=./vvv").mcut(f="pid,size,count,total,support,lift,pattern",o="x1").run(msg="on")
-#print(f)
-
+f = nm.runfunc(check,"i=man1.csv","tid=tid","type=F","S=3","O=./vvv").mcut(f="pid,size,count,total,support,lift,pattern").run(msg="on")
+print(f)
 
 #==============================================================
 
@@ -70,11 +69,10 @@ def check4(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
 		sys.stderr.write("st2 "+ str(nL) +"\n")
 		sys.stderr.write("st2 "+ str(tl) +"\n")
 	except Exception as err:
-		print(sys.exc_info())	
-	
+		sys.stderr.write(sys.exc_info())	
+		sys.stderr.write("\n")
 
 nm.runfunc(check4,"aaaa",t1="xxx",nF=2).run()
-
 
 f = nm.mselrand(c=10,i="featureAll.ans.csv")
 f <<= nm.mcut(f="id,fldkey,way,val")
