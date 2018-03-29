@@ -1683,12 +1683,13 @@ for ql,qh in quantile:
 		
 #nm.drawModels(funclist9,"check.html")
 # 全部まとめ動かすファイルの数上限
-# (10240 on man 管理者でなくて変えれる上限っぽい)を超える
+# (10240 on mac 管理者でなくて変えれる上限っぽい)を超える
 #if len(funclist8)>0:
 #	nm.runs(funclist8) 
-#	nm.drawModelsD3(funclist8,"output.html") 
+nm.drawModelsD3(funclist8_all,"output.html") 
 #print("a st")
 nm.runs(funclist8_all) 
+
 #print("a ed")
 
 #cid_ce normalise (normalizeのsdチェック)

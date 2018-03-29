@@ -8,14 +8,12 @@ class Nysol_MeachIter(object):
 
 	def __init__(self,obj):
 		
-		dupobj = copy.deepcopy(obj)
 
-		if len(dupobj.outlist["o"])==0:
-			runobj = dupobj
-		else:
+		if len(obj.outlist["o"])!=0:
 			print ("type ERORR")
 			return None
 			
+		runobj = copy.deepcopy(obj)
 		
 		runobj.change_modNetwork()
 
@@ -52,6 +50,10 @@ class Nysol_MeachKeyIter(object):
 
 	def __init__(self,obj,keys,skeys=None):
 
+		if len(obj.outlist["o"])!=0:
+			print ("type ERORR")
+			return None
+
 		if isinstance(keys,str) :
 			newkeys = keys.split(",") 
 		elif isinstance(keys,list) :
@@ -59,27 +61,20 @@ class Nysol_MeachKeyIter(object):
 		else:
 			raise Exception("unsuport TYPE")
 
-		
 		dupobj = copy.deepcopy(obj)
 
-		if len(dupobj.outlist["o"])==0:
-			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
-			sortkeys = copy.deepcopy(newkeys)
-			if skeys != None:
-				if isinstance(keys,str) :
-					sortkeys.extend(skeys.split(","))
-				elif isinstance(keys,list) :
-					sortkeys.extend(skeys)
-				else:
-					raise Exception("unsuport TYPE")
+		from nysol.mod.submod.msortf import Nysol_Msortf as msortf
+		sortkeys = copy.deepcopy(newkeys)
+		if skeys != None:
+			if isinstance(keys,str) :
+				sortkeys.extend(skeys.split(","))
+			elif isinstance(keys,list) :
+				sortkeys.extend(skeys)
+			else:
+				raise Exception("unsuport TYPE")
 			
-			runobj = msortf({"f":sortkeys}).addPre(dupobj)
+		runobj = msortf({"f":sortkeys}).addPre(dupobj)
 
-		else:
-			print ("type ERORR")
-			return None
-			
-		
 		runobj.change_modNetwork()
 
 		uniqmod={} 
@@ -114,6 +109,10 @@ class Nysol_MeachKeyDictIter(object):
 
 	def __init__(self,obj,keys,skeys=None):
 
+		if len(obj.outlist["o"])!=0:
+			print ("type ERORR")
+			return None
+
 		if isinstance(keys,str) :
 			newkeys = keys.split(",") 
 		elif isinstance(keys,list) :
@@ -121,27 +120,19 @@ class Nysol_MeachKeyDictIter(object):
 		else:
 			raise Exception("unsuport TYPE")
 
-		
 		dupobj = copy.deepcopy(obj)
 
-		if len(dupobj.outlist["o"])==0:
-			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
-			sortkeys = copy.deepcopy(newkeys)
-			if skeys != None:
-				if isinstance(keys,str) :
-					sortkeys.extend(skeys.split(","))
-				elif isinstance(keys,list) :
-					sortkeys.extend(skeys)
-				else:
-					raise Exception("unsuport TYPE")
+		from nysol.mod.submod.msortf import Nysol_Msortf as msortf
+		sortkeys = copy.deepcopy(newkeys)
+		if skeys != None:
+			if isinstance(keys,str) :
+				sortkeys.extend(skeys.split(","))
+			elif isinstance(keys,list) :
+				sortkeys.extend(skeys)
+			else:
+				raise Exception("unsuport TYPE")
 			
-			runobj = msortf({"f":sortkeys}).addPre(dupobj)
-
-		else:
-			print ("type ERORR")
-			return None
-			
-		
+		runobj = msortf({"f":sortkeys}).addPre(dupobj)
 		runobj.change_modNetwork()
 
 		uniqmod={} 
@@ -176,6 +167,11 @@ class Nysol_MeachKeyDictIter(object):
 class Nysol_MeachKeyIterWithFlag(object):
 
 	def __init__(self,obj,keys,skeys=None):
+
+		if len(obj.outlist["o"])!=0:
+			print ("type ERORR")
+			return None
+
 		
 		if isinstance(keys,str) :
 			newkeys = keys.split(",") 
@@ -187,24 +183,18 @@ class Nysol_MeachKeyIterWithFlag(object):
 		
 		dupobj = copy.deepcopy(obj)
 
-		if len(dupobj.outlist["o"])==0:
-			from nysol.mod.submod.msortf import Nysol_Msortf as msortf
-			sortkeys = copy.deepcopy(newkeys)
-			if skeys != None:
-				if isinstance(keys,str) :
-					sortkeys.extend(skeys.split(","))
-				elif isinstance(keys,list) :
-					sortkeys.extend(skeys)
-				else:
-					raise Exception("unsuport TYPE")
+		from nysol.mod.submod.msortf import Nysol_Msortf as msortf
+		sortkeys = copy.deepcopy(newkeys)
+		if skeys != None:
+			if isinstance(keys,str) :
+				sortkeys.extend(skeys.split(","))
+			elif isinstance(keys,list) :
+				sortkeys.extend(skeys)
+			else:
+				raise Exception("unsuport TYPE")
 			
-			runobj = msortf({"f":sortkeys}).addPre(dupobj)
+		runobj = msortf({"f":sortkeys}).addPre(dupobj)
 
-		else:
-			print ("type ERORR")
-			return None
-			
-		
 		runobj.change_modNetwork()
 
 		uniqmod={} 

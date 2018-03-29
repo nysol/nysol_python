@@ -122,17 +122,9 @@ class kgshell{
 	int _blockmax;
 	kgSplitBlock _spblk;
 
-	void splitBLOCK(int st,int blk,int cmdsize);
-	void splitBLOCKsub(vector<bool>& visit,vector< vector<int> > &stk,int st,int blk,int pos);
 
+	void makePipeList(vector<linkST>& plist,int iblk);
 
-	void makeBLKSub(vector<bool>& visit, int st, int blockNo);
-	void makeBLK(vector<cmdCapselST> &cmds,	vector<linkST> & plist);
-	void checkBRKpoint(vector<bool>& visit,int st);
-
-
-	void makePipeList(vector<linkST>& plist);
-	void makePipeList3(vector<linkST>& plist,int iblk);
 	argST *_argst;
 
 	// ####################################
@@ -221,8 +213,9 @@ class kgshell{
 			_modlist = NULL;
 		}
 	}
-	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist);
-	int runMain3(vector<cmdCapselST> &cmds,vector<linkST> & plist);
+	void runInit(vector<cmdCapselST> &cmds,vector<linkST> & plist);
+	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk);
+	int runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk);
 
 public:
 	// コンストラクタ
@@ -263,14 +256,17 @@ public:
 	static void *run_writelist(void *arg);
 	static void *run_readlist(void *arg);
 	static void *run_pyfunc(void *arg);
+
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	int runx(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 
-
 	kgCSVfld* runiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	kgCSVkey* runkeyiter(vector<cmdCapselST> &cmdcap,vector<linkST> & plist,vector<string> & klist);
-	int getparams(kgstr_t cmdname,PyObject* list);
+
 	void cancel(void){ runClean();}
+
+	int getparams(kgstr_t cmdname,PyObject* list);
+
 
 
 };

@@ -12,26 +12,6 @@ from multiprocessing import Pool
 import copy
 import os, sys
 
-
-#def mulit_run(val):
-#	cc = n_core.init(val[2])
-#	return n_core.runL(cc,val[0],val[1])
-
-
-
-def runs(val,**kw_args):
-	return NysolMOD_CORE.runs(val,**kw_args)
-
-def drawModels(val,fname):
-	return NysolMOD_CORE.drawModels(val,fname)
-
-def drawModelsD3(val,fname):
-	return NysolMOD_CORE.drawModelsD3(val,fname)
-
-
-def modelInfos(val):
-	return NysolMOD_CORE.modelInfos(val)
-
 class NysolMOD_CORE(object):
 	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
 
@@ -46,7 +26,6 @@ class NysolMOD_CORE(object):
 
 		self.defaltdir   = "o"
 		self.nowdir   = self.defaltdir
-
 
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
@@ -241,20 +220,6 @@ class NysolMOD_CORE(object):
 	
 	@classmethod
 	def check_dupObjSub(self,sumiobj,dupobj,obj):
-		#if not isinstance(obj,str):
-		#	print("------mod---------")
-		#	print(obj)
-		#	print(obj.name)
-		#	print(nutil.para2str(obj.kwd))
-		#	print("i=",obj.inplist["i"])
-		#	print("m=",obj.inplist["m"])
-		#	print("o=",obj.outlist["o"])
-		#	print("u=",obj.outlist["u"])
-		#	print("------mod---------")			
-		#else:
-		#	print("------mod---------")			
-		#	print(obj)
-		#	print("------mod---------")			
 
 		if obj in sumiobj:
 			if obj in dupobj:
@@ -267,10 +232,9 @@ class NysolMOD_CORE(object):
 				sumiobj.add(obj)
 			return False
 	
-
+	#o=でチェックできるはずなので　いらなくなるはず 
 	def check_dupObj(self,sumiobj,dupobj):
-		#o=でチェックできるはずなので　いらなくなるはず 
-
+		
 		if NysolMOD_CORE.check_dupObjSub(sumiobj,dupobj,self) ==True :
 			return
 
@@ -294,7 +258,6 @@ class NysolMOD_CORE(object):
 			elif isinstance(self.inplist["m"][0],list):
 				pass
 
-
 		return			
  
 	@classmethod
@@ -302,17 +265,9 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		for obj in dupobj:
-			#print("----add tee----") 
-			#print(obj)
-			#print(obj.name)
-			#print(nutil.para2str(obj.kwd))
-			#print("i=",obj.inplist["i"])
-			#print("m=",obj.inplist["m"])
-			#print("o=",obj.outlist["o"])
-			#print("u=",obj.outlist["u"])
-			#print("----add tee----") 
+
 			for k in obj.outlist.keys():
-				#print(k,obj.outlist[k])
+
 				if len(obj.outlist[k])==0:
 					continue
 				elif len(obj.outlist[k])==1: #fifoのみ追加
@@ -333,16 +288,10 @@ class NysolMOD_CORE(object):
 					obj.outlist[k].append(teexxx)
 
 					"""これだとだめ
-					print(obj.outlist)
 					outll = obj.outlist[k]
-					print("aaaaaa1")
-					print(outll)
-					print("aaaaaa2")
 					teexxx = m2tee(i=obj)
 					teexxx.outlist["o"] = [] 
 					obj.outlist[k] = [teexxx]
-					print(outll)
-					print("aaaaaa3")
 					"""
 
 					for outin in outll:
@@ -439,9 +388,6 @@ class NysolMOD_CORE(object):
 
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
-		#print("dup")
-		#print(dupobj)
-		#print("dup")
 		if len(dupobj)!=0:
 			NysolMOD_CORE.addTee(dupobj)
 			
@@ -451,8 +397,6 @@ class NysolMOD_CORE(object):
 	def change_modNetwork(self):
 
 		NysolMOD_CORE.change_modNetworks([self])
-
-
 
 	def selectUniqMod(self,sumiobj,modlist):
 		if self in sumiobj:
@@ -474,15 +418,6 @@ class NysolMOD_CORE(object):
 	def makeModList(self,uniqmod,modlist,iolist):
 
 		for obj,no in uniqmod.items():
-			#print("---------------")
-			#print(obj)
-			#print(obj.name)
-			#print(nutil.para2str(obj.kwd))
-			#print("i=",obj.inplist["i"])
-			#print("m=",obj.inplist["m"])
-			#print("o=",obj.outlist["o"])
-			#print("u=",obj.outlist["u"])
-			#print("---------------")
 			modlist[no]= [obj.name,nutil.para2str(obj.kwd),{},obj.tag]
 			iolist[no]=[[],[],[],[]]
 
@@ -548,12 +483,7 @@ class NysolMOD_CORE(object):
 			
 
 	@classmethod
-	def runs(self,mods,**kw_args):
-
-		msgF =False
-		if "msg" in kw_args:
-			if kw_args["msg"] == "on" :
-				msgF = True
+	def makeRunNetwork(self,mods):
 
 		stocks =[None]*len(mods)
 		outfs = [None]*len(mods)
@@ -561,9 +491,8 @@ class NysolMOD_CORE(object):
 		for i,mod in enumerate(mods):
 			if len(mod.outlist["o"]) != 0 :
 				stocks[i] = mod.outlist["o"][0]
-				
+	
 		dupobjs = copy.deepcopy(mods)
-
 		#oが無ければlist出力追加
 		runobjs =[None]*len(dupobjs)
 
@@ -606,88 +535,37 @@ class NysolMOD_CORE(object):
 
 		linklist=[]
 		self.makeLinkList(iolist,linklist)
+		return modlist,iolist,linklist,outfs
+
+
+	@classmethod
+	def runs(self,mods,**kw_args):
+
+		msgF =False
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on" :
+				msgF = True
+
+		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetwork(mods)
 
 		shobj = n_core.init(msgF)
+
 		modlimt =300
-
-		if len(modlist) > modlimt:
-			#newmod ,newlink = self.separateblock(modlist,linklist)
-			#print("ccccc1")
-			#print(newmod[0])
-			#print(newlink[0])
-			#print("ccccc2")
-			n_core.runLx(shobj,modlist,linklist)
-
-		else:
-			n_core.runLx(shobj,modlist,linklist)
-			
+		n_core.runLx(shobj,modlist,linklist)
 
 		return outfs
 
-	def run(self,**kw_args):
 
-		return NysolMOD_CORE.runs([self],**kw_args)[0]
-
-
-	@classmethod
-	def drawModelsCore(self,mod):
-		dupshowobjs = copy.deepcopy(mod)
-		showobjs =[]
-		rtnlist = []
-		for dupshowobj in dupshowobjs:
-			if dupshowobj.name == "msep" or dupshowobj.name == "mshuffle" or dupshowobj.name == "mstdout" :
-				showobjs.append(dupshowobj)
-			elif len(dupshowobj.outlist["o"])==0:
-				showobjs.append(dupshowobj.writelist(rtnlist))
-			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
-				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0])
-				dupshowobj.outlist["o"] = [showobj]
-				showobjs.append(showobj)
-			else:
-				showobjs.append(dupshowobj)
-
-		self.change_modNetworks(showobjs)
-
-		uniqmod={} 
-		sumiobj= set([])
-
-		for mod in showobjs:
-			mod.selectUniqMod(sumiobj,uniqmod)
-
-
-		modlist=[None]*len(uniqmod) #[[name,para]]
-		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
-		self.makeModList(uniqmod,modlist,iolist)
-
-		linklist=[]
-		self.makeLinkList(iolist,linklist)
-		return modlist,iolist,linklist
 		
-	#GRAPH表示 #deepコピーしてからチェック
 	@classmethod
 	def drawModels(self,mod,fname=None):
-
-		modlist,iolist,linklist = NysolMOD_CORE.drawModelsCore(mod)	
+		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)		
 
-	#GRAPH表示 #deepコピーしてからチェック
 	@classmethod
 	def drawModelsD3(self,mod,fname=None):
-
-		modlist,iolist,linklist = NysolMOD_CORE.drawModelsCore(mod)
+		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
 		ndraw.chageSVG_D3(modlist,iolist,linklist,fname)		
-
-
-	#GRAPH表示 #deepコピーしてからチェック
-	def drawModel(self,fname=None):
-
-		NysolMOD_CORE.drawModels([self],fname)
-
-
-	def drawModelD3(self,fname=None):
-
-		NysolMOD_CORE.drawModelsD3([self],fname)
-
 
 
 
@@ -730,51 +608,36 @@ class NysolMOD_CORE(object):
 		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
 
 
+	def run(self,**kw_args):
+
+		return NysolMOD_CORE.runs([self],**kw_args)[0]
+
+
+	def drawModel(self,fname=None):
+
+		NysolMOD_CORE.drawModels([self],fname)
+
+
+	def drawModelD3(self,fname=None):
+
+		NysolMOD_CORE.drawModelsD3([self],fname)
+
+
 	def modelInfo(self):
 
 		return NysolMOD_CORE.modelInfos([self])
 
-	# 未実装
-	def parallelrun(self,ilist,olist=None,num=2,**kw_args):
 
-		if "msg" in kw_args:
-			if kw_args["msg"] == "on" :
-				self.msg = True
+def runs(val,**kw_args):
+	return NysolMOD_CORE.runs(val,**kw_args)
 
-		listd = []
-		runA = False
-		sumiobj=set([])
-		listd = self.make_modlist(sumiobj)
+def drawModels(val,fname):
+	return NysolMOD_CORE.drawModels(val,fname)
 
-		runlist = []
-		alist = listd
-		while alist[2] != None:
-			alist = alist[2] 
+def drawModelsD3(val,fname):
+	return NysolMOD_CORE.drawModelsD3(val,fname)
 
-		chagVALi = copy.deepcopy(alist[1])
-		chagVALo = copy.deepcopy(listd[1])
-		rtnA = True if olist==None else False
-		
-		for i , fn in enumerate(ilist):
-			if alist == listd:
-				if olist == None :
-					alist[1] = chagVALi + " i=" + fn
-				else:
-					alist[1] = chagVALi + " i=" + fn + " o=" + olist[i]
-			else:		
-				if olist == None :
-					alist[1] = chagVALi + " i=" + fn
-				else:
-					alist[1]   = chagVALi + " i=" + fn 
-					listd[1] = chagVALo + " o=" + olist[i]
-			runlist.append([copy.deepcopy(listd),rtnA,self.msg])	
-
-		p = Pool(num)
-		output = p.map(mulit_run, runlist)
-		p.close()
-
-		return output
-
-
+def modelInfos(val):
+	return NysolMOD_CORE.modelInfos(val)
 
 
