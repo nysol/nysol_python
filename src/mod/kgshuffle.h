@@ -50,12 +50,6 @@ class kgShuffle:public kgMod {
 
 	int runMain(void);
 
-	void runErrEnd(void){
-		_iFile.close();
-		for(size_t i=0; i<_oFile.size(); i++){
-			 if ( _oFile.at(i) ){ _oFile.at(i)->close(); }
-		}
-	}
 
 
 public:
@@ -70,6 +64,12 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+	void runErrEnd(void){
+		_iFile.close();
+		for(size_t i=0; i<_oFile.size(); i++){
+			 if ( _oFile.at(i) ){ _oFile.at(i)->forceclose(); }
+		}
+	}
 
 };
 

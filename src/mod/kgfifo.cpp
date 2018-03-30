@@ -539,12 +539,10 @@ int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		return sts;
 	}
 	catch(kgError& err){
-		iClose();
-		oClose();
+		rw_cancel();
 		msg.append(errorEndMsg(err));
 	}catch(...){
-		iClose();
-		oClose();
+		rw_cancel();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
 	}

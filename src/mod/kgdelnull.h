@@ -52,12 +52,6 @@ class kgDelnull:public kgModIncludeSort
 
 	// nullがあるかチェック
 	bool nullcheck(vector<int>& cnt,char** str);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_oFile.close();
-		if(_elsefile){ _uFile.close(); }
-	}
 
 public:
 	// コンストラクタ&引数セット
@@ -71,6 +65,13 @@ public:
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }
 	size_t oRecNo(void) const { return _oFile.recNo(); }
+
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.forceclose();
+		if(_elsefile){ _uFile.forceclose(); }
+	}
 
 };
 

@@ -228,13 +228,23 @@ int kgVdelnull::run(void)
 
 }
 
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kgVdelnull*)arg)->runErrEnd();
+}
+
 int kgVdelnull::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	try {
+		int sts=0;
+
+		pthread_cleanup_push(&cleanup_handler, this);	
 
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
+  	pthread_cleanup_pop(0);
 		return sts;
 
 	}catch(kgOPipeBreakError& err){

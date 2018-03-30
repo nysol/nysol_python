@@ -47,10 +47,6 @@ class kgCut : public kgMod {
 	void writeFldName(const vector<int>& fld ,bool reverse) throw(kgError);
 
 	int runMain(void);
-	void runErrEnd(void){
-		_iFile.close();
-		_oFile.close();
-	}
 	void setArgsMain(void);	
 
 public:
@@ -66,6 +62,12 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+
+	void runErrEnd(void){
+		_iFile.close();
+		_oFile.forceclose();
+	}
+
 
 };
 

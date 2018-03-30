@@ -48,12 +48,6 @@ class kgNjoin: public kgModIncludeSort
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_mFile.close();
-		_oFile.close();
-	}
 
 	//マッチしたものの書き出し
 	void	writeTM(void);
@@ -71,6 +65,12 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_mFile.close();
+		_oFile.forceclose();
+	}
 
 };
 

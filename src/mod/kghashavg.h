@@ -45,10 +45,6 @@ class kgHashavg :public kgMod
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		_iFile.close();
-		_oFile.close();
-	}
 
 public:
   // コンストラクタ
@@ -63,6 +59,10 @@ public:
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }
 	size_t oRecNo(void) const { return _oFile.recNo(); }
+	void runErrEnd(void){
+		_iFile.close();
+		_oFile.forceclose();
+	}
 
 };
 
