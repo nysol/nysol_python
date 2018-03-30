@@ -822,8 +822,11 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 					_modlist[i] =NULL;
 				
 				}
+				catch(kgError& err){
+					cerr << "script RUN KGERROR " << err.message(0) << endl;
+				}
 				catch(...){ 
-					cerr  << "ocuur final chatch " << endl; 
+					cerr  << "closing.. " << endl; 
 				}
 			}
 			delete[] _modlist;

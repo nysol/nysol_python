@@ -360,7 +360,7 @@ void kgFifo::setArgs(void){
 	if(_iName.empty()){
 	 _iFD=0;
 	}else{
-		_iFD = ::open(_iName.c_str(), O_RDONLY);
+		_iFD = ::open(_iName.c_str(), KG_IOPEN_FLG);
 		if(_iFD == -1 ){
 			ostringstream ss;
 			ss << "file read open error: " << _iName;
@@ -370,7 +370,7 @@ void kgFifo::setArgs(void){
 	if(_oName.empty()){
 		_oFD=1;
 	}else{
-		_oFD = ::open(_oName.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+		_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
 		if(_oFD == -1 ){
 			ostringstream ss;
 			ss << "file write open error: " << _oName;
@@ -405,7 +405,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 		if(_iName.empty()){
 				throw kgError("i= is necessary");
 		}else{
-			_iFD = ::open(_iName.c_str(), O_RDONLY);
+			_iFD = ::open(_iName.c_str(), KG_IOPEN_FLG);
 			if(_iFD == -1 ){
 				ostringstream ss;
 				ss << "file read open error: " << _iName;
@@ -420,7 +420,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 		if(_oName.empty()){
 				throw kgError("o= is necessary");
 		}else{
-			_oFD = ::open(_oName.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+			_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
 			if(_oFD == -1 ){
 				ostringstream ss;
 				ss << "file write open error: " << _oName;
@@ -460,6 +460,15 @@ void kgFifo::iClose(void) throw(kgError) {
 		throw kgError(ss.str());
 	}
 }
+void kgFifo::rw_cancel(void){
+
+  pthread_cancel(_thr_write);
+	pthread_cancel(_thr_read);
+  pthread_join(_thr_write, NULL);
+	pthread_join(_thr_read, NULL);
+	oClose();
+	iClose();
+}
 
 // -----------------------------------------------------------------------------
 // 実行
@@ -468,16 +477,13 @@ int kgFifo::runMain(void) {
 
 	Queue que(_iFD,_oFD,_queSize,KG_iSize,_env);
 
-	pthread_t thr_read;
-	pthread_t thr_write;
-
 	//int rth_rtn = 
-	pthread_create( &thr_read, NULL, &rThread ,(void*)&que);		
+	pthread_create( &_thr_read, NULL, &rThread ,(void*)&que);		
 	//int wth_rtn = 
-	pthread_create( &thr_write, NULL, &wThread ,(void*)&que);		
+	pthread_create( &_thr_write, NULL, &wThread ,(void*)&que);		
 
-	pthread_join(thr_read, NULL);
-  pthread_join(thr_write, NULL);
+	pthread_join(_thr_read, NULL);
+  pthread_join(_thr_write, NULL);
 
 	iClose();
 	oClose();
@@ -510,13 +516,26 @@ int kgFifo::run(void)
 }
 
 
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+	((kgFifo*)arg)->rw_cancel();
+}
+
+
 int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	try {
+		int sts=0;
+		// thread cleanup 登録
+		pthread_cleanup_push(&cleanup_handler, this);	
 
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
+		// thread cleanup 解除
+  	pthread_cleanup_pop(0);
+
 		return sts;
 	}
 	catch(kgError& err){
