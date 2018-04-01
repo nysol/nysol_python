@@ -374,12 +374,13 @@ class NysolMOD_CORE(object):
 					continue
 				if obj.name=="m2cat":
 					continue
-					
 				for i,xval in enumerate(obj.inplist["i"]):
+
 					if isinstance(xval,list) :
+
 						rlmod = mreadlist(xval)
 						rlmod.outlist["o"] = [obj]
-						xval.inplist["i"][i]=rlmod
+						obj.inplist["i"][i]=rlmod
 
 				if len(obj.inplist["i"])>1:
 
@@ -397,7 +398,7 @@ class NysolMOD_CORE(object):
 					if isinstance(xval,list) :
 						rlmod = mreadlist(xval)
 						rlmod.outlist["o"] = [obj]
-						xval.inplist["m"][i]=rlmod
+						obj.inplist["m"][i]=rlmod
 
 				if len(obj.inplist["m"])>1:
 
