@@ -387,7 +387,8 @@ class NysolMOD_CORE(object):
 					m2cmod.outlist["o"] = [obj]
 
 					for xval in obj.inplist["i"]:
-						xval.outlist["o"] = [m2cmod] 
+						if isinstance(xval,NysolMOD_CORE):
+							xval.outlist["o"] = [m2cmod] 
 
 					obj.inplist["i"] = [m2cmod]
 
@@ -404,7 +405,8 @@ class NysolMOD_CORE(object):
 					m2cmod.outlist["o"] = [obj]
 
 					for xval in obj.inplist["m"]:
-						xval.outlist["o"] = [m2cmod] 
+						if isinstance(xval,NysolMOD_CORE):
+							xval.outlist["o"] = [m2cmod] 
 
 					obj.inplist["m"] = [m2cmod]
 
