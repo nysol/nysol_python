@@ -97,4 +97,5 @@
 #include <kgxml2csv.h>
 #include <kgtab2csv.h>
 #include <kgpyfunc.h>
+#include <kg2cat.h>
 

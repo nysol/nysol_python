@@ -44,20 +44,51 @@ class NysolMOD_CORE(object):
 		if "i" in self.kwd :
 			if isinstance(self.kwd["i"],NysolMOD_CORE):	
 				self.kwd["i"].outlist[self.kwd["i"].nowdir].append(self)
-			self.inplist["i"].append(self.kwd["i"])
+				self.inplist["i"].append(self.kwd["i"])
+
+			elif isinstance(self.kwd["i"],list):
+				if isinstance(self.kwd["i"][0],list):	
+					self.inplist["i"].append(self.kwd["i"])
+
+				else:
+					for kval in self.kwd["i"]:
+						if isinstance(kval,NysolMOD_CORE):	
+							kval.outlist[kval.nowdir].append(self)
+	
+						self.inplist["i"].append(kval)
+			else:
+				self.inplist["i"].append(self.kwd["i"])
+
 			del self.kwd["i"]
+
+		if "m" in self.kwd :
+
+			if isinstance(self.kwd["m"],NysolMOD_CORE):	
+				self.kwd["m"].outlist[self.kwd["m"].nowdir].append(self)
+				self.inplist["m"].append(self.kwd["m"])
+
+			elif isinstance(self.kwd["m"],list):
+				if isinstance(self.kwd["m"][0],list):	
+					self.inplist["m"].append(self.kwd["m"])
+
+				else:
+					for kval in self.kwd["m"]:
+						if isinstance(kval,NysolMOD_CORE):	
+							kval.outlist[kval.nowdir].append(self)
+	
+						self.inplist["m"].append(kval)
+			else:
+				self.inplist["m"].append(self.kwd["m"])
+
+			del self.kwd["m"]
+
+
+
 
 		if "o" in self.kwd :
 			self.outlist["o"].append(self.kwd["o"])
 			del self.kwd["o"]
 		
-		if "m" in self.kwd :
-			if isinstance(self.kwd["m"],NysolMOD_CORE):	
-				self.kwd["m"].outlist[self.kwd["m"].nowdir].append(self)
-
-			self.inplist["m"].append(self.kwd["m"])
-			
-			del self.kwd["m"]
 
 		if "u" in self.kwd :
 			self.outlist["u"].append(self.kwd["u"])
@@ -239,24 +270,30 @@ class NysolMOD_CORE(object):
 			return
 
 		if len(self.inplist["i"]) != 0 :
-			if isinstance(self.inplist["i"][0],NysolMOD_CORE):
-				self.inplist["i"][0].check_dupObj(sumiobj,dupobj)
 
-			elif isinstance(self.inplist["i"][0],str):
-				self.check_dupObjSub(sumiobj,dupobj,self.inplist["i"][0])
+			for xval in self.inplist["i"]:
 
-			elif isinstance(self.inplist["i"][0],list):
-				pass
+				if isinstance(xval,NysolMOD_CORE):
+					xval.check_dupObj(sumiobj,dupobj)
 
+				elif isinstance(xval,str):
+					self.check_dupObjSub(sumiobj,dupobj,xval)
+
+				elif isinstance(xval,list):
+					pass
 
 		if len(self.inplist["m"]) != 0 :
-			if isinstance(self.inplist["m"][0],NysolMOD_CORE):
-				self.inplist["m"][0].check_dupObj(sumiobj,dupobj) 
-			elif isinstance(self.inplist["m"][0],str):
-				self.check_dupObjSub(sumiobj,dupobj,self.inplist["m"][0])
 
-			elif isinstance(self.inplist["m"][0],list):
-				pass
+			for xval in self.inplist["m"]:
+
+				if isinstance(xval,NysolMOD_CORE):
+					xval.check_dupObj(sumiobj,dupobj) 
+
+				elif isinstance(xval,str):
+					self.check_dupObjSub(sumiobj,dupobj,xval)
+
+				elif isinstance(xval,list):
+					pass
 
 		return			
  
@@ -326,22 +363,51 @@ class NysolMOD_CORE(object):
 		# add list read
 		from nysol.mod.submod.readlist import Nysol_Readlist as mreadlist
 		from nysol.mod.submod.writelist import Nysol_Writelist as mwritelist
+		from nysol.mod.submod.m2cat import Nysol_M2cat as m2cat
 		add_mod =[]
+
 		for obj in sumiobj:
 			if isinstance(obj,NysolMOD_CORE):
 				if obj.name=="readlist":
 					continue
 				if obj.name=="writelist":
 					continue
-				if len(obj.inplist["i"])!=0 and isinstance(obj.inplist["i"][0],list) :
-					rlmod = mreadlist(obj.inplist["i"][0])
-					rlmod.outlist["o"] = [obj]
-					obj.inplist["i"][0]=rlmod
+				if obj.name=="m2cat":
+					continue
+					
+				for i,xval in enumerate(obj.inplist["i"]):
+					if isinstance(xval,list) :
+						rlmod = mreadlist(xval)
+						rlmod.outlist["o"] = [obj]
+						xval.inplist["i"][i]=rlmod
 
-				if len(obj.inplist["m"])!=0 and isinstance(obj.inplist["m"][0],list) :
-					rlmod = mreadlist(inplist["m"][0])
-					rlmod.outlist["o"] = [obj]
-					obj.inplist["m"][0]=rlmod
+				if len(obj.inplist["i"])>1:
+
+					m2cmod  = m2cat(i=obj.inplist["i"])
+					m2cmod.outlist["o"] = [obj]
+
+					for xval in obj.inplist["i"]:
+						xval.outlist["o"] = [m2cmod] 
+
+					obj.inplist["i"] = [m2cmod]
+
+
+				for i,xval in enumerate(obj.inplist["m"]):
+					if isinstance(xval,list) :
+						rlmod = mreadlist(xval)
+						rlmod.outlist["o"] = [obj]
+						xval.inplist["m"][i]=rlmod
+
+				if len(obj.inplist["m"])>1:
+
+					m2cmod  = m2cat(i=obj.inplist["m"])
+					m2cmod.outlist["o"] = [obj]
+
+					for xval in obj.inplist["m"]:
+						xval.outlist["o"] = [m2cmod] 
+
+					obj.inplist["m"] = [m2cmod]
+
 			
 				if len(obj.outlist["o"])!=0 and isinstance(obj.outlist["o"][0],list) :
 					wlmod = mwritelist(obj.outlist["o"][0])
@@ -497,6 +563,7 @@ class NysolMOD_CORE(object):
 		runobjs =[None]*len(dupobjs)
 
 		for i, dupobj in enumerate(dupobjs):
+
 			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc" : #統一的にする
 				runobjs[i]= dupobj			
 			elif len(dupobj.outlist["o"])==0:

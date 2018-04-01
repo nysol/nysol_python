@@ -114,6 +114,8 @@ kgshell::kgshell(int mflg){
 		_kgmod_map["msep"]  = boost::lambda::bind(boost::lambda::new_ptr<kgSep>());
 		_kgmod_map["mshuffle"]  = boost::lambda::bind(boost::lambda::new_ptr<kgShuffle>());
 
+		_kgmod_map["m2cat"]  = boost::lambda::bind(boost::lambda::new_ptr<kg2Cat>());
+
 
 		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["readlist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
@@ -207,6 +209,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["runfunc"] = 3;
 		_kgmod_run["mstdin"] = 0;
 		_kgmod_run["mstdout"] = 0;
+		_kgmod_run["m2cat"] = 0;
 
 
 
