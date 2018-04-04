@@ -355,6 +355,31 @@ PyObject* readline(PyObject* self, PyObject* args)
 	return rlist;
 }
 
+PyObject* readlineDict(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+	size_t fcnt = kcfld->fldSize();
+
+
+  PyObject* rlist = PyDict_New();
+	for(size_t j=0 ;j<fcnt;j++){
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),Py_BuildValue("s", kcfld->getVal(j)) );
+	}
+	return rlist;
+}
+
+
 PyObject* readkeyline(PyObject* self, PyObject* args)
 {
 
@@ -529,6 +554,7 @@ static PyMethodDef hellomethods[] = {
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
 	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
+	{"readlineDict", reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },

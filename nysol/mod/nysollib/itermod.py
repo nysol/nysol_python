@@ -45,6 +45,49 @@ class Nysol_MeachIter(object):
 		raise StopIteration()
 
 
+class Nysol_MeachDictIter(object):
+
+	def __init__(self,obj):
+		
+
+		if len(obj.outlist["o"])!=0:
+			print ("type ERORR")
+			return None
+			
+		runobj = copy.deepcopy(obj)
+		
+		runobj.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+		runobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		runobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
+		# kgshell stock
+		self.shobj = n_core.init(runobj.msg)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
+
+	def next(self):
+		line = n_core.readlineDict(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+	def __next__(self):
+		line = n_core.readlineDict(self.csvin)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+
+
 
 class Nysol_MeachKeyIter(object):
 

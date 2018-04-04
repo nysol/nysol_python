@@ -185,6 +185,17 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
+	def getline_dict(self):
+		try:
+			x = itermod.Nysol_MeachDictIter(self)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+
+
 	def getline_with_keyflag(self,keys,skeys=None):
 		
 		try:
