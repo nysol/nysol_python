@@ -1399,8 +1399,8 @@ nm.msummary(k=keyfld,f="val",c=calfld,i=baseDATA,o=sumDATA).run()
 nm.m2cross(i=sumDATA,k=keyfld,f=calfld,a="way,val",o=rlsDIR+"/rls0.csv").run()
 
 #dict TEST
-for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
-	print(ddict)
+#for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
+#	print(ddict)
 
 #baseDATAが元になるデータ
 #sumDATAがsummaryデータ
@@ -1461,7 +1461,6 @@ for lg in [5,10,50]:
 	f3_4 <<= nm.m2cross(k=keyfld+["fld2","len"],f=["intercept","rvalue","slope","stderr"],a="k,val")
 	f3_4 <<= nm.mcal(a="way",c='"agg_linear_trend_agg_"+$s{fld2}+"_chunk_len_"+$s{len}+"_attr_"+$s{k}' )
 	#f3_4 <<= nm.mcal(a="way",c="'agg_linear_trend_agg_'+$s{fld2}+'_chunk_len_'+$s{len}+'_attr_'+$s{k}" )
-	#　上はだめ 
 	f3_4 <<= nm.mcut(f=keyfld+["way","val"],o=rlsDIR+"/rls3_%d.csv"%(lg))
 	funcList3.append(f3_4)
 
@@ -1686,7 +1685,7 @@ for ql,qh in quantile:
 # (10240 on mac 管理者でなくて変えれる上限っぽい)を超える
 #if len(funclist8)>0:
 #	nm.runs(funclist8) 
-nm.drawModelsD3(funclist8_all,"output.html") 
+#nm.drawModelsD3(funclist8_all,"output.html") 
 #print("a st")
 nm.runs(funclist8_all) 
 

@@ -250,8 +250,8 @@ kgshell::kgshell(int mflg){
 
 
 void *kgshell::run_func(void *arg){
-	try{
 
+	try{
 
 		string msg;
 		argST *a =(argST*)arg; 
@@ -259,6 +259,7 @@ void *kgshell::run_func(void *arg){
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
 
 		pthread_mutex_lock(a->stMutex);
+
 		a->status =sts;
 		a->finflg=true;
 		a->msg.append(msg);
@@ -318,6 +319,9 @@ void *kgshell::run_func(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
+
+	pthread_exit(0);
+
 	return NULL;	
 }
 
@@ -766,6 +770,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	// status check
 	pthread_mutex_lock(&_stsMutex);
+
 	while(1){
 		size_t pos = 0;
 		bool endFLG = true;
@@ -786,9 +791,11 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 				_argst[pos].outputEND = true;
 			}
 			if(_argst[pos].status!=0){
-				//エラー発生時はthread cancel
+ 				//エラー発生時はthread cancel
 				for(size_t j=0;j<clenpos;j++){
-					pthread_cancel(_th_st_pp[j]);	
+					if(!_argst[j].finflg){
+						pthread_cancel(_th_st_pp[j]);	
+					}
 				}
 				endFLG=true;
 				break;
@@ -798,13 +805,14 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 		if (endFLG) break;
 		pthread_cond_wait(&_stsCond,&_stsMutex);
 	}
+
 	pthread_mutex_unlock(&_stsMutex);
 
 	for(size_t i=clenpos;i>0;i--){
 		pthread_join(_th_st_pp[i-1],NULL);
 	}
 
-		if(_modlist){
+	if(_modlist){
 		for(size_t i=0 ;i<clenpos;i++){
 			try {
 				if(_argst[i].outputEND == false){
@@ -822,21 +830,21 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 				}
 				_argst[i].outputEND = true;
 				delete _modlist[i];
-					_modlist[i] =NULL;
-				
-				}
-				catch(kgError& err){
-					cerr << "script RUN KGERROR " << err.message(0) << endl;
-				}
-				catch(...){ 
-					cerr  << "closing.. " << endl; 
-				}
+				_modlist[i] =NULL;
 			}
-			delete[] _modlist;
+			catch(kgError& err){
+				cerr << "script RUN KGERROR " << err.message(0) << endl;
+			}
+			catch(...){ 
+				cerr  << "closing.. " << endl; 
+			}
 		}
-		delete[] _th_st_pp;
-		_th_st_pp = NULL;
-		_modlist = NULL;
+		delete[] _modlist;
+	}
+
+	delete[] _th_st_pp;
+	_th_st_pp = NULL;
+	_modlist = NULL;
 
 }
 

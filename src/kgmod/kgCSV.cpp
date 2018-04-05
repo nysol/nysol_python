@@ -92,6 +92,7 @@ void kgCSV::readCSVfile() throw(kgError)
 	while(accSize<maxSize){
 		int rsize = ::read(fd_, buf_ + dupSize_ + accSize, resSize<ioSize_ ? resSize : ioSize_);
 		if( rsize < 0 ){ 
+			cerr << "errno " << errno << endl; 
 			if(errno==70||errno==11){ continue;}
 			if(errno==9&&retryCNT<10){
 				retryCNT++;

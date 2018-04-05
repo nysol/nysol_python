@@ -66,6 +66,7 @@ public:
 	void runErrEnd(void){
 		_iFile.close();
 		_oFile.forceclose();
+		
 	}
 
 

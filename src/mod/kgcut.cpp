@@ -210,31 +210,25 @@ int kgCut::run(void)
 ///* thraad cancel action
 static void cleanup_handler(void *arg)
 {
-    ((kgCut*)arg)->runErrEnd();
+  ((kgCut*)arg)->runErrEnd();
 }
 
 
 int kgCut::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
+	int sts=1;
+	pthread_cleanup_push(&cleanup_handler, this);	
 	try {
-
-		int sts=0;
-
-		pthread_cleanup_push(&cleanup_handler, this);	
 
 		setArgs(inum, i_p, onum,o_p);
 		sts = runMain();
 		msg.append(successEndMsg());
 
-  	pthread_cleanup_pop(0);
-
-		return sts;
-
 	}catch(kgOPipeBreakError& err){
 
 		runErrEnd();
 		msg.append(successEndMsg());
-		return 0;
+		sts =0;
 
 	}catch(kgError& err){
 
@@ -260,6 +254,8 @@ int kgCut::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-	return 1;
+  pthread_cleanup_pop(0);
+	return sts;
+
 }
 
