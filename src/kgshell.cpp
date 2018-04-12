@@ -613,9 +613,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	}
 
 	size_t base ;
-
 	int ret = pthread_attr_init(&pattr);
-
 	pthread_attr_getstacksize(&pattr,&base);
 
 	if( stacksize > base ){
@@ -875,6 +873,26 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
+	pthread_attr_t pattr;
+	char * envStr=getenv("KG_THREAD_STK");
+
+	size_t stacksize;
+	if(envStr!=NULL){
+		stacksize = aToSizeT(envStr);
+	}else{
+		stacksize = KGMOD_THREAD_STK;
+	}
+
+	size_t base ;
+	int ret = pthread_attr_init(&pattr);
+	pthread_attr_getstacksize(&pattr,&base);
+
+	if( stacksize > base ){
+		if( pthread_attr_setstacksize(&pattr,stacksize)	){
+			cerr << "stack size change error " << endl;
+		}
+	}
+
 	makePipeList(plist,iblk);
 
 	if( pipe(_csvpiped) < 0){ throw kgError("pipe open error on kgshell");}
@@ -1122,9 +1140,9 @@ int kgshell::runx(
 
 		for(int iblk=0;iblk<_spblk.getBlksize();iblk++){
 			if ( _spblk.getModBlkSize(iblk) == 0 ){ continue; }
-			cerr << "blk " << iblk << " start (size:" <<  _spblk.getModBlkSize(iblk) <<  ")==============================" << endl;
+			//cerr << "blk " << iblk << " start (size:" <<  _spblk.getModBlkSize(iblk) <<  ")==============================" << endl;
 			runMain(cmds,plist,iblk);
-			cerr << "blk " << iblk << " end ================================" << endl;
+			//cerr << "blk " << iblk << " end ================================" << endl;
 		}
 		return 0;
 
