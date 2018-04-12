@@ -301,7 +301,7 @@ int kgCommon::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 	try {
 
 		setArgs(inum, i_p, onum,o_p);
-		runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
 
 	}catch(kgOPipeBreakError& err){
