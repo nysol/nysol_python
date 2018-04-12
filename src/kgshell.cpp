@@ -602,6 +602,28 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 
 int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
+	pthread_attr_t pattr;
+	char * envStr=getenv("KG_THREAD_STK");
+
+	size_t stacksize;
+	if(envStr!=NULL){
+		stacksize = aToSizeT(envStr);
+	}else{
+		stacksize = KGMOD_THREAD_STK;
+	}
+
+	size_t base ;
+
+	int ret = pthread_attr_init(&pattr);
+
+	pthread_attr_getstacksize(&pattr,&base);
+
+	if( stacksize > base ){
+		if( pthread_attr_setstacksize(&pattr,stacksize)	){
+			cerr << "stack size change error " << endl;
+		}
+	}
+
 	makePipeList(plist,iblk);
 
 	_clen = _spblk.getModBlkSize(iblk);
@@ -653,7 +675,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 		_argst[clenpos_a].fobj= cmds[i].fobj;
 		_argst[clenpos_a].aobj= cmds[i].aobj;
 		_argst[clenpos_a].kobj= cmds[i].kobj;
-		_argst[i].mutex = &_mutex;
+		_argst[clenpos_a].mutex = &_mutex;
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 		if(typ==3){
@@ -690,8 +712,8 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 				_argst[clenpos_a].i_p= new int[cnt];
 				size_t pos = 0;
 				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
-					for(size_t j=0;j<_ipipe_map[i]["i"].size();j++){
-						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["i"][j];
+					for(size_t jj=0;jj<_ipipe_map[i]["i"].size();jj++){
+						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["i"][jj];
 						pos++;
 					}
 				}
@@ -699,8 +721,8 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 					if(pos==0 && cnt>1){ // mのみ対応
 						_argst[clenpos_a].i_p[pos]=-1; pos++;
 					}
-					for(size_t j=0;j<_ipipe_map[i]["m"].size();j++){
-						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["m"][j];
+					for(size_t jj=0;jj<_ipipe_map[i]["m"].size();jj++){
+						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["m"][jj];
 						pos++;
 					}
 				}
@@ -755,16 +777,16 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 		//debugARGST_OUTPUT(i);
 
 		if(typ==0){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_func ,(void*)&_argst[clenpos_a]);
+			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_func ,(void*)&_argst[clenpos_a]);
 		}
 		else if(typ==1){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_writelist ,(void*)&_argst[clenpos_a]);
+			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_writelist ,(void*)&_argst[clenpos_a]);
 		}
 		else if(typ==2){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_readlist ,(void*)&_argst[clenpos_a]);
+			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_readlist ,(void*)&_argst[clenpos_a]);
 		}
 		else if(typ==3){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], NULL, kgshell::run_pyfunc ,(void*)&_argst[clenpos_a]);
+			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_pyfunc ,(void*)&_argst[clenpos_a]);
 		}
 	}
 
@@ -843,7 +865,9 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	}
 
 	delete[] _th_st_pp;
+	delete[] _argst;
 	_th_st_pp = NULL;
+	_argst = NULL;
 	_modlist = NULL;
 
 }
@@ -1094,11 +1118,13 @@ int kgshell::runx(
 )
 {
 	try{
-
 		runInit(cmds,plist);
 
 		for(int iblk=0;iblk<_spblk.getBlksize();iblk++){
+			if ( _spblk.getModBlkSize(iblk) == 0 ){ continue; }
+			cerr << "blk " << iblk << " start (size:" <<  _spblk.getModBlkSize(iblk) <<  ")==============================" << endl;
 			runMain(cmds,plist,iblk);
+			cerr << "blk " << iblk << " end ================================" << endl;
 		}
 		return 0;
 
