@@ -320,9 +320,11 @@ class NysolMOD_CORE(object):
 					continue
 				elif len(obj.outlist[k])==1: #fifoのみ追加
 					outll = obj.outlist[k][0]
-					fifoxxx=mfifo(i=obj)
-					obj.outlist[k][0] = fifoxxx
+					obj.outlist[k] = []
+					fifoxxx=mfifo(i=obj.direction(k))
+					#obj.outlist[k][0] = fifoxxx
 					fifoxxx.outlist["o"]=[outll]
+
 					if len(outll.inplist["i"])!=0 and obj == outll.inplist["i"][0]:
 						outll.inplist["i"] = [fifoxxx]
 					if len(outll.inplist["m"])!=0 and obj == outll.inplist["m"][0]:
