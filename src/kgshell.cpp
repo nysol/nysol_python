@@ -547,7 +547,7 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 	_opipe_map.clear();
 	_FDlist.clear();
 	
-	int pcnt = _spblk.getLinkBlkSize(iblk);
+	int pcnt = _spblk.getLinkBlkSize_M(iblk);
 	rlimit rlim;
 	int chfFlg;
 	chfFlg = getrlimit(RLIMIT_NOFILE, &rlim);
@@ -555,10 +555,13 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 	if(rlim.rlim_cur < pfilecnt ){
 		rlim.rlim_cur = pfilecnt;
 		chfFlg = setrlimit(RLIMIT_NOFILE, &rlim);
-		if (chfFlg <0 ) { throw kgError("change file limit on kgshell"); } 
+		if (chfFlg <0 ) { 
+			throw kgError("change file limit on kgshell"); 
+		} 
+
 	}
 
-	vector<int> linklist = _spblk.getLinkBlkInfo(iblk);
+	vector<int> linklist = _spblk.getLinkBlkInfo_M(iblk);
 
 	for(size_t j=0;j<linklist.size();j++){
 		int i = linklist[j];
@@ -624,12 +627,12 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	makePipeList(plist,iblk);
 
-	_clen = _spblk.getModBlkSize(iblk);
+	_clen = _spblk.getModBlkSize_M(iblk);
 	
 	//debugIOinfo_OUTPUT(); //DEBUG
 	//_clen = cmds.size();
 	_modlist = new kgMod*[_clen];
-	vector<int> cmdlist = _spblk.getModBlkInfo(iblk);
+	vector<int> cmdlist = _spblk.getModBlkInfo_M(iblk);
 
 	
 	int clenpos= 0;
@@ -903,12 +906,12 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 	fcntl(_csvpiped[1], F_SETFD, flags1 | FD_CLOEXEC);
 
 
-	_clen = _spblk.getModBlkSize(iblk);
+	_clen = _spblk.getModBlkSize_M(iblk);
 	
 	//debugIOinfo_OUTPUT(); //DEBUG
 	//_clen = cmds.size();
 	_modlist = new kgMod*[_clen];
-	vector<int> cmdlist = _spblk.getModBlkInfo(iblk);
+	vector<int> cmdlist = _spblk.getModBlkInfo_M(iblk);
 
 	
 	int clenpos= 0;
@@ -952,7 +955,7 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 		_argst[clenpos_a].fobj= cmds[i].fobj;
 		_argst[clenpos_a].aobj= cmds[i].aobj;
 		_argst[clenpos_a].kobj= cmds[i].kobj;
-		_argst[i].mutex = &_mutex;
+		_argst[clenpos_a].mutex = &_mutex;
 
 		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
 		if(typ==3){
@@ -1138,11 +1141,8 @@ int kgshell::runx(
 	try{
 		runInit(cmds,plist);
 
-		for(int iblk=0;iblk<_spblk.getBlksize();iblk++){
-			if ( _spblk.getModBlkSize(iblk) == 0 ){ continue; }
-			//cerr << "blk " << iblk << " start (size:" <<  _spblk.getModBlkSize(iblk) <<  ")==============================" << endl;
+		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			runMain(cmds,plist,iblk);
-			//cerr << "blk " << iblk << " end ================================" << endl;
 		}
 		return 0;
 
@@ -1178,11 +1178,11 @@ kgCSVfld* kgshell::runiter(
 
 		runInit(cmds,plist);
 
-		for(int iblk=0;iblk<_spblk.getBlksize()-1;iblk++){
+		for(int iblk=0;iblk<_spblk.getBlksize_M()-1;iblk++){
 			runMain(cmds,plist,iblk);
 		}
 
-		int itrfd = runiter_SUB(cmds,plist,_spblk.getBlksize()-1);
+		int itrfd = runiter_SUB(cmds,plist,_spblk.getBlksize_M()-1);
 
 		// データ出力
 		_iterrtn = new kgCSVfld;
@@ -1223,11 +1223,11 @@ kgCSVkey* kgshell::runkeyiter(
 
 		runInit(cmds,plist);
 
-		for(int iblk=0;iblk<_spblk.getBlksize()-1;iblk++){
+		for(int iblk=0;iblk<_spblk.getBlksize_M()-1;iblk++){
 			runMain(cmds,plist,iblk);
 		}
 
-		int itrfd = runiter_SUB(cmds,plist,_spblk.getBlksize()-1);
+		int itrfd = runiter_SUB(cmds,plist,_spblk.getBlksize_M()-1);
 
 		// データ出力
 		_iterrtnk = new kgCSVkey;

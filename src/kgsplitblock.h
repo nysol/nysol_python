@@ -42,6 +42,9 @@ class kgSplitBlock{
 	vector< vector<int> > _BLkmodlist;
 	vector< vector<int> > _BLklinklist;
 
+	vector< vector<int> > _runUnitBLklist;
+
+	int _runBlkCnt;
 	set<int>           _splitNode;
 	vector <linkST>    _splitEdge;
 
@@ -77,8 +80,46 @@ class kgSplitBlock{
 		int getModBlkSize(int i){ return  _BLkmodlist[i].size(); }
 		int getLinkBlkSize(int i){ return  _BLklinklist[i].size(); }
 
-
-
 		int getBlksize(){ return _BLkmodlist.size();}
+
+		int getBlksize_M(){ return _runBlkCnt;}
+
+		// ============================
+		// f.w
+		// ============================
+
+		int getModBlkSize_M(int i){ 
+			int rtn = 0;
+			for(int j=0;j<_runUnitBLklist[i].size();j++){
+				rtn += getModBlkSize(_runUnitBLklist[i][j]);
+			}
+			return rtn; 
+		}
+
+		int getLinkBlkSize_M(int i){
+			int rtn = 0;
+			for(int j=0;j<_runUnitBLklist[i].size();j++){
+				rtn += getLinkBlkSize(_runUnitBLklist[i][j]);
+			}
+			return rtn;
+		}
+		
+		vector<int> getLinkBlkInfo_M(int i){
+			vector<int> rtn;
+			for(int j=0;j<_runUnitBLklist[i].size();j++){
+				vector<int> addvec = getLinkBlkInfo(_runUnitBLklist[i][j]);
+				rtn.insert(rtn.end(), addvec.begin(), addvec.end());
+			}
+			return rtn;
+		}
+		vector<int> getModBlkInfo_M(int i){
+			vector<int> rtn;
+			for(int j=0;j<_runUnitBLklist[i].size();j++){
+				vector<int> addvec = getModBlkInfo(_runUnitBLklist[i][j]);
+				rtn.insert(rtn.end(), addvec.begin(), addvec.end());
+			}
+			return rtn;
+		}
+
 
 };

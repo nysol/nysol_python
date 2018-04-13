@@ -23,85 +23,6 @@
 #include <iostream> // debug
 using namespace std;
 
-//loopが無いことが前提
-/*
-
-void kgSplitBlock::reblockSub( int st, int blockNo, int layer, i_iv_t& layermap,int oldblk,int bp)
-{
-	cerr << "reblock sub start" << endl;
-
-	if(_modBLkNo[st]!=oldblk || st==bp){ return ; }
-
-	_modBLkNo[st] = blockNo;
-	_BLkcnt[blockNo]++;
-	if( layermap.find(layer) == layermap.end()){
-		vector<int> newvec;
-		layermap[layer] = newvec;
-	}
-	layermap[layer].push_back(st);
-
-	if(_edge_map.find(st) == _edge_map.end()){ return; } 
-
-	if(_t2f_map.find(st) != _t2f_map.end()){
-		for ( size_t i=0 ; i<_t2f_map[st].size();i++){
-			makeBLKSub(_t2f_map[st][i],blockNo,layer-1,layermap);
-		}
-	}
-	if(_f2t_map.find(st) != _f2t_map.end()){
-		for ( size_t i=0 ; i<_f2t_map[st].size();i++){
-			makeBLKSub(_f2t_map[st][i],blockNo,layer+1,layermap);
-		}
-	}
-	
-}
-
-void kgSplitBlock::reblockWW(int blockNo,int nowbpos){
-	
-	cerr << "reblock start" << endl;
-
-	multimap<int, int> junctionRank;
-	vector<int> newstpos;
-
-	for(int i=0;i<_node;i++){
-
-		if(_modBLkNo[i]!=blockNo){ continue; }
-		if(_stPos.find(i)!=_stPos.end()){ newstpos.push_back(i); }
-
-		int count =0;
-		if(_f2t_map.find(i)!=_f2t_map.end() &&
-				_f2t_map[i].size()>1){ count += _f2t_map[i].size(); }
-
-		// とりあえず上だけ
-		//if(_t2f_map.find(i)!=_t2f_map.end() &&
-		//		_t2f_map[i].size()>1){ count += _t2f_map[i].size(); } 
-		
-		if(count!=0){
-			junctionRank.insert(multimap<int, int>::value_type(count,i));
-		}
-	}
-
-	for( multimap<int, int>::reverse_iterator j = junctionRank.rbegin(); j != junctionRank.rend() ; ++j ) {
-		i_iv_t layermap0;
-
-		for(vector<int>::iterator i =newstpos.begin();i!=newstpos.end();i++){
-			if (_modBLkNo[*i] != blockNo) { continue; }
-			reblockSub(*i,nowmaxblock,0,layermap0,blockNo,j->second);
-			nowbpos++;
-		}
-
-		reblockSub(_f2t_map[j->second][i],nowmaxblock,0,layermap1,blockNo,j->second);
-			nowmaxblock++;
-		}
-		cerr << "=======" << endl;
-		cerr << "=====check==" << endl;
-		
-		
-		cerr << "=======" << endl;
-		break;
-	}
-}
-*/
-
 //layer split
 int kgSplitBlock::reblock(int blockNo,int nowbpos){
 
@@ -247,18 +168,22 @@ void kgSplitBlock::blockSplit(int maxsize){
 		for(size_t i=0 ; i<_edge.size();i++){
 			_BLklinklist[0].push_back(i);
 		}
+		_runUnitBLklist.resize(1);
+		_runUnitBLklist[0].push_back(0);
+		_runBlkCnt = 1;
 		return;
 	}
 
 	int blockNo = makeBLK();
 	_BLkmodlist .resize(blockNo);
 	_BLklinklist.resize(blockNo);
+	_runUnitBLklist.resize(blockNo);
 
-
+/*
 //	for(set<int>::iterator j =_splitNode.begin();j!=_splitNode.end();j++){
 //		cerr << *j << endl;
 //	}
-
+*/
 	
 	// set block No (mod&link) 
 	for(int i=0;i<_edge.size();i++){
@@ -273,11 +198,25 @@ void kgSplitBlock::blockSplit(int maxsize){
 		}
 		_BLklinklist[_modBLkNo[_edge[i].toID]].push_back(i);
 	}
-
 	for(int i=0;i<_node;i++){
 		_BLkmodlist[_modBLkNo[i]].push_back(i);
 	}
 
+	// block merge
+	_runBlkCnt=0;
+	int nowsize = 0;
+	for(int i=0;i<blockNo;i++){
+		if ( _BLkmodlist[i].size()==0 ) { continue;}
+		if (nowsize+_BLkmodlist[i].size() > _blockLimit){
+			nowsize = 0;
+			_runBlkCnt++;
+		}
+		_runUnitBLklist[_runBlkCnt].push_back(i);
+		nowsize += _BLkmodlist[i].size();
+	}
+	_runBlkCnt++;
+
+	
 	//DEBUG
 	/*
 	for(int i=0;i<blockNo;i++){
