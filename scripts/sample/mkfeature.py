@@ -2082,7 +2082,7 @@ for m in m_s:
 	f20 <<= nm.mcount(k=keyfld+["diffT"],a="cnt")
 	f20 <<= nm.mbest(k=keyfld,s="diffT%nr",size=1)
 	f20 <<= nm.mcal(c="if(${diffT}==0,0,${cnt})",a="number_crossing_m_%g"%(m))
-	f20 <<= nm.m2cross(k=keyfld,f="number_crossing_m_%g"%(m),a="way,val",o=rlsDIR+"/rls20.csv")
+	f20 <<= nm.m2cross(k=keyfld,f="number_crossing_m_%g"%(m),a="way,val",o=rlsDIR+"/rls20_%d.csv"%(m))
 	funclist20.append(f20)
 
 nm.runs(funclist20)

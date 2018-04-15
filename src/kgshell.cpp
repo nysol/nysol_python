@@ -557,8 +557,7 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 		chfFlg = setrlimit(RLIMIT_NOFILE, &rlim);
 		if (chfFlg <0 ) { 
 			throw kgError("change file limit on kgshell"); 
-		} 
-
+		}
 	}
 
 	vector<int> linklist = _spblk.getLinkBlkInfo_M(iblk);
@@ -1092,7 +1091,15 @@ void kgshell::runInit(
 		PyEval_InitThreads();
 	}
 	
-	_spblk.blockSplit(KGMOD_RUN_LIMIT,cmds.size(),plist);
+	char * envStr=getenv("KG_RUN_LIMIT");
+	int runlim;
+	if(envStr!=NULL){
+		runlim = atoi(envStr);
+	}else{
+		runlim = KGMOD_RUN_LIMIT;
+	}
+
+	_spblk.blockSplit(runlim,cmds.size(),plist);
 
 	// パラメータ変更		
 	vector<linkST>&spedge = _spblk.getsplitEdge();

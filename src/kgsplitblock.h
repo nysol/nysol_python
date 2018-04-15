@@ -26,6 +26,15 @@
 
 using namespace std;
 
+struct laySt{
+	int _lay;
+	bool _sumi;
+	laySt(int lay=0,bool sumi=false){
+		_lay = lay; 
+		_sumi = sumi;
+	}
+	
+};
 
 class kgSplitBlock{
 	int _node;
@@ -37,10 +46,13 @@ class kgSplitBlock{
 	vector<int> _likBLkNo;
 	vector<int> _BLkcnt;
 	set<int>    _stPos;
+	vector< vector<int> > _BLkstPos;
+
 
 	//最終ケータイ
 	vector< vector<int> > _BLkmodlist;
 	vector< vector<int> > _BLklinklist;
+
 
 	vector< vector<int> > _runUnitBLklist;
 
@@ -56,10 +68,16 @@ class kgSplitBlock{
 	i_iv_t _t2f_map;
 
 	vector<i_iv_t> _layer_maps;
+
+	map<int,laySt> _id_layer;
 	
 	int reblock(int blockNo,int nowmaxblock);
+	int reblock(int blockNo,int nowmaxblock,i_iv_t & layermap);
+
 //	void reblockSub( int st, int blockNo, int layer, i_iv_t& layermap,int oldblk,int bp);
-	void makeBLKSub(int st,int blockNo,int layer,i_iv_t& layermap);
+//	void makeBLKSub(int st,int blockNo,int layer,i_iv_t& layermap);
+	void makeBLKSub(int st,int blockNo);
+
 	int  makeBLK(void);
 
 	public:
@@ -87,6 +105,7 @@ class kgSplitBlock{
 		// ============================
 		// f.w
 		// ============================
+		void makeLayer(int blockNo,vector<int>& stps,i_iv_t & layermap);
 
 		int getModBlkSize_M(int i){ 
 			int rtn = 0;

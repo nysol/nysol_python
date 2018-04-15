@@ -150,13 +150,12 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,in
 				//PyObject* rtn = PyObject_CallObject(f_p,a_p);
 				PyObject* rtn = PyObject_Call(f_p,a_p,k_p);
 				if(rtn == NULL){
-					cerr << "runfun err " << endl;
-
+					// ERR返す？
+					PyErr_Print();
 					_exit(1);
 				}
 				else{
-				cerr << "runfun OK " << endl;
-				_exit(0);
+					_exit(0);
 				}
 //			}
 //			pthread_mutex_unlock(mtx);

@@ -318,7 +318,7 @@ class NysolMOD_CORE(object):
 
 				if len(obj.outlist[k])==0:
 					continue
-				elif len(obj.outlist[k])==1: #fifoのみ追加
+				elif len(obj.outlist[k])==1: #fifoのみ追加(o,u対策)
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
 					fifoxxx=mfifo(i=obj.direction(k))
@@ -335,7 +335,6 @@ class NysolMOD_CORE(object):
 					obj.outlist[k] = []
 					teexxx = m2tee(i=obj)
 					teexxx.outlist["o"] = [] 
-					obj.outlist[k].append(teexxx)
 
 					"""これだとだめ
 					outll = obj.outlist[k]
@@ -347,12 +346,10 @@ class NysolMOD_CORE(object):
 					for outin in outll:
 						if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
 							fifoxxx=mfifo(i=teexxx)
-							teexxx.outlist["o"].append(fifoxxx)
 							fifoxxx.outlist["o"]=[outin]
 							outin.inplist["i"] = [fifoxxx]
 						if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
 							fifoxxx=mfifo(i=teexxx)
-							teexxx.outlist["o"].append(fifoxxx)
 							fifoxxx.outlist["o"]=[outin]
 							outin.inplist["m"] = [fifoxxx]
 
