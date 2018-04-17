@@ -117,7 +117,7 @@ void kg2Cat::readwrite(size_t pos){
 
 	if(first){
 		first =false;
-		_oFile.writeFldName(*_iFiles[pos]);
+		_oFile.writeFldName(_iFiles[pos]->fldName());
 	}
 
 
