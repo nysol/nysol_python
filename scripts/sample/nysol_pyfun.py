@@ -58,8 +58,9 @@ def check3():
 	
 
 def check4(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
-		
+	print(a)
 	try:
+		
 		sys.stderr.write("st2\n")
 		sys.stderr.write("st2 "+ str(eF) +"\n")
 		sys.stderr.write("st2 "+ str(eL) +"\n")
@@ -72,7 +73,20 @@ def check4(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
 		sys.stderr.write(sys.exc_info())	
 		sys.stderr.write("\n")
 
-nm.runfunc(check4,"aaaa",t1="xxx",nF=2).run()
+
+def check5(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
+	print(a)
+		
+	sys.stderr.write("st2\n")
+	sys.stderr.write("st2 "+ str(eF) +"\n")
+	sys.stderr.write("st2 "+ str(eL) +"\n")
+	sys.stderr.write("st2 "+ str(t1) +"\n")
+	sys.stderr.write("st2 "+ str(t2) +"\n")
+	sys.stderr.write("st2 "+ str(nF) +"\n")
+	sys.stderr.write("st2 "+ str(nL) +"\n")
+	sys.stderr.write("st2 "+ str(tl) +"\n")
+
+nm.runfunc(check5,"aaaa",t1="xxx",nF=2).run()
 
 f = nm.mselrand(c=10,i="featureAll.ans.csv")
 f <<= nm.mcut(f="id,fldkey,way,val")
