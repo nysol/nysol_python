@@ -1,12 +1,5 @@
 // helloWrapper.c
 #include "Python.h"
-//#undef tolower
-//#undef toupper
-//#undef isalpha
-//#undef islower
-//#undef isupper
-//#undef isspace
-//#undef isalnum
 #include <kgEnv.h>
 #include <kgMethod.h>
 #include <kgCSV.h>
@@ -45,6 +38,71 @@ static bool strCHECK(PyObject* data){
 
 }
 
+
+PyObject* cancel(PyObject* self, PyObject* args)
+{
+	try {
+
+		PyObject *sh;
+
+		if (!PyArg_ParseTuple(args, "O", &sh )){ return NULL; }
+
+		kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+
+		if(ksh) ksh->cancel();
+
+		return PyLong_FromLong(0);
+
+	}
+	catch(kgError& err){
+		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "cancel Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "cancel Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "cancel Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+PyObject* csvclose(PyObject* self, PyObject* args)
+{
+	try {
+
+		PyObject *csvin;
+
+		if (!PyArg_ParseTuple(args, "O", &csvin)){
+  	  return Py_BuildValue("");
+ 		}
+
+		kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+		if(kcfld){ kcfld->close(); }
+
+		return PyLong_FromLong(0);
+
+	}
+	catch(kgError& err){
+		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
+
+	}catch (const exception& e) {
+		cerr << "cancel Error [ " << e.what() << " ]" << endl;
+
+	}catch(char * er){
+		cerr << "cancel Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "cancel Error [ unKnown ERROR ]" << endl;
+	}
+	return PyLong_FromLong(1);
+}
+
+
+
 void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCapsel, vector< linkST > & p_list){
 
 	Py_ssize_t msize = PyList_Size(mlist);
@@ -62,7 +120,23 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 
 		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
 		for(Py_ssize_t j=0 ; j<psize;j++){
-				cmpcaplocal.paralist.push_back(strGET(PyList_GetItem(para_LIST ,j)));
+			PyObject *parainfo = PyList_GetItem(para_LIST ,j);
+
+			if( strCHECK(parainfo) ){
+				cmpcaplocal.paralist.push_back(strGET(parainfo));
+			}
+			else if( PyList_Check( parainfo ) ){
+				char * kwd = strGET(PyList_GetItem(parainfo ,0));
+				if( !strcmp(kwd,"runfunc_func") ){
+					cmpcaplocal.fobj=PyList_GetItem(parainfo ,1);
+				}
+				else if( !strcmp(kwd,"runfunc_args") ){
+					cmpcaplocal.aobj=PyList_GetItem(parainfo ,1);
+				}
+				else if( !strcmp(kwd,"runfunc_kwd") ){
+					cmpcaplocal.kobj=PyList_GetItem(parainfo ,1);
+				}
+			}
 		}
 
 		//cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);
@@ -120,225 +194,37 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 }
 
 
-PyObject* runL(PyObject* self, PyObject* args)
-{
-	try {
-
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
-	}
-	vector< cmdCapselST > cmdCapsel;
-	vector< linkST > p_list;
-	runCore(mlist,linklist,cmdCapsel,p_list);
-
-
-	ksh->run(cmdCapsel,p_list);
-	return PyLong_FromLong(0);
-
-
-	}
-	catch(kgError& err){
-		cerr << "run Error [ " << err.message(0) << " ]" << endl;
-
-	}catch (const exception& e) {
-		cerr << "run Error [ " << e.what() << " ]" << endl;
-
-	}catch(char * er){
-		cerr << "run Error [ " << er << " ]" << endl;
-
-	}catch(...){
-		cerr << "run Error [ unKnown ERROR ]" << endl;
-	}
-	return PyLong_FromLong(1);
-}
-
-
 PyObject* runLx(PyObject* self, PyObject* args)
 {
 	try {
 
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
-	}
-	vector< cmdCapselST > cmdCapsel;
-	vector< linkST > p_list;
-	runCore(mlist,linklist,cmdCapsel,p_list);
-
-
-	ksh->runx(cmdCapsel,p_list);
-	return PyLong_FromLong(0);
-
-
-	}
-	catch(kgError& err){
-		cerr << "run Error [ " << err.message(0) << " ]" << endl;
-
-	}catch (const exception& e) {
-		cerr << "run Error [ " << e.what() << " ]" << endl;
-
-	}catch(char * er){
-		cerr << "run Error [ " << er << " ]" << endl;
-
-	}catch(...){
-		cerr << "run Error [ unKnown ERROR ]" << endl;
-	}
-	return PyLong_FromLong(1);
-}
-
-
-PyObject* cancel(PyObject* self, PyObject* args)
-{
-	try {
-
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "O", &sh )){
-    return NULL;
-  }
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-	ksh->cancel();
-	return PyLong_FromLong(0);
-
-
-	}
-	catch(kgError& err){
-		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
-
-	}catch (const exception& e) {
-		cerr << "cancel Error [ " << e.what() << " ]" << endl;
-
-	}catch(char * er){
-		cerr << "cancel Error [ " << er << " ]" << endl;
-
-	}catch(...){
-		cerr << "cancel Error [ unKnown ERROR ]" << endl;
-	}
-	return PyLong_FromLong(1);
-}
-
-
-PyObject* csvclose(PyObject* self, PyObject* args)
-{
-	try {
-
-
-	PyObject *csvin;
-	//PyObject *list;
-	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
-    return Py_BuildValue("");
-  }
-	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-	kcfld->close();
-
-	return PyLong_FromLong(0);
-
-
-	}
-	catch(kgError& err){
-		cerr << "cancel Error [ " << err.message(0) << " ]" << endl;
-
-	}catch (const exception& e) {
-		cerr << "cancel Error [ " << e.what() << " ]" << endl;
-
-	}catch(char * er){
-		cerr << "cancel Error [ " << er << " ]" << endl;
-
-	}catch(...){
-		cerr << "cancel Error [ unKnown ERROR ]" << endl;
-	}
-	return PyLong_FromLong(1);
-}
-
-
-PyObject* runLs(PyObject* self, PyObject* args)
-{
-	try {
-
-	PyObject *sh;
-	PyObject *mlists;
-	PyObject *linklists;
-	if (!PyArg_ParseTuple(args, "OO",  &mlists  ,&linklists)){
-    return NULL;
-  }
-
-//	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlists)){
-		cerr << "cannot run " << PyList_Check(mlists) << " "<<PyList_Size(mlists)<< endl;
-		return Py_BuildValue("");
-	}
-
-
-	Py_ssize_t lsize = PyList_Size(mlists);
-	Py_ssize_t limit = 1;
-	Py_ssize_t nowcount = 0;
-
-	PyObject *runmod =PyList_New(0);
-	PyObject *runlink =PyList_New(0);
-
-	for(Py_ssize_t i=0;i<lsize;i++){
-
-		PyObject *mlist = PyList_GetItem(mlists ,i);
-		PyObject *llist = PyList_GetItem(linklists ,i);
-		Py_ssize_t msize = PyList_Size(mlist);
-		Py_ssize_t llsize = PyList_Size(llist);
-
-
-		if(nowcount + msize >limit ){
-			vector< cmdCapselST > cmdCapsel;
-			vector< linkST > p_list;
-			runCore(runmod,runlink ,cmdCapsel,p_list);
-			kgshell *ksht =  new kgshell;
-			ksht->run(cmdCapsel,p_list);
-			delete ksht;
-			//ksh->run(cmdCapsel,p_list);
-			runmod =PyList_New(0);
-			runlink =PyList_New(0);
-			nowcount = 0;
+		if(!Py_IsInitialized()){ 
+			Py_Initialize();
 		}
 
-		nowcount += msize;
+		if (!PyEval_ThreadsInitialized())	{ 
+			PyEval_InitThreads();
+		}
+
+		PyObject *sh;
+		PyObject *mlist;
+		PyObject *linklist;
+		if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+ 	   return NULL;
+ 	 }
+		kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
 		
-		for(Py_ssize_t j=0;j<msize;j++){
-			PyList_Append(runmod,PyList_GetItem(mlist,j));
+
+		if(!PyList_Check(mlist)){
+			cerr << "cannot run " << PyList_Check(mlist) << " "<<PyList_Size(mlist)<< endl;
+			return Py_BuildValue("");
 		}
-		for(Py_ssize_t j=0;j<llsize;j++){
-			PyList_Append(runlink,PyList_GetItem(llist,j));
-		}
-	}
-	if(PyList_Size(runmod)>0){
 		vector< cmdCapselST > cmdCapsel;
 		vector< linkST > p_list;
-		runCore(runmod,runlink,cmdCapsel,p_list);
-		kgshell *ksht =  new kgshell;
-		ksht->run(cmdCapsel,p_list);
-		delete ksht;
-	}
+		runCore(mlist,linklist,cmdCapsel,p_list);
 
-
-	return PyLong_FromLong(0);
+		ksh->runx(cmdCapsel,p_list);
+		return PyLong_FromLong(0);
 
 
 	}
@@ -356,32 +242,59 @@ PyObject* runLs(PyObject* self, PyObject* args)
 	}
 	return PyLong_FromLong(1);
 }
-
 
 
 
 PyObject* runP(PyObject* self, PyObject* args)
 {
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
-    return NULL;
-  }
 
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+	try {
 
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " " << PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
+		if(!Py_IsInitialized()){ 
+			Py_Initialize();
+		}
+
+		if (!PyEval_ThreadsInitialized())	{ 
+			PyEval_InitThreads();
+		}
+
+		PyObject *sh;
+		PyObject *mlist;
+		PyObject *linklist;
+		if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+  	  return NULL;
+	  }
+
+		kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
+		
+
+		if(!PyList_Check(mlist)){
+			cerr << "cannot run " << PyList_Check(mlist) << " " << PyList_Size(mlist)<< endl;
+			return Py_BuildValue("");
+		}
+
+		vector< cmdCapselST > cmdCapsel;
+		vector< linkST > p_list;
+		runCore(mlist,linklist,cmdCapsel,p_list);
+
+		kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);
+
+		return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+
 	}
-	vector< cmdCapselST > cmdCapsel;
-	vector< linkST > p_list;
-	runCore(mlist,linklist,cmdCapsel,p_list);
+	catch(kgError& err){
+		cerr << "run Error [ " << err.message(0) << " ]" << endl;
 
-	kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);
+	}catch (const exception& e) {
+		cerr << "run Error [ " << e.what() << " ]" << endl;
 
-	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+	}catch(char * er){
+		cerr << "run Error [ " << er << " ]" << endl;
+
+	}catch(...){
+		cerr << "run Error [ unKnown ERROR ]" << endl;
+	}
+	return NULL;
 
 }
 
@@ -441,6 +354,31 @@ PyObject* readline(PyObject* self, PyObject* args)
 	}
 	return rlist;
 }
+
+PyObject* readlineDict(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+	size_t fcnt = kcfld->fldSize();
+
+
+  PyObject* rlist = PyDict_New();
+	for(size_t j=0 ;j<fcnt;j++){
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),Py_BuildValue("s", kcfld->getVal(j)) );
+	}
+	return rlist;
+}
+
 
 PyObject* readkeyline(PyObject* self, PyObject* args)
 {
@@ -607,16 +545,16 @@ PyObject* start(PyObject* self, PyObject* args){
   }
 }
 
+
 static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
-	{"runL", reinterpret_cast<PyCFunction>(runL), METH_VARARGS },
-	{"runLs", reinterpret_cast<PyCFunction>(runLs), METH_VARARGS },
 	{"runLx", reinterpret_cast<PyCFunction>(runLx), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
 	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
 	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
+	{"readlineDict", reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },

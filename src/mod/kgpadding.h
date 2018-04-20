@@ -58,11 +58,6 @@ class kgPadding : public kgModIncludeSort
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_oFile.close();
-	}
 	
 	bool parseTime(const char* str,boost::posix_time::ptime& value);
 	bool parseDate(const char* str,boost::gregorian::date& value);
@@ -89,6 +84,12 @@ public:
 	// コマンド固有の公開メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }
 	size_t oRecNo(void) const { return _oFile.recNo(); }
+
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.forceclose();
+	}
 
 
 };

@@ -1,4 +1,4 @@
-from .nysollib.nysolmodcore import runs, drawModels,drawModelsD3, modelInfos
+from .nysollib.core import runs, drawModels,drawModelsD3, modelInfos
 from .submod.readcsv import Nysol_Readcsv as readcsv
 from .submod.readlist import Nysol_Readlist as readlist
 from .submod.writecsv import Nysol_Writecsv as writecsv
@@ -76,6 +76,7 @@ from .submod.msum import Nysol_Msum as msum
 from .submod.msep import Nysol_Msep as msep
 from .submod.mshuffle import Nysol_Mshuffle as mshuffle
 from .submod.cmd import Nysol_Excmd as cmd
+from .submod.runfunc import Nysol_Runfunc as runfunc
 from .submod.marff2csv import Nysol_Marff2csv as marff2csv
 from .submod.m2tee import Nysol_M2tee as m2tee
 from .submod.mtab2csv import Nysol_Mtab2csv as mtab2csv
@@ -83,4 +84,7 @@ from .submod.mxml2csv import Nysol_Mxml2csv as mxml2csv
 from .submod.msortf import Nysol_Msortf as msortf
 from .submod.mjoin import Nysol_Mjoin as mjoin
 from .submod.m2tee import Nysol_M2tee as m2tee
+from .submod.m2cat import Nysol_M2cat as m2cat
+from .submod.mstdin import Nysol_Mstdin as mstdin
+from .submod.mstdout import Nysol_Mstdout as mstdout
 

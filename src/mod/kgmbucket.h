@@ -48,12 +48,6 @@ class kgMbucket : public kgModIncludeSort
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_oFile.close();
-		_rFile.close();
-	}
 
 public:
   // コンストラクタ
@@ -67,6 +61,13 @@ public:
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }
 	size_t oRecNo(void) const { return _oFile.recNo(); }
+
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.forceclose();
+		_rFile.forceclose();
+	}
 
 };
 

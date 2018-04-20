@@ -1399,8 +1399,8 @@ nm.msummary(k=keyfld,f="val",c=calfld,i=baseDATA,o=sumDATA).run()
 nm.m2cross(i=sumDATA,k=keyfld,f=calfld,a="way,val",o=rlsDIR+"/rls0.csv").run()
 
 #dict TEST
-for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
-	print(ddict)
+#for ddict in nm.readcsv(baseDATA).keyblock_dict(keyfld,seqfld):
+#	print(ddict)
 
 #baseDATAが元になるデータ
 #sumDATAがsummaryデータ
@@ -1461,7 +1461,6 @@ for lg in [5,10,50]:
 	f3_4 <<= nm.m2cross(k=keyfld+["fld2","len"],f=["intercept","rvalue","slope","stderr"],a="k,val")
 	f3_4 <<= nm.mcal(a="way",c='"agg_linear_trend_agg_"+$s{fld2}+"_chunk_len_"+$s{len}+"_attr_"+$s{k}' )
 	#f3_4 <<= nm.mcal(a="way",c="'agg_linear_trend_agg_'+$s{fld2}+'_chunk_len_'+$s{len}+'_attr_'+$s{k}" )
-	#　上はだめ 
 	f3_4 <<= nm.mcut(f=keyfld+["way","val"],o=rlsDIR+"/rls3_%d.csv"%(lg))
 	funcList3.append(f3_4)
 
@@ -1683,12 +1682,13 @@ for ql,qh in quantile:
 		
 #nm.drawModels(funclist9,"check.html")
 # 全部まとめ動かすファイルの数上限
-# (10240 on man 管理者でなくて変えれる上限っぽい)を超える
+# (10240 on mac 管理者でなくて変えれる上限っぽい)を超える
 #if len(funclist8)>0:
 #	nm.runs(funclist8) 
-#	nm.drawModelsD3(funclist8,"output.html") 
+#nm.drawModelsD3(funclist8_all,"output.html") 
 #print("a st")
 nm.runs(funclist8_all) 
+
 #print("a ed")
 
 #cid_ce normalise (normalizeのsdチェック)
@@ -2082,7 +2082,7 @@ for m in m_s:
 	f20 <<= nm.mcount(k=keyfld+["diffT"],a="cnt")
 	f20 <<= nm.mbest(k=keyfld,s="diffT%nr",size=1)
 	f20 <<= nm.mcal(c="if(${diffT}==0,0,${cnt})",a="number_crossing_m_%g"%(m))
-	f20 <<= nm.m2cross(k=keyfld,f="number_crossing_m_%g"%(m),a="way,val",o=rlsDIR+"/rls20.csv")
+	f20 <<= nm.m2cross(k=keyfld,f="number_crossing_m_%g"%(m),a="way,val",o=rlsDIR+"/rls20_%d.csv"%(m))
 	funclist20.append(f20)
 
 nm.runs(funclist20)

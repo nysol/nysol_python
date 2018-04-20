@@ -57,12 +57,6 @@ class kgNrjoin:public kgModIncludeSort
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_mFile.close();
-		_oFile.close();
-	}
 
 	// 範囲マッチ
 	void range_match(void);
@@ -83,6 +77,12 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_mFile.close();
+		_oFile.forceclose();
+	}
 
 
 };

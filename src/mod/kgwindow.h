@@ -42,6 +42,7 @@ class kgWindow : public kgModIncludeSort {
 	bool 			_nulout;	//-n
 	bool 			_reverse;	//-r
 	int				_interval;//t=
+	size_t 	 _stock_cnt;
 
 	// 引数セット
   void setArgs(void);
@@ -49,11 +50,6 @@ class kgWindow : public kgModIncludeSort {
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		_iFile.close();
-		_oFile.close();
-	}
 	
 	
 	int pos_inc(int i){ return (++i)%(_interval); }
@@ -61,14 +57,21 @@ class kgWindow : public kgModIncludeSort {
 	void output(int spos,int epos,int nkpos);
 
 	// データ確保用、出力用
-	vector<kgAutoPtr2<char> > _d_stock_ap;
+	char** _d_stock_ap;
 	kgAutoPtr2<char*> _o_stock_ap;
 
 
 public:
   // コンストラクタ
 	kgWindow(void);
-	~kgWindow(void){}
+	~kgWindow(void){
+		if(_d_stock_ap!=NULL){
+			for(size_t j=0;j<_stock_cnt;j++){
+				delete [] _d_stock_ap[j];
+			}
+			delete [] _d_stock_ap;
+		}	
+	}
 
 	// コマンド固有の公開メソッド
 	size_t iRecNo(void) const { return _iFile.recNo(); }
@@ -77,6 +80,11 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+	void runErrEnd(void){
+		th_cancel();
+		_iFile.close();
+		_oFile.forceclose();
+	}
 
 };
 

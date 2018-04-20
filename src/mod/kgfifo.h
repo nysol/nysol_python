@@ -20,6 +20,9 @@ class kgFifo : public kgMod {
 	string _oName;   // i=
 	size_t _queSize; // n=
 
+	pthread_t _thr_read;
+	pthread_t _thr_write;
+	
 	int _iFD;					//i=ファイルディスクリプタ
 	int _oFD; //o=ファイルディスクリプタ
 
@@ -40,6 +43,8 @@ public:
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
+	void rw_cancel(void);
 };
+	
 
 }

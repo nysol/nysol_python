@@ -117,9 +117,9 @@ void kgMod::signalHandler( int sigNo, siginfo_t* info, void* ctx )
 		}
 		ss << "(" << g_mod_->name() << ":" << getpid( ) << ")";
 		kgError err=kgError(ss.str());
-		g_mod_->errorEnd(err); // kgmodエラー終了処理
+		//g_mod_->errorEnd(err); // kgmodエラー終了処理
 		kgTempfile::interrupt_clean(g_mod_->tmpPath());
-		_exit( g_mod_->status( ) );
+		//_exit( g_mod_->status( ) );
 	}
 }
 

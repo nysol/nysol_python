@@ -381,33 +381,57 @@ int kg2Cross::run(void) {
 
 }
 
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kg2Cross*)arg)->runErrEnd();
+}
+
 int kg2Cross::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
+	int sts=1;
+	// thread cleanup 登録
+	pthread_cleanup_push(&cleanup_handler, this);	
+
 	try {
+
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
-		return sts;
+
 	}catch(kgOPipeBreakError& err){
+
 		runErrEnd();
 		msg.append(successEndMsg());
-		return 0;
+		sts = 0;
+
 	}catch(kgError& err){
+
 		runErrEnd();
 		msg.append(errorEndMsg(err));
+
 	}catch (const exception& e) {
+
 		runErrEnd();
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
+
 	}catch(char * er){
+
 		runErrEnd();
 		kgError err(er);
 		msg.append(errorEndMsg(err));
+
 	}catch(...){
+
 		runErrEnd();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
+
 	}
-	return 1;
+
+	// thread cleanup 解除
+  pthread_cleanup_pop(0);
+	return sts;
 
 }

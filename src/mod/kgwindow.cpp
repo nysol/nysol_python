@@ -47,8 +47,8 @@ kgWindow::kgWindow(void)
 	#ifdef JPN_FORMAT
 		#include <help/jp/kgwindowHelp.h>
 	#endif
-
-
+	_d_stock_ap =NULL;
+	_stock_cnt=0;
 }
 // -----------------------------------------------------------------------------
 // 入出力ファイルオープン
@@ -135,10 +135,10 @@ void kgWindow::output(int s_pos,int e_pos, int nkpos)
 	int tpos = s_pos;
 	do {
 		for(unsigned int i=0;i<_wkField.size();i++){
-			*( _o_stock_ap.get() + i) = _d_stock_ap.at(nkpos*_iFile.fldSize()+_wkField.num(i)).get();
+			*( _o_stock_ap.get() + i) = _d_stock_ap[nkpos*_iFile.fldSize()+_wkField.num(i)];
 		}
 		for(unsigned int i=0;i<_iFile.fldSize();i++){
-			*( _o_stock_ap.get() + _wkField.size() + i) = _d_stock_ap.at(tpos*_iFile.fldSize()+i).get();
+			*( _o_stock_ap.get() + _wkField.size() + i) = _d_stock_ap[tpos*_iFile.fldSize()+i];
 		}
 		_oFile.writeFld(_iFile.fldSize()+_wkField.size(),_o_stock_ap.get());	
 
@@ -171,14 +171,26 @@ int kgWindow::runMain(void)
 	}
 
 	// データストック領域確保:項目数*(num)分
-	_d_stock_ap.resize(_iFile.fldSize()*(_interval));
-	for(unsigned int i=0;i<_iFile.fldSize()*_interval;i++){
+	_stock_cnt = _iFile.fldSize()*(_interval);
+	try{
+		_d_stock_ap = new char*[_stock_cnt];
+	} catch(...) {
+		_d_stock_ap=NULL;
+		throw kgError("memory allocation error ");
+	}	
+	for(unsigned int i=0;i<_stock_cnt;i++){
 		try {
-			_d_stock_ap.at(i).set( new char[KG_MAX_STR_LEN] );
+			_d_stock_ap[i] = new char[KG_MAX_STR_LEN];
 		} catch(...) {
+			for(size_t j=0;j<i;j++){
+				delete [] _d_stock_ap[j];
+			}
+			delete [] _d_stock_ap;
+			_d_stock_ap = NULL;
 			throw kgError("memory allocation error ");
 		}
-	}
+	}	
+
 
 	// 既存OUTOUT領域確保:f=項目数分+_wkFildサイズ
 	_o_stock_ap.set( new char*[_iFile.fldSize()+_wkField.size()] );
@@ -195,7 +207,7 @@ int kgWindow::runMain(void)
 
 		// oldデータをセット
 		for(unsigned int i=0;i<_iFile.fldSize();i++){
-			strcpy(_d_stock_ap.at(pos*_iFile.fldSize()+i).get(),_iFile.getOldVal(i));
+			strcpy(_d_stock_ap[pos*_iFile.fldSize()+i],_iFile.getOldVal(i));
 		}
 		pos = pos_inc(pos);
 
@@ -282,20 +294,30 @@ int kgWindow::run(void)
 	return 1;
 
 }
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kgWindow*)arg)->runErrEnd();
+}
+
 int kgWindow::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
+	int sts=1;
+
+	pthread_cleanup_push(&cleanup_handler, this);	
+
 	try {
 
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
-		return sts;
+
 
 	}catch(kgOPipeBreakError& err){
 
 		runErrEnd();
 		msg.append(successEndMsg());
-		return 0;
+		sts=0;
 
 	}catch(kgError& err){
 
@@ -321,6 +343,7 @@ int kgWindow::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-	return 1;
+	pthread_cleanup_pop(0);
+	return sts;
 }
 

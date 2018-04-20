@@ -55,7 +55,8 @@ def check_for_boost():
 		['boost_thread-mt','boost_thread'],
 		['boost_filesystem-mt','boost_filesystem'],
 		['boost_regex-mt','boost_regex'],
-		['boost_system-mt','boost_system']
+		['boost_system-mt','boost_system'],
+		['boost_date_time']
 	]
 	for boostlist in boostLibLists:
 
@@ -80,9 +81,9 @@ umodLibs.extend(check_for_boost())
 
 module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
-                    						'src/kgexcmd.cpp','src/nysolshell.cpp'
-                    						,'src/kgshell.cpp','src/kgsplitblock.cpp'
-                    						,'src/kgload.cpp',
+                    						'src/kgexcmd.cpp','src/nysolshell.cpp','src/mod/kg2cat.cpp',
+                    						'src/kgshell.cpp','src/kgsplitblock.cpp',
+                    						'src/kgload.cpp','src/kgpyfunc.cpp',
                     						'src/kgmod/kgArgFld.cpp',
 																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
 																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',

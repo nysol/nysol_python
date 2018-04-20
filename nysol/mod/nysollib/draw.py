@@ -1,17 +1,28 @@
 # -*- coding: utf-8 -*-
 import sys
 # これは簡易版
-def dicisionPosSub(mlist,iolist,baselist,dsppos,y,counter):
+def dicisionPosSub(mlist,iolist,baselist,dsppos,y,counter,basecont):
 
 	for i in baselist:
 		if dsppos[i] != None:
 			continue
 		dsppos[i] = [counter[y],y]
 		counter[y]+=1
+
+		newlist = iolist[i][0] + iolist[i][1] 
+
+		if not y-1 in counter.keys():
+			counter[y-1]=basecont
+
+		dicisionPosSub(mlist,iolist,newlist,dsppos,y-1,counter,basecont)
+
 		newlist = iolist[i][2] + iolist[i][3] 
-		if len(counter)==y+1:
-			counter.append(0)
-		dicisionPosSub(mlist,iolist,newlist,dsppos,y+1,counter)
+
+		if not y+1 in counter.keys():
+			counter[y+1]=basecont
+
+		dicisionPosSub(mlist,iolist,newlist,dsppos,y+1,counter,basecont)
+
 
 	
 def dicisionPos(mlist,iolist):
@@ -24,16 +35,34 @@ def dicisionPos(mlist,iolist):
 			if "m" in mm[2]:
 				startpos.add(i)
 
+
 	for i , mm in enumerate(iolist):
 		if len(mm[0]) == 0 and len(mm[1]) == 0 :
 			startpos.add(i)
 
 	dsppos   = [None]*len(mlist)
+	counter ={0:0}
 	y=0
-	counter =[0]
-	dicisionPosSub(mlist,iolist,list(startpos),dsppos,y,counter)
+	basecont=0
+	maxlen=0
+	minpos =0;
+	for x in list(startpos):
+		dicisionPosSub(mlist,iolist,[x],dsppos,y,counter,basecont)
+		basecont=max(counter.values())+1
+
+		if minpos > min(counter.keys()):
+			minpos = min(counter.keys())
+
+		if maxlen < len(counter):
+			maxlen = len(counter)
+
+		counter = {0:basecont}
 	
-	return dsppos , len(counter) ,max(counter)
+	if minpos < 0 :
+		for val in dsppos:
+			val[1]=val[1]-minpos
+
+	return dsppos , maxlen ,basecont
 
 	#for i in startpos:
 	#	if dsppos[i] != None:
@@ -114,7 +143,9 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 
 def chageSVG_D3(mlist,iolist,linklist,fname=None):
+
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
+
 
 	if fname == None:
 		f=sys.stdout

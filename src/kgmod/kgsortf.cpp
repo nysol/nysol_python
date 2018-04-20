@@ -946,8 +946,9 @@ static void cleanup_handler(void *arg)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-void kgSortf::run_noargs() try 
+void kgSortf::run_noargs() 
 {
+	try {
 	// thread cleanup 登録
 	pthread_cleanup_push(&cleanup_handler, this);	
 	 
@@ -991,19 +992,21 @@ void kgSortf::run_noargs() try
 	// thread cleanup 解除
   pthread_cleanup_pop(0);
   
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	tempFile_.remove_all();
+	}catch(kgOPipeBreakError& err){
+		// 終了処理
+		tempFile_.remove_all();
 
-}catch(kgError& err){
-	tempFile_.remove_all();
-	errorEnd(err);
-}catch (const std::exception& e) {
-	tempFile_.remove_all();
-}catch(char * er){
-	tempFile_.remove_all();
-}catch(...){
-	tempFile_.remove_all();
-	//pthread_cancelが起こったときthrowしないabortする
-	throw;
+	}catch(kgError& err){
+		tempFile_.remove_all();
+		errorEnd(err);
+	}catch (const std::exception& e) {
+		tempFile_.remove_all();
+	}catch(char * er){
+		tempFile_.remove_all();
+	}catch(...){
+		tempFile_.remove_all();
+		//pthread_cancelが起こったときthrowしないabortする
+		//throw;
+	}
+	return;	
 }

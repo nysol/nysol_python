@@ -50,13 +50,6 @@ class kgBucket : public kgModIncludeSort
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		th_cancel();
-		// 終了処理
-		_iFile.close();
-		_oFile.close();	
-		if(_rangefile){ _rFile.close();}
-	}
 
 	// 範囲ファイル項目名出力
 	void writeFldName_RangeF(void);
@@ -73,6 +66,14 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+
+	void runErrEnd(void){
+		th_cancel();
+		// 終了処理
+		_iFile.close();
+		_oFile.forceclose();	
+		if(_rangefile){ _rFile.forceclose();}
+	}
 
 };
 

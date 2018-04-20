@@ -198,6 +198,7 @@ int kgVjoin::runMain(void)
 	}
 
 	//文字列生成用領域
+	/*
 	vector<kgAutoPtr2<char> > rls_ap;
 	rls_ap.resize(_vfField.size());
 	for(unsigned int i=0;i<_vfField.size();i++){
@@ -207,7 +208,7 @@ int kgVjoin::runMain(void)
 			throw kgError("memory allocation error ");
 		}
 	}	
-
+	*/
 	//出力項目名出力 追加 or 置換
 	if(_add_flg) { _oFile.writeFldName(_iFile,_vfField,true);}
 	else				 { _oFile.writeFldName(_vfField, true);}
@@ -287,21 +288,28 @@ int kgVjoin::run(void)
 
 }
 
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kgVjoin*)arg)->runErrEnd();
+}
 
 int kgVjoin::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
+	int sts=1;
+	pthread_cleanup_push(&cleanup_handler, this);	
+
 	try {
 
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
-		return sts;
 
 	}catch(kgOPipeBreakError& err){
 
 		runErrEnd();
 		msg.append(successEndMsg());
-		return 0;
+		sts = 0;
 
 	}catch(kgError& err){
 
@@ -327,5 +335,6 @@ int kgVjoin::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-	return 1;
+  pthread_cleanup_pop(0);
+	return sts;
 }

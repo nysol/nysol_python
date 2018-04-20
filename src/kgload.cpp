@@ -36,6 +36,16 @@ static char* strGET(PyObject* data){
 #endif
 
 }
+static bool strCHECK(PyObject* data){
+
+#if PY_MAJOR_VERSION >= 3
+	return PyUnicode_Check(data);
+#else		
+	return PyString_Check(data);
+#endif
+
+}
+
 
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
@@ -49,7 +59,6 @@ kgLoad::kgLoad(void)
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF;
 
 	_titleL = _title = "";
-	
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
@@ -81,10 +90,10 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 
 	// 入出力ファイルオープン
 	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
 
 	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 
 	_iFile.read_header();
 	
@@ -242,19 +251,28 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 				// headerを出力するとき
 				if(!_nfn_o){ _oFile.writeFldName(headdata);}
 				// 行数を取得してデータ出力
-				char ** vals = new char*[fldsize];
 				while( nowlin < max ){
 					PyObject* ddata = PyList_GetItem(i_p, nowlin);
 					if( fldsize != PyList_Size(ddata) ){
 						kgError err("unmatch fld size" );	
 					}
 					for(Py_ssize_t i=0 ; i<fldsize;i++){
-						vals[i] = strGET(PyList_GetItem(ddata,i));
+						PyObject* fval = PyList_GetItem(ddata,i);
+						if(strCHECK(fval)){
+							_oFile.writeStr(strGET(fval), i==fldsize-1);
+						}
+						else if (PyLong_Check(fval)){
+							_oFile.writeDbl(PyLong_AsDouble(fval), i==fldsize-1);
+						}
+						else if (PyFloat_Check(fval)){
+							_oFile.writeDbl(PyFloat_AsDouble(fval), i==fldsize-1);
+						}
+						else{
+							throw kgError("unsupport data type");
+						}
 					}
-					_oFile.writeFld(fldsize,vals);
 					nowlin++;
 				}
-				delete[] vals;
 			}
 		}else{
 			throw kgError("not python list");

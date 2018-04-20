@@ -45,10 +45,6 @@ class kgVcount:public kgMod {
 	void setArgsMain(void);	
 
 	int runMain(void);
-	void runErrEnd(void){
-		_iFile.close();
-		_oFile.close();
-	}
 
 public:
 
@@ -63,6 +59,10 @@ public:
 	//実行メソッド
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
+	void runErrEnd(void){
+		_iFile.close();
+		_oFile.forceclose();
+	}
 
 };
 

@@ -465,20 +465,28 @@ int kgNrjoin::run(void)
 	return 1;
 
 }
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kgNrjoin*)arg)->runErrEnd();
+}
+
 int kgNrjoin::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
+	int sts=1;
+	pthread_cleanup_push(&cleanup_handler, this);	
+
 	try {
 
 		setArgs(inum, i_p, onum,o_p);
-		int sts = runMain();
+		sts = runMain();
 		msg.append(successEndMsg());
-		return sts;
 
 	}catch(kgOPipeBreakError& err){
 
 		runErrEnd();
 		msg.append(successEndMsg());
-		return 0;
+		sts = 0;
 
 	}catch(kgError& err){
 
@@ -504,5 +512,6 @@ int kgNrjoin::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-	return 1;
+  pthread_cleanup_pop(0);
+	return sts;
 }

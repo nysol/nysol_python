@@ -70,10 +70,6 @@ class kgCat : public kgMod
 	void output(kgCSVfld* csv);
 
 	int runMain(void);
-	void runErrEnd(void){
-		_iFile.close();
-		_oFile.close();
-	}
 
 
 public:
@@ -88,6 +84,12 @@ public:
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iCnt; }
 	size_t oRecNo(void) const { return _oFile.recNo(); }
+
+	void runErrEnd(void){
+		_iFile.close();
+		_oFile.forceclose();
+	}
+
 
 };
 
