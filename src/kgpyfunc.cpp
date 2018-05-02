@@ -82,7 +82,10 @@ int kgPyfunc::run(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,int onum, int* o_p,string & msg,pthread_mutex_t *mtx,vector<int> fdlist)
+int kgPyfunc::run(
+	PyObject* f_p,PyObject* a_p,PyObject* k_p,
+	int inum,int *i_p,int onum, int* o_p,string & msg,
+	pthread_mutex_t *mtx,pthread_cond_t *forkCond,volatile int *runst)
 {
 	try{
 		setArgs();
@@ -116,6 +119,12 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,in
 		return 0;
 		*/
 
+		// ============
+		/// TH Vesion
+		// ============
+#define THVER 0		
+#if THVER  
+
 
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
@@ -124,11 +133,11 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,in
 			if (!PyEval_ThreadsInitialized())	{  PyEval_InitThreads(); }
 			PyOS_AfterFork();
 
-			for(size_t i=0; i<fdlist.size();i++){
-				if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
-					close(fdlist[i]);
-				}
-			}
+			//for(size_t i=0; i<fdlist.size();i++){
+			//	if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
+			//		close(fdlist[i]);
+			//	}
+			//}
 			if(i_p_t>0){
 				dup2(i_p_t, 0);
 				close(i_p_t);
@@ -187,6 +196,94 @@ int kgPyfunc::run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i_p,in
 		
 
 		return 0;
+
+#else
+
+		int initchek[2];
+		int finchek[2];
+		if( pipe(initchek) < 0){ 
+			cerr << "call python func pipe open err(init)" << endl;
+			throw kgError("call python func pipe open err(init)");
+		}
+		if( pipe(finchek) < 0){ 
+			cerr << "call python func pipe open err(fin)" << endl;
+			throw kgError("call python func pipe open err(fin)");
+		}
+		pid_t pid;
+		if ((pid = fork()) == 0) {	
+			close(initchek[0]);
+			close(finchek[1]);
+			if(i_p_t>0){
+				dup2(i_p_t, 0);
+				close(i_p_t);
+			} 
+			if(o_p_t>0){
+				dup2(o_p_t, 1);
+				close(o_p_t);
+			}
+			PyGILState_STATE gstate;
+			gstate = PyGILState_Ensure();
+			PyOS_AfterFork();
+			write(initchek[1],"OK", strlen("OK"));
+			close(initchek[1]);
+			char buf[256];
+			while (read(finchek[0], &buf, 256) > 0){
+				if(!strncmp(buf,"OK",strlen("OK"))){ break;}
+			}
+			close(finchek[0]);
+			PyObject* rtn = PyObject_Call(f_p,a_p,k_p);
+			PyGILState_Release(gstate);
+
+			if(rtn == NULL){
+				// ERR返す？
+				PyErr_Print();
+				_exit(1);
+			}
+			else{
+				_exit(0);
+			}
+
+			
+		}else if (pid>0){//parent
+			close(initchek[1]);
+			close(finchek[0]);
+
+			char buf[256];
+			while (read(initchek[0], &buf, 256) > 0){
+				if(!strncmp(buf,"OK",strlen("OK"))){ break;}
+			}
+			close(initchek[0]);
+
+			pthread_mutex_lock(mtx);
+			int rtnx = pthread_cond_signal(forkCond);
+			pthread_mutex_unlock(mtx);
+			while(1){
+				if(*runst){
+					write(finchek[1],"OK", strlen("OK"));
+					close(finchek[1]);		
+					break;
+				}
+			}
+			int status;
+			waitpid(pid, &status, 0);
+			if(i_p_t>0){ close(i_p_t);}
+			if(o_p_t>0){ close(o_p_t);}
+			if(status==0){
+				msg.append(successEndMsg());
+			}
+			else{
+				throw kgError("exec call python func");
+			}
+			return status;
+		}
+		else {//err
+			throw kgError("fork error" );
+		}
+
+		return 0;
+
+
+#endif
 
 	}catch(kgError& err){
 		msg.append(errorEndMsg(err));

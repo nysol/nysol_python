@@ -244,6 +244,14 @@ kgshell::kgshell(int mflg){
 			ss << "init cond mutex error";
 			throw kgError(ss.str());
 	  }
+	  
+	  if (pthread_cond_init(&_forkCond, NULL) == -1) { 
+			ostringstream ss;
+			ss << "init cond mutex error";
+			throw kgError(ss.str());
+	  }
+	  
+	  
 		_tempFile.init(&_env);
 }
 
@@ -472,7 +480,12 @@ void *kgshell::run_pyfunc(void *arg){
 		//cerr << "run_pyfunc:0" << endl;
 		//gstate = PyGILState_Ensure();
 		//cerr << "run_pyfunc:1" << endl;
-		int sts = a->mobj->run(a->fobj,a->aobj,a->kobj,a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,a->mutex,a->fdlist);
+		int sts = a->mobj->run(
+			a->fobj,a->aobj,a->kobj,
+			a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,
+			a->mutex,a->forkCond,a->runst
+		);
+
 		//cerr << "run_pyfunc:2" << endl;
 		//PyGILState_Release(gstate);
 		//cerr << "run_pyfunc:3" << endl;
@@ -547,7 +560,9 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 	_opipe_map.clear();
 	_FDlist.clear();
 	
-	int pcnt = _spblk.getLinkBlkSize_M(iblk);
+	//int pcnt = _spblk.getLinkBlkSize_M(iblk);
+	int pcnt = _spblk.getModBlkSize_M(iblk);
+
 	rlimit rlim;
 	int chfFlg;
 	chfFlg = getrlimit(RLIMIT_NOFILE, &rlim);
@@ -630,163 +645,180 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	
 	//debugIOinfo_OUTPUT(); //DEBUG
 	//_clen = cmds.size();
+
+	// initlize
 	_modlist = new kgMod*[_clen];
+	_argst   = new argST[_clen];
+	_runst   = new int[_clen];
+
 	vector<int> cmdlist = _spblk.getModBlkInfo_M(iblk);
 
-	
-	int clenpos= 0;
-	for(size_t j=0;j<cmdlist.size();j++){
+	for(size_t i=0;i<cmdlist.size();i++){
 
-		int i = cmdlist[j];
-		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
-			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
+		int cmdNo = cmdlist[i];
+		if ( _kgmod_map.find(cmds[cmdNo].cmdname) == _kgmod_map.end()){
+			cerr << "not 1 kgmod " << cmds[cmdNo].cmdname << endl;
 			return 1;
 		}
-		_modlist[clenpos] = _kgmod_map.find(cmds[i].cmdname)->second() ;
+		_modlist[i] = _kgmod_map.find(cmds[cmdNo].cmdname)->second() ;
 		kgArgs newArgs;
-		for(size_t j=0;j<cmds[i].paralist.size();j++){
-			newArgs.add(cmds[i].paralist[j]);
+		for(size_t j=0;j<cmds[cmdNo].paralist.size();j++){
+			newArgs.add(cmds[cmdNo].paralist[j]);
 		}
-		_modlist[clenpos]->init(newArgs, &_env);
-		clenpos++;
-	}
+		_modlist[i]->init(newArgs, &_env);
 
+		_argst[i].mobj= _modlist[i];
+		_argst[i].tag= cmds[cmdNo].tag;
+		_argst[i].finflg = false;
+		_argst[i].outputEND = false;
+		_argst[i].status = 0;
+		_argst[i].stMutex = &_stsMutex;
+		_argst[i].stCond = &_stsCond;
+		_argst[i].fobj= cmds[cmdNo].fobj;
+		_argst[i].aobj= cmds[cmdNo].aobj;
+		_argst[i].kobj= cmds[cmdNo].kobj;
+		_argst[i].mutex = &_mutex;
+		_argst[i].forkCond = &_forkCond;
 
-	_th_st_pp = new pthread_t[clenpos];
-	_argst = new argST[clenpos];
-	int _th_rtn[clenpos];
-	int clenpos_a = clenpos;
-	// before run 
-
-
-	for(int j=cmdlist.size()-1;j>=0;j--){
-
-		int i=cmdlist[j];
-
-		clenpos_a--;
-
-		_argst[clenpos_a].mobj= _modlist[clenpos_a];
-		_argst[clenpos_a].tag= cmds[i].tag;
-		_argst[clenpos_a].finflg = false;
-		_argst[clenpos_a].outputEND = false;
-		_argst[clenpos_a].status = 0;
-		_argst[clenpos_a].stMutex = &_stsMutex;
-		_argst[clenpos_a].stCond = &_stsCond;
-		_argst[clenpos_a].fobj= cmds[i].fobj;
-		_argst[clenpos_a].aobj= cmds[i].aobj;
-		_argst[clenpos_a].kobj= cmds[i].kobj;
-		_argst[clenpos_a].mutex = &_mutex;
-
-		int typ = _kgmod_run.find(cmds[i].cmdname)->second ;
+		int typ = _kgmod_run.find(cmds[cmdNo].cmdname)->second ;
 		if(typ==3){
-			_argst[clenpos_a].fdlist= _FDlist;
+			_argst[i].fdlist= _FDlist;
+			_runst[i] = 0;
 		}
+		else{
+			_runst[i]= 1;
+		}
+		_argst[i].runst= &(_runst[i]) ;
 
-		if( _ipipe_map.find(i) == _ipipe_map.end() ){ 
+		if( _ipipe_map.find(cmdNo) == _ipipe_map.end() ){ 
 			if(typ==2){
-				_argst[clenpos_a].i_cnt= 1;
-				_argst[clenpos_a].i_p= NULL;
-				_argst[clenpos_a].list = cmds[i].iobj;
+				_argst[i].i_cnt= 1;
+				_argst[i].i_p= NULL;
+				_argst[i].list = cmds[cmdNo].iobj;
 			}
 			else{
-				_argst[clenpos_a].i_cnt= 0;
-				_argst[clenpos_a].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 		}
 		else{
 			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
 			size_t cnt=0;
-			if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
-				cnt += _ipipe_map[i]["i"].size();
+			if( _ipipe_map[cmdNo].find("i") != _ipipe_map[cmdNo].end()){
+				cnt += _ipipe_map[cmdNo]["i"].size();
 			}
-			if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
-				cnt += _ipipe_map[i]["m"].size();
+			if( _ipipe_map[cmdNo].find("m") != _ipipe_map[cmdNo].end()){
+				cnt += _ipipe_map[cmdNo]["m"].size();
 				if(cnt==1) { cnt++; } //mのみの場合はdmy追加 
 			}
 			if(cnt==0){
-				_argst[clenpos_a].i_cnt= 0;
-				_argst[clenpos_a].i_p= NULL;
+				_argst[i].i_cnt= 0;
+				_argst[i].i_p= NULL;
 			}
 			else{
-				_argst[clenpos_a].i_cnt= cnt;
-				_argst[clenpos_a].i_p= new int[cnt];
+				_argst[i].i_cnt= cnt;
+				_argst[i].i_p= new int[cnt];
 				size_t pos = 0;
-				if( _ipipe_map[i].find("i") != _ipipe_map[i].end()){
-					for(size_t jj=0;jj<_ipipe_map[i]["i"].size();jj++){
-						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["i"][jj];
+				if( _ipipe_map[cmdNo].find("i") != _ipipe_map[cmdNo].end()){
+					for(size_t jj=0;jj<_ipipe_map[cmdNo]["i"].size();jj++){
+						_argst[i].i_p[pos] = _ipipe_map[cmdNo]["i"][jj];
 						pos++;
 					}
 				}
-				if( _ipipe_map[i].find("m") != _ipipe_map[i].end()){
+				if( _ipipe_map[cmdNo].find("m") != _ipipe_map[cmdNo].end()){
 					if(pos==0 && cnt>1){ // mのみ対応
-						_argst[clenpos_a].i_p[pos]=-1; pos++;
+						_argst[i].i_p[pos]=-1; pos++;
 					}
-					for(size_t jj=0;jj<_ipipe_map[i]["m"].size();jj++){
-						_argst[clenpos_a].i_p[pos] = _ipipe_map[i]["m"][jj];
+					for(size_t jj=0;jj<_ipipe_map[cmdNo]["m"].size();jj++){
+						_argst[i].i_p[pos] = _ipipe_map[cmdNo]["m"][jj];
 						pos++;
 					}
 				}
 			}
 		}
-		if( _opipe_map.find(i) == _opipe_map.end() ){ 
+		if( _opipe_map.find(cmdNo) == _opipe_map.end() ){ 
 			if(typ==1){
-				_argst[clenpos_a].o_cnt= 1;
-				_argst[clenpos_a].o_p = NULL;
-				_argst[clenpos_a].mutex = &_mutex;
-				_argst[clenpos_a].list = cmds[i].oobj;
+				_argst[i].o_cnt= 1;
+				_argst[i].o_p = NULL;
+				_argst[i].mutex = &_mutex;
+				_argst[i].list = cmds[cmdNo].oobj;
 			}
 			else{
-				_argst[clenpos_a].o_cnt= 0;
-				_argst[clenpos_a].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 		}
 		else{
 			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
 			size_t cnt=0;
-			if( _opipe_map[i].find("o") != _opipe_map[i].end()){
-				cnt += _opipe_map[i]["o"].size();
+			if( _opipe_map[cmdNo].find("o") != _opipe_map[cmdNo].end()){
+				cnt += _opipe_map[cmdNo]["o"].size();
 			}
-			if( _opipe_map[i].find("u") != _ipipe_map[i].end()){
-				cnt += _opipe_map[i]["u"].size();
+			if( _opipe_map[cmdNo].find("u") != _ipipe_map[cmdNo].end()){
+				cnt += _opipe_map[cmdNo]["u"].size();
 			}
 			if(cnt==0){
-				_argst[clenpos_a].o_cnt= 0;
-				_argst[clenpos_a].o_p= NULL;
+				_argst[i].o_cnt= 0;
+				_argst[i].o_p= NULL;
 			}
 			else{
-				_argst[clenpos_a].o_cnt= cnt;
-				_argst[clenpos_a].o_p= new int[cnt];
+				_argst[i].o_cnt= cnt;
+				_argst[i].o_p= new int[cnt];
 				size_t pos = 0;
-				if( _opipe_map[i].find("o") != _opipe_map[i].end()){
-					for(size_t j=0;j<_opipe_map[i]["o"].size();j++){
-					_argst[clenpos_a].o_p[pos] = _opipe_map[i]["o"][j];
+				if( _opipe_map[cmdNo].find("o") != _opipe_map[cmdNo].end()){
+					for(size_t j=0;j<_opipe_map[cmdNo]["o"].size();j++){
+					_argst[i].o_p[pos] = _opipe_map[cmdNo]["o"][j];
 						pos++;
 					}
 				}
-				if( _opipe_map[i].find("u") != _opipe_map[i].end()){
-					for(size_t j=0;j<_opipe_map[i]["u"].size();j++){
-						_argst[clenpos_a].o_p[pos] = _opipe_map[i]["u"][j];
+				if( _opipe_map[cmdNo].find("u") != _opipe_map[cmdNo].end()){
+					for(size_t j=0;j<_opipe_map[cmdNo]["u"].size();j++){
+						_argst[i].o_p[pos] = _opipe_map[cmdNo]["u"][j];
 						pos++;
 					}
 				}
 			}
 		}
+	}
 
-		//debug
-			
+	_th_st_pp = new pthread_t[_clen];
+	_th_rtn   = new int[_clen];
+
+
+	PyThreadState *_save;
+	_save = PyEval_SaveThread();
+
+	for(int i=cmdlist.size()-1;i>=0;i--){
+
+		if(3 == _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second){
+			pthread_mutex_lock(&_mutex);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_pyfunc ,(void*)&_argst[i]);
+			pthread_cond_wait(&_forkCond,&_mutex);
+			pthread_mutex_unlock(&_mutex);
+		}
+	}
+
+	for(int i=cmdlist.size()-1;i>=0;i--){
+
 		//debugARGST_OUTPUT(i);
+		if(3 == _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second){
+			_runst[i]=1;
+		}
+	}
+
+	for(int i=cmdlist.size()-1;i>=0;i--){
+
+		//debugARGST_OUTPUT(i);
+		int typ = _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second ;
 
 		if(typ==0){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_func ,(void*)&_argst[clenpos_a]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_func ,(void*)&_argst[i]);
 		}
 		else if(typ==1){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_writelist ,(void*)&_argst[clenpos_a]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_writelist ,(void*)&_argst[i]);
 		}
 		else if(typ==2){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_readlist ,(void*)&_argst[clenpos_a]);
-		}
-		else if(typ==3){
-			_th_rtn[clenpos_a] = pthread_create( &_th_st_pp[clenpos_a], &pattr, kgshell::run_pyfunc ,(void*)&_argst[clenpos_a]);
+			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_readlist ,(void*)&_argst[i]);
 		}
 	}
 
@@ -796,7 +828,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	while(1){
 		size_t pos = 0;
 		bool endFLG = true;
-		while(pos<clenpos){
+		while(pos<_clen){
 			if(_argst[pos].finflg==false){ endFLG=false;}
 			else if(_argst[pos].outputEND==false){
 				if(!_argst[pos].msg.empty()){
@@ -814,7 +846,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 			}
 			if(_argst[pos].status!=0){
  				//エラー発生時はthread cancel
-				for(size_t j=0;j<clenpos;j++){
+				for(size_t j=0;j<_clen;j++){
 					if(!_argst[j].finflg){
 						pthread_cancel(_th_st_pp[j]);	
 					}
@@ -830,12 +862,13 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	pthread_mutex_unlock(&_stsMutex);
 
-	for(size_t i=clenpos;i>0;i--){
+	for(size_t i=_clen;i>0;i--){
 		pthread_join(_th_st_pp[i-1],NULL);
 	}
+	PyEval_RestoreThread(_save);
 
 	if(_modlist){
-		for(size_t i=0 ;i<clenpos;i++){
+		for(size_t i=0 ;i<_clen;i++){
 			try {
 				if(_argst[i].outputEND == false){
 					if(!_argst[i].msg.empty()){
@@ -866,8 +899,12 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	delete[] _th_st_pp;
 	delete[] _argst;
+	delete[] _th_rtn;
+	delete[] _runst;
 	_th_st_pp = NULL;
 	_argst = NULL;
+	_th_rtn = NULL;
+	_runst = NULL;
 	_modlist = NULL;
 
 }
@@ -933,7 +970,7 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 
 	_th_st_pp = new pthread_t[clenpos];
 	_argst = new argST[clenpos];
-	int _th_rtn[clenpos];
+	_th_rtn = new int[clenpos];
 	int clenpos_a = clenpos;
 	// before run 
 

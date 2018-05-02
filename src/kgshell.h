@@ -59,7 +59,8 @@ struct argST{
 	pthread_mutex_t *mutex;
 	pthread_mutex_t *stMutex;
 	pthread_cond_t *stCond;
-
+	pthread_cond_t *forkCond;
+	int *runst;
 };
 
 struct cmdCapselST{
@@ -83,6 +84,7 @@ class kgshell{
 	pthread_mutex_t _mutex;
 	pthread_mutex_t _stsMutex;
 	pthread_cond_t 	_stsCond;
+	pthread_cond_t 	_forkCond;
 
 	typedef map<std::string, boost::function<kgMod* ()> > kgmod_map_t;
 	typedef map<std::string, int > kgmod_run_t;
@@ -93,6 +95,8 @@ class kgshell{
  	kgCSVfld* _iterrtn;
  	kgCSVkey* _iterrtnk;
 	pthread_t* _th_st_pp;
+	int *_runst;
+	int *_th_rtn;
 	size_t _clen;
 	kgMod **_modlist;
 
