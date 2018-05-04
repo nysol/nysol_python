@@ -128,7 +128,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		else if (pid>0){//parent
 
 			int status = 0;
-			//int ret = 
+			//int ret = // ステータス情報どうする？
 			waitpid(pid, &status, 0);
 			if(i_p_t>0){ close(i_p_t);}
 			if(o_p_t>0){ close(o_p_t);}
@@ -138,7 +138,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 			else{
 				msg.append(successEndMsg());
 			}
-			return status;
+			return 0;
 		}
 		else {//err
 			throw kgError("fork error" );
