@@ -667,7 +667,13 @@ vector<string> kglib::splitTokenQ(string& str, char delim,bool skip)
 					break;
 				}
 				if(pos!=0){
-  	    	vs.push_back(str.substr(prv, pos-prv));
+					if( (str[prv]=='"'&& str[pos-1]=='"')
+						|| (str[prv]=='\''&& str[pos-1]=='\'')){
+	  	    	vs.push_back(str.substr(prv+1, pos-prv-2));
+					}
+					else{
+	  	    	vs.push_back(str.substr(prv, pos-prv));
+	  	    }
   	    }
  				break;
 			}
@@ -701,14 +707,21 @@ vector<string> kglib::splitTokenQ(string& str, char delim,bool skip)
 					}
     			pos++;
 				}
-			}*/else if(str[pos] == delim){
+			}*/
+			else if(str[pos] == delim){
 				if(skip && pos==0){
 					while(str[pos+1]==delim){ pos++; }			
 					prv=pos+1;
 					pos++;
 					continue;
 				}
-      	vs.push_back(str.substr(prv, pos-prv));
+				if( (str[prv]=='"'&& str[pos-1]=='"')
+					|| (str[prv]=='\''&& str[pos-1]=='\'')){
+	  	   	vs.push_back(str.substr(prv+1, pos-prv-2));
+				}
+				else{
+	  	  	vs.push_back(str.substr(prv, pos-prv));
+				}
 				if(skip){
 					while(str[pos+1]==delim){ pos++; }
 				}
