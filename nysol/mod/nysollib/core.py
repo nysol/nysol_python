@@ -336,13 +336,6 @@ class NysolMOD_CORE(object):
 					teexxx = m2tee(i=obj)
 					teexxx.outlist["o"] = [] 
 
-					"""これだとだめ
-					outll = obj.outlist[k]
-					teexxx = m2tee(i=obj)
-					teexxx.outlist["o"] = [] 
-					obj.outlist[k] = [teexxx]
-					"""
-
 					for outin in outll:
 						if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
 							fifoxxx=mfifo(i=teexxx)
@@ -433,6 +426,35 @@ class NysolMOD_CORE(object):
 					wlmod.inplist["i"]=[obj]
 					obj.outlist["u"][0] = wlmod
 					
+				# 途中OUTPUTチェック
+				if len(obj.outlist["o"]) > 1:
+					for i in range(len(obj.outlist["o"])):
+						if isinstance(obj.outlist["o"][i],str) :
+							from nysol.mod.submod.writecsv import Nysol_Writecsv as mwritecsv
+							wcsv_o = mwritecsv(obj.outlist["o"][i])
+							wcsv_o.inplist["i"]=[obj]
+							obj.outlist["o"][i] = wcsv_o
+							if obj in dupobj:
+								dupobj[obj] += 1
+							else:
+								dupobj[obj] = 2
+							add_mod.append(wcsv_o)	
+							
+				if len(obj.outlist["u"]) > 1:
+					for i in range(len(obj.outlist["u"])):
+						if isinstance(obj.outlist["u"][i],str) :
+							from nysol.mod.submod.writecsv import Nysol_Writecsv as mwritecsv
+							wcsv_o = mwritecsv(obj.outlist["u"][i])
+							wcsv_o.inplist["i"]=[obj]
+							obj.outlist["u"][i] = wcsv_o
+							if obj in dupobj:
+								dupobj[obj] += 1
+							else:
+								dupobj[obj] = 2
+
+							add_mod.append(wcsv_o)	
+
+
 				if obj.dlog != "" :
 					if len(obj.outlist["o"])!=0:
 						from nysol.mod.submod.writecsv import Nysol_Writecsv as mwritecsv
