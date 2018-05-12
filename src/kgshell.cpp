@@ -119,11 +119,12 @@ kgshell::kgshell(int mflg){
 
 		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["readlist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
-		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgCat>());
+		_kgmod_map["readcsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["writecsv"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 
 		_kgmod_map["mstdin"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["mstdout"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
+		_kgmod_map["msortchk"] = boost::lambda::bind(boost::lambda::new_ptr<kgSortchk>());
 
 		_kgmod_run["m2tee"] = 0;
 		_kgmod_run["mfifo"] = 0;
@@ -210,8 +211,7 @@ kgshell::kgshell(int mflg){
 		_kgmod_run["mstdin"] = 0;
 		_kgmod_run["mstdout"] = 0;
 		_kgmod_run["m2cat"] = 0;
-
-
+		_kgmod_run["msortchk"] = 0;
 
 		_kgmod_run["mload"] = 0;
 		_kgmod_run["msave"] = 0;

@@ -80,7 +80,7 @@ umodLibs = ['pthread']
 umodLibs.extend(check_for_boost())
 
 module1 = Extension('nysol/_nysolshell_core',
-                    sources = ['src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
+                    sources = ['src/mod/kgsortchk.cpp','src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
                     						'src/kgexcmd.cpp','src/nysolshell.cpp','src/mod/kg2cat.cpp',
                     						'src/kgshell.cpp','src/kgsplitblock.cpp',
                     						'src/kgload.cpp','src/kgpyfunc.cpp',

@@ -98,4 +98,5 @@
 #include <kgtab2csv.h>
 #include <kgpyfunc.h>
 #include <kg2cat.h>
+#include <kgsortchk.h>
 

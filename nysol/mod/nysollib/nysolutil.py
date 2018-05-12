@@ -68,7 +68,7 @@ def para2str(vals): #クラスごとにいれる?
 def args2dict(args, kw_args,klist,uk=None):
 
 	if len(args)>1:
-		print("arge only one")
+		raise TypeError("arge only one")
 		return None
 
 	if len(args)==1:
@@ -81,7 +81,7 @@ def args2dict(args, kw_args,klist,uk=None):
 					elif uk!=None:
 						kw_args[uk] = val[0]
 					else:
-						print("unkonwn parameter")			
+						raise TypeError("arge only one")
 				elif len(val)==2 :
 					kw_args[val[0]] = val[1]
 				else:
@@ -94,7 +94,7 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 
 		else :
-			raise TypeError
+			raise TypeError("args type str or dict")
 			#print(args)
 			#print("args type str or dict")
 			#return None
@@ -113,7 +113,7 @@ def args2dict(args, kw_args,klist,uk=None):
 			
 		else:
 			exval.append(k)
-			print ( k + " is not keyword")
+			raise TypeError(k + " is not keyword")
 			
 	for k in exval:
 		del kw_args[k]
