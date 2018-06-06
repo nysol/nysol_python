@@ -63,7 +63,8 @@ PyObject* grhfil_run(PyObject* self, PyObject* args){
 		return PyLong_FromLong(1);
 	}
 	vv[0] = "grhfil";
-	for(Py_ssize_t i=0 ; i< psize;i++){
+	Py_ssize_t i;
+	for(i=0 ; i< psize;i++){
 		PyObject *param = PyList_GetItem(params ,i);
 		if(strCHECK(param)){
 			vv[i+1] = strGET(param);
