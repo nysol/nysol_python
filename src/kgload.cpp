@@ -318,7 +318,11 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		else     { rls.open(_args.toString("i=",true), _env,_nfn_i); }
 		rls.read_header();
 
+
 		if(PyList_Check(o_p)){
+			PyGILState_STATE gstate;
+			gstate = PyGILState_Ensure();
+
 			while( EOF != rls.read() ){
 				pthread_mutex_lock(mtx);
 				{
@@ -332,6 +336,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 				pthread_mutex_unlock(mtx);
 			}
 			rls.close();
+			PyGILState_Release(gstate);
 		}
 		else{
 			throw kgError("not python list");
