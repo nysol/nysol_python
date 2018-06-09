@@ -549,6 +549,8 @@ void *kgshell::run_pyfunc(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
+	pthread_exit(0);
+
 	return NULL;	
 }
 
@@ -621,6 +623,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	pthread_attr_t pattr;
 	char * envStr=getenv("KG_THREAD_STK");
+	bool errflg=false;
 
 	size_t stacksize;
 	if(envStr!=NULL){
@@ -852,6 +855,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 					}
 				}
 				endFLG=true;
+				errflg = true;
 				break;
 			}
 			pos++;
@@ -889,9 +893,11 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 			}
 			catch(kgError& err){
 				cerr << "script RUN KGERROR " << err.message(0) << endl;
+				errflg = true;
 			}
 			catch(...){ 
 				cerr  << "closing.. " << endl; 
+				errflg = true;
 			}
 		}
 		delete[] _modlist;
@@ -906,6 +912,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	_th_rtn = NULL;
 	_runst = NULL;
 	_modlist = NULL;
+	if (errflg) { throw kgError("runmain on kgshell"); }
 
 }
 
@@ -955,7 +962,7 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 
 		int i = cmdlist[j];
 		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
-			cerr << "not 1 kgmod " << cmds[i].cmdname << endl;
+			throw kgError("not kgmod :" + cmds[i].cmdname);
 			return 1;
 		}
 		_modlist[clenpos] = _kgmod_map.find(cmds[i].cmdname)->second() ;
