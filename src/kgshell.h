@@ -100,6 +100,8 @@ class kgshell{
 	size_t _clen;
 	kgMod **_modlist;
 
+	int	_runlim;
+
 	// pipe LIST
 	//map<int,int> _ipipe_map;
 	//map<int,int> _mpipe_map;
@@ -224,7 +226,7 @@ class kgshell{
 
 public:
 	// コンストラクタ
-	kgshell(int mflg=false);
+	kgshell(int mflg=false,int modlim = -1);
 	~kgshell(void){
 		if(_th_st_pp){
 			vector<int> chk(_clen);

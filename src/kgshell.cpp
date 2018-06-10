@@ -31,7 +31,7 @@ using namespace kgmod;
 using namespace kglib;
 
 
-kgshell::kgshell(int mflg){
+kgshell::kgshell(int mflg,int rumlim){
 
 		_kgmod_map["m2tee"] = boost::lambda::bind(boost::lambda::new_ptr<kg2Tee>());
 		_kgmod_map["mfifo"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
@@ -228,6 +228,8 @@ kgshell::kgshell(int mflg){
 
 		if(!mflg){  _env.verblvl(2);	}
 
+		_runlim = rumlim;
+
 	  if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 			ostringstream ss;
 			ss << "init mutex error";
@@ -399,6 +401,7 @@ void *kgshell::run_writelist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
+	pthread_exit(0);
 	return NULL;	
 }
 
@@ -466,6 +469,7 @@ void *kgshell::run_readlist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
+	pthread_exit(0);
 	return NULL;	
 }
 
@@ -1136,11 +1140,21 @@ void kgshell::runInit(
 	}
 	
 	char * envStr=getenv("KG_RUN_LIMIT");
+
 	int runlim;
-	if(envStr!=NULL){
-		runlim = atoi(envStr);
-	}else{
-		runlim = KGMOD_RUN_LIMIT;
+	if ( _runlim == -1){
+		if(envStr!=NULL){
+			runlim = atoi(envStr);
+		}else{
+			runlim = KGMOD_RUN_LIMIT;
+		}
+	}
+	else{
+		runlim = _runlim;
+	}
+	if ( runlim <=0 ){
+		throw kgError("not valid runlimit");
+		return;
 	}
 
 	_spblk.blockSplit(runlim,cmds.size(),plist);

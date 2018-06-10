@@ -95,7 +95,7 @@ class NysolMOD_CORE(object):
 			del self.kwd["u"]
 
 		self.msg=False
-
+		self.runlimit = -1
 
 	def direction(self,dir) :
 		self.nowdir = dir
@@ -208,6 +208,10 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
+
+	def set_runlimit(self,lim):
+		self.runlimit=int(lim)
+		return self
 
 	def msgOn(self):
 		self.msg=True
@@ -643,16 +647,20 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def runs(self,mods,**kw_args):
 
-		msgF =False
+		msgF =mods[0].msg
+		modlimt = mods[0].runlimit
+
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
 				msgF = True
 
+		if "runlimit" in kw_args:
+			modlimt = int(kw_args["runlimit"])
+
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetwork(mods)
 
-		shobj = n_core.init(msgF)
+		shobj = n_core.init(msgF,modlimt)
 
-		modlimt =300
 		n_core.runLx(shobj,modlist,linklist)
 
 		return outfs

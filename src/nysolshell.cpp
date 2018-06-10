@@ -538,10 +538,11 @@ PyObject* getparams(PyObject* self, PyObject* args){
 
 PyObject* start(PyObject* self, PyObject* args){
 	int mflg;
-	if (!PyArg_ParseTuple(args, "i", &mflg)){
+	int rulim;
+	if (!PyArg_ParseTuple(args, "ii", &mflg , &rulim)){
 		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
   }else{
-		return PyCapsule_New(new kgshell(mflg),"kgshellP",py_kgshell_free);
+		return PyCapsule_New(new kgshell(mflg,rulim),"kgshellP",py_kgshell_free);
   }
 }
 

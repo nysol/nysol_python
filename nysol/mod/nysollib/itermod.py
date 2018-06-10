@@ -28,7 +28,7 @@ class Nysol_MeachIter(object):
 		linklist=[]
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
 
 	def next(self):
@@ -69,7 +69,7 @@ class Nysol_MeachDictIter(object):
 		linklist=[]
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
 
 	def next(self):
@@ -131,7 +131,7 @@ class Nysol_MeachKeyIter(object):
 		linklist=[]
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
 		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
 
 	def next(self):
@@ -189,7 +189,7 @@ class Nysol_MeachKeyDictIter(object):
 		linklist=[]
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
 		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
 
 	def next(self):
@@ -251,7 +251,7 @@ class Nysol_MeachKeyIterWithFlag(object):
 		linklist=[]
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
 		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
 		self.breakPre = True
 	
