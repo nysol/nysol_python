@@ -115,6 +115,7 @@ kgshell::kgshell(int mflg,int rumlim){
 		_kgmod_map["mshuffle"]  = boost::lambda::bind(boost::lambda::new_ptr<kgShuffle>());
 
 		_kgmod_map["m2cat"]  = boost::lambda::bind(boost::lambda::new_ptr<kg2Cat>());
+		_kgmod_map["municat"]  = boost::lambda::bind(boost::lambda::new_ptr<kgUnicat>());
 
 
 		_kgmod_map["writelist"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
@@ -212,6 +213,7 @@ kgshell::kgshell(int mflg,int rumlim){
 		_kgmod_run["mstdout"] = 0;
 		_kgmod_run["m2cat"] = 0;
 		_kgmod_run["msortchk"] = 0;
+		_kgmod_run["municat"] = 0;
 
 		_kgmod_run["mload"] = 0;
 		_kgmod_run["msave"] = 0;
