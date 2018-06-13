@@ -323,6 +323,10 @@ class NysolMOD_CORE(object):
 				if len(obj.outlist[k])==0:
 					continue
 				elif len(obj.outlist[k])==1: #fifoのみ追加(o,u対策)
+
+					if isinstance(obj.outlist[k][0],str):
+						continue 
+
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
 					fifoxxx=mfifo(i=obj.direction(k))
