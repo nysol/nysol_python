@@ -148,6 +148,67 @@ class Nysol_MeachKeyIter(object):
 		raise StopIteration()
 
 
+
+class Nysol_convIter(object):
+
+	def __init__(self,obj,conv=None):
+
+		if len(obj.outlist["o"])!=0:
+			print ("type ERORR")
+			return None
+
+		#if isinstance(keys,str) :
+		#	newkeys = keys.split(",") 
+		#elif isinstance(keys,list) :
+		#	newkeys = keys
+		#else:
+		#	raise Exception("unsuport TYPE")
+
+		#dupobj = copy.deepcopy(obj)
+		runobj = copy.deepcopy(obj)
+		#from nysol.mod.submod.msortchk import Nysol_Msortchk as msortchk
+		#sortkeys = copy.deepcopy(newkeys)
+		#if skeys != None:
+		#	if isinstance(keys,str) :
+		#		sortkeys.extend(skeys.split(","))
+		#	elif isinstance(keys,list) :
+		#		sortkeys.extend(skeys)
+		#	else:
+		#		raise Exception("unsuport TYPE")
+			
+		#runobj = msortchk({"k":sortkeys}).addPre(dupobj)
+		#runobj.change_modNetwork()
+
+		uniqmod={} 
+		sumiobj= set([])
+		runobj.selectUniqMod(sumiobj,uniqmod)
+
+		modlist=[None]*len(uniqmod) #[[name,para]]
+		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
+		runobj.makeModList(uniqmod,modlist,iolist)
+
+		linklist=[]
+		runobj.makeLinkList(iolist,linklist)
+		# kgshell stock
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
+		self.convptn = n_core.fldtp(self.csvin,conv)
+
+	def next(self):
+		line = n_core.readlineconvPtn(self.csvin,self.convptn)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+	def __next__(self):
+		line = n_core.readlineconvPtn(self.csvin,self.convptn)
+		if line: 
+			return line
+		raise StopIteration()
+
+
+
 class Nysol_MeachKeyDictIter(object):
 
 	def __init__(self,obj,keys,skeys=None):

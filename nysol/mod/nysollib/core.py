@@ -195,6 +195,15 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
+	def convtype(self,convtp=None):
+		try:
+			x = itermod.Nysol_convIter(self,convtp)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
 
 	def getline_with_keyflag(self,keys,skeys=None):
 		

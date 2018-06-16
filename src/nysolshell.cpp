@@ -380,6 +380,105 @@ PyObject* readlineDict(PyObject* self, PyObject* args)
 }
 
 
+
+PyObject* readlineconvPtn(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	PyObject *ptn;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+    return Py_BuildValue("");
+  }
+
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+
+	size_t fcnt = kcfld->fldSize();
+	PyObject* rlist = PyList_New(fcnt);
+
+	for(size_t j=0 ;j<fcnt;j++){
+		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+		char* v = kcfld->getVal(j);
+
+		if(k==0){ //str
+			PyList_SetItem(rlist,j,Py_BuildValue("s", v));
+			
+		}else if(k==1){ // int
+			if(*v=='\0'){
+				PyList_SetItem(rlist,j,Py_BuildValue("d", Py_NAN));
+			}
+			else{
+				PyList_SetItem(rlist,j,Py_BuildValue("l", atol(v)) );
+			}
+
+		}else if(k==2){ // double
+			if(*v=='\0'){
+				PyList_SetItem(rlist,j,Py_BuildValue("d", Py_NAN));
+			}
+			else{
+				PyList_SetItem(rlist,j,Py_BuildValue("d", atof(v)) );
+			}
+						
+		}else if(k==3){ // bool
+			int len = strlen(v);
+
+			if(len==1){	
+				if(*v=='1'){
+					PyList_SetItem(rlist,j,Py_True);
+					Py_INCREF(Py_True);
+				}else if(*v=='0'){
+					PyList_SetItem(rlist,j,Py_False);
+					Py_INCREF(Py_False);
+				}
+				else{
+					PyList_SetItem(rlist,j,Py_None);
+					Py_INCREF(Py_None);
+				}
+			}
+			else if(len==4){
+				if ( ( *v == 't' || *v == 'T') && (*(v+1) == 'r' || *(v+1) == 'R') 
+						&& ( *(v+2) == 'u' || *(v+2) == 'U')  &&  ( *(v+3) == 'e' || *(v+3) == 'E') ){
+
+						PyList_SetItem(rlist,j,Py_True);
+						Py_INCREF(Py_True);
+							
+				}
+				else{
+					PyList_SetItem(rlist,j,Py_None);
+					Py_INCREF(Py_None);
+				}
+			}
+			else if(len==5){
+				if ( ( *v == 'f' || *v == 'F') 
+					&& ( *(v+1) == 'a' || *(v+1) == 'A') && ( *(v+2) == 'l' || *(v+2) == 'l')
+				 	&& ( *(v+3) == 's' || *(v+3) == 'S') && ( *(v+4) == 'e' || *(v+4) == 'E')){
+
+						PyList_SetItem(rlist,j,Py_False);
+						Py_INCREF(Py_False);
+				}
+				else {
+					PyList_SetItem(rlist,j,Py_None);
+					Py_INCREF(Py_None);
+				}
+			}
+			else{
+					PyList_SetItem(rlist,j,Py_None);
+					Py_INCREF(Py_None);
+
+			}
+		}
+	}
+	return rlist;
+}
+
+
+
+
 PyObject* readkeyline(PyObject* self, PyObject* args)
 {
 
@@ -413,6 +512,53 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 		}
 	}
 	return rlist;
+}
+
+PyObject* fldtp(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	PyObject *tpmap;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "OO", &csvin,&tpmap)){
+    return Py_BuildValue("");
+  }
+
+
+	kgCSVfld *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+	
+	size_t fcnt = kcfld->fldSize();
+	PyObject* rlist = PyList_New(fcnt);
+
+	for(size_t j=0 ;j<fcnt;j++){
+		PyObject * v = PyDict_GetItem(tpmap, Py_BuildValue("s",kcfld->fldName(j).c_str()));
+		if(v){
+			char *vv = strGET(v);
+			if ( !strcmp(vv,"str")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+						
+			}
+			else if ( !strcmp(vv,"int")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 1));
+				Py_BuildValue("i", 1);		
+			}
+			else if ( !strcmp(vv,"double")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 2));
+						
+			}
+			else if ( !strcmp(vv,"bool")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 3));
+			}
+			else{
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+			}
+		}
+		else{
+			PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+		}
+	}
+	return rlist;
+
 }
 
 PyObject* readkeylineDict(PyObject* self, PyObject* args)
@@ -557,7 +703,9 @@ static PyMethodDef hellomethods[] = {
 	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
 	{"readlineDict", reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
+	{"readlineconvPtn", reinterpret_cast<PyCFunction>(readlineconvPtn), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
+	{"fldtp", reinterpret_cast<PyCFunction>(fldtp), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
 	{"close", reinterpret_cast<PyCFunction>(csvclose), METH_VARARGS },
 	{NULL}
