@@ -166,18 +166,18 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 		
 
-	def keyblock(self,keys,skeys=None):
+	def keyblock(self,keys,skeys=None,dtype=None):
 		try:
-			x = itermod.Nysol_MeachKeyIter(self,keys,skeys)
+			x = itermod.Nysol_MeachKeyIter(self,keys,skeys,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def keyblock_dict(self,keys,skeys=None):
+	def keyblock_dict(self,keys,skeys=None,dtype=None):
 		try:
-			x = itermod.Nysol_MeachKeyDictIter(self,keys,skeys)
+			x = itermod.Nysol_MeachKeyDictIter(self,keys,skeys,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
@@ -185,9 +185,9 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
-	def getline_dict(self):
+	def getline_dict(self,dtype=None):
 		try:
-			x = itermod.Nysol_MeachDictIter(self)
+			x = itermod.Nysol_MeachDictIter(self,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
@@ -205,10 +205,10 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
-	def getline_with_keyflag(self,keys,skeys=None):
+	def getline_with_keyflag(self,keys,skeys=None,dtype=None):
 		
 		try:
-			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys)
+			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys,dtype)
 
 			while(True):
 				yield next(x)
