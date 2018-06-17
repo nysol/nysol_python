@@ -195,9 +195,9 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
-	def convtype(self,convtp=None):
+	def convtype(self,dtype=None):
 		try:
-			x = itermod.Nysol_convIter(self,convtp)
+			x = itermod.Nysol_convIter(self,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
