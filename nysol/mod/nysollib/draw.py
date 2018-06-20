@@ -194,7 +194,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		f.write("var EdgeDATA=[];\n")
 		f.write("var LinkLIST=[];\n")
 	
-	else:z
+	else:
 		f.write("var EdgeDATA=[")
 
 		linklist_n2e=[None]*mlastNo
