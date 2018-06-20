@@ -95,7 +95,7 @@ class NysolMOD_CORE(object):
 			del self.kwd["u"]
 
 		self.msg=False
-
+		self.runlimit = -1
 
 	def direction(self,dir) :
 		self.nowdir = dir
@@ -166,28 +166,18 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 		
 
-	def keyblock(self,keys,skeys=None):
+	def keyblock(self,keys,skeys=None,dtype=None):
 		try:
-			x = itermod.Nysol_MeachKeyIter(self,keys,skeys)
+			x = itermod.Nysol_MeachKeyIter(self,keys,skeys,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def keyblock_dict(self,keys,skeys=None):
+	def keyblock_dict(self,keys,skeys=None,dtype=None):
 		try:
-			x = itermod.Nysol_MeachKeyDictIter(self,keys,skeys)
-			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
-
-
-	def getline_dict(self):
-		try:
-			x = itermod.Nysol_MeachDictIter(self)
+			x = itermod.Nysol_MeachKeyDictIter(self,keys,skeys,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
@@ -195,11 +185,30 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
+	def getline_dict(self,dtype=None):
+		try:
+			x = itermod.Nysol_MeachDictIter(self,dtype)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
 
-	def getline_with_keyflag(self,keys,skeys=None):
+
+	def convtype(self,dtype=None):
+		try:
+			x = itermod.Nysol_convIter(self,dtype)
+			while(True):
+				yield next(x)
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+
+	def getline_with_keyflag(self,keys,skeys=None,dtype=None):
 		
 		try:
-			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys)
+			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys,dtype)
 
 			while(True):
 				yield next(x)
@@ -208,6 +217,10 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
+
+	def set_runlimit(self,lim):
+		self.runlimit=int(lim)
+		return self
 
 	def msgOn(self):
 		self.msg=True
@@ -319,6 +332,10 @@ class NysolMOD_CORE(object):
 				if len(obj.outlist[k])==0:
 					continue
 				elif len(obj.outlist[k])==1: #fifoのみ追加(o,u対策)
+
+					if isinstance(obj.outlist[k][0],str):
+						continue 
+
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
 					fifoxxx=mfifo(i=obj.direction(k))
@@ -599,7 +616,7 @@ class NysolMOD_CORE(object):
 
 		for i, dupobj in enumerate(dupobjs):
 
-			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc" : #統一的にする
+			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc"or dupobj.name == "cmd" : #統一的にする
 				runobjs[i]= dupobj			
 			elif len(dupobj.outlist["o"])==0:
 				runobjs[i]= dupobj.writelist(list())
@@ -614,7 +631,7 @@ class NysolMOD_CORE(object):
 			else:
 				runobjs[i]= dupobj
 	
-			if dupobj.name == "msep" or dupobj.name == "mshuffle"  or dupobj.name == "mstdout" or dupobj.name == "runfunc" : #統一的にする
+			if dupobj.name == "msep" or dupobj.name == "mshuffle"  or dupobj.name == "mstdout" or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
 				outfs[i] = []
 			else:
 				outfs[i] = runobjs[i].outlist["o"][0]
@@ -643,16 +660,20 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def runs(self,mods,**kw_args):
 
-		msgF =False
+		msgF =mods[0].msg
+		modlimt = mods[0].runlimit
+
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
 				msgF = True
 
+		if "runlimit" in kw_args:
+			modlimt = int(kw_args["runlimit"])
+
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetwork(mods)
 
-		shobj = n_core.init(msgF)
+		shobj = n_core.init(msgF,modlimt)
 
-		modlimt =300
 		n_core.runLx(shobj,modlist,linklist)
 
 		return outfs
@@ -680,7 +701,7 @@ class NysolMOD_CORE(object):
 		rtnlist = []
 		# 最終形式チェック
 		for dupshowobj in dupshowobjs:
-			if dupshowobj.name == "msep" or dupshowobj.name == "mshuffle" or dupshowobj.name == "mstdout":
+			if dupshowobj.name == "msep" or dupshowobj.name == "mshuffle" or dupshowobj.name == "mstdout" or dupshowobj.name == "cmd":
 				showobjs.append(dupshowobj)
 			elif len(dupshowobj.outlist["o"])==0:
 				showobjs.append(dupshowobj.writelist(rtnlist))

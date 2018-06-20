@@ -10,6 +10,7 @@ class Nysol_Excmd(NysolMOD_CORE):
 
 
 def cmd(self,*args, **kw_args):
-	return Nysol_Excmd(nutil.args2dict(args,kw_args,Nysol_Excmd.kwd)).addPre(self)
+
+	return Nysol_Excmd(nutil.arg2dict(args,kw_args,Nysol_Excmd.kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "cmd", cmd)

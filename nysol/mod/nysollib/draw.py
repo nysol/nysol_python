@@ -187,50 +187,58 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		else:
 			f.write(",\n")
 
-	f.write("var EdgeDATA=[")
 
 	elastNo = len(linklist)
-	linklist_n2e=[None]*mlastNo
+	
+	if elastNo == 0 :
+		f.write("var EdgeDATA=[];\n")
+		f.write("var LinkLIST=[];\n")
+	
+	else:z
+		f.write("var EdgeDATA=[")
 
-	for i , frto in enumerate(linklist):
-		fr,to = frto
-		frNo = fr[1] 
-		toNo = to[1] 
-		frTp = fr[0] 
-		toTp = to[0] 
+		linklist_n2e=[None]*mlastNo
+
+		for i , frto in enumerate(linklist):
+			fr,to = frto
+			frNo = fr[1] 
+			toNo = to[1] 
+			frTp = fr[0] 
+			toTp = to[0] 
 		 
-		frX , frY = dsppos[frNo]
-		toX , toY = dsppos[toNo]
+			frX , frY = dsppos[frNo]
+			toX , toY = dsppos[toNo]
 
 
-		if linklist_n2e[frNo] == None:
-			linklist_n2e[frNo] =[[],[]]
+			if linklist_n2e[frNo] == None:
+				linklist_n2e[frNo] =[[],[]]
 
-		linklist_n2e[frNo][0].append(str(i))
+			linklist_n2e[frNo][0].append(str(i))
 
-		if linklist_n2e[toNo] == None:
-			linklist_n2e[toNo] =[[],[]]
+			if linklist_n2e[toNo] == None:
+				linklist_n2e[toNo] =[[],[]]
 
-		linklist_n2e[toNo][1].append(str(i))
+			linklist_n2e[toNo][1].append(str(i))
 
-		f.write("{ title:\"%s => %s \"," % (frTp,toTp))
-#		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+40,toX*60+20,toY*60+0))
-		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+20,toX*60+20,toY*60+20))
+			f.write("{ title:\"%s => %s \"," % (frTp,toTp))
+	#		f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+40,toX*60+20,toY*60+0))
+			f.write(" x1:%d,y1:%d,x2:%d,y2:%d }" % (frX*60+20,frY*60+20,toX*60+20,toY*60+20))
 
-		if elastNo==i+1 :
-			f.write("]\n")
-		else:
-			f.write(",\n")
+			if elastNo==i+1 :
+				f.write("]\n")
+			else:
+				f.write(",\n")
 
-	n2elastNo = len(linklist_n2e)
-	f.write("var LinkLIST=[")
-	for i , n2elist in enumerate(linklist_n2e):
-		f.write("[[%s],[%s]]"%(",".join(n2elist[0]),",".join(n2elist[1])))
-		if n2elastNo ==i+1 :
-			f.write("]\n")
-		else:
-			f.write(",\n")
-
+		n2elastNo = len(linklist_n2e)
+		f.write("var LinkLIST=[")
+		for i , n2elist in enumerate(linklist_n2e):
+			if n2elist == None:
+				continue
+			f.write("[[%s],[%s]]"%(",".join(n2elist[0]),",".join(n2elist[1])))
+			if n2elastNo ==i+1 :
+				f.write("]\n")
+			else:
+				f.write(",\n")
 
 	f.write("</script>\n")
 	f.write("</head>")

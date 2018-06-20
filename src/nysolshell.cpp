@@ -38,6 +38,83 @@ static bool strCHECK(PyObject* data){
 
 }
 
+static PyObject* setRtnData(long k,char * v){
+	PyObject* rtn = NULL;
+
+	if(k==0){ //str
+
+		rtn = Py_BuildValue("s", v);
+			
+	}else if(k==1){ // int
+
+		if(*v=='\0'){ rtn = Py_BuildValue("d", Py_NAN); }
+		else        { rtn = Py_BuildValue("l", atol(v)); }
+
+	}else if(k==2){ // double
+
+			if(*v=='\0'){ rtn = Py_BuildValue("d", Py_NAN); }
+			else        { rtn = Py_BuildValue("d", atof(v)); }
+
+	}else if(k==3){ // bool
+
+		int len = strlen(v);
+		if(len==1){	
+			if(*v=='1'){
+				rtn = Py_True;
+				Py_INCREF(Py_True);
+			}else if(*v=='0'){
+				rtn = Py_False;
+				Py_INCREF(Py_False);
+			}
+			else{
+				rtn = Py_None;
+				Py_INCREF(Py_None);
+			}
+		}
+		else if(len==4){
+			if ( ( *v == 't' || *v == 'T') && (*(v+1) == 'r' || *(v+1) == 'R') 
+						&& ( *(v+2) == 'u' || *(v+2) == 'U')  &&  ( *(v+3) == 'e' || *(v+3) == 'E') ){
+
+				rtn = Py_True;
+				Py_INCREF(Py_True);
+
+			}
+			else{
+
+				rtn = Py_None;
+				Py_INCREF(Py_None);
+
+			}
+		}
+		else if(len==5){
+			if ( ( *v == 'f' || *v == 'F') 
+				&& ( *(v+1) == 'a' || *(v+1) == 'A') && ( *(v+2) == 'l' || *(v+2) == 'l')
+			 	&& ( *(v+3) == 's' || *(v+3) == 'S') && ( *(v+4) == 'e' || *(v+4) == 'E')){
+
+				rtn = Py_False;
+				Py_INCREF(Py_False);
+			}
+			else {
+				rtn = Py_None;
+				Py_INCREF(Py_None);
+			}
+		}
+		else{
+			rtn = Py_None;
+			Py_INCREF(Py_None);
+
+		}
+	}
+	else{
+		rtn = Py_None;
+		Py_INCREF(Py_None);
+	
+	}
+	return rtn;
+
+}
+
+
 
 PyObject* cancel(PyObject* self, PyObject* args)
 {
@@ -359,9 +436,9 @@ PyObject* readlineDict(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
-	//PyObject *list;
+	PyObject *ptn;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
     return Py_BuildValue("");
   }
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -374,19 +451,55 @@ PyObject* readlineDict(PyObject* self, PyObject* args)
 
   PyObject* rlist = PyDict_New();
 	for(size_t j=0 ;j<fcnt;j++){
-		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),Py_BuildValue("s", kcfld->getVal(j)) );
+
+		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+		char* v = kcfld->getVal(j);
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),setRtnData(k,v));
 	}
 	return rlist;
 }
+
+
+
+PyObject* readlineconvPtn(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	PyObject *ptn;
+	//PyObject *list;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+    return Py_BuildValue("");
+  }
+
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+
+	size_t fcnt = kcfld->fldSize();
+	PyObject* rlist = PyList_New(fcnt);
+
+	for(size_t j=0 ;j<fcnt;j++){
+		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+		char* v = kcfld->getVal(j);
+		PyList_SetItem(rlist,j,setRtnData(k,v));
+	}
+	return rlist;
+}
+
+
 
 
 PyObject* readkeyline(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
+	PyObject *ptn;
 	//PyObject *list;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -403,7 +516,9 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 
 		PyObject* rllist = PyList_New(fcnt);
 		for(size_t j=0 ;j<fcnt;j++){
-			PyList_SetItem(rllist,j,Py_BuildValue("s", kcfld->getOldVal(j)));
+			long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+			char* v = kcfld->getOldVal(j);
+			PyList_SetItem(rllist,j,setRtnData(k,v));
 		}
 		PyList_Append(rlist,rllist);
 		Py_DECREF(rllist);
@@ -415,13 +530,62 @@ PyObject* readkeyline(PyObject* self, PyObject* args)
 	return rlist;
 }
 
+PyObject* fldtp(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	PyObject *tpmap;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "OO", &csvin,&tpmap)){
+    return Py_BuildValue("");
+  }
+
+
+	kgCSVfld *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+	
+	size_t fcnt = kcfld->fldSize();
+	PyObject* rlist = PyList_New(fcnt);
+
+	for(size_t j=0 ;j<fcnt;j++){
+		PyObject * v = PyDict_GetItem(tpmap, Py_BuildValue("s",kcfld->fldName(j).c_str()));
+		if(v){
+			char *vv = strGET(v);
+			if ( !strcmp(vv,"str")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+						
+			}
+			else if ( !strcmp(vv,"int")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 1));
+				Py_BuildValue("i", 1);		
+			}
+			else if ( !strcmp(vv,"double")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 2));
+			}
+			else if ( !strcmp(vv,"float")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 2));
+			}
+			else if ( !strcmp(vv,"bool")){
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 3));
+			}
+			else{
+				PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+			}
+		}
+		else{
+			PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
+		}
+	}
+	return rlist;
+
+}
+
 PyObject* readkeylineDict(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
-	//PyObject *list;
+	PyObject *ptn;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
+	if (!PyArg_ParseTuple(args, "OO", &csvin,&ptn)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -443,9 +607,13 @@ PyObject* readkeylineDict(PyObject* self, PyObject* args)
 		if(( kcfld->status() & kgCSV::Begin )){continue;}
 
 		for(size_t j=0 ;j<fcnt;j++){
-			PyObject* setobj = Py_BuildValue("s", kcfld->getOldVal(j));
+		
+			long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+			char* v = kcfld->getOldVal(j);
+			PyObject* setobj = setRtnData(k,v);
 			PyList_Append(rlists[j],setobj);
 			Py_DECREF(setobj);
+
 		}
 		if( kcfld->keybreak() ){
 			break;
@@ -466,9 +634,9 @@ PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
-	//PyObject *list;
+	PyObject *ptn;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -494,7 +662,9 @@ PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 	PyObject* rllist = PyList_New(fcnt);
 
 	for(size_t j=0 ;j<fcnt;j++){
-		PyList_SetItem(rllist,j,Py_BuildValue("s", kcfld->getOldVal(j)));
+		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+		char* v = kcfld->getOldVal(j);
+		PyList_SetItem(rllist,j,setRtnData(k,v));
 	}
 
 	PyList_SetItem(finlist,0,rllist);
@@ -538,10 +708,11 @@ PyObject* getparams(PyObject* self, PyObject* args){
 
 PyObject* start(PyObject* self, PyObject* args){
 	int mflg;
-	if (!PyArg_ParseTuple(args, "i", &mflg)){
+	int rulim;
+	if (!PyArg_ParseTuple(args, "ii", &mflg , &rulim)){
 		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
   }else{
-		return PyCapsule_New(new kgshell(mflg),"kgshellP",py_kgshell_free);
+		return PyCapsule_New(new kgshell(mflg,rulim),"kgshellP",py_kgshell_free);
   }
 }
 
@@ -550,13 +721,15 @@ static PyMethodDef hellomethods[] = {
 	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
 	{"runLx", reinterpret_cast<PyCFunction>(runLx), METH_VARARGS },
 	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
-	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
+	{"readlineconvPtn", reinterpret_cast<PyCFunction>(readlineconvPtn), METH_VARARGS },
+	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
 	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
 	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
 	{"readlineDict", reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
 	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
 	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
+	{"fldtp", reinterpret_cast<PyCFunction>(fldtp), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
 	{"close", reinterpret_cast<PyCFunction>(csvclose), METH_VARARGS },
 	{NULL}

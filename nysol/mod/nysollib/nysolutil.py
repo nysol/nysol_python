@@ -130,7 +130,8 @@ def arg2dict(args, kw_args,klist,uk=None):
 
 	if len(args)==1:
 		if isinstance(args[0],str) :
-			kw_args["cmdstr"] = "'" + args[0] + "'" 
+			#kw_args["cmdstr"] = "'" + args[0] + "'" 
+			kw_args["cmdstr"] = args[0]
 
 		elif isinstance(args[0],dict):
 			kw_args.update(args[0])

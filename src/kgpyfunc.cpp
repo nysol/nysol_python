@@ -236,7 +236,7 @@ int kgPyfunc::run(
 
 			if(rtn == NULL){
 				// ERR返す？
-				PyErr_Print();
+				//PyErr_Print();
 				_exit(1);
 			}
 			else{
@@ -272,7 +272,7 @@ int kgPyfunc::run(
 				msg.append(successEndMsg());
 			}
 			else{
-				throw kgError("exec call python func");
+				throw kgError("error occured in the function, check the detail error message by using run() instead of runs()");
 			}
 			return status;
 		}
