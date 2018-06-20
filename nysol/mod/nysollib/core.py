@@ -616,7 +616,7 @@ class NysolMOD_CORE(object):
 
 		for i, dupobj in enumerate(dupobjs):
 
-			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc" : #統一的にする
+			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc"or dupobj.name == "cmd" : #統一的にする
 				runobjs[i]= dupobj			
 			elif len(dupobj.outlist["o"])==0:
 				runobjs[i]= dupobj.writelist(list())
@@ -631,7 +631,7 @@ class NysolMOD_CORE(object):
 			else:
 				runobjs[i]= dupobj
 	
-			if dupobj.name == "msep" or dupobj.name == "mshuffle"  or dupobj.name == "mstdout" or dupobj.name == "runfunc" : #統一的にする
+			if dupobj.name == "msep" or dupobj.name == "mshuffle"  or dupobj.name == "mstdout" or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
 				outfs[i] = []
 			else:
 				outfs[i] = runobjs[i].outlist["o"][0]
@@ -701,7 +701,7 @@ class NysolMOD_CORE(object):
 		rtnlist = []
 		# 最終形式チェック
 		for dupshowobj in dupshowobjs:
-			if dupshowobj.name == "msep" or dupshowobj.name == "mshuffle" or dupshowobj.name == "mstdout":
+			if dupshowobj.name == "msep" or dupshowobj.name == "mshuffle" or dupshowobj.name == "mstdout" or dupshowobj.name == "cmd":
 				showobjs.append(dupshowobj)
 			elif len(dupshowobj.outlist["o"])==0:
 				showobjs.append(dupshowobj.writelist(rtnlist))
