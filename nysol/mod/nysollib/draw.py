@@ -193,10 +193,9 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	if elastNo == 0 :
 		f.write("var EdgeDATA=[];\n")
 		f.write("var LinkLIST=[];\n")
-	
-	else:z
-		f.write("var EdgeDATA=[")
 
+	else:
+		f.write("var EdgeDATA=[")
 		linklist_n2e=[None]*mlastNo
 
 		for i , frto in enumerate(linklist):
