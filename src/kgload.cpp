@@ -23,6 +23,7 @@
 #include <kgload.h>
 #include <kgError.h>
 #include <kgConfig.h>
+#include <stdarg.h>
 
 using namespace std;
 using namespace kglib;
@@ -301,6 +302,11 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 	return 1;
 
 }
+/*
+static makeVal(format,...){
+
+
+}*/
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
@@ -308,7 +314,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 {
 	try {
 		// パラメータチェック
-		_args.paramcheck("i=",kgArgs::COMMON|kgArgs::IODIFF);
+		_args.paramcheck("i=,dtype=",kgArgs::COMMON|kgArgs::IODIFF);
 		if(inum>1){ throw kgError("no match IO"); }
 
 		kgCSVfld rls;
@@ -316,10 +322,34 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		// 入出力ファイルオープン
 		if(inum==1 && *i_p > 0){ rls.popen(*i_p, _env,_nfn_i); }
 		else     { rls.open(_args.toString("i=",true), _env,_nfn_i); }
+
+
 		rls.read_header();
+
+		vector< vector<kgstr_t> > vvs = _args.toStringVecVec("dtype=",':',2,false);
+		kgArgFld fFieldx;
+		fFieldx.set(vvs, &rls,_fldByNum);
+		//0:str
+		//1:int
+		//2:float
+		//3:bool
+
+		vector<int> ptn(rls.fldSize(),0);
+		for(vector<kgstr_t>::size_type i=0; i<fFieldx.size(); i++){
+			if(fFieldx.attr(i)=="int"){
+				ptn[fFieldx.num(i)] = 1;
+			}
+			else if(fFieldx.attr(i)=="float"){
+				ptn[fFieldx.num(i)] = 2;
+			}
+			else if(fFieldx.attr(i)=="bool"){
+				ptn[fFieldx.num(i)] = 3;
+			}
+		}
 
 
 		if(PyList_Check(o_p)){
+			va_list v;
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 
@@ -327,11 +357,45 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 				pthread_mutex_lock(mtx);
 				{
 					PyObject* tlist = PyList_New(rls.fldSize());
+					
 					for(size_t j=0 ;j<rls.fldSize();j++){
-						PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+						
+						if(ptn[j]==0){
+							char * p = rls.getVal(j);
+							PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+							//PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+						}
+						else if(ptn[j]==1){
+							PyList_SET_ITEM(tlist,j,Py_BuildValue("i",atoi(rls.getVal(j))));
+						}
+						else if(ptn[j]==2){
+							//PyList_SetItem(tlist,j,Py_BuildValue("d",atof(rls.getVal(j))));
+							PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(rls.getVal(j))));
+						}
+						else if(ptn[j]==3){
+							PyList_SET_ITEM(tlist,j,PyUnicode_FromString(rls.getVal(j)));
+						}
+						
+						
 					}
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
+
+					/*
+					//char * v[3];
+					//v[0]=rls.getVal(0);
+					//v[1]=rls.getVal(1);
+					//v[2]=rls.getVal(2);
+					va_list pos;
+					va_copy(pos, v);
+					va_arg( pos, char* ) = rls.getVal(0);
+					va_arg( pos, char* ) = rls.getVal(1);
+					va_arg( pos, char* ) = rls.getVal(2);
+					
+					PyObject* tlist = Py_BuildValue("[s,s,s]",v);
+					PyList_Append(o_p,tlist);
+					Py_DECREF(tlist);
+					*/
 				}
 				pthread_mutex_unlock(mtx);
 			}

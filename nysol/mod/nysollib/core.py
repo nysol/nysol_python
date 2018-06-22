@@ -619,7 +619,12 @@ class NysolMOD_CORE(object):
 			if dupobj.name == "msep" or dupobj.name == "mshuffle" or dupobj.name == "mstdout" or dupobj.name == "runfunc"or dupobj.name == "cmd" : #統一的にする
 				runobjs[i]= dupobj			
 			elif len(dupobj.outlist["o"])==0:
-				runobjs[i]= dupobj.writelist(list())
+				if dupobj.name == "writelist":
+					dupobj.outlist["o"] =[list()]
+					runobjs[i]= dupobj
+				else:
+					runobjs[i]= dupobj.writelist(list())
+
 			elif dupobj.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
 				runobj = dupobj.writelist(stocks[i])
 				dupobj.outlist["o"] = [runobj]
