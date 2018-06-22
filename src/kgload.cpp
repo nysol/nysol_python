@@ -366,7 +366,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 							//PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
 						}
 						else if(ptn[j]==1){
-							PyList_SET_ITEM(tlist,j,Py_BuildValue("i",atoi(rls.getVal(j))));
+							PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(rls.getVal(j))));
 						}
 						else if(ptn[j]==2){
 							//PyList_SetItem(tlist,j,Py_BuildValue("d",atof(rls.getVal(j))));
@@ -375,8 +375,6 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 						else if(ptn[j]==3){
 							PyList_SET_ITEM(tlist,j,PyUnicode_FromString(rls.getVal(j)));
 						}
-						
-						
 					}
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
