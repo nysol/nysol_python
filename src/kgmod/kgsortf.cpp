@@ -338,7 +338,7 @@ void kgSortf::setCfld(kgArgFld* fField)
 	// キー項目番号配列
 	try {
 		compFld_num_.set( new int[cfld_.cnt] );
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error in kgSortDat1");
 	}
 
@@ -350,7 +350,7 @@ void kgSortf::setCfld(kgArgFld* fField)
 	// キー項目フラグ配列
 	try {
 		compFld_flg_.set( new int[cfld_.cnt] );
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error in kgSortDat2");
 	}
 	cfld_.flg = compFld_flg_.get();
@@ -601,7 +601,7 @@ int kgSortf::sort(kgCSVfld& csv) throw(kgError)
 	kgAutoPtr2<char**> ap1;
 	try {
 		ap1.set( new char**[_maxlines] );
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error in sorting1");
 	}
 	char*** index = ap1.get();
@@ -610,7 +610,7 @@ int kgSortf::sort(kgCSVfld& csv) throw(kgError)
 	kgAutoPtr2<char*> ap2;
 	try {
 		ap2.set( new char*[_maxlines*fldCnt] ); // 行数×csv項目数
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error in sorting2");
 	}
 	char** fldIndex = ap2.get();
@@ -646,7 +646,7 @@ int kgSortf::sort(kgCSVfld& csv) throw(kgError)
 				try {
 					aps.set    ( new sortArgST[_threadCnt] );
 					aps_pth.set( new pthread_t[_threadCnt] );
-				} catch(...) {
+				} catch(bad_alloc) {
 					throw kgError("memory allocation error on CSVin");
 				}
 				sortArgST* data    = aps.get();
@@ -916,7 +916,7 @@ int kgSortf::run(int inum,int *i_p,int onum, int* o_p ,string & msg)
 		_oFile.close();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
-
+		throw;
 	}
 
 	return 1;
@@ -934,6 +934,7 @@ void kgSortf::prerun_noargs(int fd) try
 }
 catch(...){
 	tempFile_.remove_all();
+	throw;
 }
 
 ///* thraad cancel action
@@ -1006,7 +1007,7 @@ void kgSortf::run_noargs()
 	}catch(...){
 		tempFile_.remove_all();
 		//pthread_cancelが起こったときthrowしないabortする
-		//throw;
+		throw;
 	}
 	return;	
 }

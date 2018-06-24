@@ -61,7 +61,7 @@ void kgModIncludeSort::setSortMod(size_t num){
 		_aps.set    ( new kgSortf[_sortModSize] );
 		_aps_pth.set( new pthread_t[_sortModSize] );
 		
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on CSVin");
 	}
 	_inner_sort = _aps.get();

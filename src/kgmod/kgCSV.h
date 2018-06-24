@@ -306,7 +306,7 @@ class kgCSVfld : public kgCSV
 		to->recNo_			 = from->recNo_;
 		try {
 			to->ap_.set( new char[to->bufSize_+1] );
-		} catch(...) {
+		} catch(bad_alloc) {
 			throw kgError("memory allocation error on CSVin");
 		}
 		to->buf_ = to->ap_.get();

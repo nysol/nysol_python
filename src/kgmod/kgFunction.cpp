@@ -201,7 +201,7 @@ namespace
 				return NULL;
 			}
 		}
-		catch(...){
+		catch(bad_alloc){
 			return NULL;
 		}
 		return NULL;
@@ -213,7 +213,7 @@ namespace
 		if ( date_set(str,&y,&m,&d)){
 			try {
 				return new date(y,m,d);
-			}catch(...){
+			}catch(bad_alloc){
 				return NULL;
 			}
 		}
@@ -504,7 +504,7 @@ void kgFunction_add_day::run(void)
    			new date(*_args.at(0)->d()+date_duration(static_cast<int>(_args.at(1)->r()))) 
    		);
 			_result.d(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -524,7 +524,7 @@ void kgFunction_add_sec::run(void)
     		new ptime(*_args.at(0)->t()+time_duration(0,0,i, fract * time_duration::ticks_per_second())) 
     	);
 			_result.t(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -587,7 +587,7 @@ void kgFunction_sub_day::run(void)
    			new date(*_args.at(0)->d()-date_duration(static_cast<int>(_args.at(1)->r())))
 			);
 			_result.d(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -607,7 +607,7 @@ void kgFunction_sub_sec::run(void)
     		new ptime(*_args.at(0)->t()-time_duration(0,0,i, fract * time_duration::ticks_per_second())) 
     	);
 			_result.t(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -1634,7 +1634,7 @@ void kgFunction_julian2d::run(void)
 				)
 			);
 			_result.d(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -1655,7 +1655,7 @@ void kgFunction_julian2t::run(void)
 			ptime t( d, time_duration(12,0,i,f*time_duration::ticks_per_second()) );
     	_ap.set( new ptime(t) );
 			_result.t(_ap.get());
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 	}
@@ -3029,7 +3029,7 @@ void kgFunction_rand::preprocess(void)
 		_api.set( new variate_generator< mt19937,uniform_int<> >
 					(mt19937(seed),dst) );
 		_result.null(false);
-	}catch(...){
+	}catch(bad_alloc){
 		_result.null(true);
 	}
 }
@@ -3063,7 +3063,7 @@ void kgFunction_rand_real::preprocess(void)
 		_apr.set( new variate_generator< mt19937,uniform_real<> >
 				(mt19937(seed),dst) );
 		_result.null(false);
-	}catch(...){
+	}catch(bad_alloc){
 		_result.null(true);
 	}
 }
@@ -3101,7 +3101,7 @@ void kgFunction_nrand::preprocess(void)
 		_ap.set( new variate_generator< mt19937,normal_distribution<> >
 			(mt19937(seed),dst) );
 		_result.null(false);
-	}catch(...){
+	}catch(bad_alloc){
 		_result.null(true);
 	}
 }
@@ -3144,7 +3144,7 @@ void kgFunction_berrand::preprocess(void)
 		_ap.set( new variate_generator< mt19937,bernoulli_distribution<> >
 						(mt19937(seed),dst) );
 		_result.null(false);
-	}catch(...){
+	}catch(bad_alloc){
 		_result.null(true);
 	}
 }
@@ -3188,7 +3188,7 @@ void kgFunction_binomdist::run(void)
 		try {
 			boost::math::binomial b(n,p);
 			_result.r(boost::math::cdf(b,x));
-		}catch(...){
+		}catch(bad_alloc){
 			_result.null(true);
 		}
 
