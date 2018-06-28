@@ -332,6 +332,7 @@ void *kgshell::run_func(void *arg){
 		a->msg.append(a->mobj->name());
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
+		throw;
 	}
 #endif
 	catch(...){
@@ -417,6 +418,7 @@ void *kgshell::run_writelist(void *arg){
 		a->msg.append(a->mobj->name());
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
+		throw;
 	}
 #endif	
 	catch(...){
@@ -500,6 +502,7 @@ void *kgshell::run_readlist(void *arg){
 		a->msg.append(a->mobj->name());
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
+		throw;
 	}
 #endif	
 	catch(...){
@@ -598,6 +601,7 @@ void *kgshell::run_pyfunc(void *arg){
 		a->msg.append(a->mobj->name());
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
+		throw;
 	}
 #endif	
 	catch(...){
