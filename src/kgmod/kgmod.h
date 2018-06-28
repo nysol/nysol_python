@@ -37,7 +37,7 @@
 
 
 #if !defined(__clang__) && defined(__GNUC__)
-#define KG_ABI_CATCH catch(abi::__forced_unwind& e){ runErrEnd(); msg.append(errorEndMsg(err));}
+#define KG_ABI_CATCH catch(abi::__forced_unwind& e){ runErrEnd(); throw; }
 #else
 #define KG_ABI_CATCH  
 #endif
