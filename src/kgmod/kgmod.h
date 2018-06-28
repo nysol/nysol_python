@@ -37,7 +37,7 @@
 #include <cxxabi.h>
 
 #if !defined(__clang__) && defined(__GNUC__)
-#define KG_ABI_CATCH catch(std::abi::__forced_unwind&){ runErrEnd(); throw; }
+#define KG_ABI_CATCH catch(abi::__forced_unwind&){ runErrEnd(); throw; }
 #else
 #define KG_ABI_CATCH  
 #endif
