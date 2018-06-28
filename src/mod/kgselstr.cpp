@@ -468,7 +468,9 @@ int kgSelstr::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		kgError err(er);
 		msg.append(errorEndMsg(err));
 
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 
 		runErrEnd();
 		kgError err("unknown error" );

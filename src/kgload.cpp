@@ -206,12 +206,13 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		kgError err(er);
 		msg.append(errorEndMsg(err));
 
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 		_iFile.close();
 		_oFile.close();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
-
 	}
 	return 1;
 }
@@ -294,10 +295,13 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 		_oFile.close();
 		kgError err(er);
 		msg.append(errorEndMsg(err));
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 		_oFile.close();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
+		throw;
 	}
 	return 1;
 
@@ -421,11 +425,13 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		kgError err(er);
 		msg.append(errorEndMsg(err));
 
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 		pthread_mutex_unlock(mtx);
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
-
+		throw;
 	}
 	return 1;
 }

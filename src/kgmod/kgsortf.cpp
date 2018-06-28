@@ -1006,7 +1006,7 @@ void kgSortf::run_noargs()
 		tempFile_.remove_all();
 	}catch(...){
 		tempFile_.remove_all();
-		//pthread_cancelが起こったときthrowしないabortする
+		//pthread_cancelが起こったときthrowしないとabortする
 		throw;
 	}
 	return;	

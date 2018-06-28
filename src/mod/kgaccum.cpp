@@ -238,7 +238,9 @@ int kgAccum::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		runErrEnd();
 		kgError err(er);
 		msg.append(errorEndMsg(err));
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 		runErrEnd();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));

@@ -55,7 +55,7 @@ void kgPyfunc::setArgs(void)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgPyfunc::run(void)
+int kgPyfunc::run(void) //ダミー
 {
 	try {
 		return 0;
@@ -303,6 +303,7 @@ int kgPyfunc::run(
 
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
+		throw;
 
 	}
 	return 1;

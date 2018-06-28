@@ -98,4 +98,3 @@ typedef std::string  kgstr_t;
 #define KG_OOPEN_FLG O_WRONLY|O_CLOEXEC|O_TRUNC|O_CREAT|O_APPEND
 
 
-
