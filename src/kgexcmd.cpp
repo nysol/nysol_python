@@ -160,7 +160,7 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		msg.append(errorEndMsg(err));
 
 	}
-	KG_ABI_CATCH
+	//KG_ABI_CATCH
 	catch(...){
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));

@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <cxxabi.h>
 
 using namespace kgmod;
 using namespace kglib;
@@ -319,8 +320,21 @@ void *kgshell::run_func(void *arg){
 		a->msg.append(er);
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
-
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 0;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("ABITHROW");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+#endif
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -391,7 +405,21 @@ void *kgshell::run_writelist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 0;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("ABI THROW");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -460,7 +488,21 @@ void *kgshell::run_readlist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 0;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("ABI THROW");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -544,7 +586,21 @@ void *kgshell::run_pyfunc(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 0;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append("ABI THROW");
+		a->msg.append(a->mobj->name());
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
