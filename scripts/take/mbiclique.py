@@ -6,5 +6,5 @@ import nysol.take.mbiclique as mbiclique
 
 
 args=margs.Margs(sys.argv,"ei=,ef=,o=,l=,u=,-edge","ei=")
-mbiclique.mclique(args).run()
+mbiclique.mbiclique(args).run()
 

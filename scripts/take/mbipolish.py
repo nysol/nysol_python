@@ -5,7 +5,7 @@ import nysol.util.margs as margs
 import nysol.take.mbipolish as mbipolish
 
 args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=")
-mbipolish.mpolish(args).run()
+mbipolish.mbipolish(args).run()
 
 
 
