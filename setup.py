@@ -219,7 +219,7 @@ setup(name = 'nysol',
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py',
 								'scripts/take/mpolishing.py','scripts/take/msequence.py',
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',
-								'scripts/take/mclique.py'],
+								'scripts/take/mclique.py',"scripts/take/mbipolish.py","scripts/take/mbiclique.py"],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
 											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod,utilmod]
 			)
