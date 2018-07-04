@@ -111,7 +111,7 @@ class LcmEp(object):
 		tFiles=[]
 		tf=mtemp.Mtemp()
 		for cName,posSize in self.db.clsNameRecSize.items(): 
-			negSize=self.db.size-posSize
+			negSize=self.db.traSize-posSize
 			if "minGR" in eArgs :
 				self.minGR = eArgs["minGR"]
 			else:
@@ -249,7 +249,7 @@ class LcmEp(object):
 		# パターンファイル計算
 		items=self.db.items
 		f =   nm.mcut(f="class,ppid:pid,pattern,size,pos,neg,posTotal,minGR",i=xxpCat)
-		f <<= nm.msetstr(v=self.db.size,a="total")
+		f <<= nm.msetstr(v=self.db.traSize,a="total")
 		f <<= nm.mcal(c='${total}-${posTotal}',a="negTotal") # negのトータル件数
 		f <<= nm.mcal(c='${pos}/${posTotal}',a="support") # サポートの計算
 		f <<= nm.mcal(c='if(${neg}==0,1.797693135e+308,(${pos}/${posTotal})/(${neg}/${negTotal}))',a="growthRate")

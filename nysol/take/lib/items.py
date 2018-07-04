@@ -3,8 +3,8 @@
 import os
 
 import shutil
-from nysol.util.mtemp import Mtemp
-from nysol.util.mrecount import mrecount
+import nysol.util.mtemp as mtemp
+import nysol.util.mrecount as mrecount
 
 import nysol.mod as nm
 import nysol.take.lib.taxonomy as taxolib
@@ -65,31 +65,34 @@ import nysol.take.lib.taxonomy as taxolib
 # d,4
 #
 class Items(object):
-	"""
-	:type iFile: 文字列 or リスト
-	:type itemFN: 文字列
-	:param iFile: transactionのCSVファイル名
-	:param itemFN: 新しいアイテム項目名
 
-	iFile上のアイテム項目(itemFN)からアイテム(itemFN)と連番("__iid")の2項目からなるファイルを生成する。
-	同じアイテムが重複して登録されていれば単一化される。
-	連番は、アイテム名順に昇順ソートされ、0から始まる整数が振られる。
-	アイテムの件数(種類数)がセットされる。
-	頻出パターンマイニングで使われるトランザクションデータを扱うクラス。
-	トランザクションファイルは、トランザクションID項目とアイテム項目から構成される。
-	また分類クラスや階層構造を扱うことも可能である。
-
-	"""
-	def  __init__(self,iFile,itemFN):
+	#==初期化
+	#=====引数
+	# iFile: アイテム項目を含むファイル名
+	# itemFN: 新しいアイテム項目名
+	# idFN: 連番によるアイテムidの項目名(デフォルト:"iid")
+	#=====機能
+	#* iFile上のアイテム項目(@itemFN)からアイテム(@itemFN)と連番("num")の2項目からなるファイルを生成する。
+	#* itemFN項目の値としては、スペースで区切られた複数のアイテムであってもよい。
+	#* 同じアイテムが重複して登録されていれば単一化される。
+	#* アイテム順にソートされる。
+	#* アイテムの件数(種類数)がセットされる。
+	def  __init__(self,iFile,itemFN,idFN="__iid"):
 		self.file = None
 
-		self.itemFN = None # アイテムの項目名(=>String)
+		# アイテムの項目名(=>String)
+		self.itemFN = None
 
-		self.size = None # アイテムの種類数(=>Fixnum)
+		# id項目名(=>String)
+		self.idFN = None
 
-		self.taxonomy = None # 分類階層クラス(=>Taxonomy)
+		# アイテムの種類数(=>Fixnum)
+		self.size = None
 
-		self.temp = Mtemp()
+		# 分類階層クラス(=>Taxonomy)
+		self.taxonomy = None
+
+		self.temp = mtemp.Mtemp()
 		self.iFile   = []
 		self.iPath   = []
 		self.iFile.append(iFile)
@@ -97,19 +100,25 @@ class Items(object):
 		self.taxonomy = None
 		self.file     = self.temp.file()  # 出力ファイル名
 		self.itemFN   = itemFN
-		self.idFN     = "__id"
-		self.freqFN   = "__freq"
+		self.idFN     = idFN
 
-		nm.mcut(f=itemFN,i=iFile).mcount(k=itemFN,a=self.freqFN).mnumber(s=itemFN,a=self.idFN,S=0,o=self.file).run()
+		nm.mcut(f=itemFN,i=iFile).muniq(k=itemFN).mnumber(s=itemFN,a=idFN,S=0,o=self.file).run()
 
-		self.size = mrecount(i=self.file) # itemの数
+		self.size = mrecount.mrecount(i=self.file) # itemの数
 
-	def __str__(self):
-		ret ="## class name: "+self.__module__+"."+self.__class__.__name__+"\n"
-		ret+="id: "+"%x"%id(self)+"\n"
-		ret+="iFile: "+",".join(self.iFile)+"\n"
-		ret+="size: "+str(self.size)+"\n"
-		return ret
+
+	def show(self):
+		print("#### BEGIN Items class")
+		#print("@temp=%s"%(self.temp))
+		print("@iFile=%s"%(','.join(self.iFile)))
+		print("@iPath=%s"%(','.join(self.iPath)))
+		#print("@taxonomy=#{@taxonomy}"%(@temp))
+		print("@itemFN=%s"%(self.itemFN))
+		print("@idFN=%s"%(self.idFN))
+		print("@file=%s"%(self.file ))
+		print("@file:")
+		os.system("cat "+self.file)
+		print("#### END Items class")
 
 	#==アイテムの追加
 	# iFileのitemFN項目をアイテムとして追加する。
@@ -126,7 +135,7 @@ class Items(object):
 		self.iFile.append(iFile)
 		self.iPath.append(os.path.abspath(iFile))
 
-		xx=Mtemp()
+		xx=mtemp.Mtemp()
 		xx1=xx.file()
 		xx2=xx.file()
 		x0 =   nm.mcommon(k=self.itemFN,i=iFile,m=self.file)
@@ -139,7 +148,7 @@ class Items(object):
 
 		# 新itemファイル登録&item数更新
 		shutil.move(xx2,self.file)
-		self.size = mrecount(i=self.file)
+		self.size = mrecount.mrecount(i=self.file)
 
 
 	#==Taxonomyの設定

@@ -126,17 +126,18 @@ c,d
 	def ver(self):
 		print("version #{$version}")
 
-	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,minSup=0,iterMax=30,O=None,log=None):
+	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,sup=0,iter=30,O=None,log=None):
+
 		self.gi				= None			# (graph object) input graph set
 		self.go				= None			# (graph object) output graph set
 		self.__eo			= None			# (string) output edge file name
 		self.__no			= None			# (string) output node file name
 		self.__nf			= None			# (string) output node file column title
-		self.th				= th				# (float) threshhold of degree of similarity
+		self.th				= float(th)	# (float) threshhold of degree of similarity
 		self.indirect	= indirect	# (boolean) exclude direct relationship from adjacent node set in similarity calculation
 		self.measure	= sim				# (string) similarity measure
-		self.minSupp	= minSup		# (float) minimum support
-		self.iterMax	= iterMax		# (int) upper bound of iterations
+		self.minSupp	= int(sup) # (float) minimum support
+		self.iterMax	= int(iter)	    # (int) upper bound of iterations
 		self.logFile	= log				# (string) log file name
 		self.outDir		= O					# (string) directory name for outputs in the process
 		self.msgoff		= True
@@ -153,7 +154,7 @@ c,d
 		self.__no = self.__tempW.file()
 		self.__nf = "n"
 		
-		if iterMax < 1:
+		if self.iterMax < 1:
 			raise Exception("iter must be 1 or more.")
 
 		if self.outDir and not os.path.isdir(self.outDir) :
@@ -197,6 +198,7 @@ c,d
 
 	# execute
 	def run(self):
+
 		from datetime import datetime	
 		t = datetime.now()
 
@@ -204,6 +206,7 @@ c,d
 		xxmap = self.gi.mFile
 		xxmaprev = self.__tempW.file()
 		nm.msortf(f="id",i=xxmap,o=xxmaprev).run()
+
 
 		xxpair = self.__tempW.file() # sscpの出力(pair形式)
 		xxtra  = self.__tempW.file() # sscpの入力(tra形式)
@@ -226,7 +229,8 @@ c,d
 				denses.append(dens)
 
 			# node pairをsspc入力形式に変換
-			if(self.indirect):
+			self.indirect = False
+			if self.indirect :
 				gtpstri = "ue_" if self.msgoff else "ue"
 				extTake.grhfil(type=gtpstri,i=xxpair,o=xxtra)
 			else:
@@ -235,7 +239,7 @@ c,d
 				
 			para = "%s,%s"%(self.gi.edgeFN1,self.gi.edgeFN2)
 
-			if(self.outDir):
+			if self.outDir :
 				os.system("tr ' ' ',' < %s > %s "%(xxpair,xxtmmp))
 				f = nm.mcut(f="0:num1,1:num2",nfni=True,i=xxtmmp)
 				f <<= nm.mjoin(k="num1",K="id",m=xxmaprev,f="node:%s"%(self.gi.edgeFN1))
@@ -252,12 +256,13 @@ c,d
 
 			shutil.copyfile(xxtra,xxprev)
 
-			#print "sspc #{measure} -l #{minSupp} #{xxtra} #{th} #{xxpair}"
 			tpstr = self.measure+"_"		if self.msgoff else self.measure
+
 			extTake.sspc(type=tpstr,l=self.minSupp,i=xxtra,th=self.th,o=xxpair)
 
-			gtpstr = "ue0_" if self.msgoff else "ue0"
-			extTake.grhfil(type=gtpstr,i=xxpair,o=xxtra)
+
+			#gtpstr = "ue0_" if self.msgoff else "ue0"
+			#extTake.grhfil(type=gtpstr,i=xxpair,o=xxtra)
 
 			iter+=1
 
@@ -280,13 +285,22 @@ c,d
 		else:
 			self.go = ntg.graph(edgeFile=self.__eo,title1=self.gi.edgeFN1,title2=self.gi.edgeFN2,nodeFile=self.__no,title=self.__nf)
 
-
 		procTime = datetime.now()-t
 		# ログファイル出力
 		if(self.logFile):
 			kv=[["key","value"]]
-			kv.extend(self.args.getKeyValue())
-			kv.append(["iter",str(iter)])
+			
+			kv.append(["iter",str(self.iterMax)])
+			kv.append(["outDir",str(self.outDir)])
+			kv.append(["th",str(self.th)])
+			kv.append(["indirect",str(self.indirect)])
+			kv.append(["measure",str(self.measure)])
+
+			kv.append(["minSupp",str(self.minSupp)])
+			kv.append(["logFile",str(self.logFile)])
+			kv.append(["outDir",str(self.outDir)])
+
+
 			kv.append(["time",str(procTime)])
 			for i in range(len(nSizes)):
 				kv.append(["nSize"+str(i),str(nSizes[i])]);

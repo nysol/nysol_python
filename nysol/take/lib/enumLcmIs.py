@@ -223,17 +223,17 @@ class LcmIs(object):
 			self.minSup = float(self.minCnt) / float(self.db.traSize)
 		else:
 			self.minSup = float(eArgs["minSup"])
-			self.minCnt = int(self.minSup * float(self.db.size) + 0.99)
+			self.minCnt = int(self.minSup * float(self.db.traSize) + 0.99)
 
 		# 最大サポートと最大サポート件数
 		self.maxCnt=None
 		if ("maxCnt" in eArgs and  eArgs["maxCnt"]!= None) or ( "maxSup" in eArgs and eArgs["maxSup"]!= None):
 			if "maxCnt" in eArgs and eArgs["maxCnt"]!= None:
 				self.maxCnt = int(eArgs["maxCnt"])
-				self.maxSup = float(self.maxCnt) / float(self.db.size)
+				self.maxSup = float(self.maxCnt) / float(self.db.traSize)
 			else:
 				self.maxSup    = float(eArgs["maxSup"])
-				self.maxCnt = int(self.maxSup * float(self.db.size) + 0.99)
+				self.maxCnt = int(self.maxSup * float(self.db.traSize) + 0.99)
 
 
 		params = {}

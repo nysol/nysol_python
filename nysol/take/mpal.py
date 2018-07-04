@@ -295,7 +295,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			if self.filterStr[2] :
 				f <<= nm.mselnum(f=self.filterStr[1],c="[%s,%s]"%(self.lbStr[2],self.ubStr[2]))
 
-			f.writecsv(xxsimgE).run()
+			f.writecsv(o=xxsimgE).run()
 
 		else:
 			shutil.move(xxsimgE0,xxsimgE)

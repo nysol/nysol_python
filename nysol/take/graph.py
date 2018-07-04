@@ -30,6 +30,7 @@ class graph(object):
 		self.__temp		= mtemp.Mtemp()
 		#引数指定があればデータ読み込み(ファイルとリストが同時に指定された場合はファイル優先)
 		#エッジ読み込み
+
 		if edgeFile is not None:
 			self.__readEdgeCSV(edgeFile=edgeFile,title1=title1,title2=title2)
 		else:
