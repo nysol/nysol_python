@@ -38,12 +38,18 @@ void kgModIncludeSort::th_cancel(void){
 
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 		chk[i] = pthread_cancel(_th_st_p[i]);
-		if (chk[i]!=0&&chk[i]!=3){ cerr << "waring destruct fail thread cancel : " << chk[i] << endl;}
+		if (chk[i]!=0&&chk[i]!=3){ 
+			kgMsg msg(kgMsg::MSG, _env);
+			msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
+		}
 	}
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 		if(chk[i]==0||chk[i]==3){
 			int rtn = pthread_join(_th_st_p[i],NULL);
-			if(rtn!=0) { cerr << "waring destruct fail thread join : " << rtn << endl; }
+			if(rtn!=0) { 
+				kgMsg msg(kgMsg::MSG, _env);
+				msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
+			}
 		}
 	}
 }
@@ -55,7 +61,7 @@ void kgModIncludeSort::setSortMod(size_t num){
 		_aps.set    ( new kgSortf[_sortModSize] );
 		_aps_pth.set( new pthread_t[_sortModSize] );
 		
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on CSVin");
 	}
 	_inner_sort = _aps.get();

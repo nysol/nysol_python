@@ -34,7 +34,7 @@ namespace kglib { ////////////////////////////////////////////// start namespace
 class kgMsg {
 
 public:
-	enum Plevel {ERR,WAR,END,MSG,DEB};
+	enum Plevel {ERR,WAR,END,MSG,DEB,IGN};
 
 private:
 	kgEnv* env_;
@@ -63,6 +63,7 @@ public:
 	~kgMsg(void){}
 
 	//メッセージ出力
+	void output_ignore(const string& v);
 	void output(const string& v, const string& comment="");
 	void output(const vector<string>& vv, const string& comment="");
 	void output(kglib::kgMod* kgmod, string v, const string& comment="");

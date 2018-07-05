@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <cxxabi.h>
 
 using namespace kgmod;
 using namespace kglib;
@@ -287,7 +288,6 @@ void *kgshell::run_func(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR ");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
@@ -300,7 +300,6 @@ void *kgshell::run_func(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR ");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
@@ -313,21 +312,34 @@ void *kgshell::run_func(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR ");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
-
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 2;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ABI THROW");
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+		throw;
+	}
+#endif
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR ");
 		a->msg.append(a->mobj->name());
+		a->msg.append(" unKnown ERROR ");
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
@@ -358,7 +370,6 @@ void *kgshell::run_writelist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
@@ -371,7 +382,6 @@ void *kgshell::run_writelist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
@@ -384,22 +394,35 @@ void *kgshell::run_writelist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 2;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ABI THROW");
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+		throw;
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
-		a->msg.append(" ");
+		a->msg.append(" unKnown ERROR");
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
@@ -427,7 +450,7 @@ void *kgshell::run_readlist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
+		a->msg.append(" unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
@@ -440,7 +463,7 @@ void *kgshell::run_readlist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
+		a->msg.append(" unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
@@ -453,20 +476,35 @@ void *kgshell::run_readlist(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
+		a->msg.append(" unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 2;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ABI THROW");
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+		throw;
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
+		a->msg.append(" unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
@@ -482,19 +520,12 @@ void *kgshell::run_pyfunc(void *arg){
 		string msg;
 		argST *a =(argST*)arg; 
 
-		//PyGILState_STATE gstate;
-		//cerr << "run_pyfunc:0" << endl;
-		//gstate = PyGILState_Ensure();
-		//cerr << "run_pyfunc:1" << endl;
 		int sts = a->mobj->run(
 			a->fobj,a->aobj,a->kobj,
 			a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,
 			a->mutex,a->forkCond,a->runst
 		);
 
-		//cerr << "run_pyfunc:2" << endl;
-		//PyGILState_Release(gstate);
-		//cerr << "run_pyfunc:3" << endl;
 
 		pthread_mutex_lock(a->stMutex);
 		a->status = sts;
@@ -511,7 +542,6 @@ void *kgshell::run_pyfunc(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
@@ -524,7 +554,6 @@ void *kgshell::run_pyfunc(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
@@ -537,21 +566,35 @@ void *kgshell::run_pyfunc(void *arg){
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
-	}catch(...){
+	}
+#if !defined(__clang__) && defined(__GNUC__)
+	catch(abi::__forced_unwind&){  
+		argST *a =(argST*)arg; 
+		pthread_mutex_lock(a->stMutex);
+		a->status = 2;
+		a->finflg=true;
+		a->endtime=getNowTime(true);
+		a->msg.append(a->mobj->name());
+		a->msg.append(" ABI THROW");
+		pthread_cond_signal(a->stCond);
+		pthread_mutex_unlock(a->stMutex);
+		throw;
+	}
+#endif	
+	catch(...){
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
-		a->msg.append("unKnown ERROR");
 		a->msg.append(a->mobj->name());
+		a->msg.append(" unKnown ERROR");
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
@@ -560,6 +603,30 @@ void *kgshell::run_pyfunc(void *arg){
 	return NULL;	
 }
 
+void kgshell::raw_OUTPUT(const string& v){
+	kgMsg msg(kgMsg::IGN, &_env);
+	msg.output_ignore(v);
+}
+
+void kgshell::end_OUTPUT(const string& v){
+	kgMsg msg(kgMsg::END, &_env);
+	ostringstream ss;
+	ss << "kgshell (" << v << ")"; 
+	msg.output(ss.str());
+
+}
+void kgshell::war_OUTPUT(const string& v){
+	kgMsg msg(kgMsg::WAR, &_env);
+	ostringstream ss;
+	ss << "kgshell (" << v << ")";
+	msg.output(ss.str());
+}
+void kgshell::err_OUTPUT(const string& v){
+	kgMsg msg(kgMsg::ERR, &_env);	
+	ostringstream ss;
+	ss << "kgshell (" << v << ")";
+	msg.output(ss.str());
+}
 
 void kgshell::makePipeList(vector<linkST> & plist,int iblk)
 {
@@ -644,7 +711,8 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 	if( stacksize > base ){
 		if( pthread_attr_setstacksize(&pattr,stacksize)	){
-			cerr << "stack size change error " << endl;
+			err_OUTPUT("stack size change error ");
+			return 1;
 		}
 	}
 
@@ -666,7 +734,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 
 		int cmdNo = cmdlist[i];
 		if ( _kgmod_map.find(cmds[cmdNo].cmdname) == _kgmod_map.end()){
-			cerr << "not 1 kgmod " << cmds[cmdNo].cmdname << endl;
+			err_OUTPUT("not 1 kgmod "+ cmds[cmdNo].cmdname);
 			return 1;
 		}
 		_modlist[i] = _kgmod_map.find(cmds[cmdNo].cmdname)->second() ;
@@ -841,19 +909,19 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 			if(_argst[pos].finflg==false){ endFLG=false;}
 			else if(_argst[pos].outputEND==false){
 				if(!_argst[pos].msg.empty()){
-					if(!_argst[pos].tag.empty()){
-						cerr << _argst[pos].msg << " " << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
+					if(_argst[pos].status==2){
+						end_OUTPUT(_argst[pos].msg);
 					}
 					else{
-						cerr << _argst[pos].msg  << endl; 					
+						raw_OUTPUT(_argst[pos].msg);
 					}
 				}
-				else if(!_argst[pos].tag.empty()){
-					cerr  << _argst[pos].tag << "(" << _argst[pos].endtime << ")" << endl; 
+				if(!_argst[pos].tag.empty()){
+					raw_OUTPUT("#TAG# " + _argst[pos].tag);
 				}
 				_argst[pos].outputEND = true;
 			}
-			if(_argst[pos].status!=0){
+			if(_argst[pos].status!=0&&_argst[pos].status!=2){
  				//エラー発生時はthread cancel
 				for(size_t j=0;j<_clen;j++){
 					if(!_argst[j].finflg){
@@ -882,15 +950,15 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 			try {
 				if(_argst[i].outputEND == false){
 					if(!_argst[i].msg.empty()){
-						if(!_argst[i].tag.empty()){
-							cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
+						if(_argst[i].status==2){
+							end_OUTPUT(_argst[i].msg);
 						}
 						else{
-							cerr << _argst[i].msg  << endl; 					
+							raw_OUTPUT(_argst[i].msg);
 						}
 					}
-					else if(!_argst[i].tag.empty()){
-						cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+					if(!_argst[i].tag.empty()){
+						raw_OUTPUT("#TAG# " + _argst[i].tag);
 					}
 				}
 				_argst[i].outputEND = true;
@@ -898,11 +966,11 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 				_modlist[i] =NULL;
 			}
 			catch(kgError& err){
-				cerr << "script RUN KGERROR " << err.message(0) << endl;
+				err_OUTPUT("script RUN KGERROR " + err.message(0));
 				errflg = true;
 			}
 			catch(...){ 
-				cerr  << "closing.. " << endl; 
+				err_OUTPUT("closing.. ");
 				errflg = true;
 			}
 		}
@@ -919,7 +987,7 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk){
 	_runst = NULL;
 	_modlist = NULL;
 	if (errflg) { throw kgError("runmain on kgshell"); }
-
+	return 0;
 }
 
 
@@ -941,7 +1009,8 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 
 	if( stacksize > base ){
 		if( pthread_attr_setstacksize(&pattr,stacksize)	){
-			cerr << "stack size change error " << endl;
+			err_OUTPUT("stack size change error ");
+			return -1;
 		}
 	}
 
@@ -969,7 +1038,7 @@ int kgshell::runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plist,int ib
 		int i = cmdlist[j];
 		if ( _kgmod_map.find(cmds[i].cmdname) == _kgmod_map.end()){
 			throw kgError("not kgmod :" + cmds[i].cmdname);
-			return 1;
+			return -1;
 		}
 		_modlist[clenpos] = _kgmod_map.find(cmds[i].cmdname)->second() ;
 		kgArgs newArgs;
@@ -1213,26 +1282,28 @@ int kgshell::runx(
 		}
 		return 0;
 
-	}
-	catch(kgError& err){
-	
-		cerr << "script RUN KGERROR " << err.message(0) << endl;
+	}catch(kgError& err){
+		ostringstream ss;
+		ss << "script RUN KGERROR " << err.message(0);
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch (const exception& e) {
-
-		cerr << "script RUN EX ERR " << e.what() << endl;
+		ostringstream ss;
+		ss << "script RUN KGERROR " << e.what();
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(char * er){
-		cerr << "script RUN ERROR CHAR " << er << endl;
+		ostringstream ss;
+		ss << "script RUN EX ERR " << er;
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(...){	
-		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
+		err_OUTPUT("script RUN ERROR UNKNOWN TYPE");
 		runClean();
 	}
-
 	return 1;
 }
 
@@ -1250,6 +1321,9 @@ kgCSVfld* kgshell::runiter(
 		}
 
 		int itrfd = runiter_SUB(cmds,plist,_spblk.getBlksize_M()-1);
+		if(itrfd<0){
+			return NULL;
+		}
 
 		// データ出力
 		_iterrtn = new kgCSVfld;
@@ -1259,23 +1333,28 @@ kgCSVfld* kgshell::runiter(
 		return _iterrtn;
 
 	}catch(kgError& err){
-	
-		cerr << "script RUN KGERROR " << err.message(0) << endl;
+		ostringstream ss;
+		ss << "script RUN KGERROR " << err.message(0);
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch (const exception& e) {
-
-		cerr << "script RUN EX ERR " << e.what() << endl;
+		ostringstream ss;
+		ss << "script RUN KGERROR " << e.what();
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(char * er){
-		cerr << "script RUN ERROR CHAR " << er << endl;
+		ostringstream ss;
+		ss << "script RUN EX ERR " << er;
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(...){	
-		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
+		err_OUTPUT("script RUN ERROR UNKNOWN TYPE");
 		runClean();
 	}
+
 	return NULL;
 }
 
@@ -1309,23 +1388,28 @@ kgCSVkey* kgshell::runkeyiter(
 		return _iterrtnk;
 
 	}catch(kgError& err){
-	
-		cerr << "script RUN KGERROR " << err.message(0) << endl;
+		ostringstream ss;
+		ss << "script RUN KGERROR " << err.message(0);
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch (const exception& e) {
-
-		cerr << "script RUN EX ERR " << e.what() << endl;
+		ostringstream ss;
+		ss << "script RUN KGERROR " << e.what();
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(char * er){
-		cerr << "script RUN ERROR CHAR " << er << endl;
+		ostringstream ss;
+		ss << "script RUN EX ERR " << er;
+		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(...){	
-		cerr << "script RUN ERROR UNKNOWN TYPE" << endl;
+		err_OUTPUT("script RUN ERROR UNKNOWN TYPE");
 		runClean();
-	}	
+	}
+
 	return NULL;
 
 }
@@ -1337,7 +1421,7 @@ int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 
 	try{
 		if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
-			cerr << "Not unspport mod " << cmdname << endl;
+			err_OUTPUT("Not unspport mod " + cmdname);
 			return 1;	
 		}
 
@@ -1359,7 +1443,7 @@ int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 		return 0;
 
 	}catch(...){
-		cerr << "UnKnown ERROR IN GET PARAMETER " << endl;
+		err_OUTPUT("UnKnown ERROR IN GET PARAMETER " );
 		return 1;	
 	}
 	return 1;

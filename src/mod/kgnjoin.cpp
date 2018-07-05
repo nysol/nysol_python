@@ -377,7 +377,9 @@ int kgNjoin::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(successEndMsg());
 		sts = 0;
 
-	}catch(kgError& err){
+	}
+	KG_ABI_CATCH
+	catch(kgError& err){
 
 		runErrEnd();
 		msg.append(errorEndMsg(err));

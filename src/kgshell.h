@@ -183,7 +183,10 @@ class kgshell{
 		}
 	}
 
-
+	void raw_OUTPUT(const string& v);
+ 	void end_OUTPUT(const string& v);
+	void war_OUTPUT(const string& v);
+	void err_OUTPUT(const string& v);
 
 	void runClean(void){
 
@@ -199,15 +202,10 @@ class kgshell{
 				for(size_t i=0 ;i<_clen;i++){
 					if(_argst[i].outputEND == false){
 						if(!_argst[i].msg.empty()){
-							if(!_argst[i].tag.empty()){
-								cerr << _argst[i].msg << " " << _argst[i].tag << "(" << _argst[i].endtime << ")" << endl; 
-							}
-							else{
-								cerr << _argst[i].msg  << endl; 					
-							}
+							raw_OUTPUT(_argst[i].msg);
 						}
-						else if(!_argst[i].tag.empty()){
-							cerr << _argst[i].tag  << "(" << _argst[i].endtime << ")" <<  endl;
+						if(!_argst[i].tag.empty()){
+							raw_OUTPUT(_argst[i].tag);
 						}
 					}
 					_argst[i].outputEND = true;

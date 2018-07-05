@@ -93,7 +93,7 @@ class TraDB(object):
 		self.idFN     = None # トランザクションID項目名(String)
 		self.itemFN   = None # アイテム集合項目名(String)
 		self.clsFN    = None # クラス項目名(String)
-		self.size     = None # トランザクションサイズ(Num)
+		self.traSize  = None # トランザクションサイズ(Num)
 		self.items    = None # Itemsクラス
 		self.taxonomy = None # 階層分類クラス
 		self.clsNameRecSize = None # クラス別件数
@@ -116,7 +116,7 @@ class TraDB(object):
 
 		# トランザクション数の計算
 		xx1 = nm.mcut(f=self.idFN,i=self.file).muniq(k=self.idFN).mcount(a='__cnt').mcut(f='__cnt').run()
-		self.size = int(xx1[0][0])
+		self.traSize = int(xx1[0][0])
 		
 		# トランザクションデータからアイテムオブジェクトを生成
 		self.items=items.Items(self.file,self.itemFN)
@@ -149,7 +149,7 @@ class TraDB(object):
 
 
 		xx1 = nm.mcut(f=self.idFN,i=self.file).muniq(k=self.idFN).mcount(a='__cnt').mcut(a='__cnt').run()
-		self.size = int(xx1[0][0])
+		self.traSize = int(xx1[0][0])
 
 	#=== taxonomyをトランザクションに追加
 	# トランザクションデータのアイテム集合に、対応するtaxonomyを追加する。

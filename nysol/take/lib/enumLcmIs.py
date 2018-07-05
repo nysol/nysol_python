@@ -30,10 +30,120 @@ import nysol.vsop._vsoplib as VSOP
 # 列挙関数:lcm 利用DB:TraDB
 #========================================================================
 class LcmIs(object):
+	"""
+	:type db: nysol.take.traDB.TraDBオブジェクト
+	:param db: transactionデータベース名
+
+	トランザクションデータベースから頻出アイテム集合を列挙するクラス。
+
+	例1) 最小サポート件数が3件、最小アイテムサイズが2件の頻出アイテム集合を列挙し、その後に同条件の頻出飽和集合を求める。
+
+	.. code-block:: python
+		:linenos:
+
+		import os
+		from nysol.take.traDB import TraDB
+		from nysol.take.enumLcmIs import LcmIs
+
+		d='''id,item
+		"T1","C"
+		"T1","E"
+		"T2","D"
+		"T2","E"
+		"T2","F"
+		"T3","A"
+		"T3","B"
+		"T3","D"
+		"T3","A"
+		"T4","B"
+		"T4","D"
+		"T4","F"
+		"T5","A"
+		"T5","B"
+		"T5","D"
+		"T5","E"
+		"T6","A"
+		"T6","B"
+		"T6","D"
+		"T6","E"
+		"T6","F"
+		'''
+
+		with open("dat1.csv","w") as fpw:
+	  		fpw.write(d)
+
+				db=TraDB(iFile="dat1.csv",idFN="id",itemFN="item")
+
+				lcm=LcmIs(db)
+
+		eArgs={}
+		eArgs["type"]="F"
+		eArgs["minCnt"]=3
+		eArgs["minLen"]=2
+		lcm.enumerate(eArgs)
+		oPath="./xxrsl1"
+		os.system("mkdir %s"%oPath)
+		lcm.output(oPath)
+		print(lcm)
+
+	.. code-block:: python
+		:linenos:
+
+		## class name: nysol.take.enumLcmIs.LcmIs
+		id: 10805b4a8
+		eArgs: {'type': 'F', 'minCnt': 3, 'minLen': 2}
+		minCnt: 3
+		minSup: 0.5
+		maxCnt: None
+		maxSup: None
+		minLen: None
+		maxLen: None
+		top: None
+		skipTP: False
+
+		## class name: nysol.take.enumLcmIs.LcmIs
+		id: 10805b4a8
+		eArgs: {'type': 'C', 'minCnt': 3, 'minLen': 2}
+		minCnt: 3
+		minSup: 0.5
+		maxCnt: None
+		maxSup: None
+		minLen: None
+		maxLen: None
+		top: None
+		skipTP: False
+	"""
+	def __init__(self,db):
+		self.db=db
+		self.eArgs=None
+		self.type =None
+		self.minCnt=None
+		self.minSup=None
+		self.maxCnt=None
+		self.maxSup=None
+		self.minLen=None
+		self.maxLen=None
+		self.top =None
+		self.skipTP=False
+
+		#self.size =None
+		self.pFile =None
+		self.tFile =None
+		self.msgoff = True
+
+		self.temp=mtemp.Mtemp()
+		self.db = db # 入力データベース
+		self.file=self.temp.file()
+		items=self.db.items
+
+		# アイテムをシンボルから番号に変換する。
+		f =   nm.mjoin(k=self.db.itemFN,K=items.itemFN,m=items.file,f=items.idFN,i=self.db.file)
+		f <<= nm.mcut(f=self.db.idFN+","+items.idFN)
+		f <<= nm.mtra(k=self.db.idFN,f=items.idFN)
+		f <<= nm.mcut(f=items.idFN,nfno=True,o=self.file)
+		f.run()
 
 	def reduceTaxo(self,pat,items):
-
-
 		#tf=MCMD::Mtemp.new
 
 		if items.taxonomy==None:
@@ -62,50 +172,68 @@ class LcmIs(object):
 
 		return pat
 
-
-	def __init__(self,db,outtf=True):
-
-		self.size =None
-		self.pFile =None
-		self.tFile =None
-		self.type =None
-		self.top =None
-		self.msgoff = True
-
-		self.temp=mtemp.Mtemp()
-		self.db = db # 入力データベース
-		self.file=self.temp.file()
-		items=self.db.items
-		self.outtf = outtf
-
-		# アイテムをシンボルから番号に変換する。
-		f =   nm.mjoin(k=self.db.itemFN,K=items.itemFN,m=items.file,f=items.idFN,i=self.db.file)
-		f <<= nm.mcut(f=self.db.idFN+","+items.idFN)
-		f <<= nm.mtra(k=self.db.idFN,f=items.idFN)
-		f <<= nm.mcut(f=items.idFN,nfno=True,o=self.file)
-		f.run()
+	def __str__(self):
+		ret ="## class name: "+self.__module__+"."+self.__class__.__name__+"\n"
+		ret+="id: "+"%x"%id(self)+"\n"
+		ret+="eArgs: "+self.eArgs.__str__()+"\n"
+		ret+="minCnt: "+str(self.minCnt)+"\n"
+		ret+="minSup: "+str(self.minSup)+"\n"
+		ret+="maxCnt: "+str(self.maxCnt)+"\n"
+		ret+="maxSup: "+str(self.maxSup)+"\n"
+		ret+="minLen: "+str(self.minLen)+"\n"
+		ret+="maxLen: "+str(self.maxLen)+"\n"
+		ret+="top: "   +str(self.top)+"\n"
+		ret+="skipTP: "+str(self.skipTP)+"\n"
+		#ret+="db: "+self.db.__str__()+"\n"
+		#ret+="size: "  +str(self.size)+"\n"
+		return ret
 
 	def enumerate(self,eArgs):
+		"""
+		eArgsで与えられた条件で、頻出アイテム集合の列挙を実行する。
+
+		:type eArgs: dict
+		:type eArgs['type']: str
+		:type eArgs['minCnt']: int
+		:type eArgs['minSup']: float
+		:type eArgs['maxCnt']: int
+		:type eArgs['maxSup']: float
+		:type eArgs['minLen']: int
+		:type eArgs['maxLen']: int
+		:type eArgs['top']: int
+		:type eArgs['skipTP']: bool【default:False】
+		:param eArgs: 各種列挙パラメータ
+		:param eArgs['type']: 抽出するアイテム集合の型【'F':頻出集合, 'C':飽和集合, 'M':極大集合】
+		:param eArgs['minCnt']: 最小サポート(件数)
+		:param eArgs['minSup']: 最小サポート(確率)
+		:param eArgs['maxCnt']: 最大サポート(件数)
+		:param eArgs['maxSup']: 最大サポート(確率)
+		:param eArgs['minLen']: アイテム集合の最小アイテム数(件数)
+		:param eArgs['maxLen']: アイテム集合の最大アイテム数(件数)
+		:param eArgs['top']: 列挙するサポート上位件数(件数)
+		:param eArgs['skipTP']: トランザクションにマッチするパターン(アイテム集合)の出力を行わない。
+		"""
 
 		tf=mtemp.Mtemp()
+		self.eArgs=eArgs
 		self.type = eArgs["type"]
 
 		if "minCnt" in eArgs and eArgs["minCnt"] != None:
 			self.minCnt = int(eArgs["minCnt"])
-			self.minSup = float(self.minCnt) / float(self.db.size)
+			self.minSup = float(self.minCnt) / float(self.db.traSize)
 		else:
 			self.minSup = float(eArgs["minSup"])
-			self.minCnt = int(self.minSup * float(self.db.size) + 0.99)
+			self.minCnt = int(self.minSup * float(self.db.traSize) + 0.99)
 
 		# 最大サポートと最大サポート件数
 		self.maxCnt=None
 		if ("maxCnt" in eArgs and  eArgs["maxCnt"]!= None) or ( "maxSup" in eArgs and eArgs["maxSup"]!= None):
 			if "maxCnt" in eArgs and eArgs["maxCnt"]!= None:
 				self.maxCnt = int(eArgs["maxCnt"])
-				self.maxSup = float(self.maxCnt) / float(self.db.size)
+				self.maxSup = float(self.maxCnt) / float(self.db.traSize)
 			else:
 				self.maxSup    = float(eArgs["maxSup"])
-				self.maxCnt = int(self.maxSup * float(self.db.size) + 0.99)
+				self.maxCnt = int(self.maxSup * float(self.db.traSize) + 0.99)
 
 
 		params = {}
@@ -149,6 +277,10 @@ class LcmIs(object):
 				self.minCnt=1 
 
 
+		self.skipTP=False
+		if "skipTP" in eArgs:
+			self.skipTP=eArgs["skipTP"]
+
 		# lcm_seq出力ファイル
 		lcmout = tf.file()
 
@@ -156,8 +288,6 @@ class LcmIs(object):
 		# そのときのために空ファイルを生成しておいく。
 		with open(lcmout, "w") as efile:
 			pass
-
-
 
 		# lcm実行
 		params["i"] = self.file
@@ -184,7 +314,7 @@ class LcmIs(object):
 
 		f =   nm.mdelnull(i=trans0,f="pattern")
 		f <<= nm.mvreplace(vf="pattern",m=items.file,K=items.idFN,f=items.itemFN)
-		f <<= nm.msetstr(v=self.db.size,a="total")
+		f <<= nm.msetstr(v=self.db.traSize,a="total")
 		f <<= nm.mcal(c='${count}/${total}',a="support")
 		f <<= nm.mcut(f="pid,pattern,size,count,total,support")
 		f <<= nm.mvsort(vf="pattern")
@@ -254,12 +384,11 @@ class LcmIs(object):
 		f3 <<= nm.msortf(f="support%nr",o=self.pFile)
 		f3.run()
 
-		self.size = mrecount.mrecount(i=self.file)
-
+		#self.size = mrecount.mrecount(i=self.file)
 
 		#MCMD::msgLog("the number of patterns enumerated is #{@size}")
 
-		if self.outtf:
+		if not self.skipTP:
 			# トランザクション毎に出現するシーケンスを書き出す
 			#MCMD::msgLog("output tid-patterns ...")
 
@@ -272,9 +401,14 @@ class LcmIs(object):
 			xxw3 = nm.mcommon(k="pid",i=xxw3i,m=xxw2).mjoin(k="__tid",m=xxw1,f=self.db.idFN).mcut(f=self.db.idFN+",pid",o=self.tFile)
 			xxw3.run()
 
-
 	def output(self,outpath):
+		"""
+		列挙された結果を指定のパス(outpath)に保存する。
+
+		:type outpath: str
+		:param outpath: 結果を出力するパス名。存在しなければエラーとなるので、事前にディレクトリを作成しておくこと。
+		"""
 		shutil.move(self.pFile,outpath+"/patterns.csv")
-		if self.outtf :
+		if not self.skipTP:
 			shutil.move(self.tFile,outpath+"/tid_pats.csv")
   		

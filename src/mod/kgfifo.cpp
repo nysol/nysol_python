@@ -538,7 +538,9 @@ int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 	catch(kgError& err){
 		rw_cancel();
 		msg.append(errorEndMsg(err));
-	}catch(...){
+	}
+	//KG_ABI_CATCH
+	catch(...){
 		rw_cancel();
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));

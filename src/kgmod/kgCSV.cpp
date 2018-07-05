@@ -273,7 +273,7 @@ void kgCSV::set_fields(size_t dupSize)
 	bufSize_ = dupSize_ + queSize_;
 	try {
 		ap_.set( new char[bufSize_+1] );
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on CSVin");
 	}
 	buf_ = ap_.get();
@@ -414,9 +414,8 @@ bool kgCSV::isFifo(void) const
 void kgCSV::seekTop(void)throw(kgError) 
 {
 	// 先頭シーク
-	try {
-		::lseek(fd_,0,0);       
-	}catch(...){
+
+ if( ::lseek(fd_,0,0) < 0){
 		ostringstream ss;
 		ss << "input file seek error: " << fname_;
 		throw kgError(ss.str());
@@ -498,7 +497,7 @@ void kgCSVrecSimple::read_header(void)
 	bufSize_ = dupSize_ + queSize_;
 	try {
 		ap_.set( new char[bufSize_+1] );
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on CSVin");
 	}
 	buf_ = ap_.get();
@@ -787,7 +786,7 @@ void kgCSVblk::read_header(void)
 		_fldbuf_ap.set( new kgFldBuffer(_pageSize,bufSize_+1,env_) );
 		_blk_ap.set( new char*[fldSize_] );
 
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on kgCSVblk");
 	}
 	_fldbuf = _fldbuf_ap.get();

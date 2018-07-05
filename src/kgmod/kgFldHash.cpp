@@ -111,7 +111,7 @@ kgFldHashNode::kgFldHashNode(const char** flds, kgFldHash* hash)
 	// 1つのレコードを丸ままコピー
 	try {
 		_ap1.set(new char[_hash->recLen()]);
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on kgFldHashNode");
 	}
 	_buf = _ap1.get();
@@ -120,7 +120,7 @@ kgFldHashNode::kgFldHashNode(const char** flds, kgFldHash* hash)
 	// 項目へのインデックス作成
 	try {
 		_ap2.set(new char*[_hash->csvSize()]);
-	} catch(...) {
+	} catch(bad_alloc) {
 		throw kgError("memory allocation error on kgFldHashNode");
 	}
 	_idx=_ap2.get();

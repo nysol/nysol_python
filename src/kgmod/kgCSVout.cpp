@@ -102,7 +102,7 @@ void kgCSVout::initialset(kgEnv *env, bool noFldName, size_t cnt)
 	// データ領域確保
 	try {
     _buf_ap.set(new char[bufSize_+1] );
-	} catch(...) {
+	} catch(bad_alloc) {
    	throw kgError("memory allocation error on CSVout");
 	}
 	_buf    = _buf_ap.get();
@@ -121,16 +121,10 @@ void kgCSVout::popen(int fd, kgEnv *env, bool noFldName, size_t cnt)
 
 	initialset(env,noFldName,cnt);
 	// オープン処理
-	try {
-		opened_= true;
-		fname_ = "STDOUT";
-		fd_=fd;
+	opened_= true;
+	fname_ = "STDOUT";
+	fd_=fd;
 
-	} catch(...) {
-		ostringstream ss;
-		ss << "file write open error: " << fname_;
-		throw kgError(ss.str());
-	}
 }
 // -----------------------------------------------------------------------------
 // 書き込みファイルをオープンする。
@@ -152,13 +146,13 @@ void kgCSVout::open(kgstr_t fileName, kgEnv *env, bool noFldName, size_t cnt)
 			fd_ = ::open(fname_.c_str(), KG_OOPEN_FLG , S_IRWXU);
 			if(fd_ == -1 ){ 
 				opened_= false;
-				throw kgError();
+				ostringstream ss;
+				ss << "file write open error: " << fname_;
+				throw kgError(ss.str());
 			}
 		}
-	} catch(...) {
-		ostringstream ss;
-		ss << "file write open error: " << fname_;
-		throw kgError(ss.str());
+	} catch(kgError& err) {
+		throw err;
 	}
 }
 // -----------------------------------------------------------------------------

@@ -1,7 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-	TAKE LIBRARY call Function
+	==================================
+	Takeライブラリのコアアルゴリズム
+	==================================
+	C言語で開発されたTakeライブラリのコアアルゴリズムをpythonから利用できるようにラッピングしたものである。
+	オリジナルのコードは http://research.nii.ac.jp/~uno/codes-j.htm より入手できる。
+
+	:py:func:`lcm` は・・・
+
+	:ref:`lcmへ<lcm-label>`
+
+	:py:func:`take.extcore.lcm` は・・・
+
+
+	* lcm
+	* lcmseq
+
+
+	xxx title
+	-------------------
+
+	extcoreパッケージが使うデータ形式を書く。
+	トランザクション形式
+	グラフエッジ形式
+	グラフ隣接行列形式
+
+	最終更新日: |today|
+
 """
 import nysol.take._grhfillib as lib_grhfil
 import nysol.take._lcmlib as lib_lcm
@@ -13,12 +39,7 @@ import nysol.take._medsetlib as lib_medset
 import nysol.take._simsetlib as lib_simset
 import nysol.take._sspclib as lib_sspc
 
-
-def kwd2list(args, kw_args,paraConf,extpara=None):
-	"""
-kwdをstingのkwdに変換
-
-	"""
+def _kwd2list(args, kw_args,paraConf,extpara=None):
 	def tostr(val):
 		if isinstance(val,list):
 			newlist=[]
@@ -153,71 +174,195 @@ kwdをstingのkwdに変換
 
 def lcm (*args,**kw_args):
 	"""
-Linear time Closed itemset Miner
+	.. _lcm-label:
 
-keyword
-type=以下の組み合わせ 必須
-  %:show progress
-  _:no message
-  +:write solutions in append mode
-  F:frequent itemset mining
-  C:closed frequent itemset mining
-  M:maximal frequent itemset mining
-  P:positive-closed itemset mining
-  f:output frequency following to each output itemset
-  A:output positive/negative frequency, and their ratio
-  Q:output frequency and coverages preceding to itemsets
-  R:output redundant items for rule mining 
-    (usually, redundant items are removed, to be minimal, in the case of rule mining)
-  I:output ID's of transactions including each pattern
-  i:do not output itemset to the output file (only rules)
-  s:output confidence and item frequency by absolute values
-  t:transpose the input database 
-    (item i will be i-th transaction, and i-th transaction will be item i)
-i=[filename]　必須
-  input-filename
-sup=[support]　必須
-  support
-o=[filename] 
-  output-filename
-K=[num]
-  output most frequent itemsets [num]
-l=,u=[num] 
-  output itemsets with size at least/most [num]
-U=[num]
-  upper bound for support(maximum support)
-w=[filename]
-  read weights of transactions from the file
-c=,C=[filename]
-  read item constraint/un-constraint file
-item=[num]
-  find association rule for item [num]
-a=,A=[ratio]
-  find association rules of confidence at least/most [ratio]
-r=,R=[ratio]
-  find association rules of relational confidence at least/most [ratio]
-f=,F=[ratio]
-  output itemsets with frequency no less/greater than [ratio] times the frequency given 
-  by product of the probability of each item appearance
-p=,P=[num]
-  output itemset only if (frequency)/(abusolute frequency) is no less/no greater than [num]
-n=,N=[num]
-  output itemset only if its negative frequency is no less/no greater than [num] 
-  (negative frequency is the sum of weights of transactions having negative weights)
-opos=,Opos=[num]
-  output itemset only if its positive frequency is no less/no greater than [num] 
-  (positive frequency is the sum of weights of transactions having positive weights)
-m,M=[filename]
-  read/write item permutation from/to file [filename]
-stop=[num]
-  stop after outputting [num] solutions
-separator=[char] 
-  give the separator of the numbers in the output
-Q=[filename]
-  replace the output numbers according to the permutation table given by [filename]
-so=[filename]
-  standard output to [filename]
-# the 1st letter of input-filename cannot be '-'.
+	Linear time Closed itemset Miner
+	
+	:type type: 文字列
+	:type i: ファイル名
+	:type o: ファイル名
+	:type sup: 0以上の整数
+	:type K: 0以上の整数
+	:type l: 0以上の整数
+	:type u: 0以上の整数
+	:type w: ファイル名
+	:type a: float(0以上1以下)
+	:type A: float(0以上1以下)
+	:type r: float(0以上1以下)
+	:type R: float(0以上1以下)
+	:type c: ファイル名
+	:type C: ファイル名
+	:type item: 0以上の整数
+	:type so: ファイル名
+	:type separator: 文字
+	:param type: 列挙するアイテム集合のタイプ(F|C|M)、及び出力形式(詳細は後述)【必須】
+	:param i: トランザクションファイル名【必須】
+	:param o: 出力ファイル名【必須】
+	:param sup: 最小サポート
+	:param U: 最大サポート
+	:param K: 頻出な上位のアイテム集合のみ出力する
+	:param l: アイム集合のサイズの下限値
+	:param u: アイム集合のサイズの上限値
+	:param w: トランザクションの重みファイル名
+	:param a: 相関ルールマイニングを実施しconfidenceの下限値を与える
+	:param A: 相関ルールマイニングを実施しconfidenceの上限値を与える
+	:param r: 相関ルールマイニングを実施しrelational confidenceの下限値を与える
+	:param R: 相関ルールマイニングを実施しrelational confidenceの上限値を与える
+	:param c: read item constraint file
+	:param C: read item un-constraint file
+	:param item: find association rule for item [num]
+	:param so: 標準出力の内容を指定のファイルに出力する	
+	:param separator: 出力時のアイテムの区切り文字を指定する
+
+	f=,F=[ratio]
+		output itemsets with frequency no less/greater than [ratio] times the frequency given 
+		by product of the probability of each item appearance
+	p=,P=[num]
+		output itemset only if (frequency)/(abusolute frequency) is no less/no greater than [num]
+	n=,N=[num]
+		output itemset only if its negative frequency is no less/no greater than [num] 
+		(negative frequency is the sum of weights of transactions having negative weights)
+	opos=,Opos=[num]
+		output itemset only if its positive frequency is no less/no greater than [num] 
+		(positive frequency is the sum of weights of transactions having positive weights)
+	m,M=[filename]
+		read/write item permutation from/to file [filename]
+	stop=[num]
+		stop after outputting [num] solutions
+	separator=[char] 
+		give the separator of the numbers in the output
+	Q=[filename]
+		replace the output numbers according to the permutation table given by [filename]
+	# the 1st letter of input-filename cannot be '-'.
+		a
+	
+	アイテム集合のタイプとして以下の３つから一つを選ぶ【必須】。
+	
+	* F:頻出アイテム集合
+	* C:飽和アイテム集合
+	* M:極大アイテム集合
+	
+	出力形式として以下の組み合わせで指定する。
+	
+	* f:アイテム集合の後ろに出現件数を出力する。
+	* Q:アイテム集合の前に出現件数を出力する。
+	* I:アイテム集合の次の行に出現集合(出現するトランザクション行番号)を出力する。
+	* t:トランザクションデータベースを転置する(アイテムiはi番目のトランザクションとなり、j番目のトランザクションはアイテムjとなる)。
+	* A:w=でプラスとマイナスのトランザクションの重みを指定した場合、プラス/マイナスそれぞれの件数とその比を出力する。
+	* P:positive-closed itemset mining
+	* R:output redundant items for rule mining (usually, redundant items are removed, to be minimal, in the case of rule mining)
+	* i:do not output itemset to the output file (only rules)
+	* s:output confidence and item frequency by absolute values
+
+	例1
+
+	0〜5のアイテムについての6行のトランザクションデータベースnumTraDB1からの実行例を以下に示す。
+
+	.. code-block:: python
+		:linenos:
+
+		>>> import os
+		>>> from nysol.take.extcore import lcm 
+		>>> from nysol.take.sample import Samples
+		>>> smp=Samples()
+		>>> iFile=smp.numTraDB1() # カレントディレクトリにサンプルのデータファイル("numTraDB1.csv")が生成される。
+		>>> smp.head(iFile,top=0) # headは指定ファイルの先頭6行を表示するメソッド(top=0で全行表示)。
+		file name: ./numTraDB1.csv
+		2 4
+		3 4 5
+		0 1 3 5
+		1 3 5
+		0 1 3 4
+		0 1 3 4 5
+
+		>>> lcm(type="Ff_",sup=3,i=iFile,o="rsl_Ff") # 頻出アイテム集合の列挙。type=にfを指定すると出現件数を出力、_でメッセージなし
+		>>> smp.head("rsl_Ff",top=0)
+		file name: rsl_Ff
+		(6)
+		3 (5)
+		1 (4)
+		1 3 (4)
+		4 (4)
+		4 3 (3)
+		5 (4)
+		5 3 (4)
+		5 1 (3)
+		5 1 3 (3)
+		0 (3)
+		0 1 (3)
+		0 1 3 (3)
+		0 3 (3)
+
+		>>> lcm(type="Cf_",sup=3,i=iFile,o="rsl_Cf") # 頻出飽和アイテム集合の列挙。
+		>>> smp.head("rsl_Cf",top=0)
+		file name: rsl_Cf
+		(6)
+		3 (5)
+		1 3 (4)
+		4 (4)
+		4 3 (3)
+		5 3 (4)
+		5 1 3 (3)
+		0 3 1 (3)
+
+		>>> lcm(type="Mf_",sup=3,i=iFile,o="rsl_Mf") # 頻出極大アイテム集合の列挙。
+		>>> smp.head("rsl_Mf",top=0)
+		file name: rsl_Mf
+		4 3 (3)
+		5 1 3 (3)
+		0 3 1 (3)
+
+		>>> lcm(type="Ff_",sup=3,l=3,i=iFile,o="rsl_Ff_l3") # l=3でアイテム集合のサイズが3以上に限定
+		>>> smp.head("rsl_Ff",top=0)
+		file name: rsl_Ff_l3
+		5 1 3 (3)
+		0 1 3 (3)
+
+		>>> lcm(type="FfI_",sup=3,l=3,i=iFile,o="rsl_FfI_l3") # typeにIを加えることで、アイテム集合の下に出現集合が出力される。
+		>>> smp.head("rsl_FfI_l3",top=0)
+		# アイテム集合{5,1,3}はトランザクションデータの2,3,5行目に出現している(先頭行は0行目と数える}。
+		file name: rsl_FfI_l3
+		5 1 3 (3)
+		2 3 5
+		0 1 3 (3)
+		2 4 5
+
+		>>> lcm(type="FftI_",sup=3,l=3,i=iFile,o="rsl_Fft_l3") # typeにtを加えることでデータベースを転置してから実行する。
+		>>> smp.head("rsl_FftI_l3",top=0)
+		# トランザクション{4,2,5}はアイテム{0,1,3}に出現する。
+		file name: rsl_FftI_l3
+		4 2 5 (3)
+		0 1 3
+		3 2 5 (3)
+		1 3 5
+
+		>>> lcm(type="Ff",K=4,sup=1,i=iFile,so="rsl_Ff_K") # K=4で頻出上位4番目の出現件数を出力する。メッセージの標準出力として出力されるので、typeに"_"を入れず。so=に出力ファイル名を指定する。
+		trsact: ./numTraDB1.csv ,#transactions 6 ,#items 6 ,size 21 extracted database: #transactions 6 ,#items 6 ,size 21
+		separated at 0
+
+		>>> smp.head("rsl_Ff_K",top=0) # 先に実行した例 lcm(type="Ff_",sup=3,i=iFile,o="rsl_Ff") の結果から、4番目のルールは "1 3 (4)"であり、その出現件数4が出力されている。
+		file name: rsl_Ff_K
+		4
+
+		>>> wFile=smp.numTraDB1w() # 重みファイルの作成
+		>>> smp.head(wFile,top=0)
+		# トランザクション0,2,5行目の重みが-1で、他の行の重みが1という意味。小数で指定することも可能。
+		file name: ./numTraDB1w.csv
+		-1
+		1
+		-1
+		1
+		1
+		-1
+
+		>>> lcm(type="FfA_",sup=1,w=wFile,i=iFile,o="rsl_FfA_w") # w=を指定すると、トランザクションの重みで件数をカウントする。typeに"A"を加えることで、マイナス重みとプラス重みの件数情報が表示される。
+		>>> smp.head("rsl_Ff_w",top=0)
+		# アイテム3は、1,2,3,4,5行目に含まれ、その重み合計は1(=1-1+1+1-1)となる(プラス重み件数3件、マイナス重み件数2件、プラス率は3/5=0.6)。
+		# 同様にアイテム集合{4,3}は1,4,5行目に含まれ、その重み合計は1(=1+1-1)となる(プラス重み件数2件、マイナス重み件数1件、プラス率は2/3=0.6666)。
+		file name: rsl_FfA_w
+		3 (1) (3,2,0.6)
+		4 3 (1) (2,1,0.6666)
+
 	"""
 
 	paraLIST={
@@ -230,13 +375,11 @@ so=[filename]
 		"ext":[("so","so")]
 	}
 	extpara={}
-	kwd = kwd2list(args,kw_args,paraLIST,extpara)
+	kwd = _kwd2list(args,kw_args,paraLIST,extpara)
 	if "so" in extpara:
 		return lib_lcm.lcm_run(kwd,extpara["so"])
 	else:
 		return lib_lcm.lcm_run(kwd)
-
-
 	
 def lcmseq (*args, **kw_args):
 	"""
@@ -318,7 +461,7 @@ so=[filename]
 	}
 
 	extpara={}
-	kwd = kwd2list(args,kw_args,paraLIST,extpara)
+	kwd = _kwd2list(args,kw_args,paraLIST,extpara)
 	if "so" in extpara:
 		return lib_lcmseq.lcmseq_run(kwd,extpara["so"])
 	else:
@@ -404,7 +547,7 @@ so=[filename]
 					("p","-p"),("P","-P"),("n","-n"),("N","-N"),("opos","-o"),("Opos","-O"),
 					("s","-s"),("Q","-Q"),("stop","-#"),("separator","-,")]
 	}
-	kwd = kwd2list(args,kw_args,paraLIST)
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_lcmseq0.lcmseq_zero_run(kwd)
 
 def mace(*args, **kw_args):
@@ -441,7 +584,7 @@ Q=[filename]
 		"opt":[("l","-l"),("u","-u"),("Q","-Q"),("stop","-#"),("separator","-,")]
 	}
 
-	kwd = kwd2list(args,kw_args,paraLIST)
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_mace.mace_run(kwd)
 
 
@@ -524,7 +667,7 @@ Q=[filename]
 					("Q","-Q"),("stop","-#"),("separator","-,")],
 		"opts":[("9","-9",2)]
 	}
-	kwd = kwd2list(args,kw_args,paraLIST)
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_sspc.sspc_run(kwd)
 	
 def medset(*args, **kw_args):
@@ -572,7 +715,7 @@ nomsg=True
 						("progress","-%"),("nomsg","-_")]
 	}
 
-	kwd = kwd2list(args,kw_args,paraLIST)
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_medset.medset_run(kwd)
 
 
@@ -681,63 +824,120 @@ if similarity-threshold is 0, skip the similarity graph construction phase
 	}
 
 
-	kwd = kwd2list(args,kw_args,paraLIST)
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_simset.simset_run(kwd)
 
+#(:ref:`詳細<grhfilType-label>` )
 
 def grhfil(*args, **kw_args):
 	"""
-graph filtering: transform/convert/extract graph/subgraph
+	*グラフフィルタ(graph filtering: transform/convert/extract graph/subgraph)*
 
-keyword
-type=以下の組み合わせ 必須
-  %:show progress
-  _:no message
-  +:write solutions in append mode
-  d:directed graph (x->y)
-  D:directed graph with reverse direction (x<-y)
-  U,u:undirected graph (u:edge for both direction), 
-  B:bipartite graph, 
-  e,E:read/write file as edge list
-  s,S:sort vertex adjacent list in increasing/decreasing order
-  n,N:read/write the number of vertices and edges written in/at 1st line of the file
-  v,V:node ID in read/write file starts from 1, q:non-transform mode (valid with -P option)
-  0:insert vertex ID as the first entry, for each vertex (adjacency list mode)
-  9:give weight 1 to each vertex ID (with 0)
-  w,W:read/write edge weights in the graph file
-  1:unify consecutive two same numbers into one
-i=[filename] 必須
-  input-file
-o=[filename] 必須
-  output-file
-t=,T=[num]
-  remove vertices with degree smaller/larger then [num]
-ideg=,Ideg=[num]
-  remove vertices with in-degree smaller/larger then [num]
-odeg=,Odeg=[num]
-  remove vertices with out-degree smaller/larger then [num]
-r=,R=[num]
-  remove edges with weights smaller/larger then [num]
-n=[num]
-  specify #nodes
-X=[num1],[num2]
-  multiply each weight by [num1] and trancate by [num2]
-w,W=[filename]
-  weight file to be read/write
-d=[filename],[type]
-  take difference with graph of [filename] 
-  [type]はtype=の'u','U','B','D','d','e','s','S','n','w','v'を組み合わせる  
-dth=[threshold]
- specify the threshold value (d=が必要)
-m=,M=[filename],[type]
-  take intersection/union with graph of [filename]
-  [type]はtype=の'u','U','B','D','d','e','s','S','n','w','v'を組み合わせる  
-p=[filename]
-  permute the vertex ID to coutinuous numbering and output the permutation table to the file
-separator=[char]
-  give the separator of the numbers in the output
-Q=[filename]
-  permute the numbers in the file according to the table 
+	:type type: 文字列
+	:type t: 整数
+	:type T: 整数
+	:type ideg: 整数
+	:type Ideg: 整数
+	:type odeg: 整数
+	:type Odeg: 整数
+	:type r: 実数
+	:type R: 実数
+	:type n: 整数
+	:type X: 実数リスト
+	:type w: 真偽
+	:type W: 真偽
+	:type d: ファイル名
+	:type m: ファイル名
+	:type M: ファイル名
+	:type p: ファイル名
+	:type Q: ファイル名
+	:type separator: 文字
+	:param type: 主パラメータ(:ref:`以下に詳述<grhfilMP-label>` )【必須】
+	:param i: 入力ファイル名【必須】
+	:param o: 出力ファイル名【必須】
+	:param t: 次数が指定した値より小さいノードは出力しない【デフォルト=制約なし】
+	:param T: 次数が指定した値より大きいノードは出力しない
+	:param ideg: 有向グラフにおいて入次数が指定した値より小さいノードは出力しない
+	:param Ideg: 有向グラフにおいて入次数が指定した値より大きいノードは出力しない
+	:param odeg: 有向グラフにおいて出次数が指定した値より小さいノードは出力しない
+	:param Odeg: 有向グラフにおいて出次数が指定した値より大きいノードは出力しない
+	:param r: 重みが指定した値より小さいエッジは出力しない
+	:param R: 重みが指定した値より大きいエッジは出力しない
+	:param n: ノードの個数を与える【デフォルト=データ上の最大番号+1】
+	:param w: 入力ファイルの3項目目を重みとして読み込む(3項目目がなければ0がセットされる)
+	:param W: 出力ファイルの3項目目に重みを出力する
+	:param d: 指定したグラフとの差異を出力する(gTypeとgFormatは同じでなければならない)
+	:param dth: specify the threshold value (d=が必要)
+	:param m: 指定したグラフとのintersectionを出力する(gTypeとgFormatは同じでなければならない)
+	:param M: 指定したグラフとのunionを出力する(gTypeとgFormatは同じでなければならない)
+	:param p: permute the vertex ID to coutinuous numbering and output the permutation table to the file
+	:param Q: permute the numbers in the file according to the table 
+
+	.. todo:: P,Qは未対応
+
+	.. _grhfilMP-label:
+
+	**主パラメータ**
+
+	以下に示すパラメータを組み合わせて文字列として指定する(ex. "UeEs")。
+
+	1) グラフタイプ【必須】
+	グラフの種類を以下の5つから一つ選んで指定する。
+
+	* B:二部グラフ
+	* d:有向グラフ(入力隣接行列を変更しない)
+	* D:逆向きの有向グラフ(隣接行列の下三角行列と上三角行列を入れ替える)
+	* U:片方向無向グラフ(隣接行列の下三角行列を削除し、重複したエッジを削除する)
+	* u:双方向無向グラフ(入力隣接行列の下三角行列と上三角行列を対称にする)
+
+	2) グラフの書式【オプション】
+	入出力ファイルのグラフの書式は、隣接行列形式がデフォルトであるが、
+	それをノードペアのエッジ形式に変更することができる。
+
+	* e: 入力ファイルをエッジ形式とする。
+	* E: 出力ファイルをエッジ形式とする。
+
+	3) その他の指定
+
+	* s: 出力のグラフの隣接ノードを昇順に並べる。
+	* S: 出力のグラフの隣接ノードを降順に並べる。
+	* n: 入力データの一行目を"ノード数 エッジ数"とする。
+	* N: 出力データの一行目に"ノード数 エッジ数"を出力する。
+	* v: 入力データのノード番号は1から始まるものとする。
+	* V: 出力データのノード番号は1からはじまるものとして出力する。
+	* 0: 一列目にノード番号を出力する(出力が隣接行列形式の場合のみ)。
+	* w: 入力ファイルの隣接ノードの次の数字を重みとする。
+	* W: 出力ファイルの隣接ノードの次に重みを出力する。
+	* %:show progress
+	* _:no message
+	* +:write solutions in append mode
+
+	* v,V:node ID in read/write file starts from 1,
+	* q:non-transform mode (valid with -P option)
+	* 9:give weight 1 to each vertex ID (with 0)
+	* 1:unify consecutive two same numbers into one
+
+	例1) A-Fの6アイテムにつて、5件(T1-T6)のトランザクションをCSVファイルに保存し、
+	TraDBを構築する例。
+
+	.. code-block:: python
+		:linenos:
+
+		>>> from nysol.take.extcore import grhfil
+		>>> from nysol.take.sample import Samples
+		>>> smp=Samples()
+		>>> fName=smp.numGraph1()
+		>>> smp.head(fName)
+		fName: ./numGraph1.csv
+		0 1
+		0 2
+		0 4
+		1 2
+		1 4
+		1 6
+
+		>>> grhfil(type="ueE_",i=fName,o="xxa")
+		>>> smp.head("xxa")
 	"""
 
 	paraLIST={
@@ -745,12 +945,26 @@ Q=[filename]
 		"ato":[("i",1),("o",1)],
 		"opt":[("t","-t"),("T","-T"),("ideg","-i"),("Ideg","-I"),
 					("odeg","-o"),("Odeg","-O"),("r","-r"),("r","-R"),("n","-n"),
-					("w","-w"),("W","-W"),("P","-P"),("Q","-Q"),("separator","-,")],
+					("w","-w"),("W","-W"),("p","-p"),("Q","-Q"),("separator","-,")],
 		"opts":[("X","-X",2)],
 		"addkw":[("d","-d"),("m","-m"),("M","-M")],
 		"optato":[("dth","-d")]
 	}
-	kwd = kwd2list(args,kw_args,paraLIST)
+
+	kw_args2=kw_args
+
+	"""
+	gType=kw_args["gType"]
+	giFormat=kw_args["giFormat"]
+	goFormat=kw_args["goFormat"]
+	if giFormat=="e":
+		mainArg+="e"
+	if goFormat=="e":
+		mainArg+="E"
+	kw_args2["type"]=mainArg
+	"""
+
+	kwd = _kwd2list(args,kw_args,paraLIST)
 	return lib_grhfil.grhfil_run(kwd)
 
 def lcmtrans(inf,ptn,outf):

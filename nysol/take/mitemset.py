@@ -158,6 +158,6 @@ class mitemset(object):
 
 if __name__ == '__main__':
 	import sys
-	args=nu.Margs(sys.argv,"i=,x=,O=,tid=,item=,class=,taxo=,type=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,T=,-replaceTaxo")
+	args=margs.Margs(sys.argv,"i=,x=,O=,tid=,item=,class=,taxo=,type=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,T=,-replaceTaxo")
 	mitemset(args).run()
 

@@ -167,7 +167,9 @@ int kgCount::run(void)
 		runErrEnd();
 		kgError err(er);
 		errorEnd(err);
-	}catch(...){
+	}
+	KG_ABI_CATCH
+	catch(...){
 
 		runErrEnd();
 		kgError err("unknown error" );

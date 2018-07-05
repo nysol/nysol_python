@@ -262,7 +262,9 @@ int kgVdelnull::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
 
-	}catch(char * er){
+	}
+	KG_ABI_CATCH
+	catch(char * er){
 
 		runErrEnd();
 		kgError err(er);

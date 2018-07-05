@@ -84,7 +84,7 @@ class Taxonomy(object):
 		f <<= nm.muniq(k="__fld")
 		f <<= nm.mcount(a="size")
 		f <<= nm.mcut(f="size")
-		xx1 = f.run(msg="on")
+		xx1 = f.run()
 
 		self.itemSize = int(xx1[0][0])
 

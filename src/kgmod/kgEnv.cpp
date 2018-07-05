@@ -156,7 +156,7 @@ kgEnv::kgEnv(void)
   unsigned long seed= static_cast<unsigned long>(boost::posix_time::microsec_clock::local_time().time_of_day().fractional_seconds());
 	try {
 		randStrAP_.set( new variate_generator< mt19937,uniform_int<> >(mt19937(seed),uniform_int<>(48,109) ) );
-	}catch(...){
+	}catch(bad_alloc){
 		throw kgError("memory allocation error in kgEnv");
 	}
 }
