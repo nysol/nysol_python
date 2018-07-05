@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mod as nm
-import nysol.take.lib.base.seqDB as sdb
-import nysol.take.lib.taxonomy as taxolib
-import nysol.take.lib.enumLcmSeq as elcmSeq
-import nysol.take.lib.enumLcmEsp as elcmEsp
+from nysol.take.lib.base import seqDB as sdb
+from nysol.take.lib import taxonomy as taxolib
+from nysol.take.lib import enumLcmSeq as elcmSeq
+from nysol.take.lib import enumLcmEsp as elcmEsp
+from nysol.take import extcore as extTake
 
 
 class msequence(object):

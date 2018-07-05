@@ -6,7 +6,7 @@ import os
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
-import nysol.take.lib.items as items
+from nysol.take.lib import items as items
 #=トランザクションデータクラス
 # 頻出パターンマイニングで使われるトランザクションデータを扱うクラス。
 # トランザクションファイルは、トランザクションID項目とアイテム集合項目から構成される。

@@ -29,15 +29,15 @@
 	最終更新日: |today|
 
 """
-import nysol.take._grhfillib as lib_grhfil
-import nysol.take._lcmlib as lib_lcm
-import nysol.take._lcmseq_zerolib as lib_lcmseq0
-import nysol.take._lcmseqlib  as lib_lcmseq
-import nysol.take._lcmtranslib  as lib_lcmtarns
-import nysol.take._macelib as lib_mace
-import nysol.take._medsetlib as lib_medset
-import nysol.take._simsetlib as lib_simset
-import nysol.take._sspclib as lib_sspc
+from nysol.take import _grhfillib as lib_grhfil
+from nysol.take import _lcmlib as lib_lcm
+from nysol.take import _lcmseq_zerolib as lib_lcmseq0
+from nysol.take import _lcmseqlib  as lib_lcmseq
+from nysol.take import _lcmtranslib  as lib_lcmtarns
+from nysol.take import _macelib as lib_mace
+from nysol.take import _medsetlib as lib_medset
+from nysol.take import _simsetlib as lib_simset
+from nysol.take import _sspclib as lib_sspc
 
 def _kwd2list(args, kw_args,paraConf,extpara=None):
 	def tostr(val):

@@ -4,10 +4,10 @@ import os
 import os.path
 import nysol.mod as nm
 import nysol.util.margs as margs
-import nysol.take.lib.base.traDB as tdb
-import nysol.take.lib.taxonomy as taxolib
-import nysol.take.lib.enumLcmIs as elcmIs
-import nysol.take.lib.enumLcmEp as elcmEp
+from nysol.take.lib.base import traDB as tdb
+from nysol.take.lib import taxonomy as taxolib
+from nysol.take.lib import enumLcmIs as elcmIs
+from nysol.take.lib import enumLcmEp as elcmEp
 
 
 class mitemset(object):

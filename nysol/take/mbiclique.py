@@ -5,7 +5,7 @@ import shutil
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
-import nysol.take.extcore as extTake
+from nysol.take import extcore as extTake
 
 
 class mbiclique(object):

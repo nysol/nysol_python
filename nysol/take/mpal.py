@@ -5,8 +5,8 @@ import shutil
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
-import nysol.take.mtra2gc as mtra2gc  
-import nysol.take.mfriends as mfriends
+from nysol.take import mtra2gc as mtra2gc  
+from nysol.take import mfriends as mfriends
 
 
 class mpal(object):

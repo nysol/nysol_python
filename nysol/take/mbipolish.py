@@ -8,10 +8,11 @@ import shutil
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
-import nysol.take.extcore as extTake
-import nysol.take.graph as ntg
 import nysol.util.mmkdir as mkDir
 import nysol.util.mrecount as mrecount
+
+from nysol.take import extcore as extTake
+
 
 class mbipolish(object):
 

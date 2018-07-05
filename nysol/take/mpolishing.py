@@ -7,8 +7,8 @@ import shutil
 
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
-import nysol.take.extcore as extTake
-import nysol.take.graph as ntg
+from nysol.take import graph as ntg
+from nysol.take import extcore as extTake
 
 
 class mpolishing(object):

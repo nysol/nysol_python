@@ -4,7 +4,7 @@ import os
 import nysol.mod as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
-import nysol.take.extcore as extTake
+from nysol.take import extcore as extTake
 
 
 class mtra2gc(object):
