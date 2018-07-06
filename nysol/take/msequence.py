@@ -10,7 +10,7 @@ from nysol.take import extcore as extTake
 
 
 class msequence(object):
-	def help(self):
+	def helpMSG(self):
 		msg="""
 ------------------------
 #{$cmd} version #{$version}
@@ -63,94 +63,98 @@ class msequence(object):
 # LCM_seqの詳しい情報源 http://research.nii.ac.jp/~uno/codes-j.htm
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 		"""
-	def ver(self):
-		print("version #{$version}")
 
-# lcm_seqコマンド実行可能確認
-#exit(1) unless(MCMD::chkCmdExe(TAKE::LcmSeq::CMD      , "executable"))
-#exit(1) unless(MCMD::chkCmdExe(TAKE::LcmSeq::CMD_ZERO , "executable"))
-#exit(1) unless(MCMD::chkCmdExe(TAKE::LcmSeq::CMD_TRANS, "-v", "lcm_trans 1.0"))
+	verInfo="version=1.2"
 
 
-	def __init__(self,args):
-		self.args = args
+	paramter = {	
+		"i": "filename",
+		"c": "fileName", # なにもしてない
+		"x": "fileName",
+		"O": "str",
+		"tid": "fld",
+		"item":"fld",
+		"time":"fld",
+		"cls" :"fld",
+		"taxo":"fld",
+		"s" : "float",
+		"S":"int",
+		"sx":"float",
+		"Sx":"int",
+		"g":"float",
+		"p": "float",
+		"uniform" : "bool",
+		"l":"int",
+		"u":"int",
+		"gap":"int",
+		"win":"int",
+		"top":"int",
+		"padding" : "bool",
+		"mcmdenv" : "bool",
+		"T": "str"
+	}
+	paramcond = {	
+		"hissu":"i"
+	}
 
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
+	def help():
+		print(msequence.helpMSG) 
 
-		self.iFile   = args.file("i=","r")
-		self.xFile   = args.file("x=","r")
+	def ver():
+		print(msequence.versionInfo)
+
+
+	def __param_check_set(self , kwd):
+
+		for k,v in kwd.items():
+			if not k in msequence.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
 
 		import datetime
 		t = datetime.datetime.today()
-		self.outPath = args.file("O=", "w", "./take_%s"%(t.strftime("%Y%m%d%H%M%S")))
+		self.iFile   = kwd["i"]
+		self.xFile   = kwd["x"]    if "x"    in kwd else None
+		self.idFN    = kwd["tid"]  if "tid"  in kwd else "tid"
+		self.timeFN  = kwd["time"] if "time" in kwd else "time"
+		self.itemFN  = kwd["item"] if "item" in kwd else "item"
+		self.clsFN   = kwd["cls"]  if "cls"  in kwd else None
 
-		self.idFN   = args.field("tid=",  self.iFile, "tid"  )
-		self.timeFN = args.field("time=", self.iFile, "time" )
-		self.itemFN = args.field("item=", self.iFile, "item" )
-		self.clsFN  = args.field("class=",self.iFile, None )
-		self.taxoFN = args.field("taxo=", self.xFile, "taxo" )
-
-		if self.idFN :
-			self.idFN   = ','.join(self.idFN["names"])
-
-		if self.timeFN:
-			self.timeFN = ','.join(self.timeFN["names"])
-
-		if self.itemFN :
-			self.itemFN = ','.join(self.itemFN["names"])
-
-		if self.clsFN :
-			self.clsFN  = ','.join(self.clsFN["names"]) 
-
-		if self.taxoFN:
-			self.taxoFN = ','.join(self.taxoFN["names"]) 
+		self.taxoFN  = kwd["taxo"] if "taxo" in kwd else "taxo"
+		self.outPath = kwd["O"]    if "O"    in kwd else "./take_{}".format(t.strftime("%Y%m%d%H%M%S"))
 
 		self.eArgs={}
-		self.eArgs["minSup" ] = args.float("s="   ,0.05 ,0,1    ) # 最小サポート
-		self.eArgs["minProb"] = args.float("p="   ,0.5  ,0.5,1  ) # 最小事後確率
-		self.eArgs["uniform"] = args. bool("-uniform") # クラス事前確率を一様と考えるかどうか
-		self.eArgs["padding"] = args. bool("-padding") # 0item ommit
+		self.eArgs["minSup" ] = float(kwd["s"]) if "s" in kwd else 0.05  # 0-1
+		self.eArgs["minProb"] = float(kwd["p"]) if "p" in kwd else 0.5   # 0.5-1
+		self.eArgs["uniform"] = kwd["uniform"] if "uniform" in kwd else False
+		self.eArgs["padding"] = kwd["padding"] if "padding" in kwd else False
 
-		val =  args.int("S=",None,1,None) # 最小サポート件数
-		if val!=None:
-			self.eArgs["minCnt"] = val
+		if "S" in kwd :
+			self.eArgs["minCnt"] = int(kwd["S"])
 
-		val = args.float("sx=",None,0,1) # 最小サポート
-		if val!=None:
-			self.eArgs["maxSup"] = val 
+		if "sx" in kwd :
+			self.eArgs["maxSup"] = float(kwd["sx"]) # 0-1
 
-		val = args.int("Sx=",None,1,None) # 最小サポート件数
-		if val!=None:
-			self.eArgs["maxCnt"] = val
+		if "Sx" in kwd :
+			self.eArgs["maxCnt"] = int(kwd["Sx"]) # 1-
 
-		val = args.float("g=",None,1.0,None) # 最小GR
-		if val!=None:
-			self.eArgs["minGR"] = val
+		if "g" in kwd :
+			self.eArgs["minGR"] = float(kwd["g"]) # 1.0
 
-		val = args.int("l=",None,1,None)
-		if val!=None:
-			self.eArgs["minLen"] = val
+		if "l" in kwd :
+			self.eArgs["minLen"] = int(kwd["l"]) # 1-
 
-		val = args.int("u=",None,1,None)
-		if val!=None:
-			self.eArgs["maxLen"] = args.int("u=",None,1,None)
+		if "u" in kwd :
+			self.eArgs["maxLen"] = int(kwd["u"]) # 1-
 
-		val = args.int("gap=",None,0,None) # gap長上限限
-		if val!=None:
-			self.eArgs["gap"] = val
+		if "gap" in kwd :
+			self.eArgs["gap"] = int(kwd["gap"]) # 0-
 
-		val = args.int("win=",None,0,None) # win size上限限
-		if val!=None:
-			self.eArgs["win"] = val
+		if "win" in kwd :
+			self.eArgs["win"] = int(kwd["win"]) # 0-
 
-		val = args.int("top=",None,0)
-		if val!=None:
-			self.eArgs["top"] = val
+		if "top" in kwd :
+			self.eArgs["top"] = int(kwd["top"])
 
 		if "minLen" in self.eArgs and "maxLen" in self.eArgs:
 			if self.eArgs["minLen"] > self.eArgs["maxLen"]:
@@ -159,6 +163,13 @@ class msequence(object):
 		if "gap" in self.eArgs and "win" in self.eArgs:
 			if self.eArgs["gap"] > self.eArgs["win"] :
 				raise Exception("win= must be greater than or equal to gap=")
+
+
+
+	def __init__(self,**kwd):
+		#パラメータチェック
+		self.__param_check_set(kwd)
+
 
 	def run(self):
 
@@ -188,15 +199,4 @@ class msequence(object):
 
 		lcm.output(self.outPath)
 
-
-		#MCMD::msgLog("The final results are in the directory `#{outPath}'")
-
-		# 終了メッセージ
-		#MCMD::endLog(args.cmdline)
-
-if __name__ == '__main__':
-	import sys
-	import nysol.util.margs as margs
-	args=margs.Margs(sys.argv,"i=,c=,x=,O=,tid=,time=,item=,class=,taxo=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,gap=,win=,-padding,T=,-mcmdenv","i=")
-	msequence(args).run()
 

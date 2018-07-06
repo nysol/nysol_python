@@ -63,6 +63,33 @@ class mitemset(object):
 		"""
 
 	verInfo="version=1.2"
+
+	paramter = {	
+		"i": "filename",
+		"x": "fileName",
+		"O": "str",
+		"tid": "fld",
+		"item":"fld",
+		"cls" :"fld",
+		"taxo":"fld",
+		"type":"str",
+		"s" : "float",
+		"p": "float",
+		"uniform" : "bool",
+		"replaceTaxo": "bool",
+		"S":"int",
+		"sx":"float",
+		"Sx":"int",
+		"g":"float",
+		"l":"int",
+		"u":"int",
+		"top":"int",
+		"mcmdenv" : "bool",
+		"T": "str"
+	}
+	paramcond = {	
+		"hissu":"i"
+	}
 	
 	def help():
 		print(mitemset.helpMSG) 
@@ -70,64 +97,63 @@ class mitemset(object):
 	def ver():
 		print(mitemset.versionInfo)
 
-
-	def __init__(self,args):
-		self.args = args
-		self.iFile   = args.file("i=","r")
-		self.xFile   = args.file("x=","r")
 	
+	def __param_check_set(self , kwd):
+
+		for k,v in kwd.items():
+			if not k in mitemset.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
+			
 		import datetime
 		t = datetime.datetime.today()
-		self.outPath = args.file("O=", "w", "./take_%s"%(t.strftime("%Y%m%d%H%M%S")))
 
-		self.idFN   = args.field("tid=",  self.iFile, "tid"  )
-		self.itemFN = args.field("item=", self.iFile, "item" )
-		self.clsFN  = args.field("class=",self.iFile, None )
-		self.taxoFN = args.field("taxo=", self.xFile, "taxo" )
-		if self.idFN :
-			self.idFN   = ','.join(self.idFN["names"])
-		if self.itemFN :
-			self.itemFN = ','.join(self.itemFN["names"])
-		if self.clsFN :
-			self.clsFN  = ','.join(self.clsFN["names"]) 
-		if self.taxoFN:
-			self.taxoFN = ','.join(self.taxoFN["names"]) 
+		self.iFile   = kwd["i"]
+		self.xFile   = kwd["x"]    if "x"    in kwd else None
+		self.idFN    = kwd["tid"]  if "tid"  in kwd else "tid"
+		self.itemFN  = kwd["item"] if "item" in kwd else "item"
+		self.clsFN   = kwd["cls"]  if "cls"  in kwd else None
 
+		self.taxoFN  = kwd["taxo"] if "taxo" in kwd else "taxo"
+		self.outPath = kwd["O"]    if "O"    in kwd else "./take_{}".format(t.strftime("%Y%m%d%H%M%S"))
+		
 		self.eArgs={}
-		self.eArgs["type"   ] = args.  str("type=","F" )
-		self.eArgs["minSup" ] = args.float("s="   ,0.05 ,0  ,1      ) # 最小サポート
-		self.eArgs["minProb"] = args.float("p="   ,0.5  ,0.5,1      ) # 最小事後確率
-		self.eArgs["uniform"] = args. bool("-uniform") # クラス事前確率を一様と考えるかどうか
 		self.eArgs["nomodel"] = True
 
-		val =  args.int("S=",None,1,None) # 最小サポート件数
-		if val!=None:
-			self.eArgs["minCnt"] = val
+		self.eArgs["type"   ] = kwd["type"]     if "type"    in kwd else "F"
+		self.eArgs["minSup" ] = float(kwd["s"]) if "s"       in kwd else 0.05  # 0-1
+		self.eArgs["minProb"] = float(kwd["p"]) if "p"       in kwd else 0.5   # 0.5-1
+		self.eArgs["uniform"] = kwd["uniform"]  if "uniform" in kwd else False
 
-		val = args.float("sx=",None,0,1) # 最小サポート
-		if val!=None:
-			self.eArgs["maxSup"] = val 
+		if "S" in kwd :
+			self.eArgs["minCnt"] = int(kwd["S"])
 
-		val = args.int("Sx=",None,1,None) # 最小サポート件数
-		if val!=None:
-			self.eArgs["maxCnt"] = val
+		if "sx" in kwd :
+			self.eArgs["maxSup"] = float(kwd["sx"]) # 0-1
 
-		val = args.float("g=",None,1.0,None) # 最小GR
-		if val!=None:
-			self.eArgs["minGR"] = val
+		if "Sx" in kwd :
+			self.eArgs["maxCnt"] = int(kwd["Sx"]) # 1-
 
-		val = args.int("l=",None,1,None)
-		if val!=None:
-			self.eArgs["minLen"] = val
+		if "g" in kwd :
+			self.eArgs["minGR"] = float(kwd["g"]) # 1.0
 
-		val = args.int("u=",None,1,None)
-		if val!=None:
-			self.eArgs["maxLen"] = args.int("u=",None,1,None)
+		if "l" in kwd :
+			self.eArgs["minLen"] = int(kwd["l"]) # 1-
 
-		val = args.int("top=",None,0)
-		if val!=None:
-			self.eArgs["top"] = val
+		if "u" in kwd :
+			self.eArgs["maxLen"] = int(kwd["u"]) # 1-
 
+		if "top" in kwd :
+			self.eArgs["top"] = int(kwd["top"])
+
+
+		self.replaceTaxo = kwd["replaceTaxo"] if "replaceTaxo" in kwd else False
+
+
+
+	def __init__(self,**kwd):
+		#パラメータチェック
+		self.__param_check_set(kwd)
 
 
 	def run(self):
@@ -137,7 +163,7 @@ class mitemset(object):
 		self.taxo=None
 		if self.xFile!=None :
 			self.taxo = taxolib.Taxonomy(self.xFile,self.itemFN,self.taxoFN)
-			if self.args.bool("-replaceTaxo") :
+			if self.replaceTaxo :
 				db.repTaxo(self.taxo) # taxonomyの置換
 			else:
 				db.addTaxo(self.taxo) # taxonomyの追加
@@ -154,10 +180,4 @@ class mitemset(object):
 		if not os.path.isdir(self.outPath) :
 			os.makedirs(self.outPath)
 		lcm.output(self.outPath)
-
-
-if __name__ == '__main__':
-	import sys
-	args=margs.Margs(sys.argv,"i=,x=,O=,tid=,item=,class=,taxo=,type=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,T=,-replaceTaxo")
-	mitemset(args).run()
 
