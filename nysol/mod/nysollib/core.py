@@ -403,7 +403,6 @@ class NysolMOD_CORE(object):
 						obj.inplist["i"][i]=rlmod
 
 				if len(obj.inplist["i"])>1:
-
 					m2cmod  = m2cat(i=obj.inplist["i"])
 					m2cmod.outlist["o"] = [obj]
 

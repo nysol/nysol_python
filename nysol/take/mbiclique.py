@@ -7,7 +7,6 @@ import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 from nysol.take import extcore as extTake
 
-
 class mbiclique(object):
 
 	helpMSG="""
@@ -121,54 +120,85 @@ b c d,D,3,1
 """
 
 	verInfo="version=1.2"
-	
+
+	paramter = {	
+		"ei":"filename",
+		"ef":"fld",
+		"l":"int",
+		"u":"int",
+		"o":"filename",		
+		"edge":"bool",
+		"T":"str"
+	}
+
+	paramcond = {	
+		"hissu": ["ei"]
+	}	
+
 	def help():
 		print(mbiclique.helpMSG) 
 
 	def ver():
 		print(mbiclique.verInfo)
 
-	def __init__(self,args):
+	def __param_check_set(self , kwd):
 
-		self.byedge       = args.bool("-edge")
-		self.oFile        = args.file("o=", "w")
-		self.ei           = args.file("ei=","r") # edgeファイル名
-		self.ef1,self.ef2 = args.field("ef=", self.ei, "node1,node2",2,2)["names"]
+		for k,v in kwd.items():
+			if not k in mbiclique.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
 
-		minSizeStr = args.str("l=")    # クリークサイズ下限
-		maxSizeStr = args.str("u=")    # クリークサイズ上限
+		self.msgoff = True
+
+		self.byedge  = kwd["edge"] if "edge" in kwd else False 
+		self.oFile   = kwd["o"]   if "o"   in kwd else None
+
+		# ---- edge field names (two nodes) on ei=
+		self.ei = kwd["ei"] # edgeファイル名
+		ef0 = kwd["ef"].split(",")
+		self.ef1 = ef0[0]
+		self.ef2 = ef0[1] 
+
+		minSize = kwd["l"].split(",") if "l"   in kwd else None   # クリークサイズ下限
+		maxSize = kwd["u"].split(",") if "u"   in kwd else None   # クリークサイズ上限
 
 		self.minSize1 = ""
 		self.minSize2 = ""
 		self.maxSize1 = ""
 		self.maxSize2 = ""
 
-		if minSizeStr != None :
+		if minSize != None :
 
-			minSizeArray = minSizeStr.split(",")
-			if len(minSizeArray) == 1:
-				if minSizeArray[0] != "":
-					self.minSize1 = minSizeArray[0]
-					self.minSize2 = minSizeArray[0]
+			if len(minSize) == 1:
+				if minSize[0] != "":
+					self.minSize1 = minSize[0]
+					self.minSize2 = minSize[0]
 			else:
-				if minSizeArray[0] != "":
-					self.minSize1 = minSizeArray[0]
-				if minSizeArray[1] != "":
-					self.minSize2 = minSizeArray[1]
+				if minSize[0] != "":
+					self.minSize1 = minSize[0]
+				if minSize[1] != "":
+					self.minSize2 = minSize[1]
 
-		if maxSizeStr != None :
+		if maxSize != None :
 
-			maxSizeArray = maxSizeStr.split(",")
-			if len(maxSizeArray) == 1:
-				if maxSizeArray[0] != "":
-					self.maxSize1 = maxSizeArray[0]
-					self.maxSize2 = maxSizeArray[0]
+			if len(maxSize) == 1:
+				if maxSize[0] != "":
+					self.maxSize1 = maxSize[0]
+					self.maxSize2 = maxSize[0]
 			else:
-				if maxSizeArray[0] != "":
-					self.maxSize1 = maxSizeArray[0]
-				if maxSizeArray[1] != "":
-					self.maxSize2 = maxSizeArray[1]
-		self.__tempW	= mtemp.Mtemp()
+				if maxSize[0] != "":
+					self.maxSize1 = maxSize[0]
+				if maxSize[1] != "":
+					self.maxSize2 = maxSize[1]
+
+
+
+
+
+	def __init__(self,**kwd):
+		#パラメータチェック
+		self.args = kwd
+		self.__param_check_set(kwd)
 
 
 	def pair2tra(self,ei,ef1,ef2,traFile,mapFile1,mapFile2):
@@ -201,15 +231,17 @@ b c d,D,3,1
 	# entry point
 	def run(self):
 
-		xxtra = self.__tempW.file()
-		xxmap1 = self.__tempW.file()
-		xxmap2 = self.__tempW.file()
-		lcmout = self.__tempW.file()
+		tempW	= mtemp.Mtemp()
 
-		xxt0 = self.__tempW.file()
-		xxp0 = self.__tempW.file()
-		xx3t = self.__tempW.file()
-		xx4t = self.__tempW.file()
+		xxtra = tempW.file()
+		xxmap1 = tempW.file()
+		xxmap2 = tempW.file()
+		lcmout = tempW.file()
+
+		xxt0 = tempW.file()
+		xxp0 = tempW.file()
+		xx3t = tempW.file()
+		xx4t = tempW.file()
 
 		self.pair2tra(self.ei,self.ef1,self.ef2,xxtra,xxmap1,xxmap2)
 
@@ -218,6 +250,7 @@ b c d,D,3,1
 		runPara["sup"] = 1
 		runPara["o"] = lcmout
 		runPara["i"] = xxtra
+
 		if self.minSize2:
 			runPara["l"] = self.minSize2
 		if self.maxSize2:
@@ -251,6 +284,7 @@ b c d,D,3,1
 			f_e3 <<= nm.mnjoin(k="pid",m=f_e0,f="pattern,size2")
 			f_e3 <<= nm.mcut(f="pid:id,node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile)
 			f_e3.run()
+
 		else:
 
 			extTake.lcmtrans(lcmout,"t",xx4t)
@@ -264,11 +298,4 @@ b c d,D,3,1
 			f_e4 <<= nm.msortf(f="node1,pattern")
 			f_e4 <<= nm.mcut(f="node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile)
 			f_e4.run()
-
-
-if __name__ == '__main__':
-
-	import sys
-	args=margs.Margs(sys.argv,"ei=,ef=,o=,l=,u=,-edge","ei=")
-	mbiclique(args).run()
 

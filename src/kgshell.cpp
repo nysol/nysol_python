@@ -127,6 +127,8 @@ kgshell::kgshell(int mflg,int rumlim){
 		_kgmod_map["mstdin"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["mstdout"] = boost::lambda::bind(boost::lambda::new_ptr<kgLoad>());
 		_kgmod_map["msortchk"] = boost::lambda::bind(boost::lambda::new_ptr<kgSortchk>());
+		_kgmod_map["mread"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
+		_kgmod_map["mwrite"] = boost::lambda::bind(boost::lambda::new_ptr<kgFifo>());
 
 		_kgmod_run["m2tee"] = 0;
 		_kgmod_run["mfifo"] = 0;
@@ -216,8 +218,8 @@ kgshell::kgshell(int mflg,int rumlim){
 		_kgmod_run["msortchk"] = 0;
 		_kgmod_run["municat"] = 0;
 
-		_kgmod_run["mload"] = 0;
-		_kgmod_run["msave"] = 0;
+		_kgmod_run["mread"] = 0;
+		_kgmod_run["mwrite"] = 0;
 		_kgmod_run["writelist"] = 1;
 		_kgmod_run["readlist"] = 2;
 

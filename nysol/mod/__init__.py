@@ -88,4 +88,6 @@ from .submod.m2cat import Nysol_M2cat as m2cat
 from .submod.municat import Nysol_Municat as municat
 from .submod.mstdin import Nysol_Mstdin as mstdin
 from .submod.mstdout import Nysol_Mstdout as mstdout
+from .submod.mread import Nysol_Mread as mread
+from .submod.mwrite import Nysol_Mwrite as mwrite
 

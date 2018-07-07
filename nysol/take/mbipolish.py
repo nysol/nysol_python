@@ -90,6 +90,28 @@ D,e
 		"""
 
 	verInfo="version=1.2"
+
+
+	paramter = {	
+		"ei":"filename",
+		"ef":"fld",
+		"eo":"filename",		
+		"log":"filename",
+		"th":"float",
+		"th2":"float",
+		"sim":"str",
+		"sim2":"str",
+		"kn":"int",
+		"kn2":"int",
+		"sup":"int",
+		"iter":"int",
+		"T":"str"
+	}
+
+	paramcond = {	
+		"hissu": ["ei","th"]
+	}
+
 	
 	def help():
 		print(mbipolish.helpMSG) 
@@ -98,25 +120,38 @@ D,e
 		print(mbipolish.verInfo)
 
 
+	def __param_check_set(self , kwd):
 
+		for k,v in kwd.items():
+			if not k in mbipolish.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
 
-	def __init__(self,args):
+		self.msgoff = True
 
-		self.oFile        = args.file("o=", "w")
-		self.ei           = args.file("ei=","r") # edgeファイル名
-		self.ef1,self.ef2 = args.field("ef=", self.ei, "node1,node2",2,2)["names"]
-		self.eo      = args.file("eo=", "w")
-		self.logDir  = args.file("log=", "w")
-		self.outDir  = args.str("O=")	# 過程出力
+		self.oFile   = kwd["o"]   if "o"   in kwd else None
+		self.eo      = kwd["eo"]  if "eo"  in kwd else None
+		self.logDir  = kwd["log"]  if "log"  in kwd else None
+		self.outDir  = kwd["O"]    if "O"    in kwd else None # 過程出力
 
-		self.measure  = args.str("sim=","R")        # similarity measure
-		self.measure2 = args.str("sim2=",self.measure)   # similarity measure
-		self.minSupp  = args.int("sup=",0)          # minimam support
-		self.iterMax  = args.int("iter=",30,1)      # upper bound of iterations
-		self.th       = args.float("th=")           # threashold for similarity measure
-		self.th2      = args.float("th2=",self.th)       # threashold for similarity measure
-		self.kn       = args.float("kn=",1)         # no. of interaction size more than threshold 
-		self.kn2      = args.float("kn2=",1)         # no. of right node size more than threshold 
+		# ---- edge field names (two nodes) on ei=
+		self.ei = kwd["ei"] # edgeファイル名
+		ef0 = kwd["ef"].split(",") if "ef"   in kwd else ["node1","node2"]
+		self.ef1 = ef0[0]
+		self.ef2 = ef0[1] 
+
+		# threashold for similarity measure
+		self.th  = float(kwd["th"])  
+		self.th2 = float(kwd["th2"]) if "th2" in kwd else self.th  # threashold for similarity measure
+
+		# similarity measure
+		self.measure  = kwd["sim"]  if "sim"  in kwd else "R"  
+		self.measure2 = kwd["sim2"] if "sim2" in kwd else self.measure 
+
+		self.minSupp  = int(kwd["sup"])  if "sup"  in kwd else 0   # minimam support
+		self.iterMax  = int(kwd["iter"]) if "iter" in kwd else 30  # upper bound of iterations
+     
+		self.kn       = int(kwd["kn"])  if "kn"  in kwd else 1  # no. of interaction size more than threshold 
+		self.kn2      = int(kwd["kn2"])  if "kn2"  in kwd else 1         # no. of right node size more than threshold 
 
 		if self.outDir:
 			mkDir(outDir,rm=True) 
@@ -124,9 +159,18 @@ D,e
 		if self.logDir:
 			mkDir(logDir,rm=True) 
 
-		self.__tempW	= mtemp.Mtemp()
-		self.part1 = self.__tempW.file()
-		self.part2 = self.__tempW.file()
+
+
+	def __init__(self,**kwd):
+
+		#パラメータチェック
+		self.args = kwd
+		self.__param_check_set(kwd)
+
+
+		#self.__tempW	= mtemp.Mtemp()
+		#self.part1 = self.__tempW.file()
+		#self.part2 = self.__tempW.file()
 
 
 
@@ -141,12 +185,11 @@ D,e
 		f <<= nm.mcut(f="cnt")
 		f <<= nm.writelist(dtype="cnt:int")
 		nodesize = f.run()[0][0]
-		print(nodesize)
+
 		return nodesize,edgesize
 	
-	def same(self,file1,file2):
+	def same(self,file1,file2,xx):
 
-		xx = self.__tempW.file()
 
 		if os.path.getsize(file1)!=os.path.getsize(file2):
 			return False
@@ -161,22 +204,18 @@ D,e
 
 
 
-	def edge2mtx(self,ei,itra):
-		#MCMD::msgLog("converting graph files into a pair of numbered nodes ...")
-		wff1=self.__tempW.file()
-		
-		wf1 = nm.mcut(f="{}:node".format(self.ef1),i=ei) 
-		wf2 = nm.mcut(f="{}:node".format(self.ef2),i=ei)
+	def edge2mtx(self,ei,itra,map1,map2):
+
 		
 		p1   = nm.mcut(f=self.ef1,i=ei) 
 		p1 <<= nm.muniq(k=self.ef1)
 		p1 <<= nm.mdelnull(f=self.ef1)
-		p1 <<= nm.mnumber(q=True,a="num1",S=1,o=self.part1)
+		p1 <<= nm.mnumber(q=True,a="num1",S=1,o=map1)
 
 		p2   = nm.mcut(f=self.ef2,i=ei) 
 		p2 <<= nm.muniq(k=self.ef2)
 		p2 <<= nm.mdelnull(f=self.ef2)
-		p2 <<= nm.mnumber(q=True,a="num2",S=1,o=self.part2)
+		p2 <<= nm.mnumber(q=True,a="num2",S=1,o=map2)
 		
 		runp = None
 		runp <<= nm.mcut(f=[self.ef1,self.ef2],i=ei)
@@ -185,21 +224,19 @@ D,e
 		runp <<= nm.mcut(f="num1,num2")
 		runp <<= nm.mtra(k="num1",f="num2")
 		runp <<= nm.msortf(f="num1%n")
-		
-		#これだとおかしい
-		#runp <<= nm.mcut(f="num2",nfno=True)
-		#runp <<= nm.cmd("tr ',' ' ' > %s"%(itra))
-
-		runp <<= nm.mcut(f="num2",nfno=True,o=wff1)
+		runp <<= nm.mcut(f="num2",nfno=True)
+		runp <<= nm.cmd("tr ',' ' '")
+		runp <<= nm.mwrite(o=itra)
+		#runp <<= nm.mcut(f="num2",nfno=True,o=wff1)
 		runp.run()
-		os.system("tr ',' ' ' < {} > {}".format(wff1,itra))
+		#os.system("tr ',' ' ' < {} > {}".format(wff1,itra))
 
 		
 	def noPat(self):
 		##MCMD::msgLog("There is no frequent item. The value is too large")
 		exit()
 	
-	def convRsl(self,ifile,ofile,logDir=None):
+	def convRsl(self,ifile,ofile,map1,map2,logDir=None):
 		# 上記iterationで収束したマイクロクラスタグラフを元の節点文字列に直して出力する
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
 		f = None
@@ -207,8 +244,8 @@ D,e
 		f <<= nm.msed(f="tra", c=' $',v="")
 		f <<= nm.mnumber(q=True,S=1,a="num1")
 		f <<= nm.mtra(r=True,f="tra:num2")
-		f <<= nm.mjoin(k="num2",m=self.part2,f=self.ef2)
-		f <<= nm.mjoin(k="num1",m=self.part1,f=self.ef1)
+		f <<= nm.mjoin(k="num2",m=map2,f=self.ef2)
+		f <<= nm.mjoin(k="num1",m=map1,f=self.ef1)
 		f <<= nm.msortf(f="num1%n,num2%n")
 		f <<= nm.mcut(f=[self.ef1,self.ef2])
 
@@ -219,7 +256,7 @@ D,e
 
 		f.run()
 
-	def convSim(self,ifile,ofile,logDir):
+	def convSim(self,ifile,ofile,map1,logDir):
 		f = None
 		f <<= nm.mcut(nfni=True,f="0:tra",i=ifile)
 		f <<= nm.msed(f="tra", c=' $',v="")
@@ -227,32 +264,39 @@ D,e
 		f <<= nm.mtra(r=True,f="tra:num11")
 		f <<= nm.mnumber(q=True,S=1,a="order")
 		f <<= nm.mcal(c='${num11}+1',a="num1")
-		f <<= nm.mjoin(k="num1",m=self.PART1,f=self.ef1)
+		f <<= nm.mjoin(k="num1",m=map1,f=self.ef1)
 		f <<= nm.mtra(k="num0",s="order%n,num1%n",f=self.ef1)
 		f <<= nm.mcut(f=self.ef1,o="{}/{}".format(logDir,ofile))
 		f.run()
 
 	# execute
 	def run(self):
+
 		from datetime import datetime	
 		t = datetime.now()
 
-		xxinp  = self.__tempW.file()
-		xxitra = self.__tempW.file()
-		xxprev = self.__tempW.file()
-		xxpair = self.__tempW.file()
-		xxtra  = self.__tempW.file()
-		xxdiff = self.__tempW.file()
+		tempW	= mtemp.Mtemp()
 
-		self.edge2mtx(self.ei,xxinp)
+		xxinp  = tempW.file()
+		xxitra = tempW.file()
+		xxdiff = tempW.file()
+		xxsame = tempW.file()
+		xxmap1 = tempW.file()
+		xxmap2 = tempW.file()
+
+		self.edge2mtx(self.ei,xxinp,xxmap1,xxmap2)
 		extTake.grhfil(type='D""',i=xxinp,o=xxitra)
 		
 		iter=0
+		xxprev = tempW.file()
+		xxpair = tempW.file()
+		xxtra  = tempW.file()
+
 		while True :
 			# 終了判定
 			if iter>=self.iterMax:
 				break
-			if iter!=0 and self.same(xxitra,xxprev):
+			if iter!=0 and self.same(xxitra,xxprev,xxsame):
 				break
 
 			#MCMD::msgLog("polishing iteration ##{iter} (tra size=#{File.size(xxitra)}")
@@ -283,7 +327,7 @@ D,e
 			extTake.grhfil(type='eu0',i=xxpair,o=xxtra)
 		
 			if self.logDir :
-				self.convSim(xxtra,"simGp{}.csv".format(iter),self.logDir)
+				self.convSim(xxtra,"simGp{}.csv".format(iter),xxmap1,self.logDir)
 			
 			os.system("cat {} {} > {}".format(xxitra,xxtra,xxpair))
 		
@@ -313,20 +357,23 @@ D,e
 
 			if self.logDir :
 				extTake.grhfil(type='D',i=xxtra,o=xxpair)
-				self.convRsl(xxpair,"iter{}.csv".format(iter),logDir)
+				self.convRsl(xxpair,"iter{}.csv".format(iter),xxmap1,xxmap2,logDir)
 		
 			iter+=1
 
 
 		extTake.grhfil(type='D',i=xxitra,o=xxpair)
-		self.convRsl(xxpair,self.eo)
+		self.convRsl(xxpair,self.eo,xxmap1,xxmap2)
 
 		procTime = datetime.now()-t
 
 		if self.logDir :
 
 			kv=[["key","value"]]
-			kv.extend(self.args.getKeyValue())
+
+			for k,v in self.args.items():
+				kv.append([k,str(v)])
+
 			kv.append(["iter",str(iter)])
 			kv.append(["time",str(procTime)])
 			for i in range(len(nSizes)):
@@ -336,9 +383,3 @@ D,e
 
 			nm.writecsv(i=kv,o="{}/keyVal.csv".format(self.logDir)).run()
 
-
-
-if __name__ == '__main__':
-	import sys
-	args=margs.Margs(sys.argv,"ei=,ef=,eo=,th=,sim=,th2=,sim2=,kn=,kn2=,sup=,iter=,log=","ei=,ef=,th=")
-	mbipolish(args).run()

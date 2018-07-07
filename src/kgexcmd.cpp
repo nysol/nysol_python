@@ -56,7 +56,7 @@ void kgExcmd::setArgs(void)
 	if(_cmdstr.size()!=0&&_cmdstr[0] =='\''&&_cmdstr[_cmdstr.size()-1]=='\''){
 		_cmdstr = _cmdstr.substr(1,_cmdstr.size()-2);
 	}
-	_cmdstrv = kglib::splitTokenQ(_cmdstr,' ');
+	_cmdstrv = kglib::splitTokenQ(_cmdstr,' ',true);
 	_cmdars = new const char* [_cmdstrv.size()+1];
 
 	for(size_t i=0;i<_cmdstrv.size();i++){

@@ -86,7 +86,7 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 	vector<kgstr_t> isf = _args.toStringVector("i=",false);
 	
 	_itotal = isf.size() + inum ;
-	
+	cerr << "size " << _itotal << endl;
 	if(_itotal==0){// maxサイズの制限も入れる
 			throw kgError("no match IO");
 	}

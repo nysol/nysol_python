@@ -216,8 +216,6 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 			}
 		}
 
-		//cmpcaplocal.paralist = kglib::splitTokenQ(para_part, ' ',true);
-
 		PyObject *key, *value;
 		Py_ssize_t pos = 0;
 		while (PyDict_Next(addinfo, &pos, &key, &value)) {

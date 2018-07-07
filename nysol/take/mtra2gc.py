@@ -6,11 +6,9 @@ import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 from nysol.take import extcore as extTake
 
-
 class mtra2gc(object):
 
-	def help(self):
-		msg="""
+	helpMSG="""
 # ver="1.0" # 初期リリース 2016/11/20
 # ver="1.1" # resemblanceをjaccardに変更 2016/12/13
 # ver="1.2" # sim=の値を変更 2016/12/13
@@ -142,93 +140,130 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 		"""
-		
-	def ver(self):
-		print("version #{$version}")
 
-	def __init__(self,args):
-		self.args = args
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
+	verInfo="version=1.2"
 
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
+
+	paramter = {	
+		"i":"filename",
+		"no":"filename",
+		"eo":"filename",
+		"log":"filename",
+		"tid":"fld",
+		"item":"fld",
+		"s":"int",
+		"S":"int",
+		"sim":"str",
+		"th":"float",
+		"node_support":"bool",
+		"T=":"str",
+		"num":"bool"
+	}
+
+	paramcond = {	
+		"hissu": ["i","tid","item","eo"]
+	}
+
+	def help():
+		print(mtra2gc.helpMSG) 
+
+	def ver():
+		print(mtra2gc.versionInfo)
+
+	def __param_check_set(self , kwd):
+
+		for k,v in kwd.items():
+			if not k in mtra2gc.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
+
 		self.msgoff = True
-		self.iFile   = args.file("i=","r")
-		self.onFile  = args. file("no=", "w")
-		self.oeFile  = args. file("eo=", "w")
-		self.logFile = args. file("log=", "w")
-		self.idFN   = args.field("tid=",  self.iFile, "tid"  )
-		self.itemFN = args.field("item=", self.iFile, "item" )
-		if self.idFN :
-			self.idFN   = ",".join(self.idFN["names"])  
-		if self.itemFN:
-			self.itemFN = ",".join(self.itemFN["names"]) 
 
-		self.sim = args.str("sim=")
-		self.th  = args.float("th=") # 類似度measure
-		self.node_support=args.bool("-node_support")
-		self.num=args.bool("-num")
+		self.iFile   = kwd["i"]
+		self.oeFile  = kwd["eo"]
+		self.idFN    = kwd["tid"]  
+		self.itemFN  = kwd["item"] 
+
+		self.onFile  = kwd["on"]        if "on"  in kwd else None
+		self.logFile = kwd["log"]       if "log" in kwd else None
+		self.sim     = kwd["sim"]       if "sim" in kwd else None
+		self.th      = float(kwd["th"]) if "th"  in kwd else None # 類似度measure
+
+
+		self.node_support = kwd["node_support"] if "node_support" in kwd else False
+		self.num = kwd["num"] if "num" in kwd else False
 
 		# 最小サポート件数
-		self.minSupPrb=args.str("s=")
-		self.minSupCnt=args.str("S=")
+		self.minSupPrb = float(kwd["s"])  if "s" in kwd else None
+		self.minSupCnt = float(kwd["S"])  if "S" in kwd else None
+
 		if self.minSupPrb==None and self.minSupCnt==None :
 			self.minSupPrb=0.01 
 
 		if self.sim and "JPC".find(self.sim)==-1:
 			raise Exception("sim= takes one of 'J','P','C'")
 
-	def convNum(self,iFile,idFN,itemFN,oFile,mapFile):
-		temp=mtemp.Mtemp()
-		xxtra=temp.file()
 
-		# 入力ファイルのidがnilの場合は連番を生成して新たなid項目を作成する。
-		nm.mcut(f=itemFN+":##item",i=iFile).mcount(k="##item",a="##freq",o=mapFile).run()
 
-		#system "head #{mapFile}"
+
+	def __init__(self,**kwd):
+
+		#パラメータチェック
+		self.args = kwd
+		self.__param_check_set(kwd)
+
+
+	def convN(self,iFile,idFN,itemFN,oFile,mapFile):
+
+
+		f0 = nm.mcut(f=itemFN+":##item",i=iFile).mcount(k="##item",a="##freq",o=mapFile)
+		f1 = nm.mtra(k=idFN,f=itemFN+":##num",i=iFile).mcut(f="##num",nfno=True,o=oFile)
+
+		nm.runs([f0,f1])
+		# #{mapFile}"
 		# ##item,##freq%0nr,##num
 		# b,4,0
 		# d,4,1
-		nm.mtra(k=idFN,f=itemFN+":##num",i=iFile).mcut(f="##num",nfno=True,o=oFile).run()
-
-		size = mrecount.mrecount(i=oFile,nfn=True)
-		return size
+		return mrecount.mrecount(i=oFile,nfn=True)
 
 	def conv(self,iFile,idFN,itemFN,oFile,mapFile):
 		temp=mtemp.Mtemp()
 		xxtra=temp.file()
+
 		# 入力ファイルのidがnilの場合は連番を生成して新たなid項目を作成する。
-		f0=nm.mcut(f=itemFN+":##item",i=iFile).mcount(k="##item",a="##freq").mnumber(s="##freq%nr",a="##num",o=mapFile).run()
-		#system "head #{mapFile}"
+		f0   = nm.mcut(f=itemFN+":##item",i=iFile)
+		f0 <<= nm.mcount(k="##item",a="##freq")
+		f0 <<= nm.mnumber(s="##freq%nr",a="##num",o=mapFile)
+
+		f1   = nm.mjoin(k=itemFN,K="##item",m=f0,f="##num",i=iFile)
+		f1 <<= nm.mtra(k=idFN,f="##num")
+		f1 <<= nm.mnumber(q=True,a="##traID")
+		f1 <<= nm.mcut(f="##num",nfno=True,o=oFile)
+		
+		f1.run()
+
 		# ##item,##freq%0nr,##num
 		# b,4,0
 		# d,4,1
-		nm.mjoin(k=itemFN,K="##item",m=mapFile,f="##num",i=iFile).mtra(k=idFN,f="##num").mnumber(q=True,a="##traID").mcut(f="##num",nfno=True,o=oFile).run() 
 		size=mrecount.mrecount(i=oFile,nfn=True)
+
 		return size
 
 
 	def run(self):
+
 		from datetime import datetime	
 		t = datetime.now()
+
 		temp=mtemp.Mtemp()
 		xxsspcin=temp.file()
-		xxsspcout=temp.file()
 		xxmap=temp.file()
-		xxminSim=temp.file()
-		xxminSup=temp.file()
-		xxsup=temp.file()
-		xxsup2=temp.file()
-		xxsup3=temp.file()
-	
+
 		# traファイルの変換とマップファイルの作成
 		if self.num :
-			total=self.convNum(self.iFile,self.idFN,self.itemFN,xxsspcin,xxmap)
+			total = self.convN(self.iFile,self.idFN,self.itemFN,xxsspcin,xxmap)
 		else:
-			total=self.conv(self.iFile,self.idFN,self.itemFN,xxsspcin,xxmap)
+			total = self.conv(self.iFile,self.idFN,self.itemFN,xxsspcin,xxmap)
 
 		# system "head xxsspcin"
 		# 3 5 0 2
@@ -241,14 +276,10 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# b,4,0
 		# d,4,1
 		# f,4,2
-		minSupp=None
-		if self.minSupPrb:
-			minSupp=int(total*float(self.minSupPrb))
-		else:
-			minSupp=int(self.minSupCnt)
+		minSupp = int(total*self.minSupPrb)	if self.minSupPrb else self.minSupCnt
+			
 
 		# sspc用simの文字列
-		sspcSim=None
 		if self.sim :
 			if self.sim=="J":
 				sspcSim="R"
@@ -262,18 +293,20 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			self.th=0
 
 		############ 列挙本体 ############
+		xxsspcout=temp.file()
 		tpstr =  sspcSim+"ft_" if self.msgoff else sspcSim+"ft"
 		extTake.sspc(type=tpstr,TT=minSupp,i=xxsspcin,th=self.th,o=xxsspcout)
 
 		##################################
-		# $ xxminSup 
-		# 1 0 (3)
-		# 2 0 (3)
+
 		xxtmmp=temp.file()
-		os.system("tr ' ()' ',' < %s > %s"%(xxsspcout,xxtmmp))
-		#f =   nm.cmd("tr ' ()' ',' < " + xxsspcout) 
-		f = nm.mcut(i=xxtmmp,f="1:i1,2:i2,0:frequency,4:sim",nfni=True)
+		
+		f =   nm.mread(i=xxsspcout) 
+		f <<= nm.cmd("tr ' ()' ','") 
+		f <<= nm.mcut(f="1:i1,2:i2,0:frequency,4:sim",nfni=True)
+
 		if self.num :
+
 			f <<= nm.mfldname(f="i1:node1,i2:node2")
 			if self.sim!="C":
 				f <<= nm.mfsort(f="node1,node2")
@@ -282,9 +315,12 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 			f <<= nm.mjoin(k="node2",K="##item",m=xxmap,f="##freq:frequency2") 
 			
 		else:
+
 			f <<= nm.mjoin(k="i1",K="##num",m=xxmap,f="##item:node1,##freq:frequency1")
 			f <<= nm.mjoin(k="i2",K="##num",m=xxmap,f="##item:node2,##freq:frequency2") 
+
 			if self.sim!="C":
+
 				f <<= nm.mcut(f="i1,i2,frequency,sim,node1,node2,frequency1,frequency2,node1:node1x,node2:node2x")
 				f <<= nm.mfsort(f="node1x,node2x")
 				f <<= nm.mcal(c='if($s{node1}==$s{node1x},$s{frequency1},$s{frequency2})',a="freq1")
@@ -302,27 +338,26 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		f.run()
 
 		if self.onFile:
-			f4 = nm.mcut(f=self.itemFN+":node",i=self.iFile).mcount(k="node",a="frequency")
+			f4 =   nm.mcut(f=self.itemFN+":node",i=self.iFile)
+			f4 <<= nm.mcount(k="node",a="frequency")
 			if self.node_support :
 				minstr = "[%s,]"%(minSupp)
-				f4 = f4.mselnum(f="frequency",c=minstr)
-			f5 = f4.msetstr(v=total,a="total").mcal(c='${frequency}/${total}',a="support").mcut(f="node,support,frequency,total",o=self.onFile)
-			f5.run()
+				f4 <<= nm.mselnum(f="frequency",c=minstr)
+
+			f4 <<= nm.msetstr(v=total,a="total")
+			f4 <<= nm.mcal(c='${frequency}/${total}',a="support")
+			f4 <<= nm.mcut(f="node,support,frequency,total",o=self.onFile)
+			f4.run()
 
 		procTime=datetime.now()-t
 
 		# ログファイル出力
 		if self.logFile :
 			kv=[["key","value"]]
-			kv.extend(self.args.getKeyValue())
+			for k,v in self.args.items():
+				kv.append([k,str(v)])
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
 
-
-
-if __name__ == '__main__':
-	import sys
-	args=nu.Margs(sys.argv,"i=,no=,eo=,log=,tid=,item=,s=,S=,sim=,th=,-node_support,T=,-num","i=,tid=,item=,eo=")
-	mtra2gc(args).run()
 
 
