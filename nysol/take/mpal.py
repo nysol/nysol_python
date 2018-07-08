@@ -5,13 +5,11 @@ import shutil
 import nysol.mod as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
-from nysol.take import mtra2gc as mtra2gc  
-from nysol.take import mfriends as mfriends
+from nysol import take as nt
 
 
 class mpal(object):
-	def help(self):
-		"""
+	helpMSG="""
 # 1.0 initial development: 2016/12/23
 # 1.1 dir=x追加: 2016/12/29
 # 1.2 jac=等追加: 2017/1/10
@@ -125,93 +123,128 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 """
-	def ver(self):
-		print("version #{$version}")
 
-	def __init__(self,args):
-		self.args = args
+	paramter = {	
+		"i": "filename",
+		"tid": "fld",
+		"item":"fld",
+		"ro": "filename",
+		"eo": "filename",
+		"no": "filename",
+		"s" : "float",
+		"S":"int",
+		"filter":"str",
+		"lb":"int",
+		"ub":"int",
+		"sim": "str",
+		"dir" :"str",
+		"rank":"fld",
+		"prune" : "bool",
+		"num": "bool",
+		"verbose":"bool",
+		"T": "str"
+	}
+	paramcond = {	
+		"hissu":["i","tid","item","eo","no"]
+	}
+	
 
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
+	def help():
+		print(mpal.helpMSG) 
 
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
-		self.iFile  = args.str("i=")
-		self.idFN   = args.str("tid=")
-		self.itemFN = args.str("item=")
-		self.sp1    = args.str("s=")
-		self.sp2    = args.str("S=")
-		#node_support=args.bool("-node_support")
-		self.numtp   = args.bool("-num")
+	def ver():
+		print(mpal.versionInfo)
 
-		self.filter= args.str("filter=",[],",")
-		self.ub    = args.str("ub="  ,[],",")
-		self.lb    = args.str("lb="  ,[],",")
+	
+	def __param_check_set(self , kwd):
+		for k,v in kwd.items():
+			if not k in mpal.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
 
-		self.sim   = args.str("sim=" ,"S",",")
-		self.dir   = args.str("dir=" ,"b",",")
-		self.rank  = args.str("rank=","3",",")
-		self.prune = args.bool("-prune")
+		self.iFile   = kwd["i"]
+		self.idFN    = kwd["tid"]
+		self.itemFN  = kwd["item"]
+		self.onFile  = kwd["no"]
+		self.oeFile  = kwd["eo"]
 
-		self.filterStr=[None]*3
-		self.lbStr=["0"]*3
-		self.ubStr=["1"]*3
+		self.orFile  =  kwd["ro"] if "ro" in kwd else None
+				
+		self.sp1    = kwd["s"] if "s" in kwd else None
+		self.sp2    = kwd["S"] if "S" in kwd else None
+
+
+		self.numtp = kwd["num"]   if "num"   in kwd else False
+		self.prune = kwd["prune"] if "prune" in kwd else False 
+
+		self.dir   = kwd["dir"].split(",")  if "dir"  in kwd else ["b"]
+		self.rank  = kwd["rank"].split(",") if "rank" in kwd else ["3"]
+
+		_sim    = kwd["sim"].split(",")    if "sim"  in kwd else ["S"]
+
+		_filter = kwd["filter"].split(",") if "filter" in kwd else [] 
+		_ub     = kwd["ub"].split(",")     if "ub" in kwd else [] 
+		_lb     = kwd["lb"].split(",")     if "lb" in kwd else [] 
+
+		self.filter=[None]*3
+		self.lb=["0"]*3
+		self.ub=["1"]*3
+
+		self.sim=[]
+
+		self.filterSize = len(_filter)
 
 		# chicking parameter for filter=
-		if len(self.filter)>0:
-
-			#if not self.lb:
-			#	raise Exception("lb= have to be set with filter=")
-		
-			for i in range(len(self.filter)-1):
-				for j in range(1,len(self.filter)):
-					if i==j :
-						continue
-					if self.filter[i]==self.filter[j]:
-						raise Exception("filter= cannot take same values")
+		if len(_filter)>0:
+			if len(_filter) != len(set(_filter)):
+				raise Exception("filter= cannot take same values")
 					
-			if len(self.filter) > 3:
+			if len(_filter) > 3:
 				raise Exception("flter=,lb=,ub= takes parameters with 0<size<=3")
 				
-			for s in self.filter:
+			for s in _filter:
 				if s!="J" and s!="P" and s!="C" :
 					raise Exception("filter= takes J, P or C")
-				
-			for i in range(len(self.filter)):
-				if self.filter[i] == "J":
-					self.filterStr[i] = "jaccard"
-				elif self.filter[i] == "P":
-					self.filterStr[i] = "PMI"
-				elif self.filter[i] == "C":
-					self.filterStr[i] = "confidence"
+			
+			# dictに
+			for i in range(len(_filter)):
+				if _filter[i] == "J":
+					self.filter[i] = "jaccard"
+				elif _filter[i] == "P":
+					self.filter[i] = "PMI"
+				elif _filter[i] == "C":
+					self.filter[i] = "confidence"
 				else:
 					raise Exception("filter= takes J, P or C")
 				
-				if self.lb and len(self.lb) > i :
-					self.lbStr[i] = self.lb[i]
+				if len(_lb) > i :
+					self.lb[i] = _lb[i]
 
-				if self.ub and len(self.ub) > i :
-					self.ubStr[i] = self.ub[i]
+				if len(_ub) > i :
+					self.ub[i] = _ub[i]
 
 
 		# chicking parameter for sim=
-		for i in range(len(self.sim)-1):
-				for j in range(1,len(self.sim)):
-					if i==j:
-						continue
-					if self.sim[i]==self.sim[j] :
-						raise Exception("sim= cannot take same values")
+		if len(_sim) != len(set(_sim)):
+			raise Exception("sim= cannot take same values")
 
-		if len(self.sim)>3 :
+		if len(_sim)>3 :
 			raise Exception("sim=,dir=,rank= takes parameters with 0<size<=3")
 
-		if not ( len(self.sim)==len(self.dir) and len(self.dir) == len(self.rank)):
+		if not ( len(_sim)==len(self.dir) and len(self.dir) == len(self.rank)):
 			raise Exception("sim=,dir=,rank= must take same size of parameters")
 
-		for s in self.sim:
-			if s!="S" and s!="J" and s!="P" and s!="C" :
+		for s in _sim:
+
+			if s=="S":
+				self.sim.append("support")
+			elif s=="J":
+				self.sim.append("jaccard")
+			elif s=="P":
+				self.sim.append("PMI")
+			elif s=="C":
+				self.sim.append("confidence")
+			else:
 				raise Exception("sim= takes S, J, P or C")
 
 		for s in self.dir:
@@ -222,128 +255,102 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			if int(s) < 0 :
 				raise Exception("rank= takes positive integer")
 
-		
-		self.simStr=[]
-		for s in self.sim :
-			if s=="S":
-				self.simStr.append("support")
-			elif s=="J":
-				self.simStr.append("jaccard")
-			elif s=="P":
-				self.simStr.append("PMI")
-			elif s=="C":
-				self.simStr.append("confidence")
-			else:
-				raise Exception("sim= takes S, J, P or C")
-				
-		self.orFile  = args. file("ro=", "w")
-		self.onFile  = args. file("no=", "w")
-		self.oeFile  = args. file("eo=", "w")
+
+	def __init__(self,**kwd):
+
+		#パラメータチェック
+		self.args = kwd
+		self.__param_check_set(kwd)
+
 
 
 	# ============
 	# entry point
 	def run(self):
 		temp=mtemp.Mtemp()
+
+		### mtra2gc
 		xxsimgN=temp.file()
-		xxsimgE0=temp.file()
 		xxsimgE=temp.file()
-		xxfriendE=temp.file()
-		xxrecs2=temp.file()
+		xxsimgE0=temp.file()
+
+		param = {}
+		param["i"] = self.iFile
+		if self.idFN:
+			param["tid"]  = self.idFN
+		if self.itemFN:
+			param["item"] = self.itemFN
+		if self.sp1:
+			param["s"] = self.sp1
+		if self.sp2:
+			param["S"] = self.sp2
+
+		#####################
+		# 異なる向きのconfidenceを列挙するためにsim=C th=0として双方向列挙しておく
+		# 出力データは倍になるが、mfriendsで-directedとすることで元が取れている
+		param["sim"]="C"
+		param["th"]= "0"
+
+		param["node_support"] = True
+		if self.numtp :
+			param["num"] = True
+		param["no"] = xxsimgN
+		param["eo"] = xxsimgE0
+
+		nt.mtra2gc(**param).run()
+
+
+		f=nm.readcsv(xxsimgE0)
+		for i in range(self.filterSize):
+			f <<= nm.mselnum(f=self.filter[i],c="[%s,%s]"%(self.lb[i],self.ub[i]))
+		f <<= nm.writecsv(xxsimgE)
+		f.run()
+
+
+		### mfrirends
 		xxfriends=temp.file()
+		xxfriendE=temp.file()
 		xxw=temp.file()
 		xxf=temp.file()
 		xxff=temp.file()
 		xxor=temp.file()
 
-		### mtra2gc
-		param = []
-		param.append("mtra2gc")
-		param.append("i="+self.iFile)
-		if self.idFN:
-			param.append("tid="+self.idFN)
-		if self.itemFN:
-			param.append("item="+self.itemFN)
-		if self.sp1:
-			param.append("s="+self.sp1)
-		if self.sp1:
-			param.append("S="+self.sp2)
-
-
-		#####################
-		# 異なる向きのconfidenceを列挙するためにsim=C th=0として双方向列挙しておく
-		# 出力データは倍になるが、mfriendsで-directedとすることで元が取れている
-		param.append("sim=C")
-		param.append("th=0")
-		#####################
-		param.append("-node_support")
-		if self.numtp :
-			param.append("-num")
-		param.append("no="+xxsimgN)
-		param.append("eo="+xxsimgE0)
-
-		args=margs.Margs(param)
-		mtra2gc.mtra2gc(args).run()
-
-
-		if len(self.filter)>0:
-			f = nm.mselnum(i=xxsimgE0,f=self.filterStr[0],c="[%s,%s]"%(self.lbStr[0],self.ubStr[0]))
-
-			if self.filterStr[1] :
-				f <<= nm.mselnum(f=self.filterStr[1],c="[%s,%s]"%(self.lbStr[1],self.ubStr[1]))
-
-			if self.filterStr[2] :
-				f <<= nm.mselnum(f=self.filterStr[1],c="[%s,%s]"%(self.lbStr[2],self.ubStr[2]))
-
-			f.writecsv(o=xxsimgE).run()
-
-		else:
-			shutil.move(xxsimgE0,xxsimgE)
-
-		col=[ ["FF000080","FF888880"], ["0000FF80","8888FF80"], ["00FF0080","88FF8880"]]
-
-
 		if not os.path.isdir(xxfriends) :
 			os.makedirs(xxfriends)
+		col=[ ["FF000080","FF888880"], ["0000FF80","8888FF80"], ["00FF0080","88FF8880"]]
 
-		# friendの結果dir
 		for i in range(len(self.sim)):
-			param =[]
-			param.append("mfriends")
-			param.append("ei="+xxsimgE)
-			param.append("ni="+xxsimgN)
-			param.append("ef=node1,node2")
-			param.append("nf=node")
-			param.append("sim="+self.simStr[i])
-			param.append("-directed")
-			if self.dir[i] :
-				param.append("dir="+self.dir[i])
-			param.append("rank="+self.rank[i])
-			param.append("eo="+xxfriendE)
-			param.append("no="+xxfriends+"/n_"+str(i))
+			paramf ={}
+			paramf["ei"] = xxsimgE
+			paramf["ni"] = xxsimgN
+			paramf["ef"] = "node1,node2"
+			paramf["nf"] = "node"
+			paramf["eo"] = xxfriendE
+			paramf["no"] = xxfriends+"/n_"+str(i)
+			paramf["sim"]  = self.sim[i]
+			paramf["dir"]  = self.dir[i]
+			paramf["rank"] = self.rank[i]
+			paramf["directed"] = True
 
-			args=margs.Margs(param)
-			mfriends.mfriends(args).run()
+			nt.mfriends(**paramf).run()
 			
-			f = nm.mfsort(f="node1,node2",i=xxfriendE)
-			f <<= nm.msummary(k="node1,node2",f=self.simStr[i],c="count,mean")
+			frec2 = nm.mfsort(f="node1,node2",i=xxfriendE)
+			frec2 <<= nm.msummary(k="node1,node2",f=self.sim[i],c="count,mean")
+			frec2 <<= nm.mselstr(f="count",v=2)
 			# node1%0,node2%1,fld,count,mean
 			# a,b,support,2,0.1818181818
 			# a,d,support,2,0.1818181818
-			f <<= nm.mselstr(f="count",v=2,o=xxrecs2)
-			f.run()
 
-
-			f = nm.mjoin(k="node1,node2",K="node1,node2",m=xxrecs2,f="mean:s1",n=True,i=xxfriendE)
-			f <<= nm.mjoin(k="node2,node1",K="node1,node2",m=xxrecs2,f="mean:s2",n=True)
+			f = nm.mjoin(k="node1,node2",K="node1,node2",m=frec2,f="mean:s1",n=True,i=xxfriendE)
+			f <<= nm.mjoin(k="node2,node1",K="node1,node2",m=frec2,f="mean:s2",n=True)
 			# 1) xxrecs2でsimをjoinできない(s1,s2共にnull)ということは、それは片方向枝なので"F"をつける
 			# 2) 双方向枝a->b,b->aのうちa->bのみ(s1がnullでない)に"W"の印をつける。
 			# 3) それ以外の枝は"D"として削除
 			f <<= nm.mcal(c='if(isnull($s{s1}),if(isnull($s{s2}),\"F\",\"D\"),\"W\")',a="dir")
 			f <<= nm.mselstr(f="dir",v="D",r=True)
-			f <<= nm.mcal(c='if($s{dir}==\"W\",$s{s1},$s{%s})'%(self.simStr[i]),a="sim")
+			f <<= nm.mcal(c='if($s{dir}==\"W\",$s{s1},$s{%s})'%(self.sim[i]),a="sim")
 			f <<= nm.mchgstr(f="dir:color",c='W:%s,F:%s'%(col[i][0],col[i][1]),A=True)
-			f <<= nm.msetstr(v=[self.simStr[i],str(i)],a="simType,simPriority")
+			f <<= nm.msetstr(v=[self.sim[i],str(i)],a="simType,simPriority")
 			f <<= nm.mcut(f="simType,simPriority,node1,node2,sim,dir,color",o=xxfriends+"/e_"+str(i))
 			f.run()
 			# node1%1,node2%0,simType,sim,dir,color
@@ -368,20 +375,23 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			f <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=xxw,o=xxff)
 			f.run()
 			f = nm.mcat(i=xxw+","+xxff).mbest(k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile).run()
+			
+			#これだめ
+			#fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
+			#fu = fo.direction("u")
+			#fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
+			#fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
+			#f  =   nm.m2cat()
+			#f  = nm.mbest(i=[fo.mcut(f="*"),fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
+
+
+			#f.run()
+
+
 
 		else:
 			nm.mcat(i=xxfriends+"/e_*",o=self.oeFile).run()
 
-		shutil.move(xxfriends+"/n_0",self.onFile)
+		nm.mcat(i=xxfriends+"/n_0",o=self.onFile).run()
 
-
-		# end message
-		#MCMD::endLog(args.cmdline)
-
-
-if __name__ == '__main__':
-
-	import sys
-	args=margs.Margs(sys.argv,"i=,tid=,item=,ro=,eo=,no=,s=,S=,filter=,lb=,ub=,sim=,dir=,rank=,-prune,-num,-verbose","i=,tid=,item=,eo=,no=")
-	mpal(args).run()
 

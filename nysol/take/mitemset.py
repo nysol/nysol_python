@@ -153,6 +153,7 @@ class mitemset(object):
 
 	def __init__(self,**kwd):
 		#パラメータチェック
+		self.args = kwd
 		self.__param_check_set(kwd)
 
 

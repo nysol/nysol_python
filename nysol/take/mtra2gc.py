@@ -184,7 +184,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		self.idFN    = kwd["tid"]  
 		self.itemFN  = kwd["item"] 
 
-		self.onFile  = kwd["on"]        if "on"  in kwd else None
+		self.onFile  = kwd["no"]        if "no"  in kwd else None
 		self.logFile = kwd["log"]       if "log" in kwd else None
 		self.sim     = kwd["sim"]       if "sim" in kwd else None
 		self.th      = float(kwd["th"]) if "th"  in kwd else None # 類似度measure

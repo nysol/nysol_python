@@ -4,7 +4,7 @@ import sys
 import re
 import nysol.util.margs as margs
 import nysol.take.graph as ntg
-import nysol.take.mpolishing as mpolishing
+import nysol.take as nt
 import nysol.mod as nm
 
 args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=","ei=,ef=,th=")
@@ -29,7 +29,7 @@ for k,v in args.keyValue.items():
 	else:	
 		para[re.sub(r'=$',"",k)]=v
 
-gobj = mpolishing.mpolishing(**para).run()
+gobj = nt.mpolishing(**para).run()
 ofile_e =args.str("eo=")
 ofile_n =args.str("no=")
 
