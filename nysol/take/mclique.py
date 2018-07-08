@@ -193,7 +193,6 @@ id,node,size
 		f <<= nm.mfsort(f="num1,num2")
 		f <<= nm.msortf(f="num1%n,num2%n" , nfno=True,o=ipair)
 		f.run()
-
 	# ============
 	# entry point
 	def run(self):
@@ -253,9 +252,8 @@ id,node,size
 			xxiso <<= nm.msetstr(v=1,a="size")
 			xxiso <<= nm.mcut(f="id,num,size")
 			# mcut入れないとおかしくなるあとで直す
-			ddlist = [fpair.mcut(f="id,num,size"),xxiso]
-
-			xxpair = nm.mcut(i=ddlist,f="id,num,size")
+			#ddlist = [fpair.mcut(f="id,num,size"),xxiso]
+			xxpair = nm.mcut(i=[fpair,xxiso],f="id,num,size")
 			
 		else:
 

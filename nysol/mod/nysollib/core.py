@@ -240,7 +240,7 @@ class NysolMOD_CORE(object):
 
 	def __ilshift__(self, other):
 		pre = other
-		while len(pre.inplist["i"])!=0:
+		while len(pre.inplist["i"])!=0: # ここ注意
 			pre = pre.inplist["i"][0]
 
 		pre.addPre(self)
@@ -326,7 +326,6 @@ class NysolMOD_CORE(object):
 		from nysol.mod.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
 		for obj in dupobj:
-
 			for k in obj.outlist.keys():
 
 				if len(obj.outlist[k])==0:
@@ -354,14 +353,18 @@ class NysolMOD_CORE(object):
 					teexxx.outlist["o"] = [] 
 
 					for outin in outll:
-						if len(outin.inplist["i"])!=0 and obj == outin.inplist["i"][0]:
-							fifoxxx=mfifo(i=teexxx)
-							fifoxxx.outlist["o"]=[outin]
-							outin.inplist["i"] = [fifoxxx]
-						if len(outin.inplist["m"])!=0 and obj == outin.inplist["m"][0]:
-							fifoxxx=mfifo(i=teexxx)
-							fifoxxx.outlist["o"]=[outin]
-							outin.inplist["m"] = [fifoxxx]
+						for ii in range(len(outin.inplist["i"])):
+							if obj == outin.inplist["i"][ii]:
+								fifoxxx=mfifo(i=teexxx)
+								fifoxxx.outlist["o"]=[outin]
+								outin.inplist["i"][ii] = fifoxxx
+
+						for ii in range(len(outin.inplist["m"])):
+							if obj == outin.inplist["m"][ii]:
+								fifoxxx=mfifo(i=teexxx)
+								fifoxxx.outlist["o"]=[outin]
+								outin.inplist["m"][ii] = fifoxxx
+
 
 		# no buffer Version
 		#for obj in dupobj:
@@ -403,12 +406,19 @@ class NysolMOD_CORE(object):
 						obj.inplist["i"][i]=rlmod
 
 				if len(obj.inplist["i"])>1:
+
 					m2cmod  = m2cat(i=obj.inplist["i"])
 					m2cmod.outlist["o"] = [obj]
 
 					for xval in obj.inplist["i"]:
-						if isinstance(xval,NysolMOD_CORE):
-							xval.outlist["o"] = [m2cmod] 
+					
+						for ii in range(len(xval.outlist["o"])):
+							if obj == xval.outlist["o"][ii]:
+								xval.outlist["o"][ii] = m2cmod
+
+						for ii in range(len(xval.outlist["u"])):
+							if obj == xval.inplist["u"][ii]:
+								xval.outlist["u"][ii] = m2cmod
 
 					obj.inplist["i"] = [m2cmod]
 
@@ -425,8 +435,15 @@ class NysolMOD_CORE(object):
 					m2cmod.outlist["o"] = [obj]
 
 					for xval in obj.inplist["m"]:
-						if isinstance(xval,NysolMOD_CORE):
-							xval.outlist["o"] = [m2cmod] 
+					
+						for ii in range(len(xval.outlist["o"])):
+							if obj == xval.outlist["o"][ii]:
+								xval.outlist["o"][ii] = m2cmod
+
+						for ii in range(len(xval.outlist["u"])):
+							if obj == xval.inplist["u"][ii]:
+								xval.outlist["u"][ii] = m2cmod
+
 
 					obj.inplist["m"] = [m2cmod]
 

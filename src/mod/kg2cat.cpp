@@ -44,7 +44,7 @@ kg2Cat::kg2Cat(void)
 	#ifdef JPN_FORMAT
 		#include <help/jp/kgcutHelp.h>
 	#endif
-	first = true;
+	_first = true;
 	_iCnt = 0;
 }
 
@@ -86,7 +86,6 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 	vector<kgstr_t> isf = _args.toStringVector("i=",false);
 	
 	_itotal = isf.size() + inum ;
-	cerr << "size " << _itotal << endl;
 	if(_itotal==0){// maxサイズの制限も入れる
 			throw kgError("no match IO");
 	}
@@ -115,18 +114,30 @@ void kg2Cat::readwrite(size_t pos){
 		
 	_iFiles[pos]->read_header();
 
-	if(first){
-		first =false;
-		_oFile.writeFldName(_iFiles[pos]->fldName());
+	if(_first){
+		_first =false;
+		_fldname1 = _iFiles[pos]->fldName();
+		_oFile.writeFldName(_fldname1);
+	}
+
+	vector<int> outFldNo;
+	for(size_t i=0; i<_fldname1.size(); i++){
+		int no=_iFiles[pos]->fldNum(_fldname1.at(i),true);
+		if(no==-1){
+			ostringstream ss;
+			ss << "field name [" << _fldname1.at(i)
+				<< "] not found on file ["   << _iFiles[pos]->fileName() << "]";
+			throw kgError(ss.str());
+		}
+		outFldNo.push_back(no);
 	}
 
 
 	size_t icnt=0;
-	size_t fsize = _iFiles[pos]->fldSize();
-
+	//size_t fsize = _iFiles[pos]->fldSize();
 	// 出力実行
 	while( EOF != _iFiles[pos]->read() ){
-		_oFile.writeFld(fsize, _iFiles[pos]->getFld());
+		_oFile.writeFld(_iFiles[pos]->getFld(),&outFldNo);
 	}
 
 	_iFiles[pos]->close();
