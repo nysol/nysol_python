@@ -375,17 +375,18 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			f <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=xxw,o=xxff)
 			f.run()
 			f = nm.mcat(i=xxw+","+xxff).mbest(k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile).run()
-			
+			"""
 			#これだめ
-			#fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
-			#fu = fo.direction("u")
-			#fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
-			#fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
+			fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
+			fu = fo.direction("u")
+			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
+			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
 			#f  =   nm.m2cat()
-			#f  = nm.mbest(i=[fo.mcut(f="*"),fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
+			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
 
 
-			#f.run()
+			f.run(msg="on")
+			"""
 
 
 

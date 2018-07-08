@@ -417,7 +417,7 @@ class NysolMOD_CORE(object):
 								xval.outlist["o"][ii] = m2cmod
 
 						for ii in range(len(xval.outlist["u"])):
-							if obj == xval.inplist["u"][ii]:
+							if obj == xval.outlist["u"][ii]:
 								xval.outlist["u"][ii] = m2cmod
 
 					obj.inplist["i"] = [m2cmod]
@@ -441,7 +441,7 @@ class NysolMOD_CORE(object):
 								xval.outlist["o"][ii] = m2cmod
 
 						for ii in range(len(xval.outlist["u"])):
-							if obj == xval.inplist["u"][ii]:
+							if obj == xval.outlist["u"][ii]:
 								xval.outlist["u"][ii] = m2cmod
 
 
