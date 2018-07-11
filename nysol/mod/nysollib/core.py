@@ -101,6 +101,13 @@ class NysolMOD_CORE(object):
 		self.nowdir = dir
 		return self
 
+	def dupdirection(self,dir) :
+		self.nowdir = dir
+		from nysol.mod.submod.mfifo import Nysol_Mfifo as mfifo
+		fifoxxx=mfifo(i=self)
+		self.outlist[self.nowdir].append(self)
+		return fifoxxx
+
 
 	def __str__(self):
 		import os

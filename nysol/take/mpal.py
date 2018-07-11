@@ -368,6 +368,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 		# マルチ枝の単一化(W優先,パラメータ位置優先)
 		if self.prune:
+			"""
 			# 双方向と片方向に分割
 			nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W",o=xxw,u=xxf).run()
 			# 片方向のみの枝を選択
@@ -378,15 +379,15 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			"""
 			#これだめ
 			fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
-			fu = fo.direction("u")
-			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
-			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
+
+			fu = fo.dupdirection("u") # これは再考
+			
+			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo.direction("o"))
+			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo.direction("o"))
 			#f  =   nm.m2cat()
 			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
 
-
-			f.run(msg="on")
-			"""
+			f.run()
 
 
 
