@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import nysol.mod as nm
+import nysol.mcmd as nm
 from nysol.take.lib.base import seqDB as sdb
 from nysol.take.lib import taxonomy as taxolib
 from nysol.take.lib import enumLcmSeq as elcmSeq

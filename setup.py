@@ -213,8 +213,8 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 										)
 
 setup(name = 'nysol',
-			packages=['nysol','nysol/util','nysol/mod','nysol/mod/submod','nysol/mod/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
-			version = '0.1',
+			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
+			version = '0.2.0',
 			description = 'This is a demo package',
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py',
 								'scripts/take/mpolishing.py','scripts/take/msequence.py',

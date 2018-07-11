@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.margs as margs
 

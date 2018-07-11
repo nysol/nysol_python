@@ -103,7 +103,7 @@ class script(object):
 			if kwd["msg"] == "on" :
 				nowMsgFlg=True
 
-		from nysol.mod.nysollib.core import runs 
+		from nysol.mcmd.nysollib.core import runs 
 
 		if nowMsgFlg :
 			runs(runcmds,msg="on")
@@ -118,7 +118,7 @@ class script(object):
 		runlist = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork(runlist)
 
-		from nysol.mod.nysollib.core import drawModels as drawModels
+		from nysol.mcmd.nysollib.core import drawModels as drawModels
 		drawModels(runcmds,fname)
 
 	def drawModelD3(self,fname=None):
@@ -126,7 +126,7 @@ class script(object):
 		runlist = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork(runlist)
 
-		from nysol.mod.nysollib.core import drawModelsD3 as drawModelsD3
+		from nysol.mcmd.nysollib.core import drawModelsD3 as drawModelsD3
 		drawModelsD3(runcmds,fname)
 
 
@@ -135,7 +135,7 @@ class script(object):
 		runlist = copy.deepcopy(self.cmdlist)
 		runcmds = self.makeNetwork(runlist)
 
-		from nysol.mod.nysollib.core import modelInfos as modelInfos
+		from nysol.mcmd.nysollib.core import modelInfos as modelInfos
 		return modelInfos(runcmds)
 
 	def __lshift__(self,obj):

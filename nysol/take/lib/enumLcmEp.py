@@ -9,7 +9,7 @@
 #module TAKE
 import os
 import shutil
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 from nysol.take import extcore as extTake
 import nysol.vsop._vsoplib as VSOP

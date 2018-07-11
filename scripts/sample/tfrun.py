@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import nysol.mod as nm
+import nysol.mcmd as nm
 if len(sys.argv) != 2:
 	print("script fileがない")
 	exit()

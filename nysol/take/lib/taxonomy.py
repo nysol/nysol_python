@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 import os
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 
 #=分類階層(taxonomy)クラス

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.margs as margs
 from nysol.take.lib.base import traDB as tdb
 from nysol.take.lib import taxonomy as taxolib

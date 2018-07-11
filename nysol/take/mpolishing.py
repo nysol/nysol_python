@@ -5,7 +5,7 @@ import os
 import os.path
 import shutil
 
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 from nysol.take import graph as ntg
 from nysol.take import extcore as extTake

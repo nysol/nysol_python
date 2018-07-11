@@ -6,7 +6,7 @@ import os
 import shutil
 from nysol.util.mtemp import Mtemp
 from nysol.util.mrecount import mrecount
-import nysol.mod as nm
+import nysol.mcmd as nm
 
 try:
 	from igraph import *

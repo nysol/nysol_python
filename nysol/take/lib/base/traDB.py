@@ -3,7 +3,7 @@
 
 import shutil
 import os
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
 from nysol.take.lib import items as items

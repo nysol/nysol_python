@@ -22,7 +22,7 @@ import os
 import shutil
 import nysol.util.mtemp as mtemp
 import nysol.util.mrecount as mrecount
-import nysol.mod as nm
+import nysol.mcmd as nm
 from nysol.take import extcore as extTake
 
 

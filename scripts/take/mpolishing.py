@@ -5,7 +5,7 @@ import re
 import nysol.util.margs as margs
 import nysol.take.graph as ntg
 import nysol.take as nt
-import nysol.mod as nm
+#import nysol.mcmd as nm
 
 args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=","ei=,ef=,th=")
 

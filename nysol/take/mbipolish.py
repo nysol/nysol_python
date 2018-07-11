@@ -5,7 +5,7 @@ import os
 import os.path
 import shutil
 
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 import nysol.util.mmkdir as mkDir
