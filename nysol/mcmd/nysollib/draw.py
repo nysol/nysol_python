@@ -29,7 +29,7 @@ def dicisionPos(mlist,iolist):
 
 	startpos = set() 
 	for i , mm in enumerate(mlist):
-		if mm[0]=="ifile" or mm[0]=="ofile" :
+		if mm[0]=="ifile" or mm[0]=="file" :
 			startpos.add(i)
 
 
@@ -65,38 +65,33 @@ def dicisionPos(mlist,iolist):
 
 def filenameEXTRACT(mlist,iolist,linklist):
 
+	ioPosF ={'o':2,'i':0,'m':1,'u':3}
+	ioPosT ={'o':0,'i':2,'m':2,'u':0}
+
 	addmod =[]
+	addfnod ={}
+
 	maxCnt = len(mlist)
 	for i, mm in enumerate(mlist):
 		if len(mm[2]) != 0:
 			for k,v in mm[2].items():
+				if v in addfnod:
+					newpos = addfnod[v] 
+				else:
+					addfnod[v]=maxCnt
+					iolist.append([[], [], [], []])
+					addmod.append(['file',[v],{},''])
+					newpos = maxCnt
+					maxCnt+=1
+
+				iolist[i][ioPosF[k]].append(newpos)
+				iolist[newpos][ioPosT[k]].append(i)
+
+				if ioPosT[k] == 0:
+					linklist.append([[k,i],["i",newpos]])
+				else:
+					linklist.append([["o",newpos],[k,i]])
 				
-
-				if k=='o' :
-					iolist[i][2].append(maxCnt)
-					iolist.append([[i], [], [], []])
-					linklist.append([[k,i],["i",maxCnt]])
-					addmod.append(['ofile',[v],{},''])
-
-				elif k=='i' :
-					iolist[i][0].append(maxCnt)
-					iolist.append([[], [], [i], []])
-					linklist.append([["o",maxCnt],[k,i]])
-					addmod.append(['ifile',[v],{},''])
-				elif k=='m' :
-
-					iolist[i][1].append(maxCnt)
-					iolist.append([[], [], [i], []])
-					linklist.append([["o",maxCnt],[k,i]])
-					addmod.append(['ifile',[v],{},''])
-
-				elif k=='u' :
-					iolist[i][3].append(maxCnt)
-					iolist.append([[i], [], [], []])
-					linklist.append([[k,i],["i",maxCnt]])
-					addmod.append(['ofile',[v],{},''])
-
-				maxCnt+=1
 
 		mlist[i][2] ={}
 		
@@ -131,7 +126,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 		f.write("<g>\n")
 
-		if modobj[0] == "ifile" or modobj[0] == "ofile" :
+		if modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
 			flist =[]
 			for full in modobj[1] :
 				flist.append(full.split("/")[-1])
@@ -139,15 +134,15 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 		elif modobj[0] == "cmd":
 			import re
-			titlestr = re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1]))
+			titlestr = re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1])).replace('"', '\\"')
 
 		else:
-			titlestr = modobj[0] + " "+ " ".join(modobj[1])
+			titlestr = modobj[0] + " "+ " ".join(modobj[1]).replace('"', '\\"') 
 
 		if  modobj[3] == "" :
 			f.write("<title>" + titlestr + "</title>\n" )
 		else:
-			f.write("<title>" + titlestr + "@" + modobj[3] + "</title>\n" )
+			f.write("<title>" + titlestr+ "@" + modobj[3] + "</title>\n" )
 
 		if modobj[0] == "cmd":
 
@@ -159,7 +154,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 				nameval = modobj[0]
 			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='gray'>\n" + nameval + "\n</text>\n"
 
-		elif modobj[0] == "ifile" or modobj[0] == "ofile" :
+		elif modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
 
 			mstr = "<rect x='" + str(x*60) + "' y='" + str(y*60+5) + "' width='40' height='40' stroke='blue' fill='white' stroke-width='1'/>\n"
 			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>\n" + modobj[0] + "\n</text>\n"
@@ -227,7 +222,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 
 		x,y = mm
 
-		if modobj[0] == "ifile" or modobj[0] == "ofile" :
+		if modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file":
 			flist =[]
 			for full in modobj[1] :
 				flist.append(full.split("/")[-1])
@@ -241,9 +236,9 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 			titlestr = modobj[0] + " "+ " ".join(modobj[1])
 
 		if  modobj[3] == "" :
-			f.write("{ title:\"%s\"," % (titlestr) ) 
+			f.write("{ title:\"%s\"," % (titlestr.replace('"', '\\"')) ) 
 		else:
-			f.write("{ title:\"%s @ %s\"," % (titlestr,modobj[3]) ) 
+			f.write("{ title:\"%s @ %s\"," % (titlestr.replace('"', '\\"'),modobj[3]) ) 
 
 		if modobj[0] == "cmd":
 			namevals =  titlestr.split()
@@ -253,7 +248,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 				nameval = modobj[0]
 			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"excmd\"}" % (x*60+20,y*60+20, nameval) ) 
 
-		elif modobj[0] == "ifile" or modobj[0] == "ofile" :
+		elif modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
 			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"file\"}" % (x*60+20,y*60+20, modobj[0])) 
 		else:
 			f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0])) 
