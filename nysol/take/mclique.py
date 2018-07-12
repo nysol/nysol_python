@@ -6,9 +6,12 @@ import os.path
 import shutil
 
 import nysol.mcmd as nm
-import nysol.util.margs as margs
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
+import nysol.util as nu
+
+#import nysol.util.margs as margs
+#import nysol.util.mtemp as mtemp
+#import nysol.util.mrecount as mrecount
+
 from nysol.take import extcore as extTake
 
 class mclique(object):
@@ -200,7 +203,7 @@ id,node,size
 		from datetime import datetime	
 		t = datetime.now()
 
-		wf = mtemp.Mtemp()
+		wf = nu.Mtemp()
 		xxinp    = wf.file()
 		xxmap    = wf.file()
 		input    = self.ei
@@ -223,7 +226,7 @@ id,node,size
 		extTake.mace(para)
 		
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
-		id = mrecount.mrecount(i=xxmace,nfni=True)
+		id = nu.mrecount(i=xxmace,nfni=True)
 
 		# xxpair = wf.file() # 上記traをpair形式に変換したデータ
 

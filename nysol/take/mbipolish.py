@@ -6,10 +6,12 @@ import os.path
 import shutil
 
 import nysol.mcmd as nm
-import nysol.util.margs as margs
-import nysol.util.mtemp as mtemp
-import nysol.util.mmkdir as mkDir
-import nysol.util.mrecount as mrecount
+import nysol.util as nu
+#import nysol.util.margs as margs
+#import nysol.util.mtemp as mtemp
+#import nysol.util.mmkdir as mkDir
+#import nysol.util.mrecount as mrecount
+
 
 from nysol.take import extcore as extTake
 
@@ -154,10 +156,10 @@ D,e
 		self.kn2      = int(kwd["kn2"])  if "kn2"  in kwd else 1         # no. of right node size more than threshold 
 
 		if self.outDir:
-			mkDir(outDir,rm=True) 
+			nu.mkDir(outDir,rm=True) 
 
 		if self.logDir:
-			mkDir(logDir,rm=True) 
+			nu.mkDir(logDir,rm=True) 
 
 
 
@@ -175,7 +177,7 @@ D,e
 
 
 	def calGsize(self,file):
-		edgesize= mrecount.mrecount(i=file,nfni=True)
+		edgesize= nu.mrecount(i=file,nfni=True)
 
 		f=None
 		f <<= nm.mcut(i=file,f="0:tra",nfni=True)
@@ -275,7 +277,7 @@ D,e
 		from datetime import datetime	
 		t = datetime.now()
 
-		tempW	= mtemp.Mtemp()
+		tempW	= nu.Mtemp()
 
 		xxinp  = tempW.file()
 		xxitra = tempW.file()

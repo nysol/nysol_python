@@ -3,10 +3,12 @@
 import os
 
 import shutil
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
+#import nysol.util.mtemp as mtemp
+#import nysol.util.mrecount as mrecount
 
 import nysol.mcmd as nm
+import nysol.util as nu
+
 from nysol.take.lib import taxonomy as taxolib
 
 #=アイテムクラス
@@ -92,7 +94,7 @@ class Items(object):
 		# 分類階層クラス(=>Taxonomy)
 		self.taxonomy = None
 
-		self.temp = mtemp.Mtemp()
+		self.temp = nu.Mtemp()
 		self.iFile   = []
 		self.iPath   = []
 		self.iFile.append(iFile)
@@ -104,7 +106,7 @@ class Items(object):
 
 		nm.mcut(f=itemFN,i=iFile).muniq(k=itemFN).mnumber(s=itemFN,a=idFN,S=0,o=self.file).run()
 
-		self.size = mrecount.mrecount(i=self.file) # itemの数
+		self.size = nu.mrecount(i=self.file) # itemの数
 
 
 	def show(self):
@@ -135,7 +137,7 @@ class Items(object):
 		self.iFile.append(iFile)
 		self.iPath.append(os.path.abspath(iFile))
 
-		xx=mtemp.Mtemp()
+		xx=nu.Mtemp()
 		xx1=xx.file()
 		xx2=xx.file()
 		x0 =   nm.mcommon(k=self.itemFN,i=iFile,m=self.file)
@@ -148,7 +150,7 @@ class Items(object):
 
 		# 新itemファイル登録&item数更新
 		shutil.move(xx2,self.file)
-		self.size = mrecount.mrecount(i=self.file)
+		self.size = nu.mrecount(i=self.file)
 
 
 	#==Taxonomyの設定

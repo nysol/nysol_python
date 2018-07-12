@@ -29,11 +29,8 @@ def dicisionPos(mlist,iolist):
 
 	startpos = set() 
 	for i , mm in enumerate(mlist):
-		if len(mm[2])!=0:
-			if "i" in mm[2]:
-				startpos.add(i)
-			if "m" in mm[2]:
-				startpos.add(i)
+		if mm[0]=="ifile" or mm[0]=="ofile" :
+			startpos.add(i)
 
 
 	for i , mm in enumerate(iolist):
@@ -46,6 +43,7 @@ def dicisionPos(mlist,iolist):
 	basecont=0
 	maxlen=0
 	minpos =0;
+
 	for x in list(startpos):
 		dicisionPosSub(mlist,iolist,[x],dsppos,y,counter,basecont)
 		basecont=max(counter.values())+1
@@ -64,17 +62,53 @@ def dicisionPos(mlist,iolist):
 
 	return dsppos , maxlen ,basecont
 
-	#for i in startpos:
-	#	if dsppos[i] != None:
-	#		continue
-	#	y=0
-	#	dsppos[i] = [x,y]
-	#	newlist = iolist[i][2] + iolist[i][3] 
-	#	dicisionPosSub(mlist,iolist,newlist,dsppos,x,y)
+
+def filenameEXTRACT(mlist,iolist,linklist):
+
+	addmod =[]
+	maxCnt = len(mlist)
+	for i, mm in enumerate(mlist):
+		if len(mm[2]) != 0:
+			for k,v in mm[2].items():
+				
+
+				if k=='o' :
+					iolist[i][2].append(maxCnt)
+					iolist.append([[i], [], [], []])
+					linklist.append([[k,i],["i",maxCnt]])
+					addmod.append(['ofile',[v],{},''])
+
+				elif k=='i' :
+					iolist[i][0].append(maxCnt)
+					iolist.append([[], [], [i], []])
+					linklist.append([["o",maxCnt],[k,i]])
+					addmod.append(['ifile',[v],{},''])
+				elif k=='m' :
+
+					iolist[i][1].append(maxCnt)
+					iolist.append([[], [], [i], []])
+					linklist.append([["o",maxCnt],[k,i]])
+					addmod.append(['ifile',[v],{},''])
+
+				elif k=='u' :
+					iolist[i][3].append(maxCnt)
+					iolist.append([[i], [], [], []])
+					linklist.append([[k,i],["i",maxCnt]])
+					addmod.append(['ofile',[v],{},''])
+
+				maxCnt+=1
+
+		mlist[i][2] ={}
+		
+	mlist.extend(addmod)
+
 
 def chageSVG(mlist,iolist,linklist,fname=None):
-	#print(mlist)
-	#print(iolist)
+	"""
+	OUTPUT FLOW SVG HTML  
+	"""
+
+	filenameEXTRACT(mlist,iolist,linklist)
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
 
 	if fname == None:
@@ -88,31 +122,55 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 	f.write("<polygon points='0,0 5,5 0,10 10,5 ' fill='black'/>\n")
 	f.write("</marker>\n")
 	f.write("</defs>\n")
-	#print(dsppos)
+
+
 	for i , mm in enumerate(dsppos):
 		
 		modobj = mlist[i]
 		x,y = mm
 
-
 		f.write("<g>\n")
-		modobj1 = ",".join(" ")
+
+		if modobj[0] == "ifile" or modobj[0] == "ofile" :
+			flist =[]
+			for full in modobj[1] :
+				flist.append(full.split("/")[-1])
+			titlestr = ",".join(flist)
+
+		elif modobj[0] == "cmd":
+			import re
+			titlestr = re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1]))
+
+		else:
+			titlestr = modobj[0] + " "+ " ".join(modobj[1])
 
 		if  modobj[3] == "" :
-			f.write("<title>" + modobj[0] + " " + modobj1 + "</title>\n" )
+			f.write("<title>" + titlestr + "</title>\n" )
 		else:
-			f.write("<title>" + modobj[0] + " " + modobj1 + "@" + modobj[3] + "</title>\n" )
-		
-		mstr = "<circle cx='" + str(x*60+20) + "' cy='" + str(y*60+20) + "' r='20' stroke='blue' fill='white' stroke-width='1'/>\n"
-		f.write(mstr)
-		mstr = "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>"
+			f.write("<title>" + titlestr + "@" + modobj[3] + "</title>\n" )
 
-		mstr +=  modobj[0]
+		if modobj[0] == "cmd":
 
-		mstr += " </text>\n"
-		f.write(mstr)
+			mstr = "<circle cx='" + str(x*60+20) + "' cy='" + str(y*60+20) + "' r='20' stroke='blue' fill='white' stroke-width='1'/>\n"
+			namevals =  titlestr.split()
+			if len(namevals)>0:
+				nameval = namevals[0]
+			else:
+				nameval = modobj[0]
+			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='gray'>\n" + nameval + "\n</text>\n"
+
+		elif modobj[0] == "ifile" or modobj[0] == "ofile" :
+
+			mstr = "<rect x='" + str(x*60) + "' y='" + str(y*60+5) + "' width='40' height='40' stroke='blue' fill='white' stroke-width='1'/>\n"
+			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>\n" + modobj[0] + "\n</text>\n"
+
+		else:
+
+			mstr = "<circle cx='" + str(x*60+20) + "' cy='" + str(y*60+20) + "' r='20' stroke='blue' fill='white' stroke-width='1'/>\n"
+			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>\n" + modobj[0] +  "\n</text>\n"
+
+		f.write(mstr) 
 		f.write("</g>\n")
-
 
 	for fr , to in linklist:
 		frNo = fr[1] 
@@ -140,9 +198,12 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 	f.close()
 
 
-
-
 def chageSVG_D3(mlist,iolist,linklist,fname=None):
+	"""
+		OUTPUT FLOW SVG HTML USING D3.V3 
+	"""
+
+	filenameEXTRACT(mlist,iolist,linklist)
 
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
 
@@ -161,32 +222,46 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 
 	mlastNo = len(dsppos)
 	for i , mm in enumerate(dsppos):
-
+		
 		modobj = mlist[i]
+
 		x,y = mm
-		modobj1 = ",".join(" ")
-		if  modobj[3] == "" :
-			f.write("{ title:\"%s %s\"," % (modobj[0],modobj1) ) 
+
+		if modobj[0] == "ifile" or modobj[0] == "ofile" :
+			flist =[]
+			for full in modobj[1] :
+				flist.append(full.split("/")[-1])
+			titlestr = ",".join(flist)
+
+		elif modobj[0] == "cmd":
+			import re
+			titlestr = re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1]))
+
 		else:
-			f.write("{ title:\"%s %s @ %s\"," % (modobj[0],modobj1,modobj[3]) ) 
+			titlestr = modobj[0] + " "+ " ".join(modobj[1])
+
+		if  modobj[3] == "" :
+			f.write("{ title:\"%s\"," % (titlestr) ) 
+		else:
+			f.write("{ title:\"%s @ %s\"," % (titlestr,modobj[3]) ) 
 
 		if modobj[0] == "cmd":
-			import re
-			namevals =  re.sub(r'^cmdstr=\'(.*)\'',r'\1',modobj1).split()
+			namevals =  titlestr.split()
 			if len(namevals)>0:
 				nameval = namevals[0]
 			else:
 				nameval = modobj[0]
 			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"excmd\"}" % (x*60+20,y*60+20, nameval) ) 
+
+		elif modobj[0] == "ifile" or modobj[0] == "ofile" :
+			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"file\"}" % (x*60+20,y*60+20, modobj[0])) 
 		else:
-			f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0]) ) 
-		
-		
+			f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0])) 
+
 		if mlastNo==i+1 :
 			f.write("]\n")
 		else:
 			f.write(",\n")
-
 
 	elastNo = len(linklist)
 	
@@ -252,6 +327,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	scp = """
 	<script>
 	svgGroup = d3.select('#flowDspArea');
+	
 	node_g = svgGroup.selectAll('g .node').data(NodeDATA);
 	edge_g = svgGroup.selectAll('g .edge').data(EdgeDATA);
 	// 移動処理用
@@ -307,8 +383,21 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	node_g2.append('title')
 			.text(function(d) { return d.title})
 
-	node_g2.append('circle')
+	node_g2
+		.filter(function(d) { return d.tp != "file" })
+		.append('circle')
 		.attr('r',20)
+		.attr('stroke','blue')
+		.attr('fill','white')
+		.attr('stroke-width',1)
+
+	node_g2
+		.filter(function(d) { return d.tp == "file" })
+		.append('rect')
+		.attr('x',-20)
+		.attr('y',-15)
+		.attr('width',40)
+		.attr('height',30)
 		.attr('stroke','blue')
 		.attr('fill','white')
 		.attr('stroke-width',1)

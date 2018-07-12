@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #/* ////////// LICENSE INFO ////////////////////
@@ -19,7 +20,7 @@
 #
 # ////////// LICENSE INFO ////////////////////*/
 
-import nysol.util._utillib as ut
+from . import _utillib 
 
 def mheader(**kw_args):
 
@@ -27,4 +28,4 @@ def mheader(**kw_args):
 	if not "i" in kw_args:
 		return None
 
-	return ut.mheader(kw_args["i"],nfnFlg)
+	return _utillib.mheader(kw_args["i"],nfnFlg)

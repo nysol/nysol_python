@@ -75,7 +75,7 @@
 # ------------------------------------------------------
 import os
 import re
-class Margs(object):
+class Margs(object): #みなおすこと
 
 	#== コンストラクタ
 	# argv: rubyのARGV変数

@@ -18,7 +18,7 @@
 # * for more details.
 #
 # ////////// LICENSE INFO ////////////////////*/
-import nysol.util._utillib as ut
+from . import _utillib 
 
 def mrecount(**kw_args):
 
@@ -26,6 +26,6 @@ def mrecount(**kw_args):
 	if not "i" in kw_args:
 		return None
 		
-	return ut.mrecount(kw_args["i"],nfnFlg)
+	return _utillib.mrecount(kw_args["i"],nfnFlg)
 
 

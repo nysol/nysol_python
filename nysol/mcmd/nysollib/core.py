@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 import shlex
 import re
+import copy
+import os, sys
+
 import nysol._nysolshell_core as n_core
 from nysol.mcmd.nysollib import nysolutil as nutil
 from nysol.mcmd.nysollib import draw as ndraw
 from nysol.mcmd.nysollib import dspalign
 from nysol.mcmd.nysollib import itermod
 
-
-from multiprocessing import Pool
-import copy
-import os, sys
 
 class NysolMOD_CORE(object):
 	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
@@ -30,69 +29,50 @@ class NysolMOD_CORE(object):
 		self.inplist ={"i":[],"m":[]}
 		self.outlist ={"o":[],"u":[]}
 		self.tag = ""
-		self.dlog = ""
 
 		if "tag" in self.kwd :
+
 			self.tag = self.kwd["tag"]
 			del self.kwd["tag"]
 
-		if "dlog" in self.kwd :
-			self.dlog = self.kwd["dlog"]
-			del self.kwd["dlog"]
+		for key in self.inplist.keys():
 
+			if key in self.kwd :
 
-		if "i" in self.kwd :
-			if isinstance(self.kwd["i"],NysolMOD_CORE):	
-				self.kwd["i"].outlist[self.kwd["i"].nowdir].append(self)
-				self.inplist["i"].append(self.kwd["i"])
+				if isinstance(self.kwd[key],NysolMOD_CORE):	
 
-			elif isinstance(self.kwd["i"],list):
-				if isinstance(self.kwd["i"][0],list):	
-					self.inplist["i"].append(self.kwd["i"])
+					self.kwd[key].outlist[self.kwd[key].nowdir].append(self)
+					self.inplist[key].append(self.kwd[key])
+				
+				elif isinstance(self.kwd[key],list):
+
+					if isinstance(self.kwd[key][0],list):	
+
+						self.inplist[key].append(self.kwd[key])
+		
+					else:
+
+						for kval in self.kwd[key]:
+
+							if isinstance(kval,NysolMOD_CORE):	
+								kval.outlist[kval.nowdir].append(self)
+	
+							self.inplist[key].append(kval)
 
 				else:
-					for kval in self.kwd["i"]:
-						if isinstance(kval,NysolMOD_CORE):	
-							kval.outlist[kval.nowdir].append(self)
-	
-						self.inplist["i"].append(kval)
-			else:
-				self.inplist["i"].append(self.kwd["i"])
 
-			del self.kwd["i"]
-
-		if "m" in self.kwd :
-
-			if isinstance(self.kwd["m"],NysolMOD_CORE):	
-				self.kwd["m"].outlist[self.kwd["m"].nowdir].append(self)
-				self.inplist["m"].append(self.kwd["m"])
-
-			elif isinstance(self.kwd["m"],list):
-				if isinstance(self.kwd["m"][0],list):	
-					self.inplist["m"].append(self.kwd["m"])
-
-				else:
-					for kval in self.kwd["m"]:
-						if isinstance(kval,NysolMOD_CORE):	
-							kval.outlist[kval.nowdir].append(self)
-	
-						self.inplist["m"].append(kval)
-			else:
-				self.inplist["m"].append(self.kwd["m"])
-
-			del self.kwd["m"]
-
-
-
-
-		if "o" in self.kwd :
-			self.outlist["o"].append(self.kwd["o"])
-			del self.kwd["o"]
+					self.inplist[key].append(self.kwd[key])
+		
+				del self.kwd[key]
 		
 
-		if "u" in self.kwd :
-			self.outlist["u"].append(self.kwd["u"])
-			del self.kwd["u"]
+		for key in self.outlist.keys():
+	
+			if key in self.kwd :
+
+				self.outlist[key].append(self.kwd[key])
+				del self.kwd[key]
+		
 
 		self.msg=False
 		self.runlimit = -1
@@ -109,48 +89,55 @@ class NysolMOD_CORE(object):
 		return fifoxxx
 
 
+	def _dsp1(self):
+
+		yLimit =40
+		pre=[]
+		sufmax = int(yLimit/2)
+		suf=[ [] for i in range(sufmax) ]
+		cnt=0
+		sufpos=0
+
+		try:
+			xx = itermod.Nysol_MeachIter(self)
+			while(True):
+				val = next(xx)
+				if cnt < yLimit :
+					pre.append(val)
+
+				cnt+=1
+				suf[sufpos]=val
+				sufpos+=1
+				if sufpos==sufmax :
+					sufpos=0
+
+		except:
+			pass
+
+		if(cnt > yLimit): 
+			ppos = sufmax
+			spos = sufpos
+			for _ in range(sufmax):
+
+				pre[ppos] = suf[spos]
+				ppos += 1
+				spos += 1
+				if spos==sufmax :
+					spos=0
+
+		outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
+
+		return "\n".join(outstrList)
+
 	def __str__(self):
 		import os
 
 		dsptp = os.getenv("NYSOL_MOD_DSP_TYPE", "0")
 
+
 		if dsptp == "1":
-
-			yLimit =40
-			pre=[]
-			sufmax = int(yLimit/2)
-			suf=[ [] for i in range(sufmax) ]
-			cnt=0
-			sufpos=0
-			try:
-				xx = itermod.Nysol_MeachIter(self)
-				while(True):
-					val = next(xx)
-					if cnt < yLimit :
-						pre.append(val)
-
-					cnt+=1
-					suf[sufpos]=val
-					sufpos+=1
-					if sufpos==sufmax :
-						sufpos=0
-			except:
-				pass
-
-			if(cnt > yLimit): 
-				ppos = sufmax
-				spos = sufpos
-				for _ in range(sufmax):
-
-					pre[ppos] = suf[spos]
-					ppos += 1
-					spos += 1
-					if spos==sufmax :
-						spos=0
-
-			outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
-
-			return "\n".join(outstrList)
+		
+			return self._dsp1()
 
 		else:
 
@@ -172,7 +159,7 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 		
-
+	## generator rap
 	def keyblock(self,keys,skeys=None,dtype=None):
 		try:
 			x = itermod.Nysol_MeachKeyIter(self,keys,skeys,dtype)
@@ -213,13 +200,10 @@ class NysolMOD_CORE(object):
 
 
 	def getline_with_keyflag(self,keys,skeys=None,dtype=None):
-		
 		try:
 			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys,dtype)
-
 			while(True):
 				yield next(x)
-
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
@@ -238,48 +222,49 @@ class NysolMOD_CORE(object):
 		return self
 
 
-	def addPre(self,pre):
+	def addPre(self,pre): # i以外も可能にする？
+
 		self.inplist["i"].append(pre) 
 		pre.outlist[pre.nowdir].append(self)
-		#if len(self.inplist["m"]) != 0 and isinstance(self.inplist["m"][0],NysolMOD_CORE):			
-		#	self.inplist["m"][0].outlist[self.inplist["m"][0].nowdir].append(self)
 		return self
 
 	def __ilshift__(self, other):
+
 		pre = other
-		while len(pre.inplist["i"])!=0: # ここ注意
+
+		while len(pre.inplist["i"])!=0: # ここも注意
 			pre = pre.inplist["i"][0]
 
 		pre.addPre(self)
 		return other
 
 	def __rlshift__(self, other):
+
 		if(other!=None):
 			raise Exception("unsuport TYPE")
+
 		return self
-		
-		
-	# f.w キーワードチェック入れる
+
 	def paraUpdate(self,kw):
+		# f.w キーワードチェック入れる
+
 		self.kwd.update(kw)
 
-		if "i" in self.kwd :
-			self.inplist["i"].append(self.kwd["i"])
-			del self.kwd["i"]
+		for key in self.inplist.keys():
 
-		if "o" in self.kwd :
-			self.outlist["o"].append(self.kwd["o"])
-			del self.kwd["o"]
-		
-		if "m" in self.kwd :
-			self.inplist["m"].append(self.kwd["m"])
-			del self.kwd["m"]
+			if key in self.kwd :
 
-		if "u" in self.kwd :
-			self.outlist["u"].append(self.kwd["u"])
-			del self.kwd["u"]
+				self.inplist[key].append(self.kwd[key])
+				del self.kwd[key]
 
-	
+
+		for key in self.outlist.keys():
+
+			if key in self.kwd :
+
+				self.outlist[key].append(self.kwd[key])
+				del self.kwd[key]
+
 	@classmethod
 	def check_dupObjSub(self,sumiobj,dupobj,obj):
 
@@ -294,37 +279,25 @@ class NysolMOD_CORE(object):
 				sumiobj.add(obj)
 			return False
 	
-	#o=でチェックできるはずなので　いらなくなるはず 
 	def check_dupObj(self,sumiobj,dupobj):
-		
+		#o=でチェックできるはずなので　いらなくなるはず 		
 		if NysolMOD_CORE.check_dupObjSub(sumiobj,dupobj,self) ==True :
 			return
 
-		if len(self.inplist["i"]) != 0 :
+		for key in self.inplist.keys():
 
-			for xval in self.inplist["i"]:
+			if len(self.inplist[key]) != 0 :
 
-				if isinstance(xval,NysolMOD_CORE):
-					xval.check_dupObj(sumiobj,dupobj)
+				for xval in self.inplist[key]:
 
-				elif isinstance(xval,str):
-					self.check_dupObjSub(sumiobj,dupobj,xval)
+					if isinstance(xval,NysolMOD_CORE):
+						xval.check_dupObj(sumiobj,dupobj)
 
-				elif isinstance(xval,list):
-					pass
+					elif isinstance(xval,str):
+						self.check_dupObjSub(sumiobj,dupobj,xval)
 
-		if len(self.inplist["m"]) != 0 :
-
-			for xval in self.inplist["m"]:
-
-				if isinstance(xval,NysolMOD_CORE):
-					xval.check_dupObj(sumiobj,dupobj) 
-
-				elif isinstance(xval,str):
-					self.check_dupObjSub(sumiobj,dupobj,xval)
-
-				elif isinstance(xval,list):
-					pass
+					elif isinstance(xval,list):
+						pass
 
 		return			
  
@@ -332,7 +305,9 @@ class NysolMOD_CORE(object):
 	def addTee(self,dupobj): 
 		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
+
 		for obj in dupobj:
+
 			for k in obj.outlist.keys():
 
 				if len(obj.outlist[k])==0:
@@ -354,6 +329,7 @@ class NysolMOD_CORE(object):
 						outll.inplist["m"] = [fifoxxx]
 
 				else:
+
 					outll = obj.outlist[k]
 					obj.outlist[k] = []
 					teexxx = m2tee(i=obj)
@@ -404,119 +380,59 @@ class NysolMOD_CORE(object):
 					continue
 				if obj.name=="m2cat":
 					continue
-				for i,xval in enumerate(obj.inplist["i"]):
 
-					if isinstance(xval,list) :
+				for key in obj.inplist.keys():
 
-						rlmod = mreadlist(xval)
-						rlmod.outlist["o"] = [obj]
-						obj.inplist["i"][i]=rlmod
+					for i,xval in enumerate(obj.inplist[key]):
 
-				if len(obj.inplist["i"])>1:
+						if isinstance(xval,list) :
 
-					m2cmod  = m2cat(i=obj.inplist["i"])
-					m2cmod.outlist["o"] = [obj]
+							rlmod = mreadlist(xval)
+							rlmod.outlist["o"] = [obj]
+							obj.inplist[key][i]=rlmod
 
-					for xval in obj.inplist["i"]:
-					
-						for ii in range(len(xval.outlist["o"])):
-							if obj == xval.outlist["o"][ii]:
-								xval.outlist["o"][ii] = m2cmod
+					if len(obj.inplist[key])>1:
+	
+						m2cmod  = m2cat(i=obj.inplist[key])
+						m2cmod.outlist["o"] = [obj]
 
-						for ii in range(len(xval.outlist["u"])):
-							if obj == xval.outlist["u"][ii]:
-								xval.outlist["u"][ii] = m2cmod
-
-					obj.inplist["i"] = [m2cmod]
-
-
-				for i,xval in enumerate(obj.inplist["m"]):
-					if isinstance(xval,list) :
-						rlmod = mreadlist(xval)
-						rlmod.outlist["o"] = [obj]
-						obj.inplist["m"][i]=rlmod
-
-				if len(obj.inplist["m"])>1:
-
-					m2cmod  = m2cat(i=obj.inplist["m"])
-					m2cmod.outlist["o"] = [obj]
-
-					for xval in obj.inplist["m"]:
-					
-						for ii in range(len(xval.outlist["o"])):
-							if obj == xval.outlist["o"][ii]:
-								xval.outlist["o"][ii] = m2cmod
-
-						for ii in range(len(xval.outlist["u"])):
-							if obj == xval.outlist["u"][ii]:
-								xval.outlist["u"][ii] = m2cmod
-
-
-					obj.inplist["m"] = [m2cmod]
-
-			
-				if len(obj.outlist["o"])!=0 and isinstance(obj.outlist["o"][0],list) :
-					wlmod = mwritelist(obj.outlist["o"][0])
-					wlmod.inplist["i"]=[obj]
-					obj.outlist["o"][0] = wlmod
-
-
-				if len(obj.outlist["u"])!=0 and isinstance(obj.outlist["u"][0],list) :
-					wlmod = mwritelist(obj.outlist["u"][0])
-					wlmod.inplist["i"]=[obj]
-					obj.outlist["u"][0] = wlmod
-					
-				# 途中OUTPUTチェック
-				if len(obj.outlist["o"]) > 1:
-					for i in range(len(obj.outlist["o"])):
-						if isinstance(obj.outlist["o"][i],str) :
-							from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
-							wcsv_o = mwritecsv(obj.outlist["o"][i])
-							wcsv_o.inplist["i"]=[obj]
-							obj.outlist["o"][i] = wcsv_o
-							if obj in dupobj:
-								dupobj[obj] += 1
-							else:
-								dupobj[obj] = 2
-							add_mod.append(wcsv_o)	
+						for xval in obj.inplist[key]:
+						
+							for okey in xval.outlist.keys():
 							
-				if len(obj.outlist["u"]) > 1:
-					for i in range(len(obj.outlist["u"])):
-						if isinstance(obj.outlist["u"][i],str) :
-							from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
-							wcsv_o = mwritecsv(obj.outlist["u"][i])
-							wcsv_o.inplist["i"]=[obj]
-							obj.outlist["u"][i] = wcsv_o
-							if obj in dupobj:
-								dupobj[obj] += 1
-							else:
-								dupobj[obj] = 2
+								for ii in range(len(xval.outlist[okey])):
+									if obj == xval.outlist[okey][ii]:
+										xval.outlist[okey][ii] = m2cmod
 
-							add_mod.append(wcsv_o)	
+						obj.inplist[key] = [m2cmod]
 
+				for key in obj.outlist.keys():
 
-				if obj.dlog != "" :
-					if len(obj.outlist["o"])!=0:
-						from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
-						wcsv_o = mwritecsv(obj.dlog+"_o")
-						wcsv_o.inplist["i"]=[obj]
-						obj.outlist["o"].append(wcsv_o)
-						if obj in dupobj:
-							dupobj[obj] += 1
-						else:
-							dupobj[obj] = 2
-						add_mod.append(wcsv_o)	
+					#これOK?複数有ったときは。。どうなる(==1が正しい？。。)
+					if len(obj.outlist[key])!=0 and isinstance(obj.outlist[key][0],list) :
 
-					if len(obj.outlist["u"])!=0:
-						from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
-						wcsv_u = mwritecsv(obj.dlog+"_u")
-						wcsv_u.inplist["i"]=[obj]
-						obj.outlist["u"].append(wcsv_u)
-						if obj in dupobj:
-							dupobj[obj] += 1
-						else:
-							dupobj[obj] = 2
-						add_mod.append(wcsv_u)	
+						wlmod = mwritelist(obj.outlist[key][0])
+						wlmod.inplist["i"]=[obj]
+						obj.outlist[key][0] = wlmod
+
+					# 途中OUTPUTチェック
+					if len(obj.outlist[key]) > 1:
+
+						for i in range(len(obj.outlist[key])):
+
+							if isinstance(obj.outlist[key][i],str) :
+
+								from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
+								wcsv_o = mwritecsv(obj.outlist[key][i])
+								wcsv_o.inplist["i"]=[obj]
+								obj.outlist[key][i] = wcsv_o
+
+								if obj in dupobj:
+									dupobj[obj] += 1
+								else:
+									dupobj[obj] = 2
+
+								add_mod.append(wcsv_o)	
 
 		return add_mod		
 	
@@ -715,8 +631,9 @@ class NysolMOD_CORE(object):
 
 	@classmethod
 	def drawModelsD3(self,mod,fname=None):
-		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
-		ndraw.chageSVG_D3(modlist,iolist,linklist,fname)		
+
+		modlist,iolist,linklist,x = NysolMOD_CORE.makeRunNetwork(mod)
+		ndraw.chageSVG_D3(modlist,iolist,linklist,fname)
 
 
 

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mcmd as nm
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
+import nysol.util as nu
+
 from nysol.take import extcore as extTake
 
 class mtra2gc(object):
@@ -224,10 +224,10 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# ##item,##freq%0nr,##num
 		# b,4,0
 		# d,4,1
-		return mrecount.mrecount(i=oFile,nfn=True)
+		return nu.mrecount(i=oFile,nfn=True)
 
 	def conv(self,iFile,idFN,itemFN,oFile,mapFile):
-		temp=mtemp.Mtemp()
+		temp=nu.Mtemp()
 		xxtra=temp.file()
 
 		# 入力ファイルのidがnilの場合は連番を生成して新たなid項目を作成する。
@@ -245,7 +245,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		# ##item,##freq%0nr,##num
 		# b,4,0
 		# d,4,1
-		size=mrecount.mrecount(i=oFile,nfn=True)
+		size=nu.mrecount(i=oFile,nfn=True)
 
 		return size
 
@@ -255,7 +255,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		from datetime import datetime	
 		t = datetime.now()
 
-		temp=mtemp.Mtemp()
+		temp=nu.Mtemp()
 		xxsspcin=temp.file()
 		xxmap=temp.file()
 
