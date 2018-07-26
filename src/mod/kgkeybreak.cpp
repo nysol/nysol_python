@@ -33,6 +33,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgKeybreak::_ipara[] = {"i",""};
+const char * kgKeybreak::_opara[] = {"o",""};
+
 kgKeybreak::kgKeybreak(void)
 {
 	_name    = "kgkeybreak";

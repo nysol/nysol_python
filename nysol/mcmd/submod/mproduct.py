@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mproduct(NysolMOD_CORE):
-	kwd = n_core.getparalist("mproduct")
+	_kwd = n_core.getparalist("mproduct")
+	_inkwd = ["i=","m="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mproduct,self).__init__("mproduct",nutil.args2dict(args,kw_args,Nysol_Mproduct.kwd))
+		super(Nysol_Mproduct,self).__init__("mproduct",nutil.args2dict(args,kw_args,Nysol_Mproduct._kwd))
 
 
 def mproduct(self,*args, **kw_args):
-	return Nysol_Mproduct(nutil.args2dict(args,kw_args,Nysol_Mproduct.kwd)).addPre(self)
+	return Nysol_Mproduct(nutil.args2dict(args,kw_args,Nysol_Mproduct._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mproduct", mproduct)

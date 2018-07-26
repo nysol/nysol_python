@@ -192,8 +192,9 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 
 		PyObject * para_LIST    = PyList_GetItem(modinfo ,1);
 
-		PyObject *addinfo    = PyList_GetItem(modinfo ,2);
-		cmpcaplocal.tag      = strGET(PyList_GetItem(modinfo ,3));
+		PyObject *addinfo_i    = PyList_GetItem(modinfo ,2);
+		PyObject *addinfo_o    = PyList_GetItem(modinfo ,3);
+		cmpcaplocal.tag      = strGET(PyList_GetItem(modinfo ,4));
 
 		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
 		for(Py_ssize_t j=0 ; j<psize;j++){
@@ -216,20 +217,24 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 			}
 		}
 
-		PyObject *key, *value;
-		Py_ssize_t pos = 0;
-		while (PyDict_Next(addinfo, &pos, &key, &value)) {
-			if(strCHECK(value)){
-				cmpcaplocal.paralist.push_back( kgstr_t(strGET(key)) + "="+ strGET(value) );
+		PyObject *key_i, *value_i;
+		Py_ssize_t pos_i = 0;
+		while (PyDict_Next(addinfo_i, &pos_i, &key_i, &value_i)) {
+			if(strCHECK(value_i)){
+				cmpcaplocal.paralist.push_back( kgstr_t(strGET(key_i)) + "="+ strGET(value_i) );
 			}
-			else if(PyList_Check(value)){
-				// ioの種類によって in or out 
-				if( kgstr_t(strGET(key)) == "i" ||kgstr_t(strGET(key)) == "m" ){
-					cmpcaplocal.iobj=value;
-				}
-				else if( kgstr_t(strGET(key)) == "o" ||kgstr_t(strGET(key)) == "u" ){
-					cmpcaplocal.oobj=value;
-				}
+			else if(PyList_Check(value_i)){
+				cmpcaplocal.iobj=value_i;
+			}
+		}
+		PyObject *key_o, *value_o;
+		Py_ssize_t pos_o = 0;
+		while (PyDict_Next(addinfo_o, &pos_o, &key_o, &value_o)) {
+			if(strCHECK(value_o)){
+				cmpcaplocal.paralist.push_back( kgstr_t(strGET(key_o)) + "="+ strGET(value_o) );
+			}
+			else if(PyList_Check(value_o)){
+				cmpcaplocal.oobj=value_o;
 			}
 		}
 		cmdCapsel.push_back(cmpcaplocal);
@@ -297,11 +302,9 @@ PyObject* runLx(PyObject* self, PyObject* args)
 		vector< cmdCapselST > cmdCapsel;
 		vector< linkST > p_list;
 		runCore(mlist,linklist,cmdCapsel,p_list);
-
 		ksh->runx(cmdCapsel,p_list);
+
 		return PyLong_FromLong(0);
-
-
 	}
 	catch(kgError& err){
 		cerr << "run Error [ " << err.message(0) << " ]" << endl;
@@ -353,6 +356,7 @@ PyObject* runP(PyObject* self, PyObject* args)
 		runCore(mlist,linklist,cmdCapsel,p_list);
 
 		kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);
+		if(rtn==NULL){ return Py_BuildValue("");}
 
 		return PyCapsule_New(rtn,"kgCSVfldP",NULL);
 
@@ -402,6 +406,7 @@ PyObject* runPK(PyObject* self, PyObject* args)
 	}
 
 	kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
+	if(rtn==NULL){ return Py_BuildValue("");}
 
 	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
 
@@ -680,8 +685,6 @@ PyObject* readkeyline_with_flag(PyObject* self, PyObject* args)
 	}
 	return finlist;
 }
-
-
 
 void py_kgshell_free(PyObject *obj){
 	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(obj,"kgshellP");

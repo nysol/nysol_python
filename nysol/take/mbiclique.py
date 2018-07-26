@@ -224,9 +224,8 @@ b c d,D,3,1
 		f3 <<= nm.mtra(k="num1",s="num2%n",f="num2")
 		f3 <<= nm.msortf(f="num1%n")
 		f3 <<= nm.mcut(f="num2",nfno=True,o=traFile)
-		
-		f3.run()		
-
+		f3.run()
+		os.system("cat "+traFile)
 	# ============
 	# entry point
 	def run(self):
@@ -258,6 +257,7 @@ b c d,D,3,1
 
 
 		extTake.lcm(runPara)
+		os.system("cat "+lcmout)
 		extTake.lcmtrans(lcmout,"p",xxt0)
 
 		f = None

@@ -48,6 +48,9 @@ class kgPyfunc : public kgMod
 	char const ** _cmdars;
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgPyfunc(void);
 	~kgPyfunc(void){}

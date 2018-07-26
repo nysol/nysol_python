@@ -4,11 +4,13 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Msetstr(NysolMOD_CORE):
-	kwd = n_core.getparalist("msetstr")
+	_kwd = n_core.getparalist("msetstr")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Msetstr,self).__init__("msetstr",nutil.args2dict(args,kw_args,Nysol_Msetstr.kwd))
+		super(Nysol_Msetstr,self).__init__("msetstr",nutil.args2dict(args,kw_args,Nysol_Msetstr._kwd))
 
 def msetstr(self,*args, **kw_args):
-	return Nysol_Msetstr(nutil.args2dict(args,kw_args,Nysol_Msetstr.kwd)).addPre(self)
+	return Nysol_Msetstr(nutil.args2dict(args,kw_args,Nysol_Msetstr._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "msetstr", msetstr)

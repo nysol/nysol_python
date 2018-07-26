@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mfifo(NysolMOD_CORE):
-	kwd = n_core.getparalist("mfifo")
+	_kwd = n_core.getparalist("mfifo")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mfifo,self).__init__("mfifo",nutil.args2dict(args,kw_args,Nysol_Mfifo.kwd))
+		super(Nysol_Mfifo,self).__init__("mfifo",nutil.args2dict(args,kw_args,Nysol_Mfifo._kwd))
 
 
 def mfifo(self,*args, **kw_args):
-	return Nysol_Mfifo(nutil.args2dict(args,kw_args,Nysol_Mfifo.kwd)).addPre(self)
+	return Nysol_Mfifo(nutil.args2dict(args,kw_args,Nysol_Mfifo._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mfifo", mfifo)

@@ -63,6 +63,9 @@ class kgNrcommon:public kgModIncludeSort {
 	void range_match(void);
 	
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgNrcommon(void);
 	~kgNrcommon(void){}

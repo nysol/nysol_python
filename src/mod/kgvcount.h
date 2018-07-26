@@ -47,6 +47,8 @@ class kgVcount:public kgMod {
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
 
 	// コンストラクタ
 	kgVcount(void);

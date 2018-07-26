@@ -4,11 +4,13 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mnjoin(NysolMOD_CORE):
-	kwd = n_core.getparalist("mnjoin")
+	_kwd = n_core.getparalist("mnjoin")
+	_inkwd = ["i=","m="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mnjoin,self).__init__("mnjoin",nutil.args2dict(args,kw_args,Nysol_Mnjoin.kwd))
+		super(Nysol_Mnjoin,self).__init__("mnjoin",nutil.args2dict(args,kw_args,Nysol_Mnjoin._kwd))
 
 def mnjoin(self,*args, **kw_args):
-	return Nysol_Mnjoin(nutil.args2dict(args,kw_args,Nysol_Mnjoin.kwd)).addPre(self)
+	return Nysol_Mnjoin(nutil.args2dict(args,kw_args,Nysol_Mnjoin._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mnjoin", mnjoin)

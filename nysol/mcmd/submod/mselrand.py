@@ -4,11 +4,13 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mselrand(NysolMOD_CORE):
-	kwd = n_core.getparalist("mselrand")
+	_kwd = n_core.getparalist("mselrand")
+	_inkwd = ["i="]
+	_outkwd = ["o=","u="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mselrand,self).__init__("mselrand",nutil.args2dict(args,kw_args,Nysol_Mselrand.kwd))
+		super(Nysol_Mselrand,self).__init__("mselrand",nutil.args2dict(args,kw_args,Nysol_Mselrand._kwd))
 
 def mselrand(self,*args, **kw_args):
-	return Nysol_Mselrand(nutil.args2dict(args,kw_args,Nysol_Mselrand.kwd)).addPre(self)
+	return Nysol_Mselrand(nutil.args2dict(args,kw_args,Nysol_Mselrand._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mselrand", mselrand)

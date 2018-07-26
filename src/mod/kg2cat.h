@@ -52,6 +52,9 @@ class kg2Cat : public kgMod {
 	void readwrite(size_t pos);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kg2Cat(void);
 	~kg2Cat(void){}

@@ -4,11 +4,13 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mnrcommon(NysolMOD_CORE):
-	kwd = n_core.getparalist("mnrcommon")
+	_kwd = n_core.getparalist("mnrcommon")
+	_inkwd = ["i=","m="]
+	_outkwd = ["o=","u="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mnrcommon,self).__init__("mnrcommon",nutil.args2dict(args,kw_args,Nysol_Mnrcommon.kwd))
+		super(Nysol_Mnrcommon,self).__init__("mnrcommon",nutil.args2dict(args,kw_args,Nysol_Mnrcommon._kwd))
 
 def mnrcommon(self,*args, **kw_args):
-	return Nysol_Mnrcommon(nutil.args2dict(args,kw_args,Nysol_Mnrcommon.kwd)).addPre(self)
+	return Nysol_Mnrcommon(nutil.args2dict(args,kw_args,Nysol_Mnrcommon._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mnrcommon", mnrcommon)

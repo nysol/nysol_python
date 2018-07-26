@@ -12,7 +12,10 @@ def _para2dict(func,args,kw_args):
 
 
 class Nysol_Runfunc(NysolMOD_CORE):
-	kwd = n_core.getparalist("runfunc")
+	_kwd = n_core.getparalist("runfunc")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
+
 	def __init__(self,func,*args, **kw_args) :
 		super(Nysol_Runfunc,self).__init__("runfunc",_para2dict(func,args,kw_args))
 

@@ -35,6 +35,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgNormalize::_ipara[] = {"i",""};
+const char * kgNormalize::_opara[] = {"o",""};
+
 kgNormalize::kgNormalize(void)
 {
 	_name    = "kgnormalize";

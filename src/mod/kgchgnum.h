@@ -55,6 +55,8 @@ class kgChgnum : public kgMod
 	// 範囲チェック
 	int rangecheck(char *str); 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
 
   // コンストラクタ
 	kgChgnum(void);

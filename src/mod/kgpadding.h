@@ -73,6 +73,8 @@ class kgPadding : public kgModIncludeSort
 	void writePading_time(const char *from,const char *to ,int direct,int outtype);	
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
   // コンストラクタ
 	kgPadding(void);
 	~kgPadding(void){}

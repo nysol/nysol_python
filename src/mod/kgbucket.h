@@ -55,6 +55,9 @@ class kgBucket : public kgModIncludeSort
 	void writeFldName_RangeF(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgBucket(void);
 	~kgBucket(void){}

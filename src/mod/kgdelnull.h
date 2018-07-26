@@ -54,6 +54,9 @@ class kgDelnull:public kgModIncludeSort
 	bool nullcheck(vector<int>& cnt,char** str);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgDelnull(void);
 	~kgDelnull(void){}

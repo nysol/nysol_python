@@ -33,6 +33,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgNrcommon::_ipara[] = {"i","m",""};
+const char * kgNrcommon::_opara[] = {"o","u",""};
+
 kgNrcommon::kgNrcommon(void)
 {
 	_name    = "kgnrcommon";

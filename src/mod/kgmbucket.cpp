@@ -561,6 +561,10 @@ Bucket calCutPoint( Cube& cube, vector<int>& bktSize, bool multiStart )
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgMbucket::_ipara[] = {"i",""};
+const char * kgMbucket::_opara[] = {"o","O",""};
+
+
 kgMbucket::kgMbucket(void)
 {
 	_name    = "kgmbucket";

@@ -35,6 +35,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgVreplace::_ipara[] = {"i","m",""};
+const char * kgVreplace::_opara[] = {"o",""};
+
 kgVreplace::kgVreplace(void)
 {
 	_name    = "kgvreplace";

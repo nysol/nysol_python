@@ -293,7 +293,12 @@ D,e
 		xxprev = tempW.file()
 		xxpair = tempW.file()
 		xxtra  = tempW.file()
-
+		os.system("echo ====gfil in")
+		os.system("cat "+xxinp)
+		os.system("echo ====gfil out")
+		os.system("cat "+xxitra)
+		os.system("echo ====gfil 1st ed")
+		
 		while True :
 			# 終了判定
 			if iter>=self.iterMax:
@@ -317,8 +322,15 @@ D,e
 			runpara["i"] = xxitra
 			runpara["th"] = self.th
 			runpara["o"] = xxpair
-
 			extTake.sspc(runpara)
+			print(runpara)
+
+			os.system("echo ====sspc in")
+			os.system("cat "+xxitra)
+			os.system("echo ====sspc out")
+			os.system("cat "+xxpair)
+			os.system("echo ====sspc 1st ed")
+
 			#	puts   "sspc t#{measure} -T #{kn} -l #{minSupp} -U 100000 -L 1 #{xxitra} #{th} #{xxpair}"
 
 			if not os.path.exists(xxpair):
@@ -327,7 +339,14 @@ D,e
 				self.noPat()
 			
 			extTake.grhfil(type='eu0',i=xxpair,o=xxtra)
-		
+
+			os.system("echo ====gfil in")
+			os.system("cat "+xxpair)
+			os.system("echo ====gfil out")
+			os.system("cat "+xxtra)
+			os.system("echo ====gfil 2st ed")
+
+
 			if self.logDir :
 				self.convSim(xxtra,"simGp{}.csv".format(iter),xxmap1,self.logDir)
 			
@@ -340,8 +359,13 @@ D,e
 			runpara["i"] = xxpair
 			runpara["th"] = self.th2
 			runpara["o"] = xxtra
-
+			print(runpara)
 			extTake.sspc(runpara)
+			os.system("echo ====sspc in")
+			os.system("cat "+xxpair)
+			os.system("echo ====sspc out")
+			os.system("cat "+xxtra)
+			os.system("echo ====sspc 2nd ed")
 
 			if not os.path.exists(xxtra):
 				self.noPat()
@@ -349,11 +373,31 @@ D,e
 				self.noPat()
 
 			extTake.grhfil(type='ed',i=xxtra,o=xxpair)
+			os.system("echo ====gfile in")
+			os.system("cat "+xxtra)
+			os.system("echo ====gfile out")
+			os.system("cat "+xxpair)
+			os.system("echo ====gfil 3rd-0 ed")
+			os.system("echo tail -n +{} {} == {}".format(edgeSize1,xxpair,xxtra))
 			os.system("tail -n +{} {} > {}".format(edgeSize1,xxpair,xxtra))
 
 			extTake.grhfil(type='D',i=xxtra,o=xxpair)
+			os.system("echo ====gfile in")
+			os.system("cat "+xxtra)
+			os.system("echo ====gfile out")
+			os.system("cat "+xxpair)
+			os.system("echo ====gfil 3rd ed")
 
-			extTake.grhfil(type='DE',d=xxitra,i=xxpair,o=xxdiff)
+			extTake.grhfil(type='DE',d=xxitra,i=xxpair,o=xxdiff) #<==つかってない？
+			os.system("echo ====gfile in")
+			os.system("cat "+xxpair)
+			os.system("echo ====gfile d")
+			os.system("cat "+xxitra)
+			os.system("echo ====gfile out")
+			os.system("cat "+xxdiff)
+			os.system("echo ====gfil DE ed")
+
+
 
 			shutil.copyfile(xxpair,xxitra)
 

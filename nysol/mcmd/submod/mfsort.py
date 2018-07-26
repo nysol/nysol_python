@@ -4,11 +4,13 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mfsort(NysolMOD_CORE):
-	kwd = n_core.getparalist("mfsort")
+	_kwd = n_core.getparalist("mfsort")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mfsort,self).__init__("mfsort",nutil.args2dict(args,kw_args,Nysol_Mfsort.kwd))
+		super(Nysol_Mfsort,self).__init__("mfsort",nutil.args2dict(args,kw_args,Nysol_Mfsort._kwd))
 
 def mfsort(self,*args, **kw_args):
-	return Nysol_Mfsort(nutil.args2dict(args,kw_args,Nysol_Mfsort.kwd)).addPre(self)
+	return Nysol_Mfsort(nutil.args2dict(args,kw_args,Nysol_Mfsort._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mfsort", mfsort)

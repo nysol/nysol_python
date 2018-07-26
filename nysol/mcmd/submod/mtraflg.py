@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mtraflg(NysolMOD_CORE):
-	kwd = n_core.getparalist("mtraflg")
+	_kwd = n_core.getparalist("mtraflg")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mtraflg,self).__init__("mtraflg",nutil.args2dict(args,kw_args,Nysol_Mtraflg.kwd))
+		super(Nysol_Mtraflg,self).__init__("mtraflg",nutil.args2dict(args,kw_args,Nysol_Mtraflg._kwd))
 
 
 def mtraflg(self,*args, **kw_args):
-	return Nysol_Mtraflg(nutil.args2dict(args,kw_args,Nysol_Mtraflg.kwd)).addPre(self)
+	return Nysol_Mtraflg(nutil.args2dict(args,kw_args,Nysol_Mtraflg._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mtraflg", mtraflg)

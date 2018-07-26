@@ -73,6 +73,9 @@ class kgCat : public kgMod
 
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgCat(void);
 	~kgCat(void){}

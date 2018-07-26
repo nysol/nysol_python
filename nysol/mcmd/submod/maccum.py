@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Maccum(NysolMOD_CORE):
-	kwd = n_core.getparalist("maccum")
+	_kwd = n_core.getparalist("maccum")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Maccum,self).__init__("maccum",nutil.args2dict(args,kw_args,Nysol_Maccum.kwd))
+		super(Nysol_Maccum,self).__init__("maccum",nutil.args2dict(args,kw_args,Nysol_Maccum._kwd))
 
 def maccum(self,*args, **kw_args):
-	return Nysol_Maccum(nutil.args2dict(args,kw_args,Nysol_Maccum.kwd)).addPre(self)
+	return Nysol_Maccum(nutil.args2dict(args,kw_args,Nysol_Maccum._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "maccum", maccum)
 

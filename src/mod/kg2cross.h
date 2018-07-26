@@ -61,7 +61,10 @@ class kg2Cross : public kgModIncludeSort
 	int runMain(void);
 
 public:
-  // コンストラクタ
+	static const char * _ipara[];
+	static const char * _opara[];
+
+	 // コンストラクタ
 	kg2Cross(void);
 	~kg2Cross(void){}
 

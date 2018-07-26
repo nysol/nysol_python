@@ -50,6 +50,9 @@ class kgMbucket : public kgModIncludeSort
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgMbucket(void);
 	~kgMbucket(void){}

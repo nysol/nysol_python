@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mcal(NysolMOD_CORE):
-	kwd = n_core.getparalist("mcal")
+	_kwd = n_core.getparalist("mcal")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mcal,self).__init__("mcal",nutil.args2dict(args,kw_args,Nysol_Mcal.kwd))
+		super(Nysol_Mcal,self).__init__("mcal",nutil.args2dict(args,kw_args,Nysol_Mcal._kwd))
 
 def mcal(self,*args, **kw_args):
-	return Nysol_Mcal(nutil.args2dict(args,kw_args,Nysol_Mcal.kwd)).addPre(self)
+	return Nysol_Mcal(nutil.args2dict(args,kw_args,Nysol_Mcal._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mcal", mcal)
 

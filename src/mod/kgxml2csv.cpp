@@ -237,6 +237,9 @@ void kgXml2csv::start_characters(XmlState *state, xmlChar *chars, int len)
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgXml2csv::_ipara[] = {"i",""};
+const char * kgXml2csv::_opara[] = {"o",""};
+
 kgXml2csv::kgXml2csv(void)
 {
 	_name    = "kgxml2csv";

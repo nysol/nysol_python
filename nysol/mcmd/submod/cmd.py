@@ -4,13 +4,15 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Excmd(NysolMOD_CORE):
-	kwd = n_core.getparalist("cmd")
+	_kwd = n_core.getparalist("cmd")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Excmd,self).__init__("cmd",nutil.arg2dict(args,kw_args,Nysol_Excmd.kwd))
+		super(Nysol_Excmd,self).__init__("cmd",nutil.arg2dict(args,kw_args,Nysol_Excmd._kwd))
 
 
 def cmd(self,*args, **kw_args):
 
-	return Nysol_Excmd(nutil.arg2dict(args,kw_args,Nysol_Excmd.kwd)).addPre(self)
+	return Nysol_Excmd(nutil.arg2dict(args,kw_args,Nysol_Excmd._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "cmd", cmd)

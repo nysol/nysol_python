@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mbest(NysolMOD_CORE):
-	kwd = n_core.getparalist("mbest")
+	_kwd = n_core.getparalist("mbest")
+	_inkwd = ["i="]
+	_outkwd = ["o=","u="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Mbest,self).__init__("mbest",nutil.args2dict(args,kw_args,Nysol_Mbest.kwd))
+		super(Nysol_Mbest,self).__init__("mbest",nutil.args2dict(args,kw_args,Nysol_Mbest._kwd))
 
 def mbest(self,*args, **kw_args):
-	return Nysol_Mbest(nutil.args2dict(args,kw_args,Nysol_Mbest.kwd)).addPre(self)
+	return Nysol_Mbest(nutil.args2dict(args,kw_args,Nysol_Mbest._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "mbest", mbest)
 

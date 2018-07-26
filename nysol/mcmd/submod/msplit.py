@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Msplit(NysolMOD_CORE):
-	kwd = n_core.getparalist("msplit")
+	_kwd = n_core.getparalist("msplit")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_Msplit,self).__init__("msplit",nutil.args2dict(args,kw_args,Nysol_Msplit.kwd))
+		super(Nysol_Msplit,self).__init__("msplit",nutil.args2dict(args,kw_args,Nysol_Msplit._kwd))
 
 
 def msplit(self,*args, **kw_args):
-	return Nysol_Msplit(nutil.args2dict(args,kw_args,Nysol_Msplit.kwd)).addPre(self)
+	return Nysol_Msplit(nutil.args2dict(args,kw_args,Nysol_Msplit._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "msplit", msplit)

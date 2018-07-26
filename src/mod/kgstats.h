@@ -50,6 +50,9 @@ class kgStats : public kgModIncludeSort {
 	void setArgsMain(void);	
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgStats(void);
 	~kgStats(void){}

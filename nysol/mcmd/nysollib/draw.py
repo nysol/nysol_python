@@ -9,14 +9,18 @@ def dicisionPosSub(mlist,iolist,baselist,dsppos,y,counter,basecont):
 		dsppos[i] = [counter[y],y]
 		counter[y]+=1
 
-		newlist = iolist[i][0] + iolist[i][1] 
+		newlist = []
+		for x in iolist[i][0]:
+			newlist.append(x[0])
 
 		if not y-1 in counter.keys():
 			counter[y-1]=basecont
 
 		dicisionPosSub(mlist,iolist,newlist,dsppos,y-1,counter,basecont)
 
-		newlist = iolist[i][2] + iolist[i][3] 
+		newlist = []
+		for x in iolist[i][1]:
+			newlist.append(x[0])
 
 		if not y+1 in counter.keys():
 			counter[y+1]=basecont
@@ -34,7 +38,7 @@ def dicisionPos(mlist,iolist):
 
 
 	for i , mm in enumerate(iolist):
-		if len(mm[0]) == 0 and len(mm[1]) == 0 :
+		if len(mm[0]) == 0 :
 			startpos.add(i)
 
 	dsppos   = [None]*len(mlist)
@@ -65,32 +69,58 @@ def dicisionPos(mlist,iolist):
 
 def filenameEXTRACT(mlist,iolist,linklist):
 
-	ioPosF ={'o':2,'i':0,'m':1,'u':3}
-	ioPosT ={'o':0,'i':2,'m':2,'u':0}
-
 	addmod =[]
 	addfnod ={}
 
 	maxCnt = len(mlist)
 	for i, mm in enumerate(mlist):
-		if len(mm[2]) != 0:
+		
+		if len(mm[2]) != 0: # in
 			for k,v in mm[2].items():
-				if v in addfnod:
+
+				if not isinstance(v, list) and v in addfnod:
 					newpos = addfnod[v] 
+				elif isinstance(v, list):
+					addfnod["ilist_"+str(i)]=maxCnt
+					iolist.append([[], []])
+					addmod.append(['list',["ilist_"+str(i)],{},{},''])
+					newpos = maxCnt
+					maxCnt+=1
 				else:
 					addfnod[v]=maxCnt
-					iolist.append([[], [], [], []])
-					addmod.append(['file',[v],{},''])
+					iolist.append([[], []])
+					addmod.append(['file',[v],{},{},''])
 					newpos = maxCnt
 					maxCnt+=1
 
-				iolist[i][ioPosF[k]].append(newpos)
-				iolist[newpos][ioPosT[k]].append(i)
+				iolist[i][0].append([newpos,k])
+				iolist[newpos][1].append([i,'o'])
+				linklist.append([["o",newpos],[k,i]])
 
-				if ioPosT[k] == 0:
-					linklist.append([[k,i],["i",newpos]])
+		if len(mm[3]) != 0: # out
+		
+			for k,v in mm[3].items():
+
+				if not isinstance(v, list) and v in addfnod:
+					newpos = addfnod[v] 
+
+				elif isinstance(v, list):
+					addfnod["olist_"+str(i)]=maxCnt
+					iolist.append([[], []])
+					addmod.append(['list',["olist_"+str(i)],{},{},''])
+					newpos = maxCnt
+					maxCnt+=1
+
 				else:
-					linklist.append([["o",newpos],[k,i]])
+					addfnod[v]=maxCnt
+					iolist.append([[], []])
+					addmod.append(['file',[v],{},{},''])
+					newpos = maxCnt
+					maxCnt+=1
+
+				iolist[i][1].append([newpos,k])
+				iolist[newpos][1].append([i,"i"])
+				linklist.append([[k,i],["i",newpos]])
 				
 
 		mlist[i][2] ={}
@@ -126,7 +156,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 		f.write("<g>\n")
 
-		if modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
+		if modobj[0] == "file" :
 			flist =[]
 			for full in modobj[1] :
 				flist.append(full.split("/")[-1])
@@ -139,10 +169,10 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 		else:
 			titlestr = modobj[0] + " "+ " ".join(modobj[1]).replace('"', '\\"') 
 
-		if  modobj[3] == "" :
+		if  modobj[4] == "" :
 			f.write("<title>" + titlestr + "</title>\n" )
 		else:
-			f.write("<title>" + titlestr+ "@" + modobj[3] + "</title>\n" )
+			f.write("<title>" + titlestr+ "@" + modobj[4] + "</title>\n" )
 
 		if modobj[0] == "cmd":
 
@@ -154,7 +184,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 				nameval = modobj[0]
 			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='gray'>\n" + nameval + "\n</text>\n"
 
-		elif modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
+		elif modobj[0] == "file" or modobj[0] == "list" :
 
 			mstr = "<rect x='" + str(x*60) + "' y='" + str(y*60+5) + "' width='40' height='40' stroke='blue' fill='white' stroke-width='1'/>\n"
 			mstr += "<text x='" + str(x*60) + "' y='" + str(y*60+20) + "' fill='black'>\n" + modobj[0] + "\n</text>\n"
@@ -197,7 +227,6 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	"""
 		OUTPUT FLOW SVG HTML USING D3.V3 
 	"""
-
 	filenameEXTRACT(mlist,iolist,linklist)
 
 	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
@@ -222,7 +251,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 
 		x,y = mm
 
-		if modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file":
+		if modobj[0] == "file":
 			flist =[]
 			for full in modobj[1] :
 				flist.append(full.split("/")[-1])
@@ -235,10 +264,10 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		else:
 			titlestr = modobj[0] + " "+ " ".join(modobj[1])
 
-		if  modobj[3] == "" :
+		if  modobj[4] == "" :
 			f.write("{ title:\"%s\"," % (titlestr.replace('"', '\\"')) ) 
 		else:
-			f.write("{ title:\"%s @ %s\"," % (titlestr.replace('"', '\\"'),modobj[3]) ) 
+			f.write("{ title:\"%s @ %s\"," % (titlestr.replace('"', '\\"'),modobj[4]) ) 
 
 		if modobj[0] == "cmd":
 			namevals =  titlestr.split()
@@ -248,10 +277,16 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 				nameval = modobj[0]
 			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"excmd\"}" % (x*60+20,y*60+20, nameval) ) 
 
-		elif modobj[0] == "ifile" or modobj[0] == "ofile" or modobj[0] == "file" :
+		elif modobj[0] == "file" :
 			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"file\"}" % (x*60+20,y*60+20, modobj[0])) 
+		elif modobj[0] == "list":
+			f.write(" x:%d , y:%d , name:\"%s\" ,tp:\"list\"}" % (x*60+20,y*60+20, modobj[0])) 
 		else:
-			f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0])) 
+			if modobj[5] == True:
+				f.write(" x:%d , y:%d , name:\"%s\", tp:\"sysadd\"}" % (x*60+20,y*60+20, modobj[0])) 
+			else:
+				f.write(" x:%d , y:%d , name:\"%s\", tp:\"mod\"}" % (x*60+20,y*60+20, modobj[0])) 
+				
 
 		if mlastNo==i+1 :
 			f.write("]\n")
@@ -379,7 +414,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 			.text(function(d) { return d.title})
 
 	node_g2
-		.filter(function(d) { return d.tp != "file" })
+		.filter(function(d) { return d.tp != "file" && d.tp != "list" && d.tp != "sysadd"})
 		.append('circle')
 		.attr('r',20)
 		.attr('stroke','blue')
@@ -387,7 +422,15 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		.attr('stroke-width',1)
 
 	node_g2
-		.filter(function(d) { return d.tp == "file" })
+		.filter(function(d) { return d.tp == "sysadd"})
+		.append('circle')
+		.attr('r',20)
+		.attr('stroke','gray')
+		.attr('fill','white')
+		.attr('stroke-width',1)
+
+	node_g2
+		.filter(function(d) { return d.tp == "file" || d.tp == "list"  })
 		.append('rect')
 		.attr('x',-20)
 		.attr('y',-15)
@@ -400,7 +443,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	node_g2.append('text')
 		.attr('x',function(d) { return -20})
 		.attr('fill',function(d) { 
-			if ( d.tp == 'excmd'){ return 'gray'; } 
+			if ( d.tp == 'excmd' || d.tp == "sysadd" ){ return 'gray'; } 
 			else { return 'black'; }
 		})
 		.text(function(d) { return d.name})

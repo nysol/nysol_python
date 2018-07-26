@@ -37,6 +37,9 @@ using namespace boost::posix_time;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgPadding::_ipara[] = {"i",""};
+const char * kgPadding::_opara[] = {"o",""};
+
 kgPadding::kgPadding(void)
 {
 	_name    = "kgpadding";

@@ -645,6 +645,60 @@ vector<string> kglib::splitToken(string& str, char delim,bool skip)
   return vs;
 }
 
+
+// -----------------------------------------------------------------------------
+// delimでトークン分割を行い分割された文字列をvectorで返す.
+// escape文字は'\' 
+// \delimにてdelim文字もescapeされる．
+// string 文字列用
+// 例) ab,cd\,ef -> 0:ab 1:cd,ef
+// skip:trueの場合連続したdelimおよび先頭、末尾のdelimは無視される
+// -----------------------------------------------------------------------------
+vector<string> kglib::splitTokenx(string str, char delim,bool skip)
+{
+  vector<string> vs;
+	if(! str.empty()){
+  	string::size_type prv=0;
+  	string::size_type pos=0;
+  	while(1){
+    	if(str[pos] == L'\0'){
+				if(skip && prv == pos ){
+					break;
+				}
+				if(pos!=0){
+  	    	vs.push_back(str.substr(prv, pos-prv));
+  	    }
+ 				break;
+			}
+    	if(str[pos] == '\\'){
+    		str.erase(pos,1);
+    		if(str[pos] != L'\0'){
+      		if(str[pos]=='t'){
+        		str[pos]='\t';
+					} else if(str[pos]=='n'){
+        		str[pos]='\n';
+					}
+    			pos++;
+				}
+			}else if(str[pos] == delim){
+				if(skip && pos==0){
+					while(str[pos+1]==delim){ pos++; }			
+					prv=pos+1;
+					pos++;
+					continue;
+				}
+      	vs.push_back(str.substr(prv, pos-prv));
+				if(skip){
+					while(str[pos+1]==delim){ pos++; }
+				}
+				prv = ++pos;
+			}else{
+				pos++;
+			}
+		}
+  }
+  return vs;
+}
 // -----------------------------------------------------------------------------
 // delimでトークン分割を行い分割された文字列をvectorで返す.
 // escape文字は'\' 

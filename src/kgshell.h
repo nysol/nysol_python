@@ -86,10 +86,18 @@ class kgshell{
 	pthread_cond_t 	_stsCond;
 	pthread_cond_t 	_forkCond;
 
+	template <class kgmodTP> void setMap(std::string,int runTP);
+
 	typedef map<std::string, boost::function<kgMod* ()> > kgmod_map_t;
 	typedef map<std::string, int > kgmod_run_t;
+	typedef map<std::string, const char **> kgmod_ioinfo_t;
+
 	kgmod_map_t    _kgmod_map; //keyword - 関数対応表
 	kgmod_run_t    _kgmod_run;
+	kgmod_ioinfo_t _kgmod_Iinfo;
+	kgmod_ioinfo_t _kgmod_Oinfo;
+
+
   kgEnv _env;
 	bool _nfni;
  	kgCSVfld* _iterrtn;
@@ -130,7 +138,6 @@ class kgshell{
 	kgSplitBlock _spblk;
 
 
-	void makePipeList(vector<linkST>& plist,int iblk);
 
 	argST *_argst;
 
@@ -218,9 +225,11 @@ class kgshell{
 			_modlist = NULL;
 		}
 	}
+	int countIO(kgmod_ioinfo_t& iomap,string& cmdname,map<string,vector<int> > & iopipeMap);
 	void runInit(vector<cmdCapselST> &cmds,vector<linkST> & plist);
-	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk);
-	int runiter_SUB(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk);
+	void makePipeList(vector<linkST>& plist,int iblk,bool outpipe);
+	int threadStkINIT(pthread_attr_t *pattr);
+	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk,bool outpipe=false);
 
 public:
 	// コンストラクタ

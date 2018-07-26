@@ -50,6 +50,8 @@ class kgVdelnull:public kgMod {
 	void output_n(char *str,bool eol);
 	
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
 
 	// コンストラクタ
 	kgVdelnull(void);

@@ -108,7 +108,7 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 		elif k in klist[1] and v== True:
 			pass
-		elif k == "tag" or k == "dlog" :
+		elif k == "tag" or k == "dlog" or k == "sysadd" :
 			pass
 			
 		else:

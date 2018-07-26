@@ -35,6 +35,9 @@ class kgFifo : public kgMod {
 	void oClose(void) throw(kgError);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgFifo(void);
 	~kgFifo(void){}

@@ -45,6 +45,9 @@ class kgSetstr : public kgMod {
 	
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgSetstr(void);
 	~kgSetstr(void){}

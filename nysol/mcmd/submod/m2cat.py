@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_M2cat(NysolMOD_CORE):
-	kwd = n_core.getparalist("m2cat")
+	_kwd = n_core.getparalist("m2cat")
+	_inkwd = ["i="]
+	_outkwd = ["o="]
 	def __init__(self,*args, **kw_args) :
-		super(Nysol_M2cat,self).__init__("m2cat",nutil.args2dict(args,kw_args,Nysol_M2cat.kwd))
+		super(Nysol_M2cat,self).__init__("m2cat",nutil.args2dict(args,kw_args,Nysol_M2cat._kwd))
 
 def m2cat(self,*args, **kw_args):
-	return Nysol_M2cat(nutil.args2dict(args,kw_args,Nysol_M2cat.kwd)).addPre(self)
+	return Nysol_M2cat(nutil.args2dict(args,kw_args,Nysol_M2cat._kwd)).addPre(self)
 
 setattr(NysolMOD_CORE, "m2cat", m2cat)
 
