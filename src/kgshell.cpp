@@ -623,38 +623,74 @@ int kgshell::threadStkINIT(pthread_attr_t *pattr){
 	return 0;
 }
 
-int kgshell::countIO(
+int kgshell::setArgStIO(
 	kgmod_ioinfo_t& ioinfo,
 	string& cmdname,
-	map<string,vector<int> > & iopipeMap){
+	map<string,vector<int> > & iopipeMap,
+	int **io_p){
 	
 	int cnt=0;
-	//件数チェック
-	if( ioinfo.find(cmdname) != ioinfo.end()){
-		int dmycnt= 0;
-		const char ** ikwd = ioinfo.find(cmdname)->second;
-		while(**ikwd){
-			if( iopipeMap.find(*ikwd) != iopipeMap.end()){
-				size_t addcnt = iopipeMap[*ikwd].size();
-				if (addcnt==0){
-					dmycnt ++;
-				}
-				else{
-					if(dmycnt!=0){
-						cnt += dmycnt;
-						dmycnt=0;
-					}
-					cnt += addcnt;
-				}
+
+	//件数チェック (後ろNULLはカウントしない)セットも一緒にする？
+	if( ioinfo.find(cmdname) == ioinfo.end()){
+		return cnt;
+	}
+	int dmycnt= 0;
+
+	const char ** ikwd_st = ioinfo.find(cmdname)->second;
+	const char ** ikwd = ikwd_st;
+	while(**ikwd){
+
+		if( iopipeMap.find(*ikwd) == iopipeMap.end()){
+			dmycnt ++; 
+		}
+		else{
+			size_t addcnt = iopipeMap[*ikwd].size();
+			if (addcnt==0){
+				dmycnt ++;
 			}
-			else{
+			else {
+				if(dmycnt!=0){
+					cnt += dmycnt;
+					dmycnt=0;
+				}
+				cnt += addcnt;
+			}
+		}
+		ikwd++;
+	}
+
+	if(cnt==0){ return cnt;}
+
+	// ip num セット 
+	*io_p = new int[cnt];
+	int pos;
+	for(pos=0 ; pos < cnt ; pos++){ (*io_p)[pos] = -1; }
+	pos = 0;
+	dmycnt =0;
+	ikwd = ikwd_st;
+	while(**ikwd){
+		if( iopipeMap.find(*ikwd) == iopipeMap.end()){
+			dmycnt ++; 
+		}
+		else{
+			if(iopipeMap[*ikwd].size()==0){
 				dmycnt ++; 
 			}
-			ikwd++;
+			else{
+				pos += dmycnt;
+			}
+			for(size_t jj=0 ; jj<iopipeMap[*ikwd].size() ;jj++){
+				(*io_p)[pos] = iopipeMap[*ikwd][jj];
+				pos++;
+			}
 		}
-	}	
+		ikwd++;
+	}
+
 	return cnt;
 }
+
 
 int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,bool outpipe){
 
@@ -678,11 +714,13 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 	for(size_t i=0;i<cmdlist.size();i++){
 
 		int cmdNo = cmdlist[i];
-		if ( _kgmod_map.find(cmds[cmdNo].cmdname) == _kgmod_map.end()){
-			err_OUTPUT("not 1 kgmod "+ cmds[cmdNo].cmdname);
+		string cmdname = cmds[cmdNo].cmdname;
+		
+		if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
+			err_OUTPUT("not 1 kgmod "+ cmdname);
 			return 1;
 		}
-		_modlist[i] = _kgmod_map.find(cmds[cmdNo].cmdname)->second() ;
+		_modlist[i] = _kgmod_map.find(cmdname)->second() ;
 		kgArgs newArgs;
 		for(size_t j=0;j<cmds[cmdNo].paralist.size();j++){
 			newArgs.add(cmds[cmdNo].paralist[j]);
@@ -701,8 +739,12 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 		_argst[i].kobj= cmds[cmdNo].kobj;
 		_argst[i].mutex = &_mutex;
 		_argst[i].forkCond = &_forkCond;
+		_argst[i].i_cnt= 0;
+		_argst[i].o_cnt= 0;
+		_argst[i].i_p= NULL;
+		_argst[i].o_p= NULL;
 
-		int typ = _kgmod_run.find(cmds[cmdNo].cmdname)->second ;
+		int typ = _kgmod_run.find(cmdname)->second ;
 		if(typ==3){
 			_argst[i].fdlist= _FDlist;
 			_runst[i] = 0;
@@ -715,51 +757,16 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 		if( _ipipe_map.find(cmdNo) == _ipipe_map.end() ){ 
 			if(typ==2){
 				_argst[i].i_cnt= 1;
-				_argst[i].i_p= NULL;
 				_argst[i].list = cmds[cmdNo].iobj;
 			}
 			else{
 				_argst[i].i_cnt= 0;
-				_argst[i].i_p= NULL;
 			}
 		}
 		else{
-			// ここは今のところ固定//全パラメータやる必要＆パラメータ順位をkgmodから
-			int icnt = countIO(_kgmod_Iinfo,cmds[cmdNo].cmdname,_ipipe_map[cmdNo]);
-
-			if(icnt==0){
-				_argst[i].i_cnt= 0;
-				_argst[i].i_p= NULL;
-			}
-			else{
-				//pipeセット
-				_argst[i].i_cnt= icnt;
-				_argst[i].i_p= new int[icnt];
-				for(int h=0 ; h<icnt ; h++){ _argst[i].i_p[h]=-1; }
-
-				size_t pos = 0;
-				if( _kgmod_Iinfo.find(cmds[cmdNo].cmdname) != _kgmod_Iinfo.end()){
-					int dmycnt_s= 0;
-					const char ** ikwd = _kgmod_Iinfo.find(cmds[cmdNo].cmdname)->second;
-					while(**ikwd){
-						if( _ipipe_map[cmdNo].find(*ikwd) != _ipipe_map[cmdNo].end()){
-							if(_ipipe_map[cmdNo][*ikwd].size()==0){
-								dmycnt_s++;
-							}
-							else{
-								pos += dmycnt_s;
-							}
-							for(size_t jj=0;jj<_ipipe_map[cmdNo][*ikwd].size();jj++){
-								_argst[i].i_p[pos] = _ipipe_map[cmdNo][*ikwd][jj];
-								pos++;
-							}
-						}
-						else{dmycnt_s++;}
-						ikwd++;
-					}
-				}
-			}
+			_argst[i].i_cnt = setArgStIO(_kgmod_Iinfo,cmdname,_ipipe_map[cmdNo],&(_argst[i].i_p));
 		}
+
 		if(i==0 && outpipe ){ // kgcsv用
 			_argst[i].o_cnt= 1;
 			_argst[i].o_p= new int[1];
@@ -768,53 +775,15 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 		else if( _opipe_map.find(cmdNo) == _opipe_map.end() ){ 
 			if(typ==1){
 				_argst[i].o_cnt= 1;
-				_argst[i].o_p = NULL;
 				_argst[i].mutex = &_mutex;
 				_argst[i].list = cmds[cmdNo].oobj;
 			}
 			else{
 				_argst[i].o_cnt= 0;
-				_argst[i].o_p= NULL;
 			}
 		}
 		else{
-
-			int ocnt = countIO( _kgmod_Oinfo,cmds[cmdNo].cmdname,_opipe_map[cmdNo]);
-
-
-			if(ocnt==0){
-				_argst[i].o_cnt= 0;
-				_argst[i].o_p= NULL;
-			}
-			else{
-				_argst[i].o_cnt= ocnt;
-				_argst[i].o_p= new int[ocnt];
-
-				for(int h=0; h<ocnt; h++){ _argst[i].o_p[h]=-1; }
-
-				size_t pos = 0;
-				if( _kgmod_Oinfo.find(cmds[cmdNo].cmdname) != _kgmod_Oinfo.end()){
-					int dmycnt_s= 0;
-					const char ** okwd_s = _kgmod_Oinfo.find(cmds[cmdNo].cmdname)->second;
-					while(**okwd_s){
-						if( _opipe_map[cmdNo].find(*okwd_s) != _opipe_map[cmdNo].end()){
-							if(_opipe_map[cmdNo][*okwd_s].size()==0){
-								dmycnt_s++;
-							}
-							else{
-								pos += dmycnt_s;
-							}
-							for(size_t jj=0;jj<_opipe_map[cmdNo][*okwd_s].size();jj++){
-								_argst[i].o_p[pos] = _opipe_map[cmdNo][*okwd_s][jj];
-								pos++;
-							}
-						}
-						okwd_s++;
-
-					}
-
-				}
-			}
+			_argst[i].o_cnt = setArgStIO(_kgmod_Oinfo,cmdname,_opipe_map[cmdNo],&(_argst[i].o_p));
 		}
 	}
 

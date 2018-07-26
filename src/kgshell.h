@@ -225,7 +225,7 @@ class kgshell{
 			_modlist = NULL;
 		}
 	}
-	int countIO(kgmod_ioinfo_t& iomap,string& cmdname,map<string,vector<int> > & iopipeMap);
+	int setArgStIO(kgmod_ioinfo_t& iomap,string& cmdname,map<string,vector<int> > & iopipeMap,int **io_p);
 	void runInit(vector<cmdCapselST> &cmds,vector<linkST> & plist);
 	void makePipeList(vector<linkST>& plist,int iblk,bool outpipe);
 	int threadStkINIT(pthread_attr_t *pattr);
