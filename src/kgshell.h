@@ -280,6 +280,7 @@ public:
 	void cancel(void){ runClean();}
 
 	int getparams(kgstr_t cmdname,PyObject* list);
+	int getIoInfo(kgstr_t cmdname,PyObject* list,int iotp);
 
 
 

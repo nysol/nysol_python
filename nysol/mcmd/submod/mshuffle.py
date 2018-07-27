@@ -4,8 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mshuffle(NysolMOD_CORE):
-	_kwd = n_core.getparalist("mshuffle")
-	_inkwd = ["i="]
+
+	_kwd,_inkwd,_outkwd  = n_core.getparalist("mshuffle",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mshuffle,self).__init__("mshuffle",nutil.args2dict(args,kw_args,Nysol_Mshuffle._kwd))
 

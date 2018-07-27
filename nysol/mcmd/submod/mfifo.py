@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mfifo(NysolMOD_CORE):
-	_kwd = n_core.getparalist("mfifo")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd,_outkwd = n_core.getparalist("mfifo",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mfifo,self).__init__("mfifo",nutil.args2dict(args,kw_args,Nysol_Mfifo._kwd))
 

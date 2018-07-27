@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mvreplace(NysolMOD_CORE):
-	_kwd = n_core.getparalist("mvreplace")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd,_outkwd = n_core.getparalist("mvreplace",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mvreplace,self).__init__("mvreplace",nutil.args2dict(args,kw_args,Nysol_Mvreplace._kwd))
 

@@ -72,14 +72,14 @@ class Nysol_convIter(object):
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def next(self):
-		line = n_core.readlineconvPtn(self.csvin,self.dptn)
+		line = n_core.readline(self.csvin,self.dptn)
 		if line: 
 			return line
 		raise StopIteration()
 
 
 	def __next__(self):
-		line = n_core.readlineconvPtn(self.csvin,self.dptn)
+		line = n_core.readline(self.csvin,self.dptn)
 		if line: 
 			return line
 		raise StopIteration()
@@ -174,7 +174,7 @@ class Nysol_MeachKeyIter(object):
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
-		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 
@@ -234,7 +234,7 @@ class Nysol_MeachKeyDictIter(object):
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
-		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def next(self):
@@ -297,7 +297,7 @@ class Nysol_MeachKeyIterWithFlag(object):
 		runobj.makeLinkList(iolist,linklist)
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
-		self.csvin = n_core.runkeyiter(self.shobj,modlist,linklist,newkeys)
+		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 		self.breakPre = True
 	

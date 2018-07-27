@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_M2cross(NysolMOD_CORE):
-	_kwd = n_core.getparalist("m2cross")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd,_outkwd  = n_core.getparalist("m2cross",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_M2cross,self).__init__("m2cross",nutil.args2dict(args,kw_args,Nysol_M2cross._kwd))
 

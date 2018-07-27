@@ -41,71 +41,41 @@ static bool strCHECK(PyObject* data){
 static PyObject* setRtnData(long k,char * v){
 	PyObject* rtn = NULL;
 
-	if(k==0){ //str
+	if(*v=='\0'){
+
+		Py_INCREF(Py_None);
+		rtn = Py_None;
+
+	}
+	else if(k==0){ //str
 
 		rtn = Py_BuildValue("s", v);
-			
+
 	}else if(k==1){ // int
 
-		if(*v=='\0'){ rtn = Py_BuildValue("d", Py_NAN); }
-		else        { rtn = Py_BuildValue("l", atol(v)); }
+		rtn = Py_BuildValue("l", atol(v)); 
 
 	}else if(k==2){ // double
 
-			if(*v=='\0'){ rtn = Py_BuildValue("d", Py_NAN); }
-			else        { rtn = Py_BuildValue("d", atof(v)); }
+		rtn = Py_BuildValue("d", atof(v));
 
 	}else if(k==3){ // bool
 
-		int len = strlen(v);
-		if(len==1){	
-			if(*v=='1'){
-				rtn = Py_True;
-				Py_INCREF(Py_True);
-			}else if(*v=='0'){
-				rtn = Py_False;
-				Py_INCREF(Py_False);
-			}
-			else{
-				rtn = Py_None;
-				Py_INCREF(Py_None);
-			}
-		}
-		else if(len==4){
-			if ( ( *v == 't' || *v == 'T') && (*(v+1) == 'r' || *(v+1) == 'R') 
-						&& ( *(v+2) == 'u' || *(v+2) == 'U')  &&  ( *(v+3) == 'e' || *(v+3) == 'E') ){
+		if(strlen(v)==1 && *v=='0'){
 
-				rtn = Py_True;
-				Py_INCREF(Py_True);
+			Py_INCREF(Py_False);
+			rtn = Py_False;
 
-			}
-			else{
-
-				rtn = Py_None;
-				Py_INCREF(Py_None);
-
-			}
-		}
-		else if(len==5){
-			if ( ( *v == 'f' || *v == 'F') 
-				&& ( *(v+1) == 'a' || *(v+1) == 'A') && ( *(v+2) == 'l' || *(v+2) == 'l')
-			 	&& ( *(v+3) == 's' || *(v+3) == 'S') && ( *(v+4) == 'e' || *(v+4) == 'E')){
-
-				rtn = Py_False;
-				Py_INCREF(Py_False);
-			}
-			else {
-				rtn = Py_None;
-				Py_INCREF(Py_None);
-			}
-		}
+		}	
 		else{
-			rtn = Py_None;
-			Py_INCREF(Py_None);
 
+			Py_INCREF(Py_True);
+			rtn = Py_True;
+		
 		}
 	}
 	else{
+
 		rtn = Py_None;
 		Py_INCREF(Py_None);
 	
@@ -113,8 +83,6 @@ static PyObject* setRtnData(long k,char * v){
 	return rtn;
 
 }
-
-
 
 PyObject* cancel(PyObject* self, PyObject* args)
 {
@@ -274,7 +242,7 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 }
 
 
-PyObject* runLx(PyObject* self, PyObject* args)
+PyObject* run(PyObject* self, PyObject* args)
 {
 	try {
 
@@ -321,9 +289,7 @@ PyObject* runLx(PyObject* self, PyObject* args)
 	return PyLong_FromLong(1);
 }
 
-
-
-PyObject* runP(PyObject* self, PyObject* args)
+PyObject* runITER(PyObject* self, PyObject* args)
 {
 
 	try {
@@ -339,7 +305,9 @@ PyObject* runP(PyObject* self, PyObject* args)
 		PyObject *sh;
 		PyObject *mlist;
 		PyObject *linklist;
-		if (!PyArg_ParseTuple(args, "OOO", &sh , &mlist  ,&linklist)){
+		PyObject *keys=NULL;
+
+		if (!PyArg_ParseTuple(args, "OOO|O", &sh , &mlist  ,&linklist,&keys)){
   	  return NULL;
 	  }
 
@@ -355,11 +323,25 @@ PyObject* runP(PyObject* self, PyObject* args)
 		vector< linkST > p_list;
 		runCore(mlist,linklist,cmdCapsel,p_list);
 
-		kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);
-		if(rtn==NULL){ return Py_BuildValue("");}
+		if(keys !=NULL){
+			vector< string > k_list;
+			//key set
+			Py_ssize_t ksize = PyList_Size(keys);
+			for(Py_ssize_t i=0 ; i<ksize;i++){
+				k_list.push_back(strGET(PyList_GetItem(keys ,i)));
+			}
+			kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
+			if(rtn==NULL){ return Py_BuildValue("");}
 
-		return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+		}
+		else{
+			kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);	
+			if(rtn==NULL){ return Py_BuildValue("");}
+			return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+		}
 
+		return Py_BuildValue("");
 	}
 	catch(kgError& err){
 		cerr << "run Error [ " << err.message(0) << " ]" << endl;
@@ -377,49 +359,15 @@ PyObject* runP(PyObject* self, PyObject* args)
 
 }
 
-PyObject* runPK(PyObject* self, PyObject* args)
-{
-	PyObject *sh;
-	PyObject *mlist;
-	PyObject *linklist;
-	PyObject *keys;
-	if (!PyArg_ParseTuple(args, "OOOO", &sh , &mlist  ,&linklist,&keys)){
-    return NULL;
-  }
-
-	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(sh,"kgshellP");
-
-	if(!PyList_Check(mlist)){
-		cerr << "cannot run " << PyList_Check(mlist) << " " << PyList_Size(mlist)<< endl;
-		return Py_BuildValue("");
-	}
-	vector< cmdCapselST > cmdCapsel;
-	vector< linkST > p_list;
-	runCore(mlist,linklist,cmdCapsel,p_list);
-
-	vector< string > k_list;
-
-	//key set
-	Py_ssize_t ksize = PyList_Size(keys);
-	for(Py_ssize_t i=0 ; i<ksize;i++){
-		k_list.push_back(strGET(PyList_GetItem(keys ,i)));
-	}
-
-	kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
-	if(rtn==NULL){ return Py_BuildValue("");}
-
-	return PyCapsule_New(rtn,"kgCSVfldP",NULL);
-
-}
-
-
 PyObject* readline(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
+	PyObject *ptn =NULL;
+
 	//PyObject *list;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O", &csvin)){
+	if (!PyArg_ParseTuple(args, "O|O", &csvin,&ptn)){
     return Py_BuildValue("");
   }
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -427,41 +375,19 @@ PyObject* readline(PyObject* self, PyObject* args)
 	if( kcfld->read() == EOF){
 		return Py_BuildValue("");
 	}
+
 	size_t fcnt = kcfld->fldSize();
+
 	PyObject* rlist = PyList_New(fcnt);
+
+
 	for(size_t j=0 ;j<fcnt;j++){
-		PyList_SetItem(rlist,j,Py_BuildValue("s", kcfld->getVal(j)));
+		long k = 0;
+		if(ptn!=NULL){ k = PyLong_AsLong ( PyList_GetItem(ptn,j) ); }
+		PyList_SetItem(rlist,j,setRtnData(k,kcfld->getVal(j)));
 	}
 	return rlist;
 }
-
-PyObject* readlineDict(PyObject* self, PyObject* args)
-{
-
-	PyObject *csvin;
-	PyObject *ptn;
-	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
-    return Py_BuildValue("");
-  }
-	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-
-	if( kcfld->read() == EOF){
-		return Py_BuildValue("");
-	}
-	size_t fcnt = kcfld->fldSize();
-
-
-  PyObject* rlist = PyDict_New();
-	for(size_t j=0 ;j<fcnt;j++){
-
-		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
-		char* v = kcfld->getVal(j);
-		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),setRtnData(k,v));
-	}
-	return rlist;
-}
-
 
 
 PyObject* readlineconvPtn(PyObject* self, PyObject* args)
@@ -491,6 +417,41 @@ PyObject* readlineconvPtn(PyObject* self, PyObject* args)
 	}
 	return rlist;
 }
+
+
+
+
+
+
+
+PyObject* readlineDict(PyObject* self, PyObject* args)
+{
+
+	PyObject *csvin;
+	PyObject *ptn;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+    return Py_BuildValue("");
+  }
+	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	if( kcfld->read() == EOF){
+		return Py_BuildValue("");
+	}
+	size_t fcnt = kcfld->fldSize();
+
+
+  PyObject* rlist = PyDict_New();
+	for(size_t j=0 ;j<fcnt;j++){
+
+		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
+		char* v = kcfld->getVal(j);
+		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),setRtnData(k,v));
+	}
+	return rlist;
+}
+
+
 
 
 
@@ -696,15 +657,51 @@ void py_kgshell_free(PyObject *obj){
 PyObject* getparams(PyObject* self, PyObject* args){
 
 	char *cmdname;
-	if (!PyArg_ParseTuple(args, "s", &cmdname)){
+	int paratype=0;
+	if (!PyArg_ParseTuple(args, "s|i", &cmdname,&paratype)){
     return Py_BuildValue("");
   }
-	PyObject* rlist = PyList_New(0);	
+
 	kgshell ksh;
-	ksh.getparams(cmdname,rlist);
-	return rlist;
+	
+	if(paratype==0){
+		PyObject* rlist = PyList_New(0);	
+		ksh.getparams(cmdname,rlist);
+		return rlist;
+	}
+	else if(paratype==1){
+		PyObject* rlist = PyList_New(0);	
+		ksh.getIoInfo(cmdname,rlist,0);
+		return rlist;
+	}
+	else if(paratype==2){
+		PyObject* rlist = PyList_New(0);	
+		ksh.getIoInfo(cmdname,rlist,1);
+		return rlist;
+	}
+	else if(paratype==3){
+		PyObject* rlist  = PyList_New(0);
+		PyObject* rlist1 = PyList_New(0);	
+		PyObject* rlist2 = PyList_New(0);	
+		PyObject* rlist3 = PyList_New(0);	
+		ksh.getparams(cmdname,rlist1);
+		ksh.getIoInfo(cmdname,rlist2,0);
+		ksh.getIoInfo(cmdname,rlist3,1);
+
+		PyList_Append(rlist,rlist1);
+		Py_DECREF(rlist1);
+		PyList_Append(rlist,rlist2);
+		Py_DECREF(rlist2);
+		PyList_Append(rlist,rlist3);
+		Py_DECREF(rlist3);
+		return rlist;
+
+	}
+  return Py_BuildValue("");
 	
 }
+
+
 
 
 PyObject* start(PyObject* self, PyObject* args){
@@ -718,21 +715,19 @@ PyObject* start(PyObject* self, PyObject* args){
 }
 
 
-static PyMethodDef hellomethods[] = {
-	{"init", reinterpret_cast<PyCFunction>(start), METH_VARARGS },
-	{"runLx", reinterpret_cast<PyCFunction>(runLx), METH_VARARGS },
-	{"runiter", reinterpret_cast<PyCFunction>(runP), METH_VARARGS },
-	{"readline", reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
-	{"readlineconvPtn", reinterpret_cast<PyCFunction>(readlineconvPtn), METH_VARARGS },
-	{"runkeyiter", reinterpret_cast<PyCFunction>(runPK), METH_VARARGS },
-	{"readkeyline", reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
-	{"readkeylineDict", reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
-	{"readlineDict", reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
-	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
-	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
-	{"fldtp", reinterpret_cast<PyCFunction>(fldtp), METH_VARARGS },
+static PyMethodDef callmethods[] = {
+	{"init", 			reinterpret_cast<PyCFunction>(start), METH_VARARGS },
+	{"runLx", 		reinterpret_cast<PyCFunction>(run), METH_VARARGS },
+	{"runiter", 	reinterpret_cast<PyCFunction>(runITER), METH_VARARGS },
 	{"cancel", reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
 	{"close", reinterpret_cast<PyCFunction>(csvclose), METH_VARARGS },
+	{"readline",				reinterpret_cast<PyCFunction>(readline), METH_VARARGS },
+	{"readkeyline",			reinterpret_cast<PyCFunction>(readkeyline), METH_VARARGS },
+	{"readkeylineWithFlag", reinterpret_cast<PyCFunction>(readkeyline_with_flag), METH_VARARGS },
+	{"readkeylineDict",	reinterpret_cast<PyCFunction>(readkeylineDict), METH_VARARGS },
+	{"readlineDict",		reinterpret_cast<PyCFunction>(readlineDict), METH_VARARGS },
+	{"getparalist", reinterpret_cast<PyCFunction>(getparams), METH_VARARGS },
+	{"fldtp", reinterpret_cast<PyCFunction>(fldtp), METH_VARARGS },
 	{NULL}
 };
 
@@ -742,7 +737,7 @@ static struct PyModuleDef moduledef = {
     "_nysolshell_core",      /* m_name */
     NULL,							     /* m_doc */
     -1,                  /* m_size */
-    hellomethods,      /* m_methods */
+    callmethods,      /* m_methods */
     NULL,                /* m_reload */
     NULL,                /* m_traverse */
     NULL,                /* m_clear */
@@ -759,7 +754,7 @@ PyInit__nysolshell_core(void){
 #else
 
 void init_nysolshell_core(void){
-	Py_InitModule("_nysolshell_core", hellomethods);
+	Py_InitModule("_nysolshell_core", callmethods);
 }
 
 #endif

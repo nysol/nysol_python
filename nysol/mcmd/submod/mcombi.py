@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Mcombi(NysolMOD_CORE):
-	_kwd = n_core.getparalist("mcombi")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd,_outkwd = n_core.getparalist("mcombi",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Mcombi,self).__init__("mcombi",nutil.args2dict(args,kw_args,Nysol_Mcombi._kwd))
 

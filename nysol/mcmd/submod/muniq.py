@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Muniq(NysolMOD_CORE):
-	_kwd = n_core.getparalist("muniq")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd,_outkwd = n_core.getparalist("muniq",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Muniq,self).__init__("muniq",nutil.args2dict(args,kw_args,Nysol_Muniq._kwd))
 

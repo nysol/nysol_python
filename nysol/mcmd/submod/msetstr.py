@@ -4,9 +4,9 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_Msetstr(NysolMOD_CORE):
-	_kwd = n_core.getparalist("msetstr")
-	_inkwd = ["i="]
-	_outkwd = ["o="]
+
+	_kwd ,_inkwd ,_outkwd = n_core.getparalist("msetstr",3)
+
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Msetstr,self).__init__("msetstr",nutil.args2dict(args,kw_args,Nysol_Msetstr._kwd))
 

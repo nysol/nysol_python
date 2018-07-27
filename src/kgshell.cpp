@@ -1166,3 +1166,37 @@ int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 	return 1;
 
 }
+
+int kgshell::getIoInfo(kgstr_t cmdname,PyObject* list,int iotp){
+	
+	kgmod_ioinfo_t * IOinfo_tmp;	
+	if(iotp == 0){
+		IOinfo_tmp = &_kgmod_Iinfo;
+	}
+	else{
+		IOinfo_tmp = &_kgmod_Oinfo;
+	}
+	
+	try{
+		if ( IOinfo_tmp->find(cmdname) == IOinfo_tmp->end()){
+			err_OUTPUT("Not unspport mod " + cmdname);
+			return 1;	
+		}
+
+		const char ** args	= IOinfo_tmp->find(cmdname)->second;
+		while(**args){
+			PyList_Append(list,Py_BuildValue("s",*args));
+			args++;
+		}		
+		return 0;
+
+	}catch(...){
+		err_OUTPUT("UnKnown ERROR IN GET IOINFO " );
+		return 1;	
+	}
+	return 1;	
+	
+
+}
+
+
