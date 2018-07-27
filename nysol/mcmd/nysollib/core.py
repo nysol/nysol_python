@@ -536,7 +536,8 @@ class NysolMOD_CORE(object):
 		outfs = [None]*len(mods)
 
 		for i,mod in enumerate(mods): #ここどうするのがいい？
-			if len(mod.outlist["o"]) != 0 :
+		
+			if mod.stdodir != None  and len(mod.outlist[mod.stdodir]) != 0 :
 				stocks[i] = mod.outlist["o"][0]
 	
 		dupobjs = copy.deepcopy(mods)
