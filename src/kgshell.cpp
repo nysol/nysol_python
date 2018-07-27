@@ -692,7 +692,11 @@ int kgshell::setArgStIO(
 }
 
 
-int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,bool outpipe){
+int kgshell::runMain(
+	vector<cmdCapselST> &cmds,
+	vector<linkST> & plist,
+	int iblk,
+	bool outpipe){
 
 	// thread attr init
 	pthread_attr_t pattr;
@@ -759,9 +763,6 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 				_argst[i].i_cnt= 1;
 				_argst[i].list = cmds[cmdNo].iobj;
 			}
-			else{
-				_argst[i].i_cnt= 0;
-			}
 		}
 		else{
 			_argst[i].i_cnt = setArgStIO(_kgmod_Iinfo,cmdname,_ipipe_map[cmdNo],&(_argst[i].i_p));
@@ -777,9 +778,6 @@ int kgshell::runMain(vector<cmdCapselST> &cmds,vector<linkST> & plist,int iblk,b
 				_argst[i].o_cnt= 1;
 				_argst[i].mutex = &_mutex;
 				_argst[i].list = cmds[cmdNo].oobj;
-			}
-			else{
-				_argst[i].o_cnt= 0;
 			}
 		}
 		else{

@@ -26,12 +26,12 @@ class NysolMOD_CORE(object):
 		self.outlist   = {}
 		self.stdodir = None
 		self.stdidir = None
-		if hasattr(self,'_inkwd') :
+		if hasattr(self,'_inkwd') and len(self._inkwd)>0 :
 			self.stdidir = self._inkwd[0].rstrip("=")
 			for k in self._inkwd:
 				self.inplist[k.rstrip("=")] = []
 
-		if hasattr(self,'_outkwd') :
+		if hasattr(self,'_outkwd')  and len(self._outkwd)>0 :
 			self.stdodir = self._outkwd[0].rstrip("=")
 			for k in self._outkwd:
 				self.outlist[k.rstrip("=")] = []
