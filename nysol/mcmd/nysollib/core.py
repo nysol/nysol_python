@@ -12,8 +12,6 @@ from nysol.mcmd.nysollib import itermod
 
 
 class NysolMOD_CORE(object):
-	# i,o,m,uは別処理(ioは別処理  : f.w. kwdをもとに処理する)
-	# dlogをdebug用に用意
 
 	def __init__(self,name=None,kwd=None) :
 
@@ -102,6 +100,11 @@ class NysolMOD_CORE(object):
 		self.outlist[self.nowdir].append(self)
 		return fifoxxx
 
+	def okwdObjCnt(self):
+		count=0
+		for key in self.outlist.keys():
+			count += len(self.outlist[key])	
+		return count
 
 	def _dsp1(self):
 
@@ -418,13 +421,6 @@ class NysolMOD_CORE(object):
 
 				for key in obj.outlist.keys():
 
-					#これOK?複数有ったときは。。どうなる(==1が正しい？。。)
-					if len(obj.outlist[key])!=0 and isinstance(obj.outlist[key][0],list) :
-
-						wlmod = mwritelist(obj.outlist[key][0],sysadd=True)
-						wlmod.inplist["i"]=[obj]
-						obj.outlist[key][0] = wlmod
-
 					# 途中OUTPUTチェック
 					if len(obj.outlist[key]) > 1:
 
@@ -436,13 +432,21 @@ class NysolMOD_CORE(object):
 								wcsv_o = mwritecsv(obj.outlist[key][i],sysadd=True)
 								wcsv_o.inplist["i"]=[obj]
 								obj.outlist[key][i] = wcsv_o
-
 								if obj in dupobj:
 									dupobj[obj] += 1
 								else:
 									dupobj[obj] = 2
+								add_mod.append(wcsv_o)
 
-								add_mod.append(wcsv_o)	
+							if isinstance(obj.outlist[key][i],list) :
+								wlmod = mwritelist(obj.outlist[key][i],sysadd=True)
+								wlmod.inplist["i"]=[obj]
+								obj.outlist[key][i] = wlmod
+								if obj in dupobj:
+									dupobj[obj] += 1
+								else:
+									dupobj[obj] = 2
+								add_mod.append(wlmod)	
 
 		return add_mod		
 	
@@ -535,48 +539,74 @@ class NysolMOD_CORE(object):
 		stocks =[None]*len(mods)
 		outfs = [None]*len(mods)
 
-		for i,mod in enumerate(mods): #ここどうするのがいい？
-		
-			if mod.stdodir != None  and len(mod.outlist[mod.stdodir]) != 0 :
-				stocks[i] = mod.outlist["o"][0]
+		# data stock
+		for i,mod in enumerate(mods): 
+
+			if mod.stdodir != None :
+				stocks[i] = {}
+				for k in mod._outkwd:
+					if len(mod.outlist[k]) != 0 :
+						stocks[i][k] = [e for e in mod.outlist[k] if not isinstance(e,NysolMOD_CORE)]
+						# list 数チェック
+						lcnt = 0
+						for obj in stocks[i][k]:
+							if isinstance(obj,list) :
+								lcnt += 1
+						if lcnt > 1:
+							raise Exception("unsuport list size")
+					else:
+						stocks[i][k] = []		 
 	
+
 		dupobjs = copy.deepcopy(mods)
-		#oが無ければlist出力追加
+
 		runobjs =[None]*len(dupobjs)
 
 		for i, dupobj in enumerate(dupobjs):
 
+			# 不要 mod 除去 & 元 output object セット
 			for k in dupobj.outlist.keys():
-			
-				newoutlist = [e for e in dupobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
-				dupobj.outlist[k].clear()
-				dupobj.outlist[k].extend(newoutlist)
+				dupobj.outlist[k] = stocks[i][k]
 
+			# not output & 最終list不可はそのまま
+			if dupobj.stdodir == None or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
 
-			
-			if len(dupobj.outlist)==0 or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
 				runobjs[i]= dupobj			
-			elif len(dupobj.outlist["o"])==0:
+				outfs[i] = []
+				
+			elif dupobj.okwdObjCnt() == 0:
+			
 				if dupobj.name == "writelist":
-					dupobj.outlist["o"] =[list()]
+					dupobj.outlist[dupobj.stdodir] =[list()]
 					runobjs[i]= dupobj
 				else:
-					runobjs[i]= dupobj.writelist(list())
-			elif dupobj.name != "writelist" and isinstance(dupobj.outlist["o"][0],list): 
-				runobj = dupobj.writelist(stocks[i],sysadd=True)
-				dupobj.outlist["o"] = [runobj]
-				runobjs[i]= runobj
+					runobjs[i]= dupobj.writelist(list(),sysadd=True)
 
-			elif isinstance(dupobj.outlist["o"][0],list):				
-				dupobj.outlist["o"][0] = stocks[i]
-				runobjs[i]= dupobj
-			else:
-				runobjs[i]= dupobj
-	
-			if len(dupobj.outlist)==0 or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
-				outfs[i] = []
-			else:
+				# writelistは // ["o"][0] 固定
 				outfs[i] = runobjs[i].outlist["o"][0]
+
+			else:
+				if dupobj.name == "writelist":
+
+					runobjs[i]= dupobj
+
+				else:
+
+					runobj = dupobj
+
+					for k in dupobj.outlist.keys():
+
+						for ki,oobj in enumerate(dupobj.outlist[k]):
+
+							if isinstance(oobj,list):
+								runobj = dupobj.writelist(stocks[i][k][ki],sysadd=True)
+								dupobj.outlist[k] = [runobj]
+								break
+
+					runobjs[i]= runobj
+
+				outfs[i] = runobjs[i].outlist["o"][0]
+
 
 		self.change_modNetworks(runobjs)
 		
@@ -646,7 +676,7 @@ class NysolMOD_CORE(object):
 			if len(dupshowobj.outlist)==0 or dupshowobj.name == "cmd":
 				showobjs.append(dupshowobj)
 			elif len(dupshowobj.outlist["o"])==0:
-				showobjs.append(dupshowobj.writelist(rtnlist))
+				showobjs.append(dupshowobj.writelist(rtnlist,sysadd=True))
 			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
 				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0],sysadd=True)
 				dupshowobj.outlist["o"] = [showobj]
