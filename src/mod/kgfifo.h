@@ -46,6 +46,8 @@ public:
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
+	void runErrEnd(void){}
+
 	void rw_cancel(void);
 };
 	

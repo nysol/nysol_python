@@ -517,14 +517,11 @@ int kgFifo::run(void)
 	}
 	return 1;
 }
-
-
 ///* thraad cancel action
 static void cleanup_handler(void *arg)
 {
 	((kgFifo*)arg)->rw_cancel();
 }
-
 
 int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
