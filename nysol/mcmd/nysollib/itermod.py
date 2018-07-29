@@ -10,7 +10,7 @@ class Nysol_MeachIter(object):
 		
 
 		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+			raise Exception("Do not specify last output ")
 			return None
 			
 		runobj = copy.deepcopy(obj)
@@ -51,7 +51,7 @@ class Nysol_convIter(object):
 	def __init__(self,obj,dtype=None):
 
 		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+			raise Exception("Do not specify last output ")
 			return None
 
 		runobj = copy.deepcopy(obj)
@@ -95,7 +95,7 @@ class Nysol_MeachDictIter(object):
 		
 
 		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+			raise Exception("Do not specify last output ")
 			return None
 			
 		runobj = copy.deepcopy(obj)
@@ -135,8 +135,8 @@ class Nysol_MeachKeyIter(object):
 
 	def __init__(self,obj,keys,skeys=None,dtype=None):
 
-		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+		if len(obj.outlist[obj.nowdir])!=0:
+			raise Exception("Do not specify last output ")
 			return None
 
 		if isinstance(keys,str) :
@@ -197,7 +197,7 @@ class Nysol_MeachKeyDictIter(object):
 	def __init__(self,obj,keys,skeys=None,dtype=None):
 
 		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+			raise Exception("Do not specify last output ")
 			return None
 
 		if isinstance(keys,str) :
@@ -257,7 +257,7 @@ class Nysol_MeachKeyIterWithFlag(object):
 	def __init__(self,obj,keys,skeys=None,dtype=None):
 
 		if len(obj.outlist["o"])!=0:
-			print ("type ERORR")
+			raise Exception("Do not specify last output ")
 			return None
 
 		
