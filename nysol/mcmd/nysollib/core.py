@@ -533,32 +533,73 @@ class NysolMOD_CORE(object):
 						linklist.append([[rtn,v],[direct,idx]])
 			
 
+	
+	@classmethod
+	def graphFindList(self,mod,sumiobj,liststk):
+
+		if mod in sumiobj:
+			return
+		
+		sumiobj.add(mod)
+
+		for k in mod._outkwd:
+			for oobj in mod.outlist[k]:
+				if isinstance(oobj,list):
+					liststk.append(oobj)
+			
+		for key in mod.inplist.keys():
+			for iobj in mod.inplist[key]:
+				if isinstance(iobj,NysolMOD_CORE):
+					self.graphFindList(iobj,sumiobj,liststk)
+	
+		return
+
+
+	@classmethod
+	def graphSetList(self,mod,sumiobj,liststk,pos):
+
+		if mod in sumiobj:
+			return pos
+		
+		sumiobj.add(mod)
+
+		for k in mod._outkwd:
+			for ipos in range(len(mod.outlist[k])):
+				if isinstance(mod.outlist[k][ipos],list):
+					mod.outlist[k][ipos] = liststk[pos]
+					pos+=1
+			
+		for key in mod.inplist.keys():
+			for iobj in mod.inplist[key]:
+				if isinstance(iobj,NysolMOD_CORE):
+					pos = self.graphSetList(iobj,sumiobj,liststk,pos)
+	
+		return pos
+		
+
+
+
+
 	@classmethod
 	def makeRunNetwork(self,mods):
 
-		stocks =[None]*len(mods)
-		outfs = [None]*len(mods)
 
-		# data stock
-		for i,mod in enumerate(mods): 
+		# stock list obj before deepcopy
+		listStks =[]
+		sumiobj=set([])
 
-			if mod.stdodir != None :
-				stocks[i] = {}
-				for k in mod._outkwd:
-					if len(mod.outlist[k]) != 0 :
-						stocks[i][k] = [e for e in mod.outlist[k] if not isinstance(e,NysolMOD_CORE)]
-						# list 数チェック
-						lcnt = 0
-						for obj in stocks[i][k]:
-							if isinstance(obj,list) :
-								lcnt += 1
-						if lcnt > 1:
-							raise Exception("unsuport list size")
-					else:
-						stocks[i][k] = []		 
-	
+		for mod in mods: 
+			self.graphFindList(mod,sumiobj,listStks)
 
 		dupobjs = copy.deepcopy(mods)
+
+		# set list obj after deepcopy		
+		sumiobj=set([])
+
+		for mod in dupobjs: 
+			self.graphSetList(mod,sumiobj,listStks,0)
+
+		outfs = [None]*len(mods)		
 
 		runobjs =[None]*len(dupobjs)
 
@@ -566,7 +607,9 @@ class NysolMOD_CORE(object):
 
 			# 不要 mod 除去 & 元 output object セット
 			for k in dupobj.outlist.keys():
-				dupobj.outlist[k] = stocks[i][k]
+				newlist = [e for e in dupobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
+				dupobj.outlist[k].clear()
+				dupobj.outlist[k].extend(newlist)
 
 			# not output & 最終list不可はそのまま
 			if dupobj.stdodir == None or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
@@ -607,7 +650,6 @@ class NysolMOD_CORE(object):
 
 				outfs[i] = runobjs[i].outlist["o"][0]
 
-
 		self.change_modNetworks(runobjs)
 		
 		uniqmod={} 
@@ -619,7 +661,6 @@ class NysolMOD_CORE(object):
 
 		modlist=[None]*len(uniqmod) #[[name,para]]
 		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
-
 
 		self.makeModList(uniqmod,modlist,iolist)
 		linklist=[]
