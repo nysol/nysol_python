@@ -620,13 +620,13 @@ class NysolMOD_CORE(object):
 			elif dupobj.okwdObjCnt() == 0:
 			
 				if dupobj.name == "writelist":
-					dupobj.outlist[dupobj.stdodir] =[list()]
+					dupobj.outlist[dupobj.nowdir] =[list()]
 					runobjs[i]= dupobj
 				else:
 					runobjs[i]= dupobj.writelist(list(),sysadd=True)
 
-				# writelistは // ["o"][0] 固定
-				outfs[i] = runobjs[i].outlist["o"][0]
+				# 1つだけセット(複数必要？)
+				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
 
 			else:
 				if dupobj.name == "writelist":
@@ -642,13 +642,13 @@ class NysolMOD_CORE(object):
 						for ki,oobj in enumerate(dupobj.outlist[k]):
 
 							if isinstance(oobj,list):
-								runobj = dupobj.writelist(stocks[i][k][ki],sysadd=True)
-								dupobj.outlist[k] = [runobj]
+								runobj = dupobj.writelist(dupobj.outlist[k][ki],sysadd=True)
+								dupobj.outlist[k][ki] = runobj
 								break
 
 					runobjs[i]= runobj
-
-				outfs[i] = runobjs[i].outlist["o"][0]
+				# 1つだけセット(複数必要？)
+				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
 
 		self.change_modNetworks(runobjs)
 		
