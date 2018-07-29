@@ -35,6 +35,9 @@ class Nysol_MeachIter(object):
 		line = n_core.readline(self.csvin)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -42,6 +45,9 @@ class Nysol_MeachIter(object):
 		line = n_core.readline(self.csvin)
 		if line: 
 			return line
+			
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -75,6 +81,9 @@ class Nysol_convIter(object):
 		line = n_core.readline(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -82,6 +91,9 @@ class Nysol_convIter(object):
 		line = n_core.readline(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -121,6 +133,9 @@ class Nysol_MeachDictIter(object):
 		line = n_core.readlineDict(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -128,6 +143,9 @@ class Nysol_MeachDictIter(object):
 		line = n_core.readlineDict(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -182,6 +200,9 @@ class Nysol_MeachKeyIter(object):
 		line = n_core.readkeyline(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -189,6 +210,9 @@ class Nysol_MeachKeyIter(object):
 		line = n_core.readkeyline(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -241,6 +265,9 @@ class Nysol_MeachKeyDictIter(object):
 		line = n_core.readkeylineDict(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -248,6 +275,9 @@ class Nysol_MeachKeyDictIter(object):
 		line = n_core.readkeylineDict(self.csvin,self.dptn)
 		if line: 
 			return line
+
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -309,6 +339,8 @@ class Nysol_MeachKeyIterWithFlag(object):
 			self.breakPre = data[1]
 			return data[0],breakTop,data[1]
 
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 
 
@@ -321,5 +353,7 @@ class Nysol_MeachKeyIterWithFlag(object):
 			self.breakPre = data[1]
 			return data[0],breakTop,data[1]
 
+		n_core.close(self.csvin)
+		n_core.cancel(self.shobj)
 		raise StopIteration()
 

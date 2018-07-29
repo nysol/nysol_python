@@ -790,7 +790,9 @@ int kgshell::runMain(
 
 
 	PyThreadState *_save;
-	_save = PyEval_SaveThread();
+	if (!outpipe){ // iterの場合saveしない 確認用
+		_save = PyEval_SaveThread();
+	}
 
 	for(int i=cmdlist.size()-1;i>=0;i--){
 
@@ -826,9 +828,8 @@ int kgshell::runMain(
 		}
 	}
 	if(outpipe){
-		// チェック必要ここでしても問題ない
+		// チェック必要ここでしても問題ない iter場合の処理
 		// 別thread監視させる？
-		PyEval_RestoreThread(_save);
 		return _csvpiped[0];
 	}
 
@@ -877,7 +878,11 @@ int kgshell::runMain(
 	for(size_t i=_clen;i>0;i--){
 		pthread_join(_th_st_pp[i-1],NULL);
 	}
-	PyEval_RestoreThread(_save);
+
+	if (!outpipe){ 
+		PyEval_RestoreThread(_save);
+	}
+
 
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
