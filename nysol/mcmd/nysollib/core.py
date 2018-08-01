@@ -17,23 +17,36 @@ class NysolMOD_CORE(object):
 
 		self.name     = name
 		self.addBySys = False
-		self.msg=False
+		self.msg      =False
 		self.runlimit = -1
 		self.kwd      = {}
-		self.inplist   = {}
-		self.outlist   = {}
-		self.stdodir = None
-		self.stdidir = None
+		self.inplist  = {}
+		self.outlist  = {}
+		self.stdodir  = None
+		self.stdidir  = None
+
+		self.disabled_ouputlist = False
+
+
 		if hasattr(self,'_inkwd') and len(self._inkwd)>0 :
 			self.stdidir = self._inkwd[0].rstrip("=")
 			for k in self._inkwd:
 				self.inplist[k.rstrip("=")] = []
 
 		if hasattr(self,'_outkwd')  and len(self._outkwd)>0 :
+
 			self.stdodir = self._outkwd[0].rstrip("=")
 			for k in self._outkwd:
 				self.outlist[k.rstrip("=")] = []
+				
+		else:
+
+			self.disabled_ouputlist = True
 		
+		if hasattr(self,'_disabled_ouputlist'):
+			self.disabled_ouputlist = self._disabled_ouputlist
+
+
 		if kwd != None:
 			self.kwd   = kwd
 
@@ -248,8 +261,10 @@ class NysolMOD_CORE(object):
 	def __ilshift__(self, other):
 
 		pre = other
-
-		while len(pre.inplist[self.stdidir])!=0: # ここも注意
+		precnt = pre.inplist[self.stdidir]
+		while precnt != 0:
+			if precnt > 1 :
+				raise Exception("Multiple input")
 			pre = pre.inplist[self.stdidir][0]
 
 		pre.addPre(self)
@@ -337,7 +352,6 @@ class NysolMOD_CORE(object):
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
 					fifoxxx=mfifo(i=obj.direction(k),sysadd=True)
-					#obj.outlist[k][0] = fifoxxx
 					fifoxxx.outlist["o"]=[outll]
 
 					for ki in outll.inplist: # 0だけOK?
@@ -357,7 +371,7 @@ class NysolMOD_CORE(object):
 							for ii in range(len(outin.inplist[ki])):
 								if obj == outin.inplist[ki][ii]:
 									fifoxxx=mfifo(i=teexxx,sysadd=True)
-									fifoxxx.outlist["o"]=[outin]  # "o"でOk?
+									fifoxxx.outlist["o"]=[outin] 
 									outin.inplist[ki][ii] = fifoxxx
 
 
@@ -612,7 +626,8 @@ class NysolMOD_CORE(object):
 				dupobj.outlist[k].extend(newlist)
 
 			# not output & 最終list不可はそのまま
-			if dupobj.stdodir == None or dupobj.name == "runfunc" or dupobj.name == "cmd" : #統一的にする
+			
+			if True == dupobj.disabled_ouputlist : #統一的にする
 
 				runobjs[i]= dupobj			
 				outfs[i] = []
