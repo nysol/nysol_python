@@ -261,12 +261,12 @@ class NysolMOD_CORE(object):
 	def __ilshift__(self, other):
 
 		pre = other
-		precnt = len(pre.inplist[self.stdidir])
+		precnt = len(pre.inplist[pre.stdidir])
 		while precnt != 0:
 			if precnt > 1 :
 				raise Exception("Multiple input")
-			pre = pre.inplist[self.stdidir][0]
-			precnt = len(pre.inplist[self.stdidir])
+			pre = pre.inplist[pre.stdidir][0]
+			precnt = len(pre.inplist[pre.stdidir])
 
 		pre.addPre(self)
 		return other
