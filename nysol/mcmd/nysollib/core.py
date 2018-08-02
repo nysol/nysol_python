@@ -626,31 +626,28 @@ class NysolMOD_CORE(object):
 				dupobj.outlist[k].clear()
 				dupobj.outlist[k].extend(newlist)
 
-			# not output & 最終list不可はそのまま
-			
 			if True == dupobj.disabled_ouputlist : #統一的にする
-
+				#  最終list不可はそのまま
 				runobjs[i]= dupobj			
 				outfs[i] = []
-				
-			elif dupobj.okwdObjCnt() == 0:
-			
-				if dupobj.name == "writelist":
-					dupobj.outlist[dupobj.nowdir] =[list()]
-					runobjs[i]= dupobj
-				else:
-					runobjs[i]= dupobj.writelist(list(),sysadd=True)
+			elif dupobj.name == "writelist":
 
-				# 1つだけセット(複数必要？)
+				if dupobj.okwdObjCnt() == 0:
+	
+					dupobj.outlist[dupobj.nowdir] =[list()]
+						
+				runobjs[i]= dupobj
+
 				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
 
 			else:
-				if dupobj.name == "writelist":
 
-					runobjs[i]= dupobj
+				if dupobj.okwdObjCnt() == 0:
 
-				else:
-
+					runobjs[i]= dupobj.writelist(list(),sysadd=True)
+				
+				else:			
+					#こここれでいい？
 					runobj = dupobj
 
 					for k in dupobj.outlist.keys():
@@ -663,8 +660,9 @@ class NysolMOD_CORE(object):
 								break
 
 					runobjs[i]= runobj
-				# 1つだけセット(複数必要？)
+
 				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
+			
 
 		self.change_modNetworks(runobjs)
 		
@@ -710,6 +708,7 @@ class NysolMOD_CORE(object):
 		
 	@classmethod
 	def drawModels(self,mod,fname=None):
+
 		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)		
 
@@ -725,38 +724,7 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def modelInfos(self,mod):
 
-		dupshowobjs = copy.deepcopy(mod)
-		showobjs =[]
-		rtnlist = []
-		# 最終形式チェック
-		for dupshowobj in dupshowobjs:
-			if len(dupshowobj.outlist)==0 or dupshowobj.name == "cmd":
-				showobjs.append(dupshowobj)
-			elif len(dupshowobj.outlist["o"])==0:
-				showobjs.append(dupshowobj.writelist(rtnlist,sysadd=True))
-			elif dupshowobj.name != "writelist" and isinstance(dupshowobj.outlist["o"][0],list): 
-				showobj = dupshowobj.writelist(dupshowobj.outlist["o"][0],sysadd=True)
-				dupshowobj.outlist["o"] = [showobj]
-				showobjs.append(showobj)
-			else:
-				showobjs.append(dupshowobj)
-
-		self.change_modNetworks(showobjs)
-
-		uniqmod={} 
-		sumiobj= set([])
-
-		for mod in showobjs:
-			mod.selectUniqMod(sumiobj,uniqmod)
-
-
-		modlist=[None]*len(uniqmod) #[[name,para]]
-		iolist=[None]*len(uniqmod) #[[iNo],[mNo],[oNo],[uNo]]
-		self.makeModList(uniqmod,modlist,iolist)
-
-		linklist=[]
-		self.makeLinkList(iolist,linklist)
-		
+		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
 		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
 
 
