@@ -353,7 +353,7 @@ class NysolMOD_CORE(object):
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
 					fifoxxx=mfifo(i=obj.direction(k),sysadd=True)
-					fifoxxx.outlist["o"]=[outll]
+					fifoxxx.outlist[fifoxxx.nowdir]=[outll]
 
 					for ki in outll.inplist: # 0だけOK?
 						if len(outll.inplist[ki])!=0 and obj == outll.inplist[ki][0]:						
@@ -364,7 +364,7 @@ class NysolMOD_CORE(object):
 					outll = obj.outlist[k]
 					obj.outlist[k] = []
 					teexxx = m2tee(i=obj,sysadd=True)
-					teexxx.outlist["o"] = [] 
+					teexxx.outlist[teexxx.nowdir] = [] 
 
 					for outin in outll:
 						for ki in outin.inplist: # 0だけOK?
@@ -372,7 +372,7 @@ class NysolMOD_CORE(object):
 							for ii in range(len(outin.inplist[ki])):
 								if obj == outin.inplist[ki][ii]:
 									fifoxxx=mfifo(i=teexxx,sysadd=True)
-									fifoxxx.outlist["o"]=[outin] 
+									fifoxxx.outlist[fifoxxx.nowdir]=[outin] 
 									outin.inplist[ki][ii] = fifoxxx
 
 
@@ -416,13 +416,13 @@ class NysolMOD_CORE(object):
 						if isinstance(xval,list) :
 
 							rlmod = mreadlist(xval,sysadd=True)
-							rlmod.outlist["o"] = [obj]
+							rlmod.outlist[rlmod.nowdir] = [obj]
 							obj.inplist[key][i]=rlmod
 
 					if len(obj.inplist[key])>1:
 	
 						m2cmod  = m2cat(i=obj.inplist[key],sysadd=True)
-						m2cmod.outlist["o"] = [obj]
+						m2cmod.outlist[m2cmod.nowdir] = [obj]
 
 						for xval in obj.inplist[key]:
 						
@@ -445,7 +445,7 @@ class NysolMOD_CORE(object):
 
 								from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
 								wcsv_o = mwritecsv(obj.outlist[key][i],sysadd=True)
-								wcsv_o.inplist["i"]=[obj]
+								wcsv_o.inplist[wcsv_o.stdidir]=[obj]
 								obj.outlist[key][i] = wcsv_o
 								if obj in dupobj:
 									dupobj[obj] += 1
@@ -455,7 +455,7 @@ class NysolMOD_CORE(object):
 
 							if isinstance(obj.outlist[key][i],list) :
 								wlmod = mwritelist(obj.outlist[key][i],sysadd=True)
-								wlmod.inplist["i"]=[obj]
+								wlmod.inplist[wlmod.stdidir]=[obj]
 								obj.outlist[key][i] = wlmod
 								if obj in dupobj:
 									dupobj[obj] += 1
