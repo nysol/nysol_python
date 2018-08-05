@@ -26,8 +26,7 @@ class NysolMOD_CORE(object):
 		self.stdidir  = None
 
 		self.disabled_ouputlist = False
-
-
+		
 		if hasattr(self,'_inkwd') and len(self._inkwd)>0 :
 			self.stdidir = self._inkwd[0].rstrip("=")
 			for k in self._inkwd:
@@ -129,7 +128,7 @@ class NysolMOD_CORE(object):
 		sufpos=0
 
 		try:
-			xx = itermod.Nysol_MeachIter(self)
+			xx = itermod.LineListIter(self)
 			while(True):
 				val = next(xx)
 				if cnt < yLimit :
@@ -181,62 +180,151 @@ class NysolMOD_CORE(object):
 	def __iter__(self):
 
 		try:
-			x = itermod.Nysol_MeachIter(self)
+			x = itermod.LineListIter(self)
 			while(True):
 				yield next(x)
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
-		
-	## generator rap
-	def keyblock(self,keys,skeys=None,dtype=None):
-		try:
-			x = itermod.Nysol_MeachKeyIter(self,keys,skeys,dtype)
-			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
 
-	def keyblock_dict(self,keys,skeys=None,dtype=None):
-		try:
-			x = itermod.Nysol_MeachKeyDictIter(self,keys,skeys,dtype)
-			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
-
-
-	def getline_dict(self,dtype=None):
-		try:
-			x = itermod.Nysol_MeachDictIter(self,dtype)
-			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
-
-
+	# __getLineList処理は同じ
 	def convtype(self,dtype=None):
 		try:
-			x = itermod.Nysol_convIter(self,dtype)
+			x = itermod.LineListIter(self,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
+	def __getLineList(self,dtype=None,skey=None):
 
-	def getline_with_keyflag(self,keys,skeys=None,dtype=None):
 		try:
-			x = itermod.Nysol_MeachKeyIterWithFlag(self,keys,skeys,dtype)
+			x = itermod.LineListIter(self,dtype,skey)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	def __getLineListWithInfo(self,keys,skeys=None,dtype=None):
+		try:
+			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
+
+
+	def __getLineDictWithInfo(self,keys,skeys=None,dtype=None):
+
+		try:
+			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	def __getLineDict(self,dtype=None,skey=None):
+
+		try:
+
+			x = itermod.LineDictIter(self,dtype,skey)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+
+
+
+	# return generator
+	def getline(self,dtype=None,keys=None,skeys=None,otype="list"):
+
+		if otype == "list":
+
+			if keys!=None:
+
+				return self.__getLineListWithInfo(keys,skeys,dtype)
+
+			elif skeys!=None:
+
+
+				return self.__getLineList(dtype,skeys)
+
+			else:
+				return self.__getLineList(dtype,None)
+
+
+		elif otype == "dict":
+
+			if keys!=None :
+
+				return self.__getLineDictWithInfo(keys,skeys,dtype)
+
+			elif skeys!=None:
+
+				return self.__getLineDict(dtype,skeys)
+
+			else:
+				
+				return self.__getLineDict(dtype,None)
+
+		else:
+
+			raise Exception("unsuport rtype" + rtype)
+
+
+
+
+	## generator rap
+	def __getBlockList(self,keys,skeys=None,dtype=None):
+
+		try:
+
+			x = itermod.BlkListIter(self,keys,skeys,dtype)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	def __getBlockDict(self,keys,skeys=None,dtype=None):
+
+		try:
+
+			x = itermod.BlkDictIter(self,keys,skeys,dtype)
+			while(True):
+				yield next(x)
+
+		except GeneratorExit:
+
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	# return generator
+	def keyblock(self,keys,skeys=None,dtype=None,otype="list"):
+
+		if otype == "list":
+
+			return self.__getBlockList(keys,skeys,dtype)
+
+		elif otype == "dict":
+
+			return self.__getBlockDict(keys,skeys,dtype)
+
+		else : 
+
+			raise Exception("unsuport rtype" + rtype)
 
 
 	def set_runlimit(self,lim):
@@ -590,14 +678,9 @@ class NysolMOD_CORE(object):
 					pos = self.graphSetList(iobj,sumiobj,liststk,pos)
 	
 		return pos
-		
-
-
-
 
 	@classmethod
-	def makeRunNetwork(self,mods):
-
+	def makeRunNetworks(self,mods,useIter=False):
 
 		# stock list obj before deepcopy
 		listStks =[]
@@ -626,7 +709,7 @@ class NysolMOD_CORE(object):
 				dupobj.outlist[k].clear()
 				dupobj.outlist[k].extend(newlist)
 
-			if True == dupobj.disabled_ouputlist : #統一的にする
+			if True == dupobj.disabled_ouputlist or useIter: #統一的にする
 				#  最終list不可はそのまま
 				runobjs[i]= dupobj			
 				outfs[i] = []
@@ -695,7 +778,7 @@ class NysolMOD_CORE(object):
 		if "runlimit" in kw_args:
 			modlimt = int(kw_args["runlimit"])
 
-		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetwork(mods)
+		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
 		
 
 		shobj = n_core.init(msgF,modlimt)
@@ -709,13 +792,13 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def drawModels(self,mod,fname=None):
 
-		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
+		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetworks(mod)
 		ndraw.chageSVG(modlist,iolist,linklist,fname)		
 
 	@classmethod
 	def drawModelsD3(self,mod,fname=None):
 
-		modlist,iolist,linklist,x = NysolMOD_CORE.makeRunNetwork(mod)
+		modlist,iolist,linklist,x = NysolMOD_CORE.makeRunNetworks(mod)
 		ndraw.chageSVG_D3(modlist,iolist,linklist,fname)
 
 
@@ -724,13 +807,18 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def modelInfos(self,mod):
 
-		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetwork(mod)
+		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetworks(mod)
 		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
 
 
 	def run(self,**kw_args):
 
 		return NysolMOD_CORE.runs([self],**kw_args)[0]
+
+
+	def makeRunNetwork(self,useIter=False):
+
+		return NysolMOD_CORE.makeRunNetworks([self],useIter)
 
 
 	def drawModel(self,fname=None):

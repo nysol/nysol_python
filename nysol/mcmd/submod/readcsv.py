@@ -7,7 +7,6 @@ class Nysol_Readcsv(NysolMOD_CORE): # i=必須にする？ #err処理は？
 
 	_kwd ,_inkwd,_outkwd = n_core.getparalist("readcsv",3)
 
-
 	def __init__(self,*args, **kw_args) :
 		if len(args) != 1 :
 			print("arge only one")
