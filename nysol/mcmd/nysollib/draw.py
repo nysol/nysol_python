@@ -313,7 +313,6 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 			frX , frY = dsppos[frNo]
 			toX , toY = dsppos[toNo]
 
-
 			if linklist_n2e[frNo] == None:
 				linklist_n2e[frNo] =[[],[]]
 

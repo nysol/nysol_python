@@ -299,7 +299,6 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 		nt.mtra2gc(**param).run()
 
-
 		f=nm.readcsv(xxsimgE0)
 		for i in range(self.filterSize):
 			f <<= nm.mselnum(f=self.filter[i],c="[%s,%s]"%(self.lb[i],self.ub[i]))

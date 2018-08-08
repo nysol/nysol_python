@@ -39,7 +39,6 @@ void kgshell::setMap(std::string name,int runTP){
 	_kgmod_Oinfo[name] = kgmodTP::_opara;
 }
 
-
 kgshell::kgshell(int mflg,int rumlim){
 
 	setMap<kgPyfunc>("runfunc",3);
@@ -511,8 +510,6 @@ void *kgshell::run_pyfunc(void *arg){
 	return NULL;	
 }
 
-
-
 void kgshell::raw_OUTPUT(const string& v){
 	kgMsg msg(kgMsg::IGN, &_env);
 	msg.output_ignore(v);
@@ -946,6 +943,7 @@ void kgshell::runInit(
 		char * envStr = getenv("KG_RUN_LIMIT");
 		if(envStr!=NULL)	{ _runlim = atoi(envStr); }
 		else							{ _runlim = KGMOD_RUN_LIMIT; }
+
 	}
 	if ( _runlim <=0 ){
 		throw kgError("not valid runlimit");

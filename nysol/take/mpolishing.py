@@ -234,6 +234,7 @@ c,d
 				denses.append(dens)
 
 			# node pairをsspc入力形式に変換
+
 			if self.indirect :
 				gtpstri = "ue_" if self.msgoff else "ue"
 				extTake.grhfil(type=gtpstri,i=xxpair,o=xxtra)

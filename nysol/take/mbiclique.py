@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+
 import nysol.mcmd as nm
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 from nysol.take import extcore as extTake
+
 
 class mbiclique(object):
 
@@ -135,6 +137,7 @@ b c d,D,3,1
 		"hissu": ["ei"]
 	}	
 
+
 	def help():
 		print(mbiclique.helpMSG) 
 
@@ -167,6 +170,7 @@ b c d,D,3,1
 		self.maxSize1 = ""
 		self.maxSize2 = ""
 
+
 		if minSize != None :
 
 			if len(minSize) == 1:
@@ -191,14 +195,11 @@ b c d,D,3,1
 				if maxSize[1] != "":
 					self.maxSize2 = maxSize[1]
 
-
-
-
-
 	def __init__(self,**kwd):
 		#パラメータチェック
 		self.args = kwd
 		self.__param_check_set(kwd)
+
 
 
 	def pair2tra(self,ei,ef1,ef2,traFile,mapFile1,mapFile2):
@@ -226,6 +227,7 @@ b c d,D,3,1
 		f3 <<= nm.mcut(f="num2",nfno=True,o=traFile)
 		f3.run()
 		os.system("cat "+traFile)
+
 	# ============
 	# entry point
 	def run(self):
@@ -257,7 +259,6 @@ b c d,D,3,1
 
 
 		extTake.lcm(runPara)
-		os.system("cat "+lcmout)
 		extTake.lcmtrans(lcmout,"p",xxt0)
 
 		f = None

@@ -75,10 +75,8 @@ static PyObject* setRtnData(long k,char * v){
 		}
 	}
 	else{
-
 		rtn = Py_None;
 		Py_INCREF(Py_None);
-	
 	}
 	return rtn;
 
@@ -498,14 +496,12 @@ PyObject* getLineDict(PyObject* self, PyObject* args)
 
   PyObject* rlist = PyDict_New();
 	for(size_t j=0 ;j<fcnt;j++){
-
 		PyObject* vv = setRtnData(PyLong_AsLong(PyList_GetItem(ptn,j)) , kcfld->getVal(j));
 		PyDict_SetItemString(rlist,kcfld->fldName(j).c_str(),vv);
 		Py_DECREF(vv);
 	}
 	return rlist;
 }
-
 
 
 
@@ -546,7 +542,6 @@ PyObject* getBlkList(PyObject* self, PyObject* args)
 	}
 	return rlist;
 }
-
 
 PyObject* getBlkDict(PyObject* self, PyObject* args)
 {
@@ -663,6 +658,7 @@ PyObject* getLineListWithInfo(PyObject* self, PyObject* args)
 	PyObject *ptn;
 	//int tp;
 	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");

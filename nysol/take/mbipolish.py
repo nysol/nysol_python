@@ -7,12 +7,6 @@ import shutil
 
 import nysol.mcmd as nm
 import nysol.util as nu
-#import nysol.util.margs as margs
-#import nysol.util.mtemp as mtemp
-#import nysol.util.mmkdir as mkDir
-#import nysol.util.mrecount as mrecount
-
-
 from nysol.take import extcore as extTake
 
 
@@ -93,7 +87,6 @@ D,e
 
 	verInfo="version=1.2"
 
-
 	paramter = {	
 		"ei":"filename",
 		"ef":"fld",
@@ -113,14 +106,12 @@ D,e
 	paramcond = {	
 		"hissu": ["ei","th"]
 	}
-
 	
 	def help():
 		print(mbipolish.helpMSG) 
 
 	def ver():
 		print(mbipolish.verInfo)
-
 
 	def __param_check_set(self , kwd):
 
@@ -174,10 +165,9 @@ D,e
 		#self.part1 = self.__tempW.file()
 		#self.part2 = self.__tempW.file()
 
-
-
 	def calGsize(self,file):
 		edgesize= nu.mrecount(i=file,nfni=True)
+
 
 		f=None
 		f <<= nm.mcut(i=file,f="0:tra",nfni=True)
@@ -191,7 +181,6 @@ D,e
 		return nodesize,edgesize
 	
 	def same(self,file1,file2,xx):
-
 
 		if os.path.getsize(file1)!=os.path.getsize(file2):
 			return False
@@ -207,7 +196,6 @@ D,e
 
 
 	def edge2mtx(self,ei,itra,map1,map2):
-
 		
 		p1   = nm.mcut(f=self.ef1,i=ei) 
 		p1 <<= nm.muniq(k=self.ef1)
@@ -226,6 +214,7 @@ D,e
 		runp <<= nm.mcut(f="num1,num2")
 		runp <<= nm.mtra(k="num1",f="num2")
 		runp <<= nm.msortf(f="num1%n")
+
 		runp <<= nm.mcut(f="num2",nfno=True)
 		runp <<= nm.cmd("tr ',' ' '")
 		runp <<= nm.mwrite(o=itra)
@@ -239,6 +228,7 @@ D,e
 		exit()
 	
 	def convRsl(self,ifile,ofile,map1,map2,logDir=None):
+
 		# 上記iterationで収束したマイクロクラスタグラフを元の節点文字列に直して出力する
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
 		f = None
@@ -259,6 +249,7 @@ D,e
 		f.run()
 
 	def convSim(self,ifile,ofile,map1,logDir):
+
 		f = None
 		f <<= nm.mcut(nfni=True,f="0:tra",i=ifile)
 		f <<= nm.msed(f="tra", c=' $',v="")
@@ -293,17 +284,13 @@ D,e
 		xxprev = tempW.file()
 		xxpair = tempW.file()
 		xxtra  = tempW.file()
-		os.system("echo ====gfil in")
-		os.system("cat "+xxinp)
-		os.system("echo ====gfil out")
-		os.system("cat "+xxitra)
-		os.system("echo ====gfil 1st ed")
 		
 		while True :
 			# 終了判定
 			if iter>=self.iterMax:
 				break
 			if iter!=0 and self.same(xxitra,xxprev,xxsame):
+
 				break
 
 			#MCMD::msgLog("polishing iteration ##{iter} (tra size=#{File.size(xxitra)}")
@@ -323,13 +310,6 @@ D,e
 			runpara["th"] = self.th
 			runpara["o"] = xxpair
 			extTake.sspc(runpara)
-			print(runpara)
-
-			os.system("echo ====sspc in")
-			os.system("cat "+xxitra)
-			os.system("echo ====sspc out")
-			os.system("cat "+xxpair)
-			os.system("echo ====sspc 1st ed")
 
 			#	puts   "sspc t#{measure} -T #{kn} -l #{minSupp} -U 100000 -L 1 #{xxitra} #{th} #{xxpair}"
 
@@ -339,13 +319,6 @@ D,e
 				self.noPat()
 			
 			extTake.grhfil(type='eu0',i=xxpair,o=xxtra)
-
-			os.system("echo ====gfil in")
-			os.system("cat "+xxpair)
-			os.system("echo ====gfil out")
-			os.system("cat "+xxtra)
-			os.system("echo ====gfil 2st ed")
-
 
 			if self.logDir :
 				self.convSim(xxtra,"simGp{}.csv".format(iter),xxmap1,self.logDir)
@@ -359,13 +332,8 @@ D,e
 			runpara["i"] = xxpair
 			runpara["th"] = self.th2
 			runpara["o"] = xxtra
-			print(runpara)
+
 			extTake.sspc(runpara)
-			os.system("echo ====sspc in")
-			os.system("cat "+xxpair)
-			os.system("echo ====sspc out")
-			os.system("cat "+xxtra)
-			os.system("echo ====sspc 2nd ed")
 
 			if not os.path.exists(xxtra):
 				self.noPat()
@@ -373,29 +341,13 @@ D,e
 				self.noPat()
 
 			extTake.grhfil(type='ed',i=xxtra,o=xxpair)
-			os.system("echo ====gfile in")
-			os.system("cat "+xxtra)
-			os.system("echo ====gfile out")
-			os.system("cat "+xxpair)
-			os.system("echo ====gfil 3rd-0 ed")
-			os.system("echo tail -n +{} {} == {}".format(edgeSize1,xxpair,xxtra))
+
 			os.system("tail -n +{} {} > {}".format(edgeSize1,xxpair,xxtra))
 
 			extTake.grhfil(type='D',i=xxtra,o=xxpair)
-			os.system("echo ====gfile in")
-			os.system("cat "+xxtra)
-			os.system("echo ====gfile out")
-			os.system("cat "+xxpair)
-			os.system("echo ====gfil 3rd ed")
+
 
 			extTake.grhfil(type='DE',d=xxitra,i=xxpair,o=xxdiff) #<==つかってない？
-			os.system("echo ====gfile in")
-			os.system("cat "+xxpair)
-			os.system("echo ====gfile d")
-			os.system("cat "+xxitra)
-			os.system("echo ====gfile out")
-			os.system("cat "+xxdiff)
-			os.system("echo ====gfil DE ed")
 
 
 

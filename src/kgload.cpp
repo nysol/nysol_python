@@ -413,26 +413,12 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 								PyList_SET_ITEM(tlist,j,Py_True);
 							
 							}
+
 						}
 					}
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
 
-					/* speed test
-					//char * v[3];
-					//v[0]=rls.getVal(0);
-					//v[1]=rls.getVal(1);
-					//v[2]=rls.getVal(2);
-					va_list pos;
-					va_copy(pos, v);
-					va_arg( pos, char* ) = rls.getVal(0);
-					va_arg( pos, char* ) = rls.getVal(1);
-					va_arg( pos, char* ) = rls.getVal(2);
-					
-					PyObject* tlist = Py_BuildValue("[s,s,s]",v);
-					PyList_Append(o_p,tlist);
-					Py_DECREF(tlist);
-					*/
 				}
 				pthread_mutex_unlock(mtx);
 			}
