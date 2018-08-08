@@ -141,6 +141,9 @@ class kgVsort:public kgMod
 	void output_n(char *str,int flgno,bool eol);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgVsort(void);
 	~kgVsort(void){}

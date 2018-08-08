@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 import nysol.util.margs as margs
 
@@ -72,6 +72,25 @@ d,c,0.30
 		"""
 
 	verInfo="version=1.2"
+	paramter = {	
+		"ni":"filename",
+		"nf": "fld",  #<= 使ってない
+		"ei":"filename",
+		"ef": "fld",
+		"eo":"filename",
+		"no":"filename",
+		"sim": "fld",
+		"rank":"int",
+		"dir":"str",
+		"directed": "bool",
+		"udout": "bool",
+		"mcmdenv" : "bool",
+		"T": "str"
+	}
+
+	paramcond = {	
+		"hissu": ["ei","sim","eo"]
+	}
 
 	def help(self):
 		print(mfriends.helpMSG)
@@ -80,42 +99,45 @@ d,c,0.30
 		print(mfriends.versionInfo)
 
 
-	def __init__(self,args):
-		self.args = args
+	def __param_check_set(self , kwd):
 
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
+		for k,v in kwd.items():
+			if not k in mfriends.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+			#型チェック入れる
 
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
 
-		self.ei = args.file("ei=","r") # edge file name
-		self.ni = args.file("ni=","r") # node file name
-
+		self.ei = kwd["ei"]
+		self.ni = kwd["ni"]    if "ni"    in kwd else None
+		
 		# ---- edge field names (two nodes) on ei=
-		ef0 = args.field("ef=", self.ei, None,2,2)["names"]
-		self.ef1 =ef0[0]
-		self.ef2 =ef0[1] 
-
+		ef0 = kwd["ef"].split(",")
+		self.ef1 = ef0[0]
+		self.ef2 = ef0[1] 
+		
 		# ---- node field name on ni=
-		self.nf = args.field("nf=", self.ni, None,1,1)
-		if self.nf :
-			self.nf = self.nf["names"][0]
+		# self.nf  = kwd["nf"] if "nf" in kwd else None
 
-		self.sim  		= args.field("sim=",self.ei,None,1,1)["names"][0]    # similarity measure
-		self.rank     = args.int("rank=",3)     # ranking 
-		self.dir      = args.str("dir=","b")    # 方向
-		self.directed = args.bool("-directed")  # directed graph
-		self.udout    = args.bool("-udout")     # 無向グラフ出力
+		self.sim  = kwd["sim"] # similarity measure
+		self.rank = int(kwd["rank"]) if "rank" in kwd else 3 # ranking 
+		self.dir  = kwd["dir"] if "dir" in kwd else "b"  # 方向
+		self.directed = kwd["directed"] if "directed" in kwd else False # directed graph
+		self.udout    = kwd["udout"] if "udout" in kwd else False # 無向グラフ出力
+
 
 		if(self.dir!="b" and self.dir!="m" and self.dir!="x"):
 			raise Exception("dir= takes b, m, x")
 
-		self.eo      = args.file("eo=", "w")
-		self.no      = args.file("no=", "w")
-		self.logFile = args.file("log=", "w")
+		self.eo      = kwd["eo"]  if "eo"  in kwd else None
+		self.no      = kwd["no"]  if "no"  in kwd else None 
+		self.logFile = kwd["log"] if "log" in kwd else None 
+	
+	
+
+
+	def __init__(self,**kwd):
+		#パラメータチェック
+		self.__param_check_set(kwd)
 
 
 	def run(self):
@@ -137,42 +159,51 @@ d,c,0.30
 		# b,e,0.14
 		# c,d,0.30
 		# d,e,0.09
+		xpal = None
 		if self.directed :
 			# 任意の枝a->bのaについて上位rankを選択
-			nm.mnumber(k=self.ef1,s=self.sim+"%nr",e="skip",S=1,a="##rank",i=self.ei).mselnum(f="##rank",c="[,"+str(self.rank)+"]",o=xxpal).run()
+			xpal <<= nm.mnumber(k=self.ef1,s=self.sim+"%nr",e="skip",S=1,a="##rank",i=self.ei)
+			xpal <<= nm.mselnum(f="##rank",c="[,"+str(self.rank)+"]")
 		else:
-			nm.mfsort(f=self.ef1+","+self.ef2,i=self.ei,o=xxa).run()
-			nm.mfsort(f=self.ef2+","+self.ef1,i=self.ei,o=xxb).run()
-			nm.mcat(i=xxa+","+xxb).muniq(k=self.ef1+","+self.ef2).mnumber(k=self.ef1,s=self.sim+"%nr",e="skip",S=1,a="##rank").mselnum(f="##rank",c="[,"+str(self.rank)+"]",o=xxpal).run()
+			xxa = nm.mfsort(f=[self.ef1,self.ef2],i=self.ei)
+			xxb = nm.mfsort(f=[self.ef2,self.ef1],i=self.ei)
+			xpal <<= nm.muniq(k=[self.ef1,self.ef2],i=[xxa,xxb])
+			xpal <<= nm.mnumber(k=self.ef1,s=self.sim+"%nr",e="skip",S=1,a="##rank")
+			xpal <<= nm.mselnum(f="##rank",c="[,"+str(self.rank)+"]")
 
 
 		# 両方向+片方向
+		xpal1=None
 		if self.dir=="x":
-			nm.mcut(f=self.ef1+","+self.ef2+","+self.sim,i=xxpal,o=xxout).run()
+			xpal1 <<= nm.mcut(f=[self.ef1,self.ef2,self.sim],i=xpal)
 		# 両方向
 		elif self.dir=="b":
 			selpara = "$s{%s}==$s{##ef2}"%(self.ef1)
 			# 得られた上位rankグラフからa->b->cを作成し、a==cであれば相思相愛ということ
-			nm.mnjoin(k=self.ef2,K=self.ef1,m=xxpal,f=self.ef2+":##ef2,"+self.sim+":sim2",i=xxpal).msel(c=selpara).mcut(f=self.ef1+","+self.ef2+","+self.sim,o=xxout).run()
+			xpal1 <<= nm.mnjoin(k=self.ef2,K=self.ef1,m=xpal,f=self.ef2+":##ef2,"+self.sim+":sim2",i=xpal)
+			xpal1 <<= nm.msel(c=selpara)
+			xpal1 <<= nm.mcut(f=[self.ef1,self.ef2,self.sim])
 		else:
 			selpara = "$s{%s}==$s{##ef2}"%(self.ef1)
-			nm.mnjoin(k=self.ef2,K=self.ef1,m=xxpal,f=self.ef2+":##ef2,"+self.sim+":sim2",i=xxpal).msel(c=selpara).mcut(f=self.ef1+","+self.ef2,o=xxc).run()
-			nm.mcut(f=self.ef1+","+self.ef2+","+self.sim,i=xxpal).mcommon(k=self.ef1+","+self.ef2,m=xxc,r=True,o=xxout).run()
+			xxc = None
+			xxc <<= nm.mnjoin(k=self.ef2,K=self.ef1,m=xpal,f=self.ef2+":##ef2,"+self.sim+":sim2",i=xpal)
+			xxc <<= nm.msel(c=selpara)
+			xxc <<= nm.mcut(f=[self.ef1,self.ef2])
+			xpal1 <<= nm.mcut(f=[self.ef1,self.ef2,self.sim],i=xpal)
+			xpal1 <<= nm.mcommon(k=self.ef1+","+self.ef2,m=xxc,r=True)
 
+		runpal =None
 		kpara="%s,%s"%(self.ef1,self.ef2)
 		if self.udout :
-			nm.mfsort(f=kpara,i=xxout).mavg(k=kpara,f=self.sim).msortf(f=kpara,o=self.eo).run()
+			runpal <<= nm.mfsort(f=kpara,i=xpal1)
+			runpal <<= nm.mavg(k=kpara,f=self.sim)
+			runpal <<= nm.msortf(f=kpara,o=self.eo)
 		else:
-			nm.msortf(f=kpara,i=xxout,o=self.eo).run()
+			runpal <<= nm.msortf(f=kpara,i=xpal1,o=self.eo)
+
+		runpal.run()
 
 		if self.ni and self.no :
 			shutil.copyfile(self.ni,self.no)
-		# 終了メッセージ
-		#MCMD::endLog(args.cmdline)
 
 
-if __name__ == '__main__':
-
-	import sys
-	args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,eo=,no=,sim=,rank=,dir=,-directed,-udout","ei=,ef=,sim=")
-	mfriends(args).run()

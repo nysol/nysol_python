@@ -74,7 +74,8 @@
 # wFlag     = args.bool("-w") # -> false
 # ------------------------------------------------------
 import os
-class Margs(object):
+import re
+class Margs(object): #みなおすこと
 
 	#== コンストラクタ
 	# argv: rubyのARGV変数
@@ -342,6 +343,12 @@ class Margs(object):
 			ret.append([prefix+k,str(v)])
 		return ret
 
+	def kvmap(self):
+		ret={}
+		for k,v in self.keyValue.items():
+			newk = re.sub(r'^-',"" ,re.sub(r'=$',"",k))
+			ret[newk] =v
+		return ret
 
 	# コマンドラインをkey-valuを配列で返す
 	def cmdline(self):

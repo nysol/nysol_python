@@ -22,8 +22,8 @@
 import os
 import shutil
 import nysol.util.mtemp as mtemp
-import nysol.mod as nm
-import nysol.take.extcore as extTake
+import nysol.mcmd as nm
+from nysol.take import extcore as extTake
 
 
 #========================================================================

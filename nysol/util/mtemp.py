@@ -22,7 +22,7 @@
 import os
 import glob
 
-#= 一時ファイル名を扱うクラス
+#= 一時ファイル名を扱うクラス (内容確認すること)
 #
 #  一時ファイル名の生成と、そのファイルの(自動)削除を行うクラス*。
 #  一時ファイル名はfileもしくはpipeメソッドを呼び出すたびに重複なく生成される。
@@ -132,16 +132,6 @@ class Mtemp(object):
 
 		self.seq = 0 # オブジェクト内通し連番
 
-		# GC呼び出し時にcallする関数を設定する。
-		#@clean_proc=Mtemp.callback(@path,@pid,@oid)
-		#ObjectSpace.define_finalizer(self, @clean_proc)
-
-		# ruby終了時にcallする関数を設定する。
-		#if @gcRM
-		#	at_exit {
-		#		delAllFiles(@path,@pid,@oid)
-		#	}
-		#end
 
 	# ワークファイルを全て消す
 	def delAllFiles(self,path,pid,oid):
@@ -160,7 +150,7 @@ class Mtemp(object):
 	# 返値: 一時ファイル名(String)
 	#
 	# 以下のフォーマットで一時ファイル名を生成する。
-	# @seqはカウントアップされる。
+	# seqはカウントアップされる。
 	# フォーマット: "#{@path}/__MTEMP_#{@pid}_#{@oid}_#{@seq}"
 	# nameが指定されれば(@path以外に)GCで削除しなくなる。
 	def file(self,name=None):
@@ -173,7 +163,7 @@ class Mtemp(object):
 
 		return n
 
-	#== 一時ファイル名(名前付きパイプ)の取得
+	#== 一時ファイル名(名前付きパイプ)の取得 deprecated
 	# 返値: 一時ファイル名(String)
 	#
 	# 以下のフォーマットで名前付きパイプの一時ファイル名を生成する。
@@ -212,7 +202,7 @@ class Mtemp(object):
 
 
 #==============================================      
-#以下、サンプルコード(require時は実行されない)       
+#以下、サンプルコード
 #==============================================      
 if __name__ == '__main__':
 	import os

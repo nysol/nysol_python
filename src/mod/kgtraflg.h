@@ -49,6 +49,9 @@ class kgTraflg : public kgMod {
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgTraflg(void);
 	~kgTraflg(void){}

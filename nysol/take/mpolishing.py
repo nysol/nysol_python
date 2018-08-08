@@ -5,15 +5,15 @@ import os
 import os.path
 import shutil
 
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
-import nysol.take.extcore as extTake
-import nysol.take.graph as ntg
+from nysol.take import graph as ntg
+from nysol.take import extcore as extTake
 
 
 class mpolishing(object):
-	def help(self):
-		msg = """
+
+	helpMSG="""
 ----------------------------
 #{$cmd} version #{$version}
 ----------------------------
@@ -123,8 +123,13 @@ c,d
 # Copyright(c) NYSOL 2018- All Rights Reserved.
 		"""
 
-	def ver(self):
-		print("version #{$version}")
+	verInfo="version=1.2"
+
+	def help():
+		print(mpolishing.helpMSG) 
+
+	def ver():
+		print(mpolishing.versionInfo)
 
 	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,sup=0,iter=30,O=None,log=None):
 
@@ -229,7 +234,7 @@ c,d
 				denses.append(dens)
 
 			# node pairをsspc入力形式に変換
-			self.indirect = False
+
 			if self.indirect :
 				gtpstri = "ue_" if self.msgoff else "ue"
 				extTake.grhfil(type=gtpstri,i=xxpair,o=xxtra)

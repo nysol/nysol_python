@@ -20,10 +20,9 @@
 # ////////// LICENSE INFO ////////////////////*/
 import os
 import shutil
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
-import nysol.mod as nm
-import nysol.take.extcore as extTake
+import nysol.util as nu
+import nysol.mcmd as nm
+from nysol.take import extcore as extTake
 
 
 #========================================================================
@@ -71,7 +70,7 @@ class LcmEsp(object):
 		self.size  = None
 		self.msgoff = True
 
-		self.temp  = mtemp.Mtemp()
+		self.temp  = nu.Mtemp()
 		self.db    = db # 入力データベース
 		self.file  = self.temp.file()
 		self.outtf = outtf
@@ -105,7 +104,7 @@ class LcmEsp(object):
 		f.run()
 
 	def enumerate(self,eArgs):
-		tf=mtemp.Mtemp()
+		tf=nu.Mtemp()
 
 		# 最小サポートと最小サポート件数
 		if "minCnt" in eArgs :
@@ -283,7 +282,7 @@ class LcmEsp(object):
 			f.run()
 
 
-		self.size = mrecount.mrecount(i=self.pFile)
+		self.size = nu.mrecount(i=self.pFile)
 		#MCMD::msgLog("the number of emerging sequence patterns enumerated is #{@size}")
 
 	def output(self,outpath):

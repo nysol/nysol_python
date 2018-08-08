@@ -20,6 +20,7 @@
 // kgLoad.cpp 行の複製
 // =============================================================================
 #include <cstdio>
+#include <math.h>
 #include <kgload.h>
 #include <kgError.h>
 #include <kgConfig.h>
@@ -51,6 +52,9 @@ static bool strCHECK(PyObject* data){
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
+const char * kgLoad::_ipara[] = {"i",""};
+const char * kgLoad::_opara[] = {"o",""};
+
 kgLoad::kgLoad(void)
 {
 	_name    = "kgload";
@@ -267,7 +271,16 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 							_oFile.writeDbl(PyLong_AsDouble(fval), i==fldsize-1);
 						}
 						else if (PyFloat_Check(fval)){
-							_oFile.writeDbl(PyFloat_AsDouble(fval), i==fldsize-1);
+							double d=PyFloat_AsDouble(fval);
+							if(isnan(d)||isinf(d)){
+								_oFile.writeStr("", i==fldsize-1);
+							}
+							else{
+								_oFile.writeDbl(d, i==fldsize-1);
+							}
+						}
+						else if (Py_None == fval){
+							_oFile.writeStr("", i==fldsize-1);
 						}
 						else{
 							throw kgError("unsupport data type");
@@ -363,41 +376,49 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 					PyObject* tlist = PyList_New(rls.fldSize());
 					
 					for(size_t j=0 ;j<rls.fldSize();j++){
-						
-						if(ptn[j]==0){
-							char * p = rls.getVal(j);
+
+						char * p = rls.getVal(j);
+
+						if(*p=='\0'){
+
+							Py_INCREF(Py_None);
+							PyList_SET_ITEM(tlist,j,Py_None);
+
+						}
+						else if(ptn[j]==0){
+
 							PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
-							//PyList_SetItem(tlist,j,Py_BuildValue("s",rls.getVal(j)));
+
 						}
 						else if(ptn[j]==1){
-							PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(rls.getVal(j))));
+
+							PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(p)));
+
 						}
 						else if(ptn[j]==2){
-							//PyList_SetItem(tlist,j,Py_BuildValue("d",atof(rls.getVal(j))));
-							PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(rls.getVal(j))));
+
+							PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(p)));
+
 						}
 						else if(ptn[j]==3){
-							PyList_SET_ITEM(tlist,j,PyUnicode_FromString(rls.getVal(j)));
+	
+							if(strlen(p)==1 && *p=='0'){
+
+								Py_INCREF(Py_False);
+								PyList_SET_ITEM(tlist,j,Py_False);
+							
+							}else{
+
+								Py_INCREF(Py_True);
+								PyList_SET_ITEM(tlist,j,Py_True);
+							
+							}
+
 						}
 					}
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
 
-					/*
-					//char * v[3];
-					//v[0]=rls.getVal(0);
-					//v[1]=rls.getVal(1);
-					//v[2]=rls.getVal(2);
-					va_list pos;
-					va_copy(pos, v);
-					va_arg( pos, char* ) = rls.getVal(0);
-					va_arg( pos, char* ) = rls.getVal(1);
-					va_arg( pos, char* ) = rls.getVal(2);
-					
-					PyObject* tlist = Py_BuildValue("[s,s,s]",v);
-					PyList_Append(o_p,tlist);
-					Py_DECREF(tlist);
-					*/
 				}
 				pthread_mutex_unlock(mtx);
 			}

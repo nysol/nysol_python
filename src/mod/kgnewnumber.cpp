@@ -31,6 +31,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgNewnumber::_ipara[] = {""};
+const char * kgNewnumber::_opara[] = {"o",""};
+
 kgNewnumber::kgNewnumber(void)
 {
 	_name    = "kgNewnumber";

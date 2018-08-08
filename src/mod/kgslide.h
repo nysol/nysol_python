@@ -66,6 +66,9 @@ class kgSlide : public kgModIncludeSort
 	void setArgsMain(void);	
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgSlide(void);
 	~kgSlide(void){

@@ -5,16 +5,18 @@ import os
 import os.path
 import shutil
 
-import nysol.mod as nm
-import nysol.util.margs as margs
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
-import nysol.take.extcore as extTake
+import nysol.mcmd as nm
+import nysol.util as nu
+
+#import nysol.util.margs as margs
+#import nysol.util.mtemp as mtemp
+#import nysol.util.mrecount as mrecount
+
+from nysol.take import extcore as extTake
 
 class mclique(object):
-	def help(self):
-		msg = """
 
+	helpMSG="""
 # ver="1.0" # 初期リリース 2014/2/20
 # ver="1.1" # eo=,no=の機能追加 2014/3/27
 # ver="1.2" # ni=,nf=の追加, eo=,no=の機能をmclique2g.rbに分離, 枝出力を廃止(-nodeによる出力のみ) 2014/8/2
@@ -115,163 +117,166 @@ id,node,size
 # Copyright(c) NYSOL 2012- All Rights Reserved.
 		"""
 
-	def ver(self):
-		print("version #{$version}")
+	verInfo="version=1.2"
 
-	def __init__(self,args):
-		self.args = args
+	paramter = {	
+		"ei":"filename",
+		"ef":"fld",
+		"ni":"filename",
+		"nf":"fld",
+		"l":"int",
+		"u":"int",
+		"o":"filename",		
+		"log":"filename",
+		"all":"bool",
+		"T":"str"
+	}
+
+	paramcond = {	
+		"hissu": ["ei","ef"]
+	}
+
+	def help():
+		print(mclique.helpMSG) 
+
+	def ver():
+		print(mclique.versionInfo)
+
+
+
+	def __param_check_set(self , kwd):
+
+		for k,v in kwd.items():
+			if not k in mclique.paramter	:
+				raise( Exception("KeyError: {} in {} ".format(k,self.__class__.__name__) ) )
+
 		self.msgoff = True
 
-		# mcmdのメッセージは警告とエラーのみ
-		#ENV["KG_VerboseLevel"]="2" unless args.bool("-mcmdenv")
-
-		#ワークファイルパス
-		#if args.str("T=")!=nil then
-		#	ENV["KG_TmpPath"] = args.str("T=").sub(/\/$/,"")
-		#end
-
-		self.all=args.bool("-all")
-
-		self.ei = args. file("ei=","r") # edgeファイル名
-		self.ni = args. file("ni=","r") # node file name
-
+		self.ei = kwd["ei"] # edgeファイル名
+		self.ni = kwd["ni"] if "ni"  in kwd else None # node file name
+		
 		# ---- edge field names (two nodes) on ei=
-		self.ef1,self.ef2 = args.field("ef=", self.ei, "node1,node2",2,2)["names"]
+		ef0 = kwd["ef"].split(",")
+		self.ef1 = ef0[0]
+		self.ef2 = ef0[1] 
 
 		# ---- node field name on ni=
-		self.nf = args.field("nf=", self.ni, "node",1,1)
-		if self.nf:
-			self.nf = self.nf["names"][0]
+		self.nf = kwd["nf"] if "nf"  in kwd else "node"
 
-		self.minSize = args.int("l=")    # クリークサイズ下限
-		self.maxSize = args.int("u=")    # クリークサイズ上限
-		self.oFile   = args.file("o=", "w")
-		self.logFile = args.file("log=", "w")
+		self.minSize = kwd["l"]   if "l"   in kwd else None   # クリークサイズ下限
+		self.maxSize = kwd["u"]   if "u"   in kwd else None   # クリークサイズ上限
+		self.oFile   = kwd["o"]   if "o"   in kwd else None
+		self.logFile = kwd["log"] if "log" in kwd else None
+
+		self.all = kwd["all"] if "all" in kwd else False
+
+	def __init__(self,**kwd):
+
+		#パラメータチェック
+		self.args = kwd
+		self.__param_check_set(kwd)
 
 
 	def g2pair(self,ni,nf,ei,ef1,ef2,ipair,mapFile):
-	#MCMD::msgLog("converting graph files into a pair of numbered nodes ...")
-		xxt = mtemp.Mtemp()
-		wf1 = xxt.file() 
-		wf2 = xxt.file() 
-		wf3 = xxt.file() 
 
-		nm.mcut(f=str(ef1)+":node",i=ei,o=wf1).run()
-		nm.mcut(f=str(ef2)+":node",i=ei,o=wf2).run()
+		dlist =[nm.mcut(f=ef1+":node",i=ei),nm.mcut(f=ef2+":node",i=ei)]
+
 		if(ni): 
-			nm.mcut(f=str(nf)+":node",i=ni,o=wf3).run()
+			dlist.append(nm.mcut(f=nf+":node",i=ni))
 			
-		if(ni): 
-			para="%s,%s,%s"%(wf1,wf2,wf3)
-		else:
-			para="%s,%s"%(wf1,wf2)
-		nm.mcat(i=para,f="node").muniq(k="node").mnumber(q=True,a="num",o=mapFile).run()
+		fmap = None	
+		fmap <<= nm.mcut(i=dlist,f="node")
+		fmap <<= nm.muniq(k="node")
+		fmap <<= nm.mnumber(q=True,a="num",o=mapFile)
 
-
-		paraE="%s,%s"%(ef1,ef2)
-		f =   nm.mcut(f=paraE,i=ei)
-		f <<= nm.mjoin(k=ef1,K="node",m=mapFile,f="num:num1")
-		f <<= nm.mjoin(k=ef2,K="node",m=mapFile,f="num:num2")
+		f =   nm.mcut(f=[ef1,ef2],i=ei)
+		f <<= nm.mjoin(k=ef1,K="node",m=fmap,f="num:num1")
+		f <<= nm.mjoin(k=ef2,K="node",m=fmap,f="num:num2")
 		f <<= nm.mcut(f="num1,num2")
 		f <<= nm.mfsort(f="num1,num2")
 		f <<= nm.msortf(f="num1%n,num2%n" , nfno=True,o=ipair)
 		f.run()
-
 	# ============
 	# entry point
 	def run(self):
+
 		from datetime import datetime	
 		t = datetime.now()
 
-
-		wf = mtemp.Mtemp()
+		wf = nu.Mtemp()
 		xxinp    = wf.file()
 		xxmap    = wf.file()
 		input    = self.ei
 
 		self.g2pair(self.ni,self.nf,self.ei,self.ef1,self.ef2,xxinp,xxmap)
 
-
-		input=xxinp
-
 		xxmace = wf.file() # maceの出力(tra形式)
-		xxpair = wf.file() # 上記traをpair形式に変換したデータ
+
 		para = {}
 		if self.msgoff :
 			para["type"] = "Ce_" if self.all else "Me_"
 		else:
 			para["type"] = "Ce" if self.all else "Me"
-			
-		para["i"] = input
+		para["i"] = xxinp
 		para["o"] = xxmace
-
 		if self.minSize :
 			para["l"] = self.minSize
-
 		if self.maxSize :
 			para["u"] = self.maxSize
-
 		extTake.mace(para)
 		
 		#MCMD::msgLog("converting the numbered nodes into original name ...")
-		id= mrecount.mrecount(i=xxmace,nfni=True)
-		fld="id,num,size"
-		f=None
-		f <<= nm.mcut(i=xxmace,nfni=True,f="0:num")
-		f <<= nm.mnumber(q=True,a="id")
-		f <<= nm.mvcount(vf="num:size")
-		f <<= nm.mtra(r=True,f="num",o=xxpair)
-		f.run()
+		id = nu.mrecount(i=xxmace,nfni=True)
+
+		# xxpair = wf.file() # 上記traをpair形式に変換したデータ
+
+		fpair = None
+		fpair <<= nm.mcut(i=xxmace,nfni=True,f="0:num")
+		fpair <<= nm.mnumber(q=True,a="id")
+		fpair <<= nm.mvcount(vf="num:size")
+		fpair <<= nm.mtra(r=True,f="num")
 		
 
 		# when ni= specified, it add the isolated single cliques.
 		if self.ni :
-			xxiso =wf.file()
-			xxcat =wf.file()
 
-			f0=None
-			f0 <<= nm.msortf(f="num",i=xxpair)
+			fpair_u = nm.mread(i=fpair)
+
 			if self.all:
-				f0 <<= nm.mselstr(f="size",v=1)
-			f0 <<= nm.mcut(f="num")
-			f0 <<= nm.muniq(k="num")
-
+				fpair_u <<= nm.mselstr(f="size",v=1)
+			fpair_u <<= nm.mcut(f="num")
+			fpair_u <<= nm.muniq(k="num")
 
 			# select all nodes which are not included in any cliques
-			f=None
-			f <<= nm.mcut(f="num",i=xxmap)
-			f <<= nm.mcommon(k="num",m=f0,r=True)
-			f <<= nm.mnumber(S=id,a="id",q=True)
-			f <<= nm.msetstr(v=1,a="size")
-			f <<= nm.mcut(f="id,num,size",o=xxiso)
-			f.run()
+			xxiso=None
+			xxiso <<= nm.mcut(f="num",i=xxmap)
+			xxiso <<= nm.mcommon(k="num",m=fpair_u,r=True)
+			xxiso <<= nm.mnumber(S=id,a="id",q=True)
+			xxiso <<= nm.msetstr(v=1,a="size")
+			xxiso <<= nm.mcut(f="id,num,size")
+			# mcut入れないとおかしくなるあとで直す
+			#ddlist = [fpair.mcut(f="id,num,size"),xxiso]
+			xxpair = nm.mcut(i=[fpair,xxiso],f="id,num,size")
+			
+		else:
 
-			nm.mcat(i=xxpair+","+xxiso,o=xxcat).run()
-			shutil.copyfile(xxcat,xxpair)
+			xxpair = fpair
 
 
-		f = nm.mjoin(m=xxmap,i=xxpair,k="num",f="node")
-		f <<= nm.mcut(f="id,node,size")
-		f <<= nm.msortf(f="id,node",o=self.oFile)
-		f.run()
+		xxpair <<= nm.mjoin(m=xxmap,k="num",f="node")
+		xxpair <<= nm.mcut(f="id,node,size")
+		xxpair <<= nm.msortf(f="id,node",o=self.oFile)
+		xxpair.run()
 
 		procTime = datetime.now()-t
 
 		# ログファイル出力
-		if (self.logFile) :
+		if self.logFile :
 			kv=[["key","value"]]
-			kv.extend(self.args.getKeyValue())
+			for k,v in self.args.items():
+				kv.append([k,str(v)])
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
 
-		# 終了メッセージ
-		#MCMD::endLog(args.cmdline)
-
-
-if __name__ == '__main__':
-	import sys
-	args=margs.Margs(sys.argv,"ei=,ef=,ni=,nf=,-all,o=,l=,u=,log=","ei=,ef=")
-	mclique(args).run()
-	#"ei=,ef=,th="
 
 

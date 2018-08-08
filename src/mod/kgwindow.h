@@ -62,6 +62,9 @@ class kgWindow : public kgModIncludeSort {
 
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgWindow(void);
 	~kgWindow(void){

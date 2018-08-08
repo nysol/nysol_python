@@ -50,6 +50,9 @@ class kgJoin:public kgModIncludeSort
 	void setArgsMain(void);	
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgJoin(void);
 	~kgJoin(void){}

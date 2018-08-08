@@ -34,12 +34,15 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgSortchk::_ipara[] = {"i",""};
+const char * kgSortchk::_opara[] = {"o",""};
+
 kgSortchk::kgSortchk(void)
 {
 	_name    = "kgsortchk";
 	_version = "###VERSION###";
 
-	_paralist = "k=,s=,-q";
+	_paralist = "i=,o=,k=,s=,-q";
 	_paraflg = kgArgs::ALLPARAM;
 
 	_titleL =  "";

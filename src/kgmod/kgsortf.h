@@ -85,6 +85,9 @@ class kgSortf :public kgMod{
 	int mergeOneLevel(int level, int iCnt);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ&引数セット
 	kgSortf(void);
 	~kgSortf(void){}

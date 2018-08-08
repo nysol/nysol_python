@@ -40,8 +40,8 @@ class kg2Cat : public kgMod {
 
 	size_t _itotal;
 	size_t _iCnt;
-	bool first ;
-
+	bool _first ;
+	vector<kgstr_t> _fldname1;
 
 	// 引数セット
 	void setArgs(void);
@@ -52,6 +52,9 @@ class kg2Cat : public kgMod {
 	void readwrite(size_t pos);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kg2Cat(void);
 	~kg2Cat(void){}

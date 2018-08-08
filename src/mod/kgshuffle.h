@@ -53,6 +53,9 @@ class kgShuffle:public kgMod {
 
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgShuffle(void);
 	~kgShuffle(void){}

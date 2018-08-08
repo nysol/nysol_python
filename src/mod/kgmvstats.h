@@ -284,6 +284,9 @@ class kgMvstats : public kgModIncludeSort {
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgMvstats(void);
 	~kgMvstats(void){}

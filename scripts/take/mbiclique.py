@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 import sys
 import nysol.util.margs as margs
-import nysol.take.mbiclique as mbiclique
-
+import nysol.take as nt
 
 args=margs.Margs(sys.argv,"ei=,ef=,o=,l=,u=,-edge","ei=")
-mbiclique.mbiclique(args).run()
+nt.mbiclique(**args.kvmap()).run()
 

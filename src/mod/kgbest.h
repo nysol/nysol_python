@@ -53,6 +53,9 @@ class kgBest : public kgModIncludeSort {
 	bool IsInRange(size_t val);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgBest(void);
 	~kgBest(void){}

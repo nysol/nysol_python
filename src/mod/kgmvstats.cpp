@@ -427,6 +427,9 @@ void kgmvstats_::kgMvUkurt::calc(vector<kgVal>& rls ,vector<kgVal>& inp)
 //--------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgMvstats::_ipara[] = {"i",""};
+const char * kgMvstats::_opara[] = {"o",""};
+
 kgMvstats::kgMvstats(void){
 
 	_name    = "kgmvstats";

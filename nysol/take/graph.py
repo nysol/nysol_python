@@ -8,7 +8,7 @@ __version__ = "1.00"
 __date__    = "28 Dec 2017"
 
 import os
-import nysol.mod as nm
+import nysol.mcmd as nm
 import nysol.util.mtemp as mtemp
 
 class graph(object):

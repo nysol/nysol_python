@@ -53,6 +53,9 @@ class kgNjoin: public kgModIncludeSort
 	void	writeTM(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgNjoin(void);
 	~kgNjoin(void){}

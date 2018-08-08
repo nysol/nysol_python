@@ -32,6 +32,9 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
+const char * kgExcmd::_ipara[] = {"i",""};
+const char * kgExcmd::_opara[] = {"o",""};
+
 kgExcmd::kgExcmd(void)
 {
 	_name    = "kgexcmd";
@@ -56,7 +59,7 @@ void kgExcmd::setArgs(void)
 	if(_cmdstr.size()!=0&&_cmdstr[0] =='\''&&_cmdstr[_cmdstr.size()-1]=='\''){
 		_cmdstr = _cmdstr.substr(1,_cmdstr.size()-2);
 	}
-	_cmdstrv = kglib::splitTokenQ(_cmdstr,' ');
+	_cmdstrv = kglib::splitTokenQ(_cmdstr,' ',true);
 	_cmdars = new const char* [_cmdstrv.size()+1];
 
 	for(size_t i=0;i<_cmdstrv.size();i++){

@@ -93,6 +93,9 @@ class kgXml2csv : public kgMod
 	int              _iRecNo;      // 入力行カウンタ
 	
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgXml2csv(void);
 	~kgXml2csv(void){}

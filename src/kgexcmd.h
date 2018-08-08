@@ -48,6 +48,8 @@ class kgExcmd : public kgMod
 	char const ** _cmdars;
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
 	// コンストラクタ
 	kgExcmd(void);
 	~kgExcmd(void){}

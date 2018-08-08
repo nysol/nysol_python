@@ -52,6 +52,9 @@ class kgNormalize : public kgModIncludeSort
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kgNormalize(void);
 	~kgNormalize(void){}

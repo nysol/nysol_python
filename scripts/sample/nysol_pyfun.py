@@ -4,7 +4,7 @@
 import sys
 import nysol.util.margs as margs
 import nysol.take.mitemset as mitemset
-import nysol.mod as nm
+import nysol.mcmd as nm
 
 
 def check(inf,tid,item,s,o):

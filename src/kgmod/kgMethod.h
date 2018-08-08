@@ -56,6 +56,7 @@ char* sepFldTokenNdq(char **pnt, size_t fldCnt, char *str);
 vector<char*> splitToken(char* str, char delim,bool skip=false);
 vector<string> splitToken(string& str, char delim,bool skip=false);
 vector<wstring> splitToken(wstring& str, wchar_t delim);
+vector<string> splitTokenx(string str, char delim,bool skip=false);
 
 vector<string> splitTokenQ(string& str, char delim,bool skip=false);
 

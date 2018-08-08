@@ -164,6 +164,10 @@ void kgTimeparser::compile(const char *str)
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
+const char * kgDformat::_ipara[] = {"i",""};
+const char * kgDformat::_opara[] = {"o",""};
+
+
 kgDformat::kgDformat(void)
 {
 	_name    = "kgdformat";

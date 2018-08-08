@@ -330,6 +330,9 @@ static void *wThread(void *arg){
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
+const char * kgFifo::_ipara[] = {"i",""};
+const char * kgFifo::_opara[] = {"o",""};
+
 
 kgFifo::kgFifo(void){
 
@@ -514,14 +517,11 @@ int kgFifo::run(void)
 	}
 	return 1;
 }
-
-
 ///* thraad cancel action
 static void cleanup_handler(void *arg)
 {
 	((kgFifo*)arg)->rw_cancel();
 }
-
 
 int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
@@ -539,7 +539,7 @@ int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		rw_cancel();
 		msg.append(errorEndMsg(err));
 	}
-	//KG_ABI_CATCH
+	KG_ABI_CATCH
 	catch(...){
 		rw_cancel();
 		kgError err("unknown error" );

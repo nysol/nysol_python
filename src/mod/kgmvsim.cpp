@@ -810,6 +810,9 @@ void kgmvsim_::kgMvSimFunc_ConvMin::calc(kgVal &rls,vector<char*>& inp)
 //--------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録)
 // -----------------------------------------------------------------------------
+const char * kgMvsim::_ipara[] = {"i",""};
+const char * kgMvsim::_opara[] = {"o",""};
+
 kgMvsim::kgMvsim(void){
 
 	_name    = "kgmvsim";

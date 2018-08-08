@@ -47,6 +47,9 @@ class kgLoad : public kgMod
 	void setArgs(int inum,int *i,int onum, int* o);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgLoad(void);
 	~kgLoad(void){}

@@ -48,6 +48,9 @@ class kgArff2csv : public kgMod
 
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ
 	kgArff2csv(void);
 	~kgArff2csv(void){}

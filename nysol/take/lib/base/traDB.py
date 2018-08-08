@@ -3,10 +3,12 @@
 
 import shutil
 import os
-import nysol.mod as nm
-import nysol.util.mtemp as mtemp
-import nysol.util.mrecount as mrecount
-import nysol.take.lib.items as items
+import nysol.mcmd as nm
+import nysol.util as nu
+
+#import nysol.util.mtemp as mtemp
+#import nysol.util.mrecount as mrecount
+from nysol.take.lib import items as items
 #=トランザクションデータクラス
 # 頻出パターンマイニングで使われるトランザクションデータを扱うクラス。
 # トランザクションファイルは、トランザクションID項目とアイテム集合項目から構成される。
@@ -100,7 +102,7 @@ class TraDB(object):
 		self.clsSize  = None # クラス数
 		self.cFile    = None # クラスファイル
 
-		self.temp   = mtemp.Mtemp()
+		self.temp   = nu.Mtemp()
 		self.iFile  = iFile                    # 入力ファイル
 		self.iPath  = os.path.abspath(self.iFile) # フルパス
 		self.idFN   = idFN                     # トランザクションID項目名
@@ -112,7 +114,7 @@ class TraDB(object):
 		nm.mcut(f=fpara,i=self.iFile).muniq(k=fpara,o=self.file).run()
 
 		# レコード数の計算
-		self.recCnt = mrecount.mrecount(i=self.file)
+		self.recCnt = nu.mrecount(i=self.file)
 
 		# トランザクション数の計算
 		xx1 = nm.mcut(f=self.idFN,i=self.file).muniq(k=self.idFN).mcount(a='__cnt').mcut(f='__cnt').run()
@@ -145,7 +147,7 @@ class TraDB(object):
 		self.file   = train
 
 		# レコード数の計算
-		self.recCnt = mrecount.mrecount(i=self.file)
+		self.recCnt = nu.mrecount(i=self.file)
 
 
 		xx1 = nm.mcut(f=self.idFN,i=self.file).muniq(k=self.idFN).mcount(a='__cnt').mcut(a='__cnt').run()
@@ -169,7 +171,7 @@ class TraDB(object):
 		itemFN=taxonomy.itemFN
 		taxoFN=taxonomy.taxoFN
 
-		tf=mtemp.Mtemp()
+		tf=nu.Mtemp()
 		xx1=tf.file()
 		cpara = "%s,%s:%s"%(self.idFN,taxoFN,self.itemFN)
 		f=None
@@ -198,7 +200,7 @@ class TraDB(object):
 		itemFN=taxonomy.itemFN
 		taxoFN=taxonomy.taxoFN
 
-		tf=mtemp.Mtemp()
+		tf=nu.Mtemp()
 		xx1=tf.file()
 		cpara = "%s,%s:%s"%(self.idFN,taxoFN,self.itemFN)
 		kpara = "%s,%s"%(self.idFN,self.itemFN)

@@ -4,7 +4,7 @@
 import sys
 import numpy as np
 import nysol.util.margs as margs 
-import nysol.mod as nm
+import nysol.mcmd as nm
 from nysol.util._utillib import mcsvout as mcsvout
 import nysol.util.mtemp as mtemp
 

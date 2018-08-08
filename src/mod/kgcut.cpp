@@ -31,13 +31,16 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
+const char * kgCut::_ipara[] = {"i",""};
+const char * kgCut::_opara[] = {"o",""};
+
 
 kgCut::kgCut(void)
 {
-	_name    = "kgcut";
-	_version = "###VERSION###";
+	_name     = "kgcut";
+	_version  = "###VERSION###";
 	_paralist = "f=,i=,o=,-r,-nfni";
-	_paraflg = kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN;
+ 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_IN;
 	#include <help/en/kgcutHelp.h>
 	_titleL = _title;
 	_docL   = _doc;

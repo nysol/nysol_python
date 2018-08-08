@@ -45,6 +45,9 @@ class kgProduct:public kgMod
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
 	// コンストラクタ&引数セット
 	kgProduct(void);
 	~kgProduct(void){}

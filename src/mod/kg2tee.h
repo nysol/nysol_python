@@ -52,6 +52,9 @@ class kg2Tee : public kgMod {
 	int runMain(void);
 
 public:
+	static const char * _ipara[];
+	static const char * _opara[];
+
   // コンストラクタ
 	kg2Tee(void);
 	~kg2Tee(void){}
