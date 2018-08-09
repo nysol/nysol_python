@@ -86,21 +86,36 @@ void kgLoad::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 {
-	// パラメータチェック
-	_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
+		// パラメータチェック
+		_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
 
-	if(inum>1 || onum>1){
-		throw kgError("no match IO");
+		if(inum>1 || onum>1){
+			throw kgError("no match IO");
+		}
+
+		// 入出力ファイルオープン
+		if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
+		else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+		iopencnt++;
+
+		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
+		oopencnt++;
+
+		_iFile.read_header();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
-
-	// 入出力ファイルオープン
-	if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
-
-	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
-
-	_iFile.read_header();
 	
 }
 
@@ -231,10 +246,22 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 		_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
 
 		if(onum>1){
+			for(int i=0; i<onum ;i++){
+				if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+			}
 			throw kgError("no match IO");
 		}
 		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		else{ 
+			try{
+				_oFile.open(_args.toString("o=",true), _env,_nfn_o);
+			}catch(...){
+				for(int i=0; i<onum ;i++){
+					if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+				}
+				throw;
+			}
+		}
 
 		if(PyList_Check(i_p)){
 			Py_ssize_t max = PyList_Size(i_p);
@@ -332,13 +359,27 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 	try {
 		// パラメータチェック
 		_args.paramcheck("i=,dtype=",kgArgs::COMMON|kgArgs::IODIFF);
-		if(inum>1){ throw kgError("no match IO"); }
+		if(inum>1){ 
+			for(int i=0; i<inum ;i++){
+				if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+			}
+			throw kgError("no match IO"); 
+		}
 
 		kgCSVfld rls;
 
 		// 入出力ファイルオープン
 		if(inum==1 && *i_p > 0){ rls.popen(*i_p, _env,_nfn_i); }
-		else     { rls.open(_args.toString("i=",true), _env,_nfn_i); }
+		else     { 
+			try{
+				rls.open(_args.toString("i=",true), _env,_nfn_i); 
+			}catch(...){
+				for(int i=0; i<inum ;i++){
+					if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+				}
+				throw;
+			}
+		}
 
 
 		rls.read_header();

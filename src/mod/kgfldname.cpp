@@ -132,24 +132,40 @@ void kgFldname::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgFldname::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	// -nfniを指定した場合、-xも指定されていることにする
-	bool nfniflg = _args.toBool("-nfni");
-	if(nfniflg){ 
-		_nfn_i =nfniflg;
-		_fldByNum = true;
+		_args.paramcheck(_paralist,_paraflg);
+
+		// -nfniを指定した場合、-xも指定されていることにする
+		bool nfniflg = _args.toBool("-nfni");
+		if(nfniflg){ 
+			_nfn_i =nfniflg;
+			_fldByNum = true;
+		}
+
+		if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+		if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		iopencnt++;
+
+		if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
+
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
-
-	if(inum>1 || onum>1){ throw kgError("no match IO");}
-
-	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
-
-	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
-
-	setArgsMain();
 
 }
 

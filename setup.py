@@ -214,7 +214,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 
 setup(name = 'nysol',
 			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
-			version = '0.2.1',
+			version = '0.2.2',
 			description = 'This is nysol tools',
 			long_description='This is nysol tools',
 			author='nysol',

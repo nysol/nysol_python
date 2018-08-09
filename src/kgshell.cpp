@@ -825,6 +825,7 @@ int kgshell::runMain(
 		}
 	}
 	if(outpipe){
+		// 呼び出しもとでキャンセルさせる
 		// チェック必要ここでしても問題ない iter場合の処理
 		// 別thread監視させる？
 		return _csvpiped[0];
@@ -1035,6 +1036,7 @@ kgCSVfld* kgshell::runiter(
 	vector<cmdCapselST> &cmds,	
 	vector<linkST> & plist
 ){
+	kgCSVfld* _iterrtn = NULL;
 	try{
 
 		runInit(cmds,plist);
@@ -1043,33 +1045,36 @@ kgCSVfld* kgshell::runiter(
 			itrfd = runMain(cmds,plist,iblk,iblk==_spblk.getBlksize_M()-1);
 		}
 		if(itrfd<0){ return NULL; }
-
 		// データ出力
-		kgCSVfld* _iterrtn = new kgCSVfld;
+		_iterrtn = new kgCSVfld;
 		_iterrtn->popen(itrfd, &_env,_nfni);
 		_iterrtn->read_header();	
-
 		return _iterrtn;
 
 	}catch(kgError& err){
+
+		if(_iterrtn==NULL) { delete _iterrtn; } 		
 		ostringstream ss;
 		ss << "script RUN KGERROR " << err.message(0);
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch (const exception& e) {
+		if(_iterrtn==NULL) { delete _iterrtn; } 		
 		ostringstream ss;
 		ss << "script RUN KGERROR " << e.what();
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(char * er){
+		if(_iterrtn==NULL) { delete _iterrtn; } 		
 		ostringstream ss;
 		ss << "script RUN EX ERR " << er;
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(...){	
+		if(_iterrtn==NULL) { delete _iterrtn; } 		
 		err_OUTPUT("script RUN ERROR UNKNOWN TYPE");
 		runClean();
 	}
@@ -1083,7 +1088,7 @@ kgCSVkey* kgshell::runkeyiter(
 	vector<linkST> & plist,
 	vector<string> & klist
 ){
-
+	kgCSVkey *_iterrtnk=NULL;
 	try{
 
 		runInit(cmds,plist);
@@ -1094,7 +1099,7 @@ kgCSVkey* kgshell::runkeyiter(
 		if(itrfd<0){ return NULL; }
 
 		// データ出力
-		kgCSVkey *_iterrtnk = new kgCSVkey;
+		_iterrtnk = new kgCSVkey;
  
 		_iterrtnk->popen(itrfd, &_env,_nfni);
 		_iterrtnk->read_header();	
@@ -1106,24 +1111,28 @@ kgCSVkey* kgshell::runkeyiter(
 		return _iterrtnk;
 
 	}catch(kgError& err){
+		if(_iterrtnk==NULL) { delete _iterrtnk; } 		
 		ostringstream ss;
 		ss << "script RUN KGERROR " << err.message(0);
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch (const exception& e) {
+		if(_iterrtnk==NULL) { delete _iterrtnk; } 		
 		ostringstream ss;
 		ss << "script RUN KGERROR " << e.what();
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(char * er){
+		if(_iterrtnk==NULL) { delete _iterrtnk; } 		
 		ostringstream ss;
 		ss << "script RUN EX ERR " << er;
 		err_OUTPUT(ss.str());
 		runClean();
 
 	}catch(...){	
+		if(_iterrtnk==NULL) { delete _iterrtnk; } 		
 		err_OUTPUT("script RUN ERROR UNKNOWN TYPE");
 		runClean();
 	}

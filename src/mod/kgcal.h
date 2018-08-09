@@ -77,7 +77,7 @@ class kgCal_PreRSL{
 			return &_prvResults[i];
 		}
 		void setVal(kgVal *rls,size_t pos){
-			char * p;
+			//char * p;
 			_prvResults[pos].set(rls);
 			if(!_prvResults[pos].null()){
 				try {

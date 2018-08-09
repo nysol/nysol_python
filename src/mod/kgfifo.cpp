@@ -393,53 +393,73 @@ void kgFifo::setArgs(void){
 }
 
 void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
-	// unknown parameter check
-	_args.paramcheck("i=,o=,n=");
 
-	// 出力ファイル名の取得
-	if(inum>1 || onum>1){
-		throw kgError("no match IO");
-	}
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	if(inum==1 && *i_p > 0){ _iFD=*i_p;}
-	else{
-		_iName = _args.toString("i=",false);
-		// 入力ファイルオープン
-		if(_iName.empty()){
-				throw kgError("i= is necessary");
-		}else{
-			_iFD = ::open(_iName.c_str(), KG_IOPEN_FLG);
-			if(_iFD == -1 ){
-				ostringstream ss;
-				ss << "file read open error: " << _iName;
-				throw kgError(ss.str());
+		// unknown parameter check
+		_args.paramcheck("i=,o=,n=");
+
+		// 出力ファイル名の取得
+		if(inum>1 || onum>1){
+			throw kgError("no match IO");
+		}
+
+		if(inum==1 && *i_p > 0){ 
+			_iFD=*i_p;
+			iopencnt++;
+		}
+		else{
+			_iName = _args.toString("i=",false);
+			// 入力ファイルオープン
+			if(_iName.empty()){
+					throw kgError("i= is necessary");
+			}else{
+				_iFD = ::open(_iName.c_str(), KG_IOPEN_FLG);
+				if(_iFD == -1 ){
+					ostringstream ss;
+					ss << "file read open error: " << _iName;
+					throw kgError(ss.str());
+				}
 			}
 		}
-	}
 
-	if(onum==1 && *o_p > 0){_oFD = *o_p; }
-	else{
-		_oName = _args.toString("o=",false);
-		if(_oName.empty()){
-				throw kgError("o= is necessary");
-		}else{
-			_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
-			if(_oFD == -1 ){
-				ostringstream ss;
-				ss << "file write open error: " << _oName;
-				throw kgError(ss.str());
+		if(onum==1 && *o_p > 0){
+			_oFD = *o_p; 
+			oopencnt++;
+		}
+		else{
+			_oName = _args.toString("o=",false);
+			if(_oName.empty()){
+					throw kgError("o= is necessary");
+			}else{
+				_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
+				if(_oFD == -1 ){
+					ostringstream ss;
+					ss << "file write open error: " << _oName;
+					throw kgError(ss.str());
+				}
 			}
 		}
-	}
-
-	string queSize = _args.toString("n=",false);
-	if(queSize.empty()){
-		_queSize = 32;
-	}else{
-		_queSize = atoi(queSize.c_str());
-	}
-	if(_queSize<=2){
-		throw kgError("n= must take greater than 2.");
+	
+		string queSize = _args.toString("n=",false);
+		if(queSize.empty()){
+			_queSize = 32;
+		}else{
+			_queSize = atoi(queSize.c_str());
+		}
+		if(_queSize<=2){
+			throw kgError("n= must take greater than 2.");
+		}
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
 }
 

@@ -93,50 +93,69 @@ void kg2Tee::setArgs(void){
 // -----------------------------------------------------------------------------
 void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 
-	_args.paramcheck(_paralist);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	_iName = _args.toString("i=",false);
-	_oName = _args.toStringVector("o=",false);
+		_args.paramcheck(_paralist);
 
-	if(inum>1){ throw kgError("no match IO"); }
+		_iName = _args.toString("i=",false);
+		_oName = _args.toStringVector("o=",false);
+
+		if(inum>1){ throw kgError("no match IO"); }
 
 
-	if(inum==1 && *i_p>0)   { _iFD=*i_p;}
-	else if(_iName.empty()){ 
-		ostringstream ss;
-		ss << "i= is necessary";
-		throw kgError(ss.str());
-	}
-	else {
-		_iFD = ::open(_iName.c_str(), O_RDONLY);
-		if(_iFD == -1 ){
+		if(inum==1 && *i_p>0)   { 
+			_iFD=*i_p;
+			iopencnt++;
+		}
+		else if(_iName.empty()){ 
 			ostringstream ss;
-			ss << "file read open error: " << _iName;
+			ss << "i= is necessary";
 			throw kgError(ss.str());
 		}
-	}
+		else {
+			_iFD = ::open(_iName.c_str(), O_RDONLY);
+			if(_iFD == -1 ){
+				ostringstream ss;
+				ss << "file read open error: " << _iName;
+				throw kgError(ss.str());
+			}
+		}
 
-	if(onum>0){
-		for(int i=0;i<onum;i++){
-			_oFD.push_back(o_p[i]);
+		if(onum>0){
+			for(int i=0;i<onum;i++){
+				_oFD.push_back(o_p[i]);
+				_endFlg.push_back(false);
+				oopencnt++;
+			}
+		}
+		else if(_oName.empty()){
+			ostringstream ss;
+			ss << "o= is necessary";
+			throw kgError(ss.str());
+		}
+		for(size_t i=0;i<_oName.size();i++){
+			int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+			if( ofd == -1 ){
+				ostringstream ss;
+				ss << "file write open error: " << _oName[i];
+				throw kgError(ss.str());
+			}
+			_oFD.push_back(ofd);
 			_endFlg.push_back(false);
 		}
-	}
-	else if(_oName.empty()){
-		ostringstream ss;
-		ss << "o= is necessary";
-		throw kgError(ss.str());
-	}
-	for(size_t i=0;i<_oName.size();i++){
-		int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
-		if( ofd == -1 ){
-			ostringstream ss;
-			ss << "file write open error: " << _oName[i];
-			throw kgError(ss.str());
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
 		}
-		_oFD.push_back(ofd);
-		_endFlg.push_back(false);
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
+
 }
 
 // -----------------------------------------------------------------------------

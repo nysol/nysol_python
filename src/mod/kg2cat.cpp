@@ -67,48 +67,72 @@ void kg2Cat::setArgs(void)
 {
 	return ;
 }
+
 // -----------------------------------------------------------------------------
 void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try {
+		// パラメータチェック
+		_args.paramcheck(_paralist,_paraflg);
 
-	if(onum>1){
-		throw kgError("no match IO");
-	}
+		if(onum>1){ 
+			throw kgError("no match IO"); 
+		}
 
-	// -nfniを指定した場合、-xも指定されていることにする
-	bool nfniflg = _args.toBool("-nfni");
-	if(nfniflg){ 
-		_nfn_i =nfniflg; 
-		_fldByNum = true;
-	}
+		// -nfniを指定した場合、-xも指定されていることにする
+		bool nfniflg = _args.toBool("-nfni");
+		if(nfniflg){ 
+			_nfn_i =nfniflg; 
+			_fldByNum = true;
+		}
 	
-	//in
-	vector<kgstr_t> isf = _args.toStringVector("i=",false);
+		//in
+		vector<kgstr_t> isf = _args.toStringVector("i=",false);
 	
-	_itotal = isf.size() + inum ;
-	if(_itotal==0){// maxサイズの制限も入れる
-			throw kgError("no match IO");
+		_itotal = isf.size() + inum ;
+		if(_itotal==0){// maxサイズの制限も入れる
+				throw kgError("no match IO");
+		}
+		if(_itotal>32){// maxサイズの制限も入れる
+				throw kgError("unsuport IO size");
+		}
+		_iFiles = new kgCSVfld*[_itotal];
+	
+		size_t pos =0;
+		for(int i=0; i<inum ;i++){
+			_iFiles[i] = new kgCSVfld;
+			_iFiles[i]->popen(*(i_p+i), _env,_nfn_i);
+			iopencnt++;
+		}
+		for(size_t i=0; i<isf.size() ;i++){
+			_iFiles[inum+i] = new kgCSVfld;
+			_iFiles[inum+i]->open(isf[i], _env,_nfn_i);
+		}
+
+		//out
+		if(onum==1 && *o_p > 0){ 
+			_oFile.popen(*o_p, _env,_nfn_o); 
+			oopencnt++;
+		}
+		else{
+			_oFile.open(_args.toString("o=",true), _env,_nfn_o);
+		}
+		
+
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0) ::close(*(i_p+i));
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0) ::close(*(o_p+i));
+		}
+		throw;
 	}
 
-	_iFiles = new kgCSVfld*[_itotal];
-
-	size_t pos =0;
-	for(size_t i=0; i<inum ;i++){
-		_iFiles[i] = new kgCSVfld;
-		_iFiles[i]->popen(*(i_p+i), _env,_nfn_i);
-	}
-	for(size_t i=0; i<isf.size() ;i++){
-		_iFiles[inum+i] = new kgCSVfld;
-		_iFiles[inum+i]->open(isf[i], _env,_nfn_i);
-	}
-
-	//out
-	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
-
-	setArgsMain();
 
 }
 
@@ -140,6 +164,7 @@ void kg2Cat::readwrite(size_t pos){
 	// 出力実行
 	while( EOF != _iFiles[pos]->read() ){
 		_oFile.writeFld(_iFiles[pos]->getFld(),&outFldNo);
+		icnt++;
 	}
 
 	_iFiles[pos]->close();
@@ -153,7 +178,6 @@ int kg2Cat::runMain()
 {
 	for(size_t i=0 ; i<_itotal;i++){
 		readwrite(i);
-
 	}
 	_oFile.close();
 

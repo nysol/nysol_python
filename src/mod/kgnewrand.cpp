@@ -131,15 +131,29 @@ void kgNewrand::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgNewrand::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	_args.paramcheck(_paralist);
+		_args.paramcheck(_paralist);
 
-	if(inum>0 || onum>1){ throw kgError("no match IO");}
+		if(inum>0 || onum>1){ throw kgError("no match IO");}
 
-	if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
 
-	setArgsMain();
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
+	}
 
 }
 
