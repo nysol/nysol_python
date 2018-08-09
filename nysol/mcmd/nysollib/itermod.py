@@ -23,7 +23,16 @@ class LineListIter(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 
@@ -68,7 +77,17 @@ class LineDictIter(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -124,7 +143,16 @@ class BlkListIter(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -181,7 +209,16 @@ class BlkDictIter(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -240,7 +277,17 @@ class LineListIterWithInfo(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 		self.breakPre = True
 
@@ -301,8 +348,18 @@ class LineDictIterWithInfo(object):
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		if self.shobj == None:
+			raise Exception("can not init shell")
+			return None			
+
 		self.csvin = n_core.runiter(self.shobj,modlist,linklist,newkeys)
+		if self.csvin == None:
+			n_core.cancel(self.shobj)
+			raise Exception("can not run iter")
+			return None
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
+
 		self.breakPre = True
 
 	def __nextCore(self):

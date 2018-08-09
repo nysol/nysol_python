@@ -126,39 +126,57 @@ void kgVcommon::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgVcommon::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	if(inum>2 && onum>1){ throw kgError("no match IO"); }
+		_args.paramcheck(_paralist,_paraflg);
 
-	// 入出力ファイルオープン
-	kgstr_t ifile = _args.toString("i=",false);
-	kgstr_t mfile = _args.toString("m=",false);
+		if(inum>2 && onum>1){ throw kgError("no match IO"); }
 
-	int i_p_t = -1;
-	int m_p_t = -1;
-	if(inum>0){ i_p_t = *i_p;     }
-	if(inum>1){ m_p_t = *(i_p+1); }
+		// 入出力ファイルオープン
+		kgstr_t ifile = _args.toString("i=",false);
+		kgstr_t mfile = _args.toString("m=",false);
 
-	if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
-		throw kgError("Either i= or m= must be specified.");
+		int i_p_t = -1;
+		int m_p_t = -1;
+		if(inum>0){ i_p_t = *i_p;     }
+		if(inum>1){ m_p_t = *(i_p+1); }
+
+		if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
+			throw kgError("Either i= or m= must be specified.");
+		}
+		// 入出力ファイルオープン
+		if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
+		else if( ifile.empty()){ 
+			throw kgError("i= is necessary");
+		}
+		else       { _iFile.open(ifile, _env,_nfn_i);}
+		iopencnt++;
+
+		if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
+		else if( mfile.empty()){ 
+			throw kgError("m= is necessary");
+		}
+		else       { _mFile.open(mfile, _env,_nfn_i);}
+		iopencnt++;
+
+		if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
+		else{ _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
+
+		setArgsMain();
+
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
-	// 入出力ファイルオープン
-	if(i_p_t>0){ _iFile.popen(i_p_t, _env,_nfn_i); }
-	else if( ifile.empty()){ 
-		throw kgError("i= is necessary");
-	}
-	else       { _iFile.open(ifile, _env,_nfn_i);}
-
-	if(m_p_t>0){ _mFile.popen(m_p_t, _env,_nfn_i); }
-	else if( mfile.empty()){ 
-		throw kgError("m= is necessary");
-	}
-	else       { _mFile.open(mfile, _env,_nfn_i);}
-
-	if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
-	else{ _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
-
-	setArgsMain();
 
 }
 

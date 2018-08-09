@@ -121,72 +121,86 @@ void kgCat::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgCat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	// パラメータチェック
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	// 項目名指定
-	_fvstr = _args.toStringVector("f=",false);
+		// パラメータチェック
+		_args.paramcheck(_paralist,_paraflg);
 
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	// フラグセット
-	// (-skip_fnf,-add_fname,-stdin,-force,-skip,-nostop")
-	// -force,-skip,-nostopのいずれか指定されていれば
-	// _stopがfalse(項目名違っていてもERRORにならないようにする)
-	// -force,-skipは同時に指定できない
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	_skip_fnf = _args.toBool("-skip_fnf");
-	_add_fn   = _args.toBool("-add_fname");
-	_stdin    = _args.toBool("-stdin");
-	_force		= _args.toBool("-force");
-	_skip 		= _args.toBool("-skip");
-	_zskip 		= _args.toBool("-skip_zero");
+		// 項目名指定
+		_fvstr = _args.toStringVector("f=",false);
+
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		// フラグセット
+		// (-skip_fnf,-add_fname,-stdin,-force,-skip,-nostop")
+		// -force,-skip,-nostopのいずれか指定されていれば
+		// _stopがfalse(項目名違っていてもERRORにならないようにする)
+		// -force,-skipは同時に指定できない
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		_skip_fnf = _args.toBool("-skip_fnf");
+		_add_fn   = _args.toBool("-add_fname");
+		_stdin    = _args.toBool("-stdin");
+		_force		= _args.toBool("-force");
+		_skip 		= _args.toBool("-skip");
+		_zskip 		= _args.toBool("-skip_zero");
 	
-	_stop			= !(_force || _skip || _args.toBool("-nostop"));
-	_is_f     = !_fvstr.empty();
-	if(_skip && _force){ throw kgError("choose one from -force or -skip");}
+		_stop			= !(_force || _skip || _args.toBool("-nostop"));
+		_is_f     = !_fvstr.empty();
+		if(_skip && _force){ throw kgError("choose one from -force or -skip");}
 
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	// 入力ファイル名取得（ファイルオープンはしない）
-	// _stdin==trueで最初のファイル名は""(標準入力)
-	// ファイルが一つもなければエラー
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		// 入力ファイル名取得（ファイルオープンはしない）
+		// _stdin==trueで最初のファイル名は""(標準入力)
+		// ファイルが一つもなければエラー
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	vector< vector<kgstr_t> > vsf = _args.toStringVecVec("flist=",':',2,false);
+		vector< vector<kgstr_t> > vsf = _args.toStringVecVec("flist=",':',2,false);
 	
-	if(onum>1){
-		throw kgError("no match IO");
-	}	
-	if(inum!=0){
-		throw kgError("not support pipe file");	
-	}
-	else{
-		vector<kgstr_t> vs = _args.toStringVector("i=",false);
-		if(!vsf.empty()){
-			for(size_t i=0;i<vsf[0].size();i++){
-				kgCSVfld iFileL;
-				kgArgFld fFieldL;	
-				iFileL.open(vsf[0][i], _env,_nfn_i);
-				iFileL.read_header();
+		if(onum>1){
+			throw kgError("no match IO");
+		}	
+		if(inum!=0){
+			throw kgError("not support pipe file");	
+		}
+		else{
+			vector<kgstr_t> vs = _args.toStringVector("i=",false);
+			if(!vsf.empty()){
+				for(size_t i=0;i<vsf[0].size();i++){
+					kgCSVfld iFileL;
+					kgArgFld fFieldL;	
+					iFileL.open(vsf[0][i], _env,_nfn_i);
+					iFileL.read_header();	
 
-				fFieldL.set(vsf[1][i], &iFileL, _fldByNum);
-				// ファイルリスト読み込み
-				while( EOF != iFileL.read() ){ vs.push_back(iFileL.getVal(fFieldL.num(0))); }
-				iFileL.close();
+					fFieldL.set(vsf[1][i], &iFileL, _fldByNum);
+					// ファイルリスト読み込み
+					while( EOF != iFileL.read() ){ vs.push_back(iFileL.getVal(fFieldL.num(0))); }
+					iFileL.close();
+				}
+			}
+			_iFilename = kgFilesearch(vs,_skip_fnf,_stdin);	
+			if(_iFilename.empty()){ throw kgError("all files on i= are not found");	}
+		}
+
+		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
+
+		vector<kgstr_t> vskv = _args.toStringVector("kv=",false);
+		if (vskv.size()!=0) {
+			for ( size_t i=0 ;i < vskv.size();i++){
+				_kv.push_back(aToSizeT(vskv[i].c_str()));
 			}
 		}
-		_iFilename = kgFilesearch(vs,_skip_fnf,_stdin);
-		if(_iFilename.empty()){ throw kgError("all files on i= are not found");	}
-	}
 
-	if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
-
-
-	vector<kgstr_t> vskv = _args.toStringVector("kv=",false);
-	if (vskv.size()!=0) {
-		for ( size_t i=0 ;i < vskv.size();i++){
-			_kv.push_back(aToSizeT(vskv[i].c_str()));
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
 		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
 
 }

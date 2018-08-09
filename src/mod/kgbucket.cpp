@@ -239,32 +239,48 @@ void kgBucket::setArgs(void){
 }
 void kgBucket::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
+		_args.paramcheck(_paralist,_paraflg);
 
-	if(inum>1 || onum>2){ throw kgError("no match IO");}
+		if(inum>1 || onum>2){ throw kgError("no match IO");}
 
-	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		iopencnt++;
 
-	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o);  }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
 
-	kgstr_t rFile = _args.toString("O=",false);
+		kgstr_t rFile = _args.toString("O=",false);
 
-	if(onum>1 && *(o_p+1)>0){ 
-		_rangefile=true;
-		_rFile.popen(*(o_p+1), _env,_nfn_o); 
-  	_rFile.setPrecision(_precision);
+		if(onum>1 && *(o_p+1)>0){ 
+			_rangefile=true;
+			_rFile.popen(*(o_p+1), _env,_nfn_o); 
+			_rFile.setPrecision(_precision);
+			oopencnt++;
+		}
+		else if(rFile.empty()){
+			_rangefile=false;
+		}
+		else{
+			_rangefile=true;
+			_rFile.open(rFile,_env,_nfn_o);
+			_rFile.setPrecision(_precision);
+		}
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
-	else if(rFile.empty()){
-		_rangefile=false;
-	}
-	else{
-		_rangefile=true;
-		_rFile.open(rFile,_env,_nfn_o);
-  	_rFile.setPrecision(_precision);
-	}
-	setArgsMain();
 }
 // -----------------------------------------------------------------------------
 // 範囲ファイルの項目名の出力

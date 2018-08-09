@@ -140,15 +140,29 @@ void kgShuffle::setArgs(void)
 }
 void kgShuffle::setArgs(int inum,int *i_p,int onum ,int *o_p)
 {
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
 
-	_args.paramcheck(_paralist);
-	if(inum>1 || onum!=0){ throw kgError("no match IO i:("+toString(inum) +" o:" +toString(onum) + ")");}
+		_args.paramcheck(_paralist);
+		if(inum>1 || onum!=0){ throw kgError("no match IO i:("+toString(inum) +" o:" +toString(onum) + ")");}
 
-	// 入出力ファイルオープン
-	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		// 入出力ファイルオープン
+		if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		iopencnt++;
 
-	setArgsMain();
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
+	}
 
 }
 

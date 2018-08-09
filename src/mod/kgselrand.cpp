@@ -142,32 +142,48 @@ void kgSelrand::setArgs(void)
 // -----------------------------------------------------------------------------
 void kgSelrand::setArgs(int inum,int *i_p,int onum, int* o_p)
 {
-	// パラメータチェック
-	_args.paramcheck(_paralist,_paraflg);
+	int iopencnt = 0;
+	int oopencnt = 0;
+	try{
+		// パラメータチェック
+		_args.paramcheck(_paralist,_paraflg);
 
-	if(inum>1 || onum>2){ throw kgError("no match IO");}
+		if(inum>1 || onum>2){ throw kgError("no match IO");}
 
-	// 入出力ファイルオープン
-	if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
-	else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		// 入出力ファイルオープン
+		if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
+		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
+		iopencnt++;
 
-	if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-	else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		oopencnt++;
 
-	kgstr_t ufile = _args.toString("u=",false);
+		kgstr_t ufile = _args.toString("u=",false);
 
-	if(onum>1 && *(o_p+1)>0){ 
-		_uFile.popen(*(o_p+1), _env,_nfn_o); 
-		_elsefile=true;
+		if(onum>1 && *(o_p+1)>0){ 
+			_uFile.popen(*(o_p+1), _env,_nfn_o); 
+			_elsefile=true;
+			oopencnt++;
+		}
+		else if(ufile.empty()){
+			_elsefile=false;
+		}
+		else{
+			_uFile.open(ufile,_env,_nfn_o);
+			_elsefile=true;
+		}
+		setArgsMain();
+
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
+		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
-	else if(ufile.empty()){
-		_elsefile=false;
-	}
-	else{
-		_uFile.open(ufile,_env,_nfn_o);
-		_elsefile=true;
-	}
-	setArgsMain();
 
 }
 // -----------------------------------------------------------------------------

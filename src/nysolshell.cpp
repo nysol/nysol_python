@@ -330,6 +330,7 @@ PyObject* runITER(PyObject* self, PyObject* args)
 				k_list.push_back(strGET(PyList_GetItem(keys ,i)));
 			}
 			kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
+			
 			if(rtn==NULL){ return Py_BuildValue("");}
 
 			return PyCapsule_New(rtn,"kgCSVfldP",NULL);
@@ -356,36 +357,6 @@ PyObject* runITER(PyObject* self, PyObject* args)
 	}
 	return NULL;
 
-}
-
-
-
-PyObject* readlineconvPtn(PyObject* self, PyObject* args)
-{
-
-	PyObject *csvin;
-	PyObject *ptn;
-	//PyObject *list;
-	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
-    return Py_BuildValue("");
-  }
-
-	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-
-	if( kcfld->read() == EOF){
-		return Py_BuildValue("");
-	}
-
-	size_t fcnt = kcfld->fldSize();
-	PyObject* rlist = PyList_New(fcnt);
-
-	for(size_t j=0 ;j<fcnt;j++){
-		long k = PyLong_AsLong ( PyList_GetItem(ptn,j) );
-		char* v = kcfld->getVal(j);
-		PyList_SetItem(rlist,j,setRtnData(k,v));
-	}
-	return rlist;
 }
 
 PyObject* fldtp(PyObject* self, PyObject* args)
