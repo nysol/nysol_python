@@ -825,6 +825,7 @@ int kgshell::runMain(
 		}
 	}
 	if(outpipe){
+		// 呼び出しもとでキャンセルさせる
 		// チェック必要ここでしても問題ない iter場合の処理
 		// 別thread監視させる？
 		return _csvpiped[0];
