@@ -17,7 +17,7 @@ class NysolMOD_CORE(object):
 
 		self.name     = name
 		self.addBySys = False
-		self.msg      = False
+		self.msg      = True
 		self.runlimit = -1
 		self.kwd      = {}
 		self.inplist  = {}
@@ -779,7 +779,6 @@ class NysolMOD_CORE(object):
 			modlimt = int(kw_args["runlimit"])
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
-		
 
 		shobj = n_core.init(msgF,modlimt)
 

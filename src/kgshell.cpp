@@ -21,6 +21,7 @@
 #include <kgEnv.h>
 #include <kgError.h>
 #include <kgMethod.h>
+#include <kgmsgincpysys.h>
 #include <kgshell.h>
 #include <kgTempfile.h>
 #include <pthread.h>
@@ -511,23 +512,23 @@ void *kgshell::run_pyfunc(void *arg){
 }
 
 void kgshell::raw_OUTPUT(const string& v){
-	kgMsg msg(kgMsg::IGN, &_env);
+	kgMsgIncPySys msg(kgMsg::IGN, &_env);
 	msg.output_ignore(v);
 }
 void kgshell::end_OUTPUT(const string& v){
-	kgMsg msg(kgMsg::END, &_env);
+	kgMsgIncPySys msg(kgMsg::END, &_env);
 	ostringstream ss;
 	ss << "kgshell (" << v << ")"; 
 	msg.output(ss.str());
 }
 void kgshell::war_OUTPUT(const string& v){
-	kgMsg msg(kgMsg::WAR, &_env);
+	kgMsgIncPySys msg(kgMsg::WAR, &_env);
 	ostringstream ss;
 	ss << "kgshell (" << v << ")";
 	msg.output(ss.str());
 }
 void kgshell::err_OUTPUT(const string& v){
-	kgMsg msg(kgMsg::ERR, &_env);	
+	kgMsgIncPySys msg(kgMsg::ERR, &_env);	
 	ostringstream ss;
 	ss << "kgshell (" << v << ")";
 	msg.output(ss.str());
@@ -1011,6 +1012,9 @@ int kgshell::runx(
 		ss << "script RUN KGERROR " << err.message(0);
 		err_OUTPUT(ss.str());
 		runClean();
+		
+		PyErr_SetString(PyExc_RuntimeError,err.message(0).c_str());
+		PyErr_Print();
 
 	}catch (const exception& e) {
 		ostringstream ss;

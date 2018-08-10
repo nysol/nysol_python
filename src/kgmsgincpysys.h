@@ -17,61 +17,32 @@
 
  ////////// LICENSE INFO ////////////////////*/
 // =============================================================================
-// kgMessage.h メッセージ関係クラス
+// kgMsgIncPySys.h メッセージ関係クラス
 // =============================================================================
 #pragma once
-
+#include "Python.h"
 #include <iostream>
 #include <string>
 #include <cstdio>
 #include <kgConfig.h>
-#include <kgmod.h>
+#include <kgMessage.h>
+
 using namespace std;
 
 namespace kglib { ////////////////////////////////////////////// start namespace
 
 // メッセージ出力クラス
-class kgMsg {
+class kgMsgIncPySys : public kgMsg{
 
-public:
-	enum Plevel {ERR,WAR,END,MSG,DEB,IGN};
+	private:
 
-protected:
-	kgEnv* env_;
+		void WriteMsgPySys(string v ,string t);
 
-	// ERR: 1以上
-	// WAR: 2以上
-	// END: 3以上
-	// MSG: 4以上
-	// DEB: 5以上
-	Plevel plevel_;
+	public:
+		kgMsgIncPySys(kgMsg::Plevel plevel, kgEnv* env):kgMsg(plevel,env){}
 
-	// ヘッダ文字列取得
-	string header(void);
-	// 日付時間取得
-	string getTime(void);
-	// 出力要否チェック
-	bool isOn(void);
-	// 出力処理
-	void WriteMsg(string v,string t);
-
-public:
-	kgMsg(Plevel plevel, kgEnv* env){
-		plevel_=plevel;
-		env_=env;
-	}
-	~kgMsg(void){}
-
-	//メッセージ出力
-	void output_ignore(const string& v);
-	void output(const string& v, const string& comment="");
-	void output(const vector<string>& vv, const string& comment="");
-	void output(kglib::kgMod* kgmod, string v, const string& comment="");
-	void output(kgMod* kgmod, vector<string> vv, const string& comment="");
-
-	string outputMsg(kglib::kgMod* kgmod, string v, const string& comment="");
-	string outputMsg(kgMod* kgmod, vector<string> vv, const string& comment="");
-
+		void output(const string& v, const string& comment="");
+		void output_ignore(const string& v);
 
 
 };
