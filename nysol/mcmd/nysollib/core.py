@@ -17,7 +17,7 @@ class NysolMOD_CORE(object):
 
 		self.name     = name
 		self.addBySys = False
-		self.msg      = True
+		self.msg      = False
 		self.runlimit = -1
 		self.kwd      = {}
 		self.inplist  = {}
