@@ -10,6 +10,10 @@ class LineListIter(object):
 			raise Exception("Do not specify last output ")
 			return None
 
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
+			return None
+
 		dupobj = copy.deepcopy(obj)
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
@@ -62,6 +66,11 @@ class LineDictIter(object):
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
 			return None
+
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
+			return None
+
 			
 		dupobj = copy.deepcopy(obj)
 
@@ -112,6 +121,10 @@ class BlkListIter(object):
 
 		if len(obj.outlist[obj.nowdir])!=0:
 			raise Exception("Do not specify last output ")
+			return None
+
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
 			return None
 
 		if isinstance(keys,str) :
@@ -179,6 +192,10 @@ class BlkDictIter(object):
 			raise Exception("Do not specify last output ")
 			return None
 
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
+			return None
+
 		if isinstance(keys,str) :
 			newkeys = keys.split(",") 
 		elif isinstance(keys,list) :
@@ -243,6 +260,10 @@ class LineListIterWithInfo(object):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
+			return None
+
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
 			return None
 
 		
@@ -316,6 +337,10 @@ class LineDictIterWithInfo(object):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
+			return None
+
+		if obj.name=="writelist":
+			raise Exception("Do not suport writelist ")
 			return None
 
 		dupobj = copy.deepcopy(obj)

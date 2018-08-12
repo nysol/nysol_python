@@ -358,7 +358,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 {
 	try {
 		// パラメータチェック
-		_args.paramcheck("i=,dtype=",kgArgs::COMMON|kgArgs::IODIFF);
+		_args.paramcheck("i=,dtype=,-addheadder",kgArgs::COMMON|kgArgs::IODIFF);
 		if(inum>1){ 
 			for(int i=0; i<inum ;i++){
 				if(*(i_p+i)>0){ ::close(*(i_p+i)); }
@@ -404,12 +404,30 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 				ptn[fFieldx.num(i)] = 3;
 			}
 		}
+		bool addhead = _args.toBool("-addheadder");
 
 
 		if(PyList_Check(o_p)){
 			va_list v;
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
+
+
+			if(addhead){ 
+				vector<kgstr_t> flds = rls.fldName();
+				pthread_mutex_lock(mtx);
+				{
+					PyObject* hlist = PyList_New(flds.size());
+					for(size_t i=0; i < flds.size();i++){
+						const char * p = flds[i].c_str();
+						PyList_SET_ITEM(hlist,i,PyUnicode_FromStringAndSize(p, strlen(p)));
+					}
+					PyList_Append(o_p,hlist);
+					Py_DECREF(hlist);
+				}
+				pthread_mutex_unlock(mtx);
+			}
+
 
 			while( EOF != rls.read() ){
 				pthread_mutex_lock(mtx);

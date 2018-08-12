@@ -131,8 +131,15 @@ class NysolMOD_CORE(object):
 		cnt=0
 		sufpos=0
 
+		dupobj = copy.deepcopy(self)
+
+		# 不要 mod 除去 
+		for k in dupobj.outlist.keys():
+			dupobj.outlist[k].clear()
+
+
 		try:
-			xx = itermod.LineListIter(self)
+			xx = itermod.LineListIter(dupobj)
 			if len(xx.fldname)>xlim:
 				head = xx.fldname[:xmid]+["..."] + xx.fldname[-xmid:]
 			else:
