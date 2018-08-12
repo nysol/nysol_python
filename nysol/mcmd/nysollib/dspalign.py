@@ -80,7 +80,7 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 
 	sufmax = int(len(pre)/2)
 
-	# fldcut check			
+	# fldcut check
 	fldmax = [ 0 for i in range(len(pre[0]))]
 	sizeCHK(pre,fldmax)
 
@@ -159,7 +159,7 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 
 
 
-def chgDSPhtml(dspdata, yLimit , maxno):
+def chgDSPhtml(dspdata, yLimit , maxno,head):
 
 		mid = yLimit / 2
 		arange_number = 0
@@ -170,6 +170,13 @@ def chgDSPhtml(dspdata, yLimit , maxno):
 		outstrList.append("<div>")
 		outstrList.append("<table border=\"1\">")
 		outstrList.append("<thead>")
+		if head != None:
+			outstrList.append("<tr>")
+			outstrList.append("<th></th>")
+			for v in head:
+				outstrList.append("<th>{}</th>".format(v))
+			outstrList.append("</tr>")
+
 		outstrList.append("</thead>")
 		outstrList.append("<tbody>")
 

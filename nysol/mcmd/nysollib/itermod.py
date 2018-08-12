@@ -17,9 +17,8 @@ class LineListIter(object):
 			runobj = msortchk({"k":skeys}).addPre(dupobj)
 		else :
 			runobj = dupobj
-				
-		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
+		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
 		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
@@ -33,6 +32,7 @@ class LineListIter(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 
@@ -44,8 +44,6 @@ class LineListIter(object):
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
 		raise StopIteration()
-	
-	
 
 	def next(self):
 
@@ -87,7 +85,7 @@ class LineDictIter(object):
 			raise Exception("can not run iter")
 			return None
 
-
+		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -99,8 +97,6 @@ class LineDictIter(object):
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
 		raise StopIteration()
-	
-
 
 	def next(self):
 
@@ -153,6 +149,7 @@ class BlkListIter(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -164,8 +161,6 @@ class BlkListIter(object):
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
 		raise StopIteration()
-	
-
 
 	def next(self):
 		
@@ -219,6 +214,7 @@ class BlkDictIter(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
@@ -289,6 +285,7 @@ class LineListIterWithInfo(object):
 
 
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
+		self.fldname = n_core.fldname(self.csvin)
 		self.breakPre = True
 
 	def __nextCore(self):
@@ -357,6 +354,8 @@ class LineDictIterWithInfo(object):
 			n_core.cancel(self.shobj)
 			raise Exception("can not run iter")
 			return None
+ 
+		self.fldname = n_core.fldname(self.csvin)
 
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
@@ -374,6 +373,7 @@ class LineDictIterWithInfo(object):
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
 		raise StopIteration()
+
 
 	
 	def next(self):

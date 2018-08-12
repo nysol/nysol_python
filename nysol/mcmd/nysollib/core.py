@@ -119,29 +119,41 @@ class NysolMOD_CORE(object):
 		return count
 
 
-	def _dspselct(self,lim):
-	
-		yLimit = lim
+	def _dspselct(self,ylim,xlim=20):
+
+		yLimit = ylim
 		pre=[]
+		head=None
 		sufmax = int(yLimit/2)
+		xmid = int(xlim/2)
+
 		suf=[ [] for i in range(sufmax) ]
 		cnt=0
 		sufpos=0
 
 		try:
 			xx = itermod.LineListIter(self)
+			if len(xx.fldname)>xlim:
+				head = xx.fldname[:xmid]+["..."] + xx.fldname[-xmid:]
+			else:
+				head = xx.fldname 
+
 			while(True):
 				val = next(xx)
+				xval = val
 				if cnt < yLimit :
-					pre.append(val)
+					if len(val)>xlim:
+						xval = val[:xmid]+["..."] + val[-xmid:]
+
+					pre.append(xval)
 
 				cnt+=1
-				suf[sufpos]=val
+				suf[sufpos]=xval
 				sufpos+=1
 				if sufpos==sufmax :
 					sufpos=0
 
-		except:
+		except StopIteration:
 			pass
 
 		if(cnt > yLimit): 
@@ -155,14 +167,14 @@ class NysolMOD_CORE(object):
 				if spos==sufmax :
 					spos=0
 
-		return pre,cnt
+		return pre,cnt,head
 
 
 	def _dsp1(self):
 
 		yLimit =40
 
-		dspdata ,cnt = self._dspselct(yLimit)
+		dspdata ,cnt ,head = self._dspselct(yLimit)
 
 		outstrList = dspalign.chgDSPstr(dspdata , cnt > yLimit)
 
@@ -174,9 +186,9 @@ class NysolMOD_CORE(object):
 
 		yLimit =40
 
-		dspdata ,cnt = self._dspselct(yLimit)
+		dspdata ,cnt ,head = self._dspselct(yLimit)
 
-		outstrList = dspalign.chgDSPhtml(dspdata , yLimit , cnt)
+		outstrList = dspalign.chgDSPhtml(dspdata , yLimit , cnt, head)
 
 		return "\n".join(outstrList)
 

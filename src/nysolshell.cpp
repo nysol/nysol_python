@@ -620,7 +620,25 @@ PyObject* getLineDictWithInfo(PyObject* self, PyObject* args)
 	return finlist;
 }
 
+PyObject* fldname(PyObject* self, PyObject* args)
+{
+	
+	PyObject *csvin;
+	//int tp;
+	if (!PyArg_ParseTuple(args, "O", &csvin)){
+    return Py_BuildValue("");
+  }
 
+	kgCSV *kcfld	= (kgCSV *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
+
+	vector<kgstr_t> flds = kcfld->fldName();
+	PyObject* rlist = PyList_New(flds.size());
+	for(size_t i=0; i < flds.size();i++){
+		PyList_SetItem(rlist,i,Py_BuildValue("s", flds[i].c_str()));
+	}
+	return rlist;
+
+}
 
 PyObject* getLineListWithInfo(PyObject* self, PyObject* args)
 {
@@ -751,6 +769,7 @@ static PyMethodDef callmethods[] = {
 	{"cancel",  reinterpret_cast<PyCFunction>(cancel), METH_VARARGS },
 	{"close",   reinterpret_cast<PyCFunction>(csvclose), METH_VARARGS },
 	{"fldtp",   reinterpret_cast<PyCFunction>(fldtp), METH_VARARGS },
+	{"fldname",   reinterpret_cast<PyCFunction>(fldname), METH_VARARGS },
 	{"getLineList", reinterpret_cast<PyCFunction>(getLineList), METH_VARARGS },
 	{"getLineDict",	reinterpret_cast<PyCFunction>(getLineDict), METH_VARARGS },
 	{"getBlkList",	reinterpret_cast<PyCFunction>(getBlkList), METH_VARARGS },
