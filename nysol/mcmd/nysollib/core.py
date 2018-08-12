@@ -118,9 +118,10 @@ class NysolMOD_CORE(object):
 			count += len(self.outlist[key])	
 		return count
 
-	def _dsp1(self):
 
-		yLimit =40
+	def _dspselct(self,lim):
+	
+		yLimit = lim
 		pre=[]
 		sufmax = int(yLimit/2)
 		suf=[ [] for i in range(sufmax) ]
@@ -154,9 +155,32 @@ class NysolMOD_CORE(object):
 				if spos==sufmax :
 					spos=0
 
-		outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
+		return pre,cnt
+
+
+	def _dsp1(self):
+
+		yLimit =40
+
+		dspdata ,cnt = self._dspselct(yLimit)
+
+		outstrList = dspalign.chgDSPstr(dspdata , cnt > yLimit)
 
 		return "\n".join(outstrList)
+
+
+
+	def _dsp2(self):
+
+		yLimit =40
+
+		dspdata ,cnt = self._dspselct(yLimit)
+
+		outstrList = dspalign.chgDSPhtml(dspdata , yLimit , cnt)
+
+		return "\n".join(outstrList)
+
+
 
 	def __str__(self):
 		import os
@@ -174,8 +198,11 @@ class NysolMOD_CORE(object):
 
 
 	def __repr__(self):
+
 		return str(self)
 
+	def _repr_html_(self):
+		return self._dsp2()
 
 	def __iter__(self):
 

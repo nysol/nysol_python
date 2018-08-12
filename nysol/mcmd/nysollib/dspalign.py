@@ -158,3 +158,43 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 	return outstr
 
 
+
+def chgDSPhtml(dspdata, yLimit , maxno):
+
+		mid = yLimit / 2
+		arange_number = 0
+
+		dmy = ( maxno > yLimit )
+
+		outstrList=[]
+		outstrList.append("<div>")
+		outstrList.append("<table border=\"1\">")
+		outstrList.append("<thead>")
+		outstrList.append("</thead>")
+		outstrList.append("<tbody>")
+
+		for i,ldata in enumerate(dspdata):
+
+			if i == mid and dmy: 
+				arange_number = maxno - yLimit
+				outstrList.append("<tr>")
+				outstrList.append("<th>...</th>")
+				for v in ldata:
+					outstrList.append("<td>...</td>")
+				outstrList.append("</tr>")
+
+
+			outstrList.append("<tr>")
+			outstrList.append("<th>{}</th>".format(i+arange_number))
+
+			for v in ldata:
+				outstrList.append("<td>{}</td>".format(v))
+			outstrList.append("</tr>")
+
+		outstrList.append("</tbody>")
+		outstrList.append("</table>")
+		outstrList.append("</div>")
+
+		return outstrList
+
+
