@@ -413,12 +413,11 @@ PyObject* getLineList(PyObject* self, PyObject* args)
 {
 
 	PyObject *csvin;
-	int withInfo;
 	PyObject *ptn = NULL;
 
 	//PyObject *list;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "Op|O", &csvin,&withInfo,&ptn)){
+	if (!PyArg_ParseTuple(args, "O|O", &csvin,&withInfo,&ptn)){
 
 		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
 		PyErr_Print();
