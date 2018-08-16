@@ -493,7 +493,7 @@ class NysolMOD_CORE(object):
 
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
-					fifoxxx=mfifo(i=obj.direction(k),sysadd=True)
+					fifoxxx=mfifo(i=obj.redirect(k),sysadd=True)
 					fifoxxx.outlist[fifoxxx.nowdir]=[outll]
 
 					for ki in outll.inplist: # 0だけOK?
