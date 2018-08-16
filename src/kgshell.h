@@ -41,6 +41,8 @@
 	#define KGMOD_THREAD_STK 1048576
 #endif
 
+#define KGMOD_MEMBASE 47104000
+
 using namespace kglib;
 using namespace kgmod;
 

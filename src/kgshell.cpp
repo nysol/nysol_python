@@ -945,7 +945,7 @@ void kgshell::runInit(
 		char * envStr = getenv("KG_RUN_LIMIT");
 		if(envStr!=NULL)	{ _runlim = atoi(envStr); }
 		else							{ 
-			_runlim = _memttl/50000000;
+			_runlim = _memttl / KGMOD_MEMBASE;
 			if(_runlim > KGMOD_RUN_LIMIT){
 				_runlim = KGMOD_RUN_LIMIT;
 			}//ファイルリミットでもチェックする
