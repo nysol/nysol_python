@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import copy
 import nysol._nysolshell_core as n_core
+# 仮 kgshellへ移行
+import psutil as ps
 
 class LineListIter(object):
 
@@ -22,7 +24,7 @@ class LineListIter(object):
 
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -76,7 +78,7 @@ class LineDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -142,7 +144,7 @@ class BlkListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -208,7 +210,7 @@ class BlkDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -276,7 +278,7 @@ class LineListIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -347,7 +349,7 @@ class LineDictIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit)
+		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			

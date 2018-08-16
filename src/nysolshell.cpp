@@ -161,6 +161,8 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 		PyObject *addinfo_i    = PyList_GetItem(modinfo ,2);
 		PyObject *addinfo_o    = PyList_GetItem(modinfo ,3);
 		cmpcaplocal.tag      = strGET(PyList_GetItem(modinfo ,4));
+		cmpcaplocal.weight   = PyLong_AsLong(PyList_GetItem(modinfo ,6));
+
 
 		Py_ssize_t psize = PyList_Size(para_LIST);//LISTチェック入れる？
 		for(Py_ssize_t j=0 ; j<psize;j++){
@@ -735,10 +737,11 @@ PyObject* getparams(PyObject* self, PyObject* args){
 PyObject* start(PyObject* self, PyObject* args){
 	int mflg;
 	int rulim;
-	if (!PyArg_ParseTuple(args, "ii", &mflg , &rulim)){
+	size_t ttlmem;
+	if (!PyArg_ParseTuple(args, "iiL", &mflg , &rulim,&ttlmem)){
 		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
   }else{
-		return PyCapsule_New(new kgshell(mflg,rulim),"kgshellP",py_kgshell_free);
+		return PyCapsule_New(new kgshell(mflg,rulim,ttlmem),"kgshellP",py_kgshell_free);
   }
 }
 

@@ -234,7 +234,9 @@ setup(name = 'nysol',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Mathematics',
         ],
-
+			install_requires=[
+      	  "psutil"
+	    ],
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py',
 								'scripts/take/mpolishing.py','scripts/take/msequence.py',
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',

@@ -39,7 +39,7 @@ void kgshell::setMap(std::string name,int runTP){
 	_kgmod_Oinfo[name] = kgmodTP::_opara;
 }
 
-kgshell::kgshell(int mflg,int rumlim){
+kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 
 	setMap<kgPyfunc>("runfunc",3);
 	setMap<kgLoad>("writelist",1);
@@ -142,6 +142,7 @@ kgshell::kgshell(int mflg,int rumlim){
 
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
+	_memttl = memttl;
 
 	if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 		ostringstream ss;
@@ -943,7 +944,12 @@ void kgshell::runInit(
 	if ( _runlim == -1){
 		char * envStr = getenv("KG_RUN_LIMIT");
 		if(envStr!=NULL)	{ _runlim = atoi(envStr); }
-		else							{ _runlim = KGMOD_RUN_LIMIT; }
+		else							{ 
+			_runlim = _memttl/50000000;
+			if(_runlim > KGMOD_RUN_LIMIT){
+				_runlim = KGMOD_RUN_LIMIT;
+			}//ファイルリミットでもチェックする
+		}
 
 	}
 	if ( _runlim <=0 ){
