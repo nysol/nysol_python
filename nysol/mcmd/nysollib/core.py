@@ -125,29 +125,49 @@ class NysolMOD_CORE(object):
 			count += len(self.outlist[key])	
 		return count
 
-	def _dsp1(self):
 
-		yLimit =40
+	def _dspselct(self,ylim,xlim=20):
+
+		yLimit = ylim
 		pre=[]
+		head=None
 		sufmax = int(yLimit/2)
+		xmid = int(xlim/2)
+
 		suf=[ [] for i in range(sufmax) ]
 		cnt=0
 		sufpos=0
 
+		dupobj = copy.deepcopy(self)
+
+		# 不要 mod 除去 
+		for k in dupobj.outlist.keys():
+			dupobj.outlist[k].clear()
+
+
 		try:
-			xx = itermod.LineListIter(self)
+			xx = itermod.LineListIter(dupobj)
+			if len(xx.fldname)>xlim:
+				head = xx.fldname[:xmid]+["..."] + xx.fldname[-xmid:]
+			else:
+				head = xx.fldname 
+
 			while(True):
 				val = next(xx)
+				xval = val
 				if cnt < yLimit :
-					pre.append(val)
+					if len(val)>xlim:
+						xval = val[:xmid]+["..."] + val[-xmid:]
+
+					pre.append(xval)
 
 				cnt+=1
-				suf[sufpos]=val
+				suf[sufpos]=xval
 				sufpos+=1
 				if sufpos==sufmax :
 					sufpos=0
 
-		except:
+		except StopIteration:
 			pass
 
 		if(cnt > yLimit): 
@@ -161,9 +181,32 @@ class NysolMOD_CORE(object):
 				if spos==sufmax :
 					spos=0
 
-		outstrList = dspalign.chgDSPstr(pre , cnt > yLimit)
+		return pre,cnt,head
+
+
+	def _dsp1(self):
+
+		yLimit =40
+
+		dspdata ,cnt ,head = self._dspselct(yLimit)
+
+		outstrList = dspalign.chgDSPstr(dspdata , cnt > yLimit)
 
 		return "\n".join(outstrList)
+
+
+
+	def _dsp2(self):
+
+		yLimit =40
+
+		dspdata ,cnt ,head = self._dspselct(yLimit)
+
+		outstrList = dspalign.chgDSPhtml(dspdata , yLimit , cnt, head)
+
+		return "\n".join(outstrList)
+
+
 
 	def __str__(self):
 		import os
@@ -181,8 +224,11 @@ class NysolMOD_CORE(object):
 
 
 	def __repr__(self):
+
 		return str(self)
 
+	def _repr_html_(self):
+		return self._dsp2()
 
 	def __iter__(self):
 
@@ -790,6 +836,7 @@ class NysolMOD_CORE(object):
 		# 仮 kgshellへ移行
 		import psutil as ps
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
+
 
 		n_core.runLx(shobj,modlist,linklist)
 

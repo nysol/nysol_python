@@ -7,6 +7,7 @@ class Nysol_Writelist(NysolMOD_CORE):
 
 	_kwd ,_inkwd,_outkwd  = n_core.getparalist("writelist",3)
 	_kwd[0].append("dtype")
+	_kwd[1].append("addheadder")
 
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Writelist,self).__init__("writelist",nutil.args2dict(args,kw_args,Nysol_Writelist._kwd,uk="o"))

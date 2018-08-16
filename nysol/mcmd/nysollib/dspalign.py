@@ -80,7 +80,7 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 
 	sufmax = int(len(pre)/2)
 
-	# fldcut check			
+	# fldcut check
 	fldmax = [ 0 for i in range(len(pre[0]))]
 	sizeCHK(pre,fldmax)
 
@@ -156,5 +156,52 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 		outstr.append(" ".join(newstr))
 
 	return outstr
+
+
+
+def chgDSPhtml(dspdata, yLimit , maxno,head):
+
+		mid = yLimit / 2
+		arange_number = 0
+
+		dmy = ( maxno > yLimit )
+
+		outstrList=[]
+		outstrList.append("<div>")
+		outstrList.append("<table border=\"1\">")
+		outstrList.append("<thead>")
+		if head != None:
+			outstrList.append("<tr>")
+			outstrList.append("<th></th>")
+			for v in head:
+				outstrList.append("<th>{}</th>".format(v))
+			outstrList.append("</tr>")
+
+		outstrList.append("</thead>")
+		outstrList.append("<tbody>")
+
+		for i,ldata in enumerate(dspdata):
+
+			if i == mid and dmy: 
+				arange_number = maxno - yLimit
+				outstrList.append("<tr>")
+				outstrList.append("<th>...</th>")
+				for v in ldata:
+					outstrList.append("<td>...</td>")
+				outstrList.append("</tr>")
+
+
+			outstrList.append("<tr>")
+			outstrList.append("<th>{}</th>".format(i+arange_number))
+
+			for v in ldata:
+				outstrList.append("<td>{}</td>".format(v))
+			outstrList.append("</tr>")
+
+		outstrList.append("</tbody>")
+		outstrList.append("</table>")
+		outstrList.append("</div>")
+
+		return outstrList
 
 
