@@ -30,8 +30,8 @@
 #include <vector>
 #include <set>
 #include <map>
-
 #include <pthread.h>
+
 
 #ifndef KGMOD_RUN_LIMIT
 	#define KGMOD_RUN_LIMIT 128
@@ -40,6 +40,8 @@
 #ifndef KGMOD_THREAD_STK
 	#define KGMOD_THREAD_STK 1048576
 #endif
+
+#define KGMOD_MEMBASE 47104000
 
 using namespace kglib;
 using namespace kgmod;
@@ -80,7 +82,7 @@ struct cmdCapselST{
 	PyObject* aobj;
 	PyObject* kobj;
 	kgstr_t tag;
-
+	int weight;
 };
 
 
@@ -112,7 +114,7 @@ class kgshell{
 	int *_th_rtn;
 	size_t _clen;
 	kgMod **_modlist;
-
+	size_t _memttl;
 	int	_runlim;
 
 	// pipe LIST
@@ -238,7 +240,7 @@ class kgshell{
 
 public:
 	// コンストラクタ
-	kgshell(int mflg=false,int modlim = -1);
+	kgshell(int mflg=false,int modlim = -1,size_t memttl=2000000000);
 	~kgshell(void){
 		if(_th_st_pp){
 			vector<int> chk(_clen);

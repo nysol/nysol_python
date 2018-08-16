@@ -26,13 +26,18 @@ class NysolMOD_CORE(object):
 		self.stdidir  = None
 
 		self.disabled_ouputlist = False
+		self.modWeight = 0
+
 		
 		if hasattr(self,'_inkwd') and len(self._inkwd)>0 :
+			self.modWeight += len(self._inkwd) * 4
 			self.stdidir = self._inkwd[0].rstrip("=")
 			for k in self._inkwd:
 				self.inplist[k.rstrip("=")] = []
 
 		if hasattr(self,'_outkwd')  and len(self._outkwd)>0 :
+
+			self.modWeight += len(self._outkwd) * 1
 
 			self.stdodir = self._outkwd[0].rstrip("=")
 			for k in self._outkwd:
@@ -45,6 +50,8 @@ class NysolMOD_CORE(object):
 		if hasattr(self,'_disabled_ouputlist'):
 			self.disabled_ouputlist = self._disabled_ouputlist
 
+		if self.modWeight == 0:
+			self.modWeight += 1
 
 		if kwd != None:
 			self.kwd   = kwd
@@ -637,7 +644,7 @@ class NysolMOD_CORE(object):
 
 		for obj,no in uniqmod.items():
 			# name,para,ipara,opara,tag
-			modlist[no]= [obj.name,nutil.para2str(obj.kwd),{},{},obj.tag,obj.addBySys]
+			modlist[no]= [obj.name,nutil.para2str(obj.kwd),{},{},obj.tag,obj.addBySys,obj.modWeight]
 			iolist[no]=[[],[]]
 
 			for k in obj.inplist.keys():
@@ -825,8 +832,11 @@ class NysolMOD_CORE(object):
 			modlimt = int(kw_args["runlimit"])
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
+		
+		# 仮 kgshellへ移行
+		import psutil as ps
+		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
 
-		shobj = n_core.init(msgF,modlimt)
 
 		n_core.runLx(shobj,modlist,linklist)
 
