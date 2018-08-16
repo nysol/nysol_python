@@ -108,7 +108,7 @@ class NysolMOD_CORE(object):
 				del self.kwd[key]
 
 
-	def direction(self,dir) :
+	def redirect(self,dir) :
 		self.nowdir = dir
 		return self
 
