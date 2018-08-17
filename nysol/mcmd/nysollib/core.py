@@ -750,9 +750,26 @@ class NysolMOD_CORE(object):
 		for mod in dupobjs: 
 			self.graphSetList(mod,sumiobj,listStks,0)
 
-		outfs = [None]*len(mods)		
-
-		runobjs =[None]*len(dupobjs)
+		runcnt=0
+		for dobj in dupobjs:
+			if dobj.okwdObjCnt() == 0:
+				runcnt +=1
+			else:
+				for k in dobj.outlist.keys():
+					rrcnt=0
+					for e in dobj.outlist[k]:
+						if not isinstance(e,NysolMOD_CORE):
+							rrcnt+=1
+					if rrcnt==0:
+						runcnt += 1
+					else:
+						runcnt += rrcnt
+					
+				
+		outfs   = [None]*len(dupobjs)		
+		runobjs = [None]*runcnt
+		
+		rpos = 0
 
 		for i, dupobj in enumerate(dupobjs):
 
@@ -763,41 +780,51 @@ class NysolMOD_CORE(object):
 				dupobj.outlist[k].extend(newlist)
 
 			if True == dupobj.disabled_ouputlist or useIter: #統一的にする
+
 				#  最終list不可はそのまま
-				runobjs[i]= dupobj			
+				runobjs[rpos]= dupobj			
+				rpos+=1
 				outfs[i] = []
+
 			elif dupobj.name == "writelist":
 
 				if dupobj.okwdObjCnt() == 0:
 	
 					dupobj.outlist[dupobj.nowdir] =[list()]
 						
-				runobjs[i]= dupobj
-
-				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
+				runobjs[rpos]= dupobj
+				outfs[i] = runobjs[rpos].outlist[runobjs[i].nowdir][0]
+				rpos+=1
 
 			else:
 
 				if dupobj.okwdObjCnt() == 0:
 
-					runobjs[i]= dupobj.writelist(list(),sysadd=True)
-				
+					runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
+					outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
+					rpos+=1
+
 				else:			
-					#こここれでいい？
-					runobj = dupobj
+					st_rpos = rpos
 
 					for k in dupobj.outlist.keys():
 
-						for ki,oobj in enumerate(dupobj.outlist[k]):
+						for ki in range(len(dupobj.outlist[k])):
 
-							if isinstance(oobj,list):
-								runobj = dupobj.writelist(dupobj.outlist[k][ki],sysadd=True)
-								dupobj.outlist[k][ki] = runobj
-								break
+							if isinstance(dupobj.outlist[k][ki],list):
 
-					runobjs[i]= runobj
+								from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+								wobj = mwritelist(dupobj.outlist[k][ki],sysadd=True)
+								wobj.inplist[wobj.stdidir]=[dupobj]
+								dupobj.outlist[k][ki] = wobj
+								runobjs[rpos]= wobj
 
-				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
+							else:
+								runobjs[rpos]= dupobj
+
+							rpos += 1
+
+					outfs[i] = runobjs[st_rpos].outlist[runobjs[st_rpos].nowdir][0]
 			
 
 		self.change_modNetworks(runobjs)
