@@ -6,7 +6,7 @@ import psutil as ps
 
 class LineListIter(object):
 
-	def __init__(self,obj,dtype=None,skeys=None):
+	def __init__(self,obj,dtype=None,skeys=None,q=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -20,7 +20,7 @@ class LineListIter(object):
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		if skeys != None:
-			runobj = msortchk({"k":skeys}).addPre(dupobj)
+			runobj = msortchk({"k":skeys,"q":q}).addPre(dupobj)
 		else :
 			runobj = dupobj
 
@@ -62,7 +62,7 @@ class LineListIter(object):
 
 class LineDictIter(object):
 
-	def __init__(self,obj,dtype=None,skeys=None):
+	def __init__(self,obj,dtype=None,skeys=None,q=False):
 		
 
 		if len(obj.outlist["o"])!=0:
@@ -78,7 +78,7 @@ class LineDictIter(object):
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		if skeys != None:
-			runobj = msortchk({"k":skeys}).addPre(dupobj)
+			runobj = msortchk({"k":skeys,"q":q}).addPre(dupobj)
 		else :
 			runobj = dupobj
 
@@ -119,7 +119,7 @@ class LineDictIter(object):
 
 class BlkListIter(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
 		if len(obj.outlist[obj.nowdir])!=0:
 			raise Exception("Do not specify last output ")
@@ -148,7 +148,7 @@ class BlkListIter(object):
 			else:
 				raise Exception("unsuport TYPE")
 			
-		runobj = msortchk({"k":sortkeys}).addPre(dupobj)
+		runobj = msortchk({"k":sortkeys,"q":q}).addPre(dupobj)
 				
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
@@ -188,7 +188,7 @@ class BlkListIter(object):
 
 class BlkDictIter(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -217,7 +217,7 @@ class BlkDictIter(object):
 			else:
 				raise Exception("unsuport TYPE")
 			
-		runobj = msortchk({"k":sortkeys}).addPre(dupobj)
+		runobj = msortchk({"k":sortkeys,"q":q}).addPre(dupobj)
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
@@ -258,7 +258,7 @@ class BlkDictIter(object):
 
 class LineListIterWithInfo(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -289,7 +289,7 @@ class LineListIterWithInfo(object):
 			else:
 				raise Exception("unsuport TYPE")
 			
-		runobj = msortchk({"k":sortkeys}).addPre(dupobj)
+		runobj = msortchk({"k":sortkeys,"q":q}).addPre(dupobj)
 
 				
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
@@ -335,7 +335,7 @@ class LineListIterWithInfo(object):
 
 class LineDictIterWithInfo(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -366,7 +366,7 @@ class LineDictIterWithInfo(object):
 			else:
 				raise Exception("unsuport TYPE")
 
-		runobj = msortchk({"k":sortkeys}).addPre(dupobj)
+		runobj = msortchk({"k":sortkeys,"q":q}).addPre(dupobj)
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 

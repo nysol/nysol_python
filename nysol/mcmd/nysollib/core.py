@@ -251,10 +251,10 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineList(self,dtype=None,skey=None):
+	def __getLineList(self,dtype=None,skey=None,q=False):
 
 		try:
-			x = itermod.LineListIter(self,dtype,skey)
+			x = itermod.LineListIter(self,dtype,skey,q)
 			while(True):
 				yield next(x)
 
@@ -262,9 +262,9 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineListWithInfo(self,keys,skeys=None,dtype=None):
+	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False):
 		try:
-			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype)
+			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
@@ -272,10 +272,10 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
-	def __getLineDictWithInfo(self,keys,skeys=None,dtype=None):
+	def __getLineDictWithInfo(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
-			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype)
+			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -283,11 +283,11 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineDict(self,dtype=None,skey=None):
+	def __getLineDict(self,dtype=None,skey=None,q=False):
 
 		try:
 
-			x = itermod.LineDictIter(self,dtype,skey)
+			x = itermod.LineDictIter(self,dtype,skey,q)
 			while(True):
 				yield next(x)
 
@@ -299,18 +299,17 @@ class NysolMOD_CORE(object):
 
 
 	# return generator
-	def getline(self,dtype=None,keys=None,skeys=None,otype="list"):
+	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False):
 
 		if otype == "list":
 
 			if keys!=None:
 
-				return self.__getLineListWithInfo(keys,skeys,dtype)
+				return self.__getLineListWithInfo(keys,skeys,dtype,q)
 
 			elif skeys!=None:
 
-
-				return self.__getLineList(dtype,skeys)
+				return self.__getLineList(dtype,skeys,q)
 
 			else:
 				return self.__getLineList(dtype,None)
@@ -320,11 +319,11 @@ class NysolMOD_CORE(object):
 
 			if keys!=None :
 
-				return self.__getLineDictWithInfo(keys,skeys,dtype)
+				return self.__getLineDictWithInfo(keys,skeys,dtype,q)
 
 			elif skeys!=None:
 
-				return self.__getLineDict(dtype,skeys)
+				return self.__getLineDict(dtype,skeys,q)
 
 			else:
 				
@@ -338,11 +337,11 @@ class NysolMOD_CORE(object):
 
 
 	## generator rap
-	def __getBlockList(self,keys,skeys=None,dtype=None):
+	def __getBlockList(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
 
-			x = itermod.BlkListIter(self,keys,skeys,dtype)
+			x = itermod.BlkListIter(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -351,11 +350,11 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getBlockDict(self,keys,skeys=None,dtype=None):
+	def __getBlockDict(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
 
-			x = itermod.BlkDictIter(self,keys,skeys,dtype)
+			x = itermod.BlkDictIter(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -365,19 +364,19 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 	# return generator
-	def keyblock(self,keys,skeys=None,dtype=None,otype="list"):
+	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False):
 
 		if otype == "list":
 
-			return self.__getBlockList(keys,skeys,dtype)
+			return self.__getBlockList(keys,skeys,dtype,q)
 
 		elif otype == "dict":
 
-			return self.__getBlockDict(keys,skeys,dtype)
+			return self.__getBlockDict(keys,skeys,dtype,q)
 
 		else : 
 
-			raise Exception("unsuport rtype" + rtype)
+			raise Exception("unsuport rtype" + otype)
 
 
 	def set_runlimit(self,lim):
