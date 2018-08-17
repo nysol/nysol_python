@@ -477,6 +477,7 @@ class NysolMOD_CORE(object):
  
 	@classmethod
 	def addTee(self,dupobj): 
+		addobj =[]
 		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 
@@ -490,6 +491,16 @@ class NysolMOD_CORE(object):
 
 					if isinstance(obj.outlist[k][0],str):
 						continue 
+
+					if isinstance(obj.outlist[k][0],list):
+
+						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+						wobj = mwritelist(obj.outlist[k][0],sysadd=True)
+						wobj.inplist[wobj.stdidir]=[obj]
+						obj.outlist[k][0] = wobj
+						addobj.append(wobj)
+						continue 
+
 
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
@@ -508,6 +519,7 @@ class NysolMOD_CORE(object):
 					teexxx.outlist[teexxx.nowdir] = [] 
 
 					for outin in outll:
+
 						for ki in outin.inplist: # 0だけOK?
 
 							for ii in range(len(outin.inplist[ki])):
@@ -516,6 +528,7 @@ class NysolMOD_CORE(object):
 									fifoxxx.outlist[fifoxxx.nowdir]=[outin] 
 									outin.inplist[ki][ii] = fifoxxx
 
+		return addobj
 
 
 		# no buffer Version
@@ -605,9 +618,41 @@ class NysolMOD_CORE(object):
 								add_mod.append(wlmod)	
 
 		return add_mod		
+
+	@classmethod
+	def addWriteList(self,mod,sumiobj):
+
+		if mod in sumiobj:
+			return 
+		
+		sumiobj.add(mod)
+
+		if mod.name != "writelist":
+			for k in mod._outkwd:
+				for ipos in range(len(mod.outlist[k])):
+
+					if isinstance(mod.outlist[k][ipos],list):
+
+						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+						wobj = mwritelist(mod.outlist[k][ipos],sysadd=True)
+						wobj.inplist[wobj.stdidir]=[mod]
+						mod.outlist[k][ipos] = wobj
+			
+		for key in mod.inplist.keys():
+			for iobj in mod.inplist[key]:
+				if isinstance(iobj,NysolMOD_CORE):
+					self.addWriteList(iobj,sumiobj)
+	
+		return
+
 	
 	@classmethod
 	def change_modNetworks(self,mods):
+
+		#sumiobj=set([])
+		#for mod in mods:
+		#	self.addWriteList(mod,sumiobj)
+
 		sumiobj=set([])
 		dupobj={}
 		for mod in mods:
@@ -616,7 +661,8 @@ class NysolMOD_CORE(object):
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
 		if len(dupobj)!=0:
-			NysolMOD_CORE.addTee(dupobj)
+			add_DmodTee = NysolMOD_CORE.addTee(dupobj)
+			mods.extend(add_DmodTee)
 			
 		mods.extend(add_Dmod)
 
