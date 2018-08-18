@@ -381,8 +381,8 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 			fu = fo.dupdirection("u") # これは再考
 			
-			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo.redirect("o"))
-			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo.redirect("o"))
+			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo.dupredirect("o"))
+			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo.dupredirect("o"))
 			#f  =   nm.m2cat()
 			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
 

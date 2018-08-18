@@ -112,7 +112,7 @@ class NysolMOD_CORE(object):
 		self.nowdir = dir
 		return self
 
-	def dupdirection(self,dir) :
+	def dupredirect(self,dir) :
 		self.nowdir = dir
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 		fifoxxx=mfifo(i=self,sysadd=True)
