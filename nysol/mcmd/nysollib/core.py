@@ -618,39 +618,9 @@ class NysolMOD_CORE(object):
 
 		return add_mod		
 
-	@classmethod
-	def addWriteList(self,mod,sumiobj):
-
-		if mod in sumiobj:
-			return 
-		
-		sumiobj.add(mod)
-
-		if mod.name != "writelist":
-			for k in mod._outkwd:
-				for ipos in range(len(mod.outlist[k])):
-
-					if isinstance(mod.outlist[k][ipos],list):
-
-						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
-						wobj = mwritelist(mod.outlist[k][ipos],sysadd=True)
-						wobj.inplist[wobj.stdidir]=[mod]
-						mod.outlist[k][ipos] = wobj
-			
-		for key in mod.inplist.keys():
-			for iobj in mod.inplist[key]:
-				if isinstance(iobj,NysolMOD_CORE):
-					self.addWriteList(iobj,sumiobj)
-	
-		return
-
 	
 	@classmethod
 	def change_modNetworks(self,mods):
-
-		#sumiobj=set([])
-		#for mod in mods:
-		#	self.addWriteList(mod,sumiobj)
 
 		sumiobj=set([])
 		dupobj={}
