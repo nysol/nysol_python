@@ -578,6 +578,8 @@ class NysolMOD_CORE(object):
 						m2cmod.outlist[m2cmod.nowdir] = [obj]
 
 						for xval in obj.inplist[key]:
+							if not isinstance(xval,NysolMOD_CORE):	
+								raise Exception("can not mutli input except nysol moudule")
 						
 							for okey in xval.outlist.keys():
 							

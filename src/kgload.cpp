@@ -274,6 +274,9 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 					PyObject* head = PyList_GetItem(i_p, nowlin);
 					fldsize = PyList_Size(head);
 					for(Py_ssize_t i=0 ; i<fldsize;i++){
+						if(!strCHECK(PyList_GetItem(head,i))){
+							throw kgError("unsupport data type");
+						}
 						headdata.push_back(strGET(PyList_GetItem(head,i)));
 					}		
 					nowlin++;
