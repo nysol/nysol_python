@@ -108,11 +108,11 @@ class NysolMOD_CORE(object):
 				del self.kwd[key]
 
 
-	def direction(self,dir) :
+	def redirect(self,dir) :
 		self.nowdir = dir
 		return self
 
-	def dupdirection(self,dir) :
+	def dupredirect(self,dir) :
 		self.nowdir = dir
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 		fifoxxx=mfifo(i=self,sysadd=True)
@@ -251,10 +251,10 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineList(self,dtype=None,skey=None):
+	def __getLineList(self,dtype=None,skey=None,q=False):
 
 		try:
-			x = itermod.LineListIter(self,dtype,skey)
+			x = itermod.LineListIter(self,dtype,skey,q)
 			while(True):
 				yield next(x)
 
@@ -262,9 +262,9 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineListWithInfo(self,keys,skeys=None,dtype=None):
+	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False):
 		try:
-			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype)
+			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 		except GeneratorExit:
@@ -272,10 +272,10 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 
-	def __getLineDictWithInfo(self,keys,skeys=None,dtype=None):
+	def __getLineDictWithInfo(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
-			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype)
+			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -283,11 +283,11 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineDict(self,dtype=None,skey=None):
+	def __getLineDict(self,dtype=None,skey=None,q=False):
 
 		try:
 
-			x = itermod.LineDictIter(self,dtype,skey)
+			x = itermod.LineDictIter(self,dtype,skey,q)
 			while(True):
 				yield next(x)
 
@@ -299,18 +299,17 @@ class NysolMOD_CORE(object):
 
 
 	# return generator
-	def getline(self,dtype=None,keys=None,skeys=None,otype="list"):
+	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False):
 
 		if otype == "list":
 
 			if keys!=None:
 
-				return self.__getLineListWithInfo(keys,skeys,dtype)
+				return self.__getLineListWithInfo(keys,skeys,dtype,q)
 
 			elif skeys!=None:
 
-
-				return self.__getLineList(dtype,skeys)
+				return self.__getLineList(dtype,skeys,q)
 
 			else:
 				return self.__getLineList(dtype,None)
@@ -320,11 +319,11 @@ class NysolMOD_CORE(object):
 
 			if keys!=None :
 
-				return self.__getLineDictWithInfo(keys,skeys,dtype)
+				return self.__getLineDictWithInfo(keys,skeys,dtype,q)
 
 			elif skeys!=None:
 
-				return self.__getLineDict(dtype,skeys)
+				return self.__getLineDict(dtype,skeys,q)
 
 			else:
 				
@@ -338,11 +337,11 @@ class NysolMOD_CORE(object):
 
 
 	## generator rap
-	def __getBlockList(self,keys,skeys=None,dtype=None):
+	def __getBlockList(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
 
-			x = itermod.BlkListIter(self,keys,skeys,dtype)
+			x = itermod.BlkListIter(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -351,11 +350,11 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getBlockDict(self,keys,skeys=None,dtype=None):
+	def __getBlockDict(self,keys,skeys=None,dtype=None,q=False):
 
 		try:
 
-			x = itermod.BlkDictIter(self,keys,skeys,dtype)
+			x = itermod.BlkDictIter(self,keys,skeys,dtype,q)
 			while(True):
 				yield next(x)
 
@@ -365,19 +364,19 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 	# return generator
-	def keyblock(self,keys,skeys=None,dtype=None,otype="list"):
+	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False):
 
 		if otype == "list":
 
-			return self.__getBlockList(keys,skeys,dtype)
+			return self.__getBlockList(keys,skeys,dtype,q)
 
 		elif otype == "dict":
 
-			return self.__getBlockDict(keys,skeys,dtype)
+			return self.__getBlockDict(keys,skeys,dtype,q)
 
 		else : 
 
-			raise Exception("unsuport rtype" + rtype)
+			raise Exception("unsuport rtype" + otype)
 
 
 	def set_runlimit(self,lim):
@@ -477,6 +476,7 @@ class NysolMOD_CORE(object):
  
 	@classmethod
 	def addTee(self,dupobj): 
+		addobj =[]
 		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 
@@ -491,9 +491,19 @@ class NysolMOD_CORE(object):
 					if isinstance(obj.outlist[k][0],str):
 						continue 
 
+					if isinstance(obj.outlist[k][0],list):
+
+						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+						wobj = mwritelist(obj.outlist[k][0],sysadd=True)
+						wobj.inplist[wobj.stdidir]=[obj]
+						obj.outlist[k][0] = wobj
+						addobj.append(wobj)
+						continue 
+
+
 					outll = obj.outlist[k][0]
 					obj.outlist[k] = []
-					fifoxxx=mfifo(i=obj.direction(k),sysadd=True)
+					fifoxxx=mfifo(i=obj.redirect(k),sysadd=True)
 					fifoxxx.outlist[fifoxxx.nowdir]=[outll]
 
 					for ki in outll.inplist: # 0だけOK?
@@ -508,6 +518,7 @@ class NysolMOD_CORE(object):
 					teexxx.outlist[teexxx.nowdir] = [] 
 
 					for outin in outll:
+
 						for ki in outin.inplist: # 0だけOK?
 
 							for ii in range(len(outin.inplist[ki])):
@@ -516,6 +527,7 @@ class NysolMOD_CORE(object):
 									fifoxxx.outlist[fifoxxx.nowdir]=[outin] 
 									outin.inplist[ki][ii] = fifoxxx
 
+		return addobj
 
 
 		# no buffer Version
@@ -566,6 +578,8 @@ class NysolMOD_CORE(object):
 						m2cmod.outlist[m2cmod.nowdir] = [obj]
 
 						for xval in obj.inplist[key]:
+							if not isinstance(xval,NysolMOD_CORE):	
+								raise Exception("can not mutli input except nysol moudule")
 						
 							for okey in xval.outlist.keys():
 							
@@ -605,9 +619,11 @@ class NysolMOD_CORE(object):
 								add_mod.append(wlmod)	
 
 		return add_mod		
+
 	
 	@classmethod
 	def change_modNetworks(self,mods):
+
 		sumiobj=set([])
 		dupobj={}
 		for mod in mods:
@@ -616,7 +632,8 @@ class NysolMOD_CORE(object):
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
 		if len(dupobj)!=0:
-			NysolMOD_CORE.addTee(dupobj)
+			add_DmodTee = NysolMOD_CORE.addTee(dupobj)
+			mods.extend(add_DmodTee)
 			
 		mods.extend(add_Dmod)
 
@@ -750,9 +767,26 @@ class NysolMOD_CORE(object):
 		for mod in dupobjs: 
 			self.graphSetList(mod,sumiobj,listStks,0)
 
-		outfs = [None]*len(mods)		
-
-		runobjs =[None]*len(dupobjs)
+		runcnt=0
+		for dobj in dupobjs:
+			if dobj.okwdObjCnt() == 0:
+				runcnt +=1
+			else:
+				for k in dobj.outlist.keys():
+					rrcnt=0
+					for e in dobj.outlist[k]:
+						if not isinstance(e,NysolMOD_CORE):
+							rrcnt+=1
+					if rrcnt==0:
+						runcnt += 1
+					else:
+						runcnt += rrcnt
+					
+				
+		outfs   = [None]*len(dupobjs)		
+		runobjs = [None]*runcnt
+		
+		rpos = 0
 
 		for i, dupobj in enumerate(dupobjs):
 
@@ -763,41 +797,51 @@ class NysolMOD_CORE(object):
 				dupobj.outlist[k].extend(newlist)
 
 			if True == dupobj.disabled_ouputlist or useIter: #統一的にする
+
 				#  最終list不可はそのまま
-				runobjs[i]= dupobj			
+				runobjs[rpos]= dupobj			
+				rpos+=1
 				outfs[i] = []
+
 			elif dupobj.name == "writelist":
 
 				if dupobj.okwdObjCnt() == 0:
 	
 					dupobj.outlist[dupobj.nowdir] =[list()]
 						
-				runobjs[i]= dupobj
-
-				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
+				runobjs[rpos]= dupobj
+				outfs[i] = runobjs[rpos].outlist[runobjs[i].nowdir][0]
+				rpos+=1
 
 			else:
 
 				if dupobj.okwdObjCnt() == 0:
 
-					runobjs[i]= dupobj.writelist(list(),sysadd=True)
-				
+					runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
+					outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
+					rpos+=1
+
 				else:			
-					#こここれでいい？
-					runobj = dupobj
+					st_rpos = rpos
 
 					for k in dupobj.outlist.keys():
 
-						for ki,oobj in enumerate(dupobj.outlist[k]):
+						for ki in range(len(dupobj.outlist[k])):
 
-							if isinstance(oobj,list):
-								runobj = dupobj.writelist(dupobj.outlist[k][ki],sysadd=True)
-								dupobj.outlist[k][ki] = runobj
-								break
+							if isinstance(dupobj.outlist[k][ki],list):
 
-					runobjs[i]= runobj
+								from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+								wobj = mwritelist(dupobj.outlist[k][ki],sysadd=True)
+								wobj.inplist[wobj.stdidir]=[dupobj]
+								dupobj.outlist[k][ki] = wobj
+								runobjs[rpos]= wobj
 
-				outfs[i] = runobjs[i].outlist[runobjs[i].nowdir][0]
+							else:
+								runobjs[rpos]= dupobj
+
+							rpos += 1
+
+					outfs[i] = runobjs[st_rpos].outlist[runobjs[st_rpos].nowdir][0]
 			
 
 		self.change_modNetworks(runobjs)

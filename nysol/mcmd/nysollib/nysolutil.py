@@ -106,11 +106,14 @@ def args2dict(args, kw_args,klist,uk=None):
 			pass
 		elif k in klist[0] :
 			pass
-		elif k in klist[1] and v== True:
-			pass
+		elif k in klist[1] :
+			if v== True:
+				pass
+			else:
+				exval.append(k)
 		elif k == "tag" or k == "dlog" or k == "sysadd" :
 			pass
-			
+
 		else:
 			exval.append(k)
 			raise TypeError(k + " is not keyword")
