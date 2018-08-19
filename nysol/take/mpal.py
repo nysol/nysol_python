@@ -378,11 +378,9 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			"""
 			#これだめ
 			fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
-
-			fu = fo.dupdirection("u") # これは再考
-			
-			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo.dupredirect("o"))
-			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo.dupredirect("o"))
+			fu = fo.direction("u") # これは再考
+			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
+			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
 			#f  =   nm.m2cat()
 			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
 

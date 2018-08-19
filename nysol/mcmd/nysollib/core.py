@@ -108,15 +108,16 @@ class NysolMOD_CORE(object):
 				del self.kwd[key]
 
 
-	def redirect(self,dir) :
+	def redirectsimple(self,dir) :
 		self.nowdir = dir
 		return self
 
-	def dupredirect(self,dir) :
+	def redirect(self,dir) :
+		olddir = self.nowdir 
 		self.nowdir = dir
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 		fifoxxx=mfifo(i=self,sysadd=True)
-		self.outlist[self.nowdir].append(self)
+		self.nowdir = olddir
 		return fifoxxx
 
 	def okwdObjCnt(self):
