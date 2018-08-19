@@ -90,8 +90,9 @@ class NysolMOD_CORE(object):
 
 							if isinstance(kval,NysolMOD_CORE):	
 								kval.outlist[kval.nowdir].append(self)
-	
+
 							self.inplist[key].append(kval)
+
 
 				else:
 
@@ -108,15 +109,16 @@ class NysolMOD_CORE(object):
 				del self.kwd[key]
 
 
-	def redirect(self,dir) :
+	def redirectsimple(self,dir) :
 		self.nowdir = dir
 		return self
 
-	def dupredirect(self,dir) :
+	def redirect(self,dir) :
+		olddir = self.nowdir 
 		self.nowdir = dir
 		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 		fifoxxx=mfifo(i=self,sysadd=True)
-		self.outlist[self.nowdir].append(self)
+		self.nowdir = olddir
 		return fifoxxx
 
 	def okwdObjCnt(self):
@@ -507,9 +509,10 @@ class NysolMOD_CORE(object):
 					fifoxxx.outlist[fifoxxx.nowdir]=[outll]
 
 					for ki in outll.inplist: # 0だけOK?
-						if len(outll.inplist[ki])!=0 and obj == outll.inplist[ki][0]:						
-							outll.inplist[ki] = [fifoxxx]
-
+						if len(outll.inplist[ki])!=0 :						
+							for ii in range(len(outll.inplist[ki])):
+								if obj == outll.inplist[ki][ii]:
+									outll.inplist[ki][ii] = fifoxxx
 				else:
 
 					outll = obj.outlist[k]
@@ -631,10 +634,11 @@ class NysolMOD_CORE(object):
 
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
+
 		if len(dupobj)!=0:
 			add_DmodTee = NysolMOD_CORE.addTee(dupobj)
 			mods.extend(add_DmodTee)
-			
+		
 		mods.extend(add_Dmod)
 
 

@@ -216,7 +216,17 @@ setup(name = 'nysol',
 			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
 			version = '0.2.2',
 			description = 'This is nysol tools',
-			long_description='This is nysol tools',
+			long_description="""\
+pythonでmcmdを利用するライブラリ.
+
+MCMDは大規模な表構造データ（CSVデータ）を効率よく処理する目的で
+開発されたオープンソースのコマンド群である。
+一般のPCでも数千万件〜数億件のCSVデータを処理できる。
+
+M-Command is a set of open source commands developed 
+to process large scale data structures (CSV data) efficiently. 
+The commands can process more than 10 million records of CSV data on a regular PC.
+""",
 			author='nysol',
 			author_email='info@nysol.jp',
 			license='AGPL3',

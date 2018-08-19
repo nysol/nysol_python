@@ -353,7 +353,7 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	f.write("</marker>\n")
 	f.write("</defs>\n")
 	f.write("</svg>\n")
-	scp = """
+	scp = """\
 	<script>
 	svgGroup = d3.select('#flowDspArea');
 	
@@ -469,6 +469,10 @@ def chageSVG_D3(mlist,iolist,linklist,fname=None):
 		.attr('stroke','black')
 		.attr('stroke-width','5')
 		.attr('marker-end','url(#endmrk)')
+
+	edge_g2.append('title')
+			.text(function(d) { return d.title})
+
 	</script>
 	"""
 	f.write(scp)
