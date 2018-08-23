@@ -820,19 +820,26 @@ class NysolMOD_CORE(object):
 			self.graphSetList(mod,sumiobj,listStks,0)
 
 		runcnt=0
+
 		for dobj in dupobjs:
+
 			if dobj.okwdObjCnt() == 0:
+
 				runcnt +=1
+
 			else:
+
+				rrcnt=0
+
 				for k in dobj.outlist.keys():
-					rrcnt=0
 					for e in dobj.outlist[k]:
 						if not isinstance(e,NysolMOD_CORE):
 							rrcnt+=1
-					if rrcnt==0:
-						runcnt += 1
-					else:
-						runcnt += rrcnt
+
+				if rrcnt==0:
+					runcnt += 1
+				else:
+					runcnt += rrcnt
 					
 				
 		outfs   = [None]*len(dupobjs)		
