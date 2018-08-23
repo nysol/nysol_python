@@ -58,6 +58,7 @@ class NysolMOD_CORE(object):
 
 		self.tag = ""
 		self.nowdir   = self.stdodir
+		self.nowidir  = self.stdidir
 
 		if "tag" in self.kwd :
 
@@ -112,6 +113,11 @@ class NysolMOD_CORE(object):
 	def redirectsimple(self,dir) :
 		self.nowdir = dir
 		return self
+
+	def iredirect(self,dir) :
+		self.nowidir = dir
+		return self
+
 
 	def redirect(self,dir) :
 		olddir = self.nowdir 
@@ -396,19 +402,19 @@ class NysolMOD_CORE(object):
 
 	def addPre(self,pre): 
 
-		self.inplist[self.stdidir].append(pre) 
+		self.inplist[self.nowidir].append(pre) 
 		pre.outlist[pre.nowdir].append(self)
 		return self
 
 	def __ilshift__(self, other):
 
 		pre = other
-		precnt = len(pre.inplist[pre.stdidir])
+		precnt = len(pre.inplist[pre.nowidir])
 		while precnt != 0:
 			if precnt > 1 :
 				raise Exception("Multiple input")
-			pre = pre.inplist[pre.stdidir][0]
-			precnt = len(pre.inplist[pre.stdidir])
+			pre = pre.inplist[pre.nowidir][0]
+			precnt = len(pre.inplist[pre.nowidir])
 
 		pre.addPre(self)
 		return other
@@ -476,11 +482,75 @@ class NysolMOD_CORE(object):
 
 		return			
  
+	
+	def __addFifo(self,k):
+
+		if len(self.outlist[k]) != 1:
+			raise Exception("unsuporot size")
+
+		outll = self.outlist[k][0]
+
+		if outll.name == "mfifo":
+			return
+
+		kwd= None
+		pos= None
+		
+		for ki in outll.inplist: # 0だけOK?
+			if len(outll.inplist[ki])!=0 :						
+				for ii in range(len(outll.inplist[ki])):
+					if self == outll.inplist[ki][ii]:
+						kwd = ki
+						pos = ii
+						
+		if kwd == None or kwd == None:
+			raise Exception("no vaild network")
+
+		self.outlist[k] = []
+		fifoxxx = self.redirect(k)
+		fifoxxx.outlist[fifoxxx.nowdir]=[outll]
+		outll.inplist[kwd][pos] = fifoxxx
+
+	def __addTee(self,k):
+
+		opos = []
+		kwd  = []
+		pos  = []
+
+		outll = self.outlist[k]
+
+		for i in range(len(outll)):
+
+			for ki in outll[i].inplist:
+
+				for ii in range(len(outll[i].inplist[ki])):
+					if self == outll[i].inplist[ki][ii]:
+						opos.append(i)
+						kwd.append(ki)
+						pos.append(ii)
+
+		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
+
+		self.outlist[k] = []
+		save_nowdir = self.nowdir
+		self.nowdir = k
+		teexxx = m2tee(i=self,sysadd=True)
+		teexxx.outlist[teexxx.nowdir] = [] 
+		self.nowdir = save_nowdir
+		
+		for p in range(len(opos)):
+
+			i = opos[p]
+			ki = kwd[p]
+			ii = pos[p]
+
+			fifoxxx = teexxx.redirect(teexxx.nowdir)
+			fifoxxx.outlist[fifoxxx.nowdir]=[ outll[opos[i]] ]   
+			outll[opos[i]].inplist[ki][ii] = fifoxxx
+ 
 	@classmethod
 	def addTee(self,dupobj): 
 		addobj =[]
-		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
-		from nysol.mcmd.submod.mfifo import Nysol_Mfifo as mfifo
 
 		for obj in dupobj:
 
@@ -493,42 +563,20 @@ class NysolMOD_CORE(object):
 					if isinstance(obj.outlist[k][0],str):
 						continue 
 
-					if isinstance(obj.outlist[k][0],list):
+					if isinstance(obj.outlist[k][0],list): #多分いらん
 
 						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
 						wobj = mwritelist(obj.outlist[k][0],sysadd=True)
-						wobj.inplist[wobj.stdidir]=[obj]
+						wobj.inplist[wobj.nowidir]=[obj]
 						obj.outlist[k][0] = wobj
 						addobj.append(wobj)
 						continue 
 
+					obj.__addFifo(k)
 
-					outll = obj.outlist[k][0]
-					obj.outlist[k] = []
-					fifoxxx=mfifo(i=obj.redirect(k),sysadd=True)
-					fifoxxx.outlist[fifoxxx.nowdir]=[outll]
-
-					for ki in outll.inplist: # 0だけOK?
-						if len(outll.inplist[ki])!=0 :						
-							for ii in range(len(outll.inplist[ki])):
-								if obj == outll.inplist[ki][ii]:
-									outll.inplist[ki][ii] = fifoxxx
 				else:
 
-					outll = obj.outlist[k]
-					obj.outlist[k] = []
-					teexxx = m2tee(i=obj,sysadd=True)
-					teexxx.outlist[teexxx.nowdir] = [] 
-
-					for outin in outll:
-
-						for ki in outin.inplist: # 0だけOK?
-
-							for ii in range(len(outin.inplist[ki])):
-								if obj == outin.inplist[ki][ii]:
-									fifoxxx=mfifo(i=teexxx,sysadd=True)
-									fifoxxx.outlist[fifoxxx.nowdir]=[outin] 
-									outin.inplist[ki][ii] = fifoxxx
+					obj.__addTee(k)
 
 		return addobj
 
@@ -603,7 +651,7 @@ class NysolMOD_CORE(object):
 
 								from nysol.mcmd.submod.writecsv import Nysol_Writecsv as mwritecsv
 								wcsv_o = mwritecsv(obj.outlist[key][i],sysadd=True)
-								wcsv_o.inplist[wcsv_o.stdidir]=[obj]
+								wcsv_o.inplist[wcsv_o.nowidir]=[obj]
 								obj.outlist[key][i] = wcsv_o
 								if obj in dupobj:
 									dupobj[obj] += 1
@@ -613,7 +661,7 @@ class NysolMOD_CORE(object):
 
 							if isinstance(obj.outlist[key][i],list) :
 								wlmod = mwritelist(obj.outlist[key][i],sysadd=True)
-								wlmod.inplist[wlmod.stdidir]=[obj]
+								wlmod.inplist[wlmod.nowidir]=[obj]
 								obj.outlist[key][i] = wlmod
 								if obj in dupobj:
 									dupobj[obj] += 1
@@ -836,7 +884,7 @@ class NysolMOD_CORE(object):
 
 								from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
 								wobj = mwritelist(dupobj.outlist[k][ki],sysadd=True)
-								wobj.inplist[wobj.stdidir]=[dupobj]
+								wobj.inplist[wobj.nowidir]=[dupobj]
 								dupobj.outlist[k][ki] = wobj
 								runobjs[rpos]= wobj
 
