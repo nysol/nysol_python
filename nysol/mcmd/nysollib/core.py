@@ -149,12 +149,13 @@ class NysolMOD_CORE(object):
 		dupobj = copy.deepcopy(self)
 
 		# 不要 mod 除去 
-		for k in dupobj.outlist.keys():
-			dupobj.outlist[k].clear()
+		itobj = dupobj.redirect(dupobj.nowdir)
+		#for k in dupobj.outlist.keys():
+		#	dupobj.outlist[k].clear()
 
 
 		try:
-			xx = itermod.LineListIter(dupobj)
+			xx = itermod.LineListIter(itobj)
 			if len(xx.fldname)>xlim:
 				head = xx.fldname[:xmid]+["..."] + xx.fldname[-xmid:]
 			else:
@@ -163,10 +164,10 @@ class NysolMOD_CORE(object):
 			while(True):
 				val = next(xx)
 				xval = val
-				if cnt < yLimit :
-					if len(val)>xlim:
-						xval = val[:xmid]+["..."] + val[-xmid:]
+				if len(val)>xlim:
+					xval = val[:xmid]+["..."] + val[-xmid:]
 
+				if cnt < yLimit :
 					pre.append(xval)
 
 				cnt+=1
@@ -823,25 +824,15 @@ class NysolMOD_CORE(object):
 
 		for dobj in dupobjs:
 
-			if dobj.okwdObjCnt() == 0:
+			for k in dobj.outlist.keys():
 
-				runcnt +=1
+				if len(dobj.outlist[k]) == 0 and k == dobj.nowdir:
+					runcnt+=1
 
-			else:
+				for e in dobj.outlist[k]:
+					if not isinstance(e,NysolMOD_CORE):
+						runcnt+=1
 
-				rrcnt=0
-
-				for k in dobj.outlist.keys():
-					for e in dobj.outlist[k]:
-						if not isinstance(e,NysolMOD_CORE):
-							rrcnt+=1
-
-				if rrcnt==0:
-					runcnt += 1
-				else:
-					runcnt += rrcnt
-					
-				
 		outfs   = [None]*len(dupobjs)		
 		runobjs = [None]*runcnt
 		
@@ -874,33 +865,33 @@ class NysolMOD_CORE(object):
 
 			else:
 
-				if dupobj.okwdObjCnt() == 0:
+				for k in dupobj.outlist.keys():
 
-					runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
-					outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
-					rpos+=1
+					if len(dupobj.outlist[k]) == 0 and k == dupobj.nowdir:
+						runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
+						outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
+						rpos+=1
+						continue
 
-				else:			
-					st_rpos = rpos
+					for ki in range(len(dupobj.outlist[k])):
 
-					for k in dupobj.outlist.keys():
+						if isinstance(dupobj.outlist[k][ki],list):
 
-						for ki in range(len(dupobj.outlist[k])):
+							from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
+							wobj = mwritelist(dupobj.outlist[k][ki],sysadd=True)
+							wobj.inplist[wobj.nowidir]=[dupobj]
+							dupobj.outlist[k][ki] = wobj
+							runobjs[rpos]= wobj
 
-							if isinstance(dupobj.outlist[k][ki],list):
+						else:
 
-								from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
-								wobj = mwritelist(dupobj.outlist[k][ki],sysadd=True)
-								wobj.inplist[wobj.nowidir]=[dupobj]
-								dupobj.outlist[k][ki] = wobj
-								runobjs[rpos]= wobj
+							runobjs[rpos]= dupobj
+							
+						if  k == dupobj.nowdir:
+							outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
 
-							else:
-								runobjs[rpos]= dupobj
+						rpos += 1
 
-							rpos += 1
-
-					outfs[i] = runobjs[st_rpos].outlist[runobjs[st_rpos].nowdir][0]
 			
 
 		self.change_modNetworks(runobjs)
