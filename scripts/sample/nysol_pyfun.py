@@ -3,7 +3,7 @@
 
 import sys
 import nysol.util.margs as margs
-import nysol.take.mitemset as mitemset
+import nysol.take as nt
 import nysol.mcmd as nm
 
 
@@ -19,7 +19,7 @@ def check(inf,tid,item,s,o):
 	args=margs.Margs(argv,"i=,x=,O=,tid=,item=,class=,taxo=,type=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,T=,-replaceTaxo")
 	try:
 		#print(dir(mitemset))
-		mitemset.mitemset(args).run()
+		nt.mitemset(**(args.kvmap())).run()
 		dir = o.split("=")[1]
 		for line in open(dir+"/patterns.csv"):
 			sys.stdout.write(line)
@@ -30,8 +30,7 @@ def check(inf,tid,item,s,o):
 
 	return None
 
-#a=("i=man1.csv","tid=tid","type=F","S=3","O=./vvv")
-#print ("aaaa")
+a=("i=man1.csv","tid=tid","type=F","S=3","O=./vvv")
 f = nm.runfunc(check,"i=man1.csv","tid=tid","type=F","S=3","O=./vvv").mcut(f="pid,size,count,total,support,lift,pattern").run(msg="on")
 print(f)
 
@@ -41,8 +40,10 @@ def check2(v):
 
 	try:
 		f   = nm.mstdin()
+		#f = nm.mnewstr(a="id",v="x")
 		f <<= nm.mselstr(f="id",v=v)
 		f <<= nm.mstdout()
+		#f.drawModel("xxx.html")
 		f.run(msg="on")
 	except Exception as err:
 		sys.stderr.write("st aaa3\n")
@@ -85,15 +86,16 @@ def check5(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
 	sys.stderr.write("st2 "+ str(nF) +"\n")
 	sys.stderr.write("st2 "+ str(nL) +"\n")
 	sys.stderr.write("st2 "+ str(tl) +"\n")
-
-nm.runfunc(check5,"aaaa",t1="xxx",nF=2).run()
+#check2("1")
+#exit()
+#nm.runfunc(check5,"aaaa",t1="xxx",nF=2).run()
 
 f = nm.mselrand(c=10,i="featureAll.ans.csv")
 f <<= nm.mcut(f="id,fldkey,way,val")
 f <<= nm.runfunc(check3)
 f <<= nm.mcut(f="id,fldkey,way,val",o="xxv0")
 f.run(msg="on")
-
+#exit()
 
 f = nm.mselrand(c=10000,i="featureAll.ans.csv")
 f <<= nm.mcut(f="id,fldkey,way,val")

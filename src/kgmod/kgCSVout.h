@@ -121,6 +121,7 @@ public:
 	bool    noFldName(void)	const {return _noFldName;}
 	bool    isOpend(void)		const {return opened_;}
 	size_t  recNo(void)			const {return _recNo;}
+	int fd(void)					const					{ return fd_;}
 
 	// bufferの強制出力
 	void flush();

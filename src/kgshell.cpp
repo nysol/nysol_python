@@ -432,7 +432,7 @@ void *kgshell::run_pyfunc(void *arg){
 		int sts = a->mobj->run(
 			a->fobj,a->aobj,a->kobj,
 			a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg,
-			a->mutex,a->forkCond,a->runst
+			a->mutex,a->forkCond,a->runst,a->fdlist
 		);
 
 
@@ -587,7 +587,6 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk,bool outpipe)
 		}
 		_opipe_map[plist[i].frID][plist[i].frTP].push_back(piped[1]);
 	}
-
 	if(outpipe){
 		if( pipe(_csvpiped) < 0){ throw kgError("pipe open error on kgshell");}
 		// pipe2(piped,O_CLOEXEC) pipe2なら省略化
@@ -701,7 +700,6 @@ int kgshell::runMain(
 	pthread_attr_t pattr;
 	if ( threadStkINIT(&pattr) ){ return 1; } 
 	
-	// thread attr init
 	makePipeList(plist,iblk,outpipe);
 
 	bool errflg=false;

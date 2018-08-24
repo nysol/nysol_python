@@ -88,7 +88,7 @@ int kgPyfunc::run(void) //ダミー
 int kgPyfunc::run(
 	PyObject* f_p,PyObject* a_p,PyObject* k_p,
 	int inum,int *i_p,int onum, int* o_p,string & msg,
-	pthread_mutex_t *mtx,pthread_cond_t *forkCond,volatile int *runst)
+	pthread_mutex_t *mtx,pthread_cond_t *forkCond,volatile int *runst,vector<int> fdlist)
 {
 	try{
 		setArgs();
@@ -127,7 +127,7 @@ int kgPyfunc::run(
 		// ============
 #define THVER 0		
 #if THVER  
-
+{
 
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
@@ -199,7 +199,7 @@ int kgPyfunc::run(
 		
 
 		return 0;
-
+}
 #else
 
 		int initchek[2];
@@ -216,6 +216,15 @@ int kgPyfunc::run(
 		if ((pid = fork()) == 0) {	
 			close(initchek[0]);
 			close(finchek[1]);
+
+			PyGILState_STATE gstate;
+			gstate = PyGILState_Ensure();
+			PyOS_AfterFork();
+			for(size_t i=0; i<fdlist.size();i++){ // 不必要FDclose
+				if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
+					close(fdlist[i]);
+				}
+			}
 			if(i_p_t>0){
 				dup2(i_p_t, 0);
 				close(i_p_t);
@@ -224,9 +233,7 @@ int kgPyfunc::run(
 				dup2(o_p_t, 1);
 				close(o_p_t);
 			}
-			PyGILState_STATE gstate;
-			gstate = PyGILState_Ensure();
-			PyOS_AfterFork();
+
 			write(initchek[1],"OK", strlen("OK"));
 			close(initchek[1]);
 			char buf[256];
@@ -234,6 +241,7 @@ int kgPyfunc::run(
 				if(!strncmp(buf,"OK",strlen("OK"))){ break;}
 			}
 			close(finchek[0]);
+
 			PyObject* rtn = PyObject_Call(f_p,a_p,k_p);
 			PyGILState_Release(gstate);
 
