@@ -119,7 +119,7 @@ def filenameEXTRACT(mlist,iolist,linklist):
 					maxCnt+=1
 
 				iolist[i][1].append([newpos,k])
-				iolist[newpos][1].append([i,"i"])
+				iolist[newpos][0].append([i,"i"])
 				linklist.append([[k,i],["i",newpos]])
 				
 

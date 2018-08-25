@@ -12,7 +12,7 @@ class Nysol_Writecsv(NysolMOD_CORE):
 
 
 def writecsv(self,*args, **kw_args):
-	return Nysol_Writecsv(nutil.args2dict(args,kw_args,Nysol_Writecsv._kwd)).addPre(self)
+	return Nysol_Writecsv(nutil.args2dict(args,kw_args,Nysol_Writecsv._kwd,uk="o")).addPre(self)
 
 setattr(NysolMOD_CORE, "writecsv", writecsv)
 

@@ -88,6 +88,7 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 {
 	int iopencnt = 0;
 	int oopencnt = 0;
+
 	try{
 		// パラメータチェック
 		_args.paramcheck("i=,o=",kgArgs::COMMON|kgArgs::IODIFF);
@@ -98,12 +99,21 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 
 		// 入出力ファイルオープン
 		if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
-		else     { _iFile.open(_args.toString("i=",false), _env,_nfn_i); }
+		else     { 
+			_iFile.open(_args.toString("i=",false), _env,_nfn_i);
+			//kgstr_t iname = _args.toString("i=",false);
+			//if(iname.empty()){
+			//	_iFile.popen(0, _env,_nfn_i); 
+			//}else{
+			//	_iFile.open(iname, _env,_nfn_i); 
+			//}
+		}
 		iopencnt++;
 
 		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
 		else     { _oFile.open(_args.toString("o=",false), _env,_nfn_o);}
 		oopencnt++;
+
 
 		_iFile.read_header();
 
