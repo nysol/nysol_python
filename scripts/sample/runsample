@@ -1,5 +1,0 @@
-readcsv featureAll.csv
-head -n 10
-mcut f=fldkey,way,val
-msum k=fldkey,way f=val
-writecsv runcheck.csv

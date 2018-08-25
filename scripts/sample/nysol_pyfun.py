@@ -5,7 +5,38 @@ import sys
 import nysol.util.margs as margs
 import nysol.take as nt
 import nysol.mcmd as nm
+import nysol.util.mtemp as mtemp
 
+data = """\
+tid,item,val
+T1,C,3
+T1,E,5
+T2,D,12
+T2,E,3
+T2,F,4
+T3,A,5
+T3,B,6
+T3,D,7
+T3,F,8
+T4,B,7
+T4,D,1
+T4,F,2
+T5,A,44
+T5,B,5
+T5,D,7
+T5,E,8
+T6,A,3
+T6,B,2
+T6,D,1
+T6,E,9
+T6,F,1\
+"""
+
+temo = mtemp.Mtemp()
+inpname = temo.file()
+
+with open(inpname,"w") as wfp:
+	wfp.write(data)
 
 def check(inf,tid,item,s,o):
 
@@ -30,20 +61,16 @@ def check(inf,tid,item,s,o):
 
 	return None
 
-a=("i=man1.csv","tid=tid","type=F","S=3","O=./vvv")
-f = nm.runfunc(check,"i=man1.csv","tid=tid","type=F","S=3","O=./vvv").mcut(f="pid,size,count,total,support,lift,pattern").run(msg="on")
+f = nm.runfunc(check,"i={}".format(inpname),"tid=tid","type=F","S=3","O=./vvv").mcut(f="pid,size,count,total,support,lift,pattern").run(msg="on")
 print(f)
-
 #==============================================================
 
 def check2(v):
 
 	try:
 		f   = nm.mstdin()
-		#f = nm.mnewstr(a="id",v="x")
-		f <<= nm.mselstr(f="id",v=v)
+		f <<= nm.mselstr(f="val",v=v)
 		f <<= nm.mstdout()
-		#f.drawModel("xxx.html")
 		f.run(msg="on")
 	except Exception as err:
 		sys.stderr.write("st aaa3\n")
@@ -58,48 +85,16 @@ def check3():
 
 	
 
-def check4(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
-	print(a)
-	try:
-		
-		sys.stderr.write("st2\n")
-		sys.stderr.write("st2 "+ str(eF) +"\n")
-		sys.stderr.write("st2 "+ str(eL) +"\n")
-		sys.stderr.write("st2 "+ str(t1) +"\n")
-		sys.stderr.write("st2 "+ str(t2) +"\n")
-		sys.stderr.write("st2 "+ str(nF) +"\n")
-		sys.stderr.write("st2 "+ str(nL) +"\n")
-		sys.stderr.write("st2 "+ str(tl) +"\n")
-	except Exception as err:
-		sys.stderr.write(sys.exc_info())	
-		sys.stderr.write("\n")
-
-
-def check5(eF=None,eL=None,t1=None,t2=None,nF=None,nL=None,tl=None):
-	print(a)
-		
-	sys.stderr.write("st2\n")
-	sys.stderr.write("st2 "+ str(eF) +"\n")
-	sys.stderr.write("st2 "+ str(eL) +"\n")
-	sys.stderr.write("st2 "+ str(t1) +"\n")
-	sys.stderr.write("st2 "+ str(t2) +"\n")
-	sys.stderr.write("st2 "+ str(nF) +"\n")
-	sys.stderr.write("st2 "+ str(nL) +"\n")
-	sys.stderr.write("st2 "+ str(tl) +"\n")
-#check2("1")
-#exit()
-#nm.runfunc(check5,"aaaa",t1="xxx",nF=2).run()
-
-f = nm.mselrand(c=10,i="featureAll.ans.csv")
-f <<= nm.mcut(f="id,fldkey,way,val")
+f = nm.mselrand(c=50,i=inpname)
+f <<= nm.mcut(f="tid,item,val")
 f <<= nm.runfunc(check3)
-f <<= nm.mcut(f="id,fldkey,way,val",o="xxv0")
-f.run(msg="on")
-#exit()
+f <<= nm.mcut(f="tid,item,val")
+print(f.run(msg="on"))
 
-f = nm.mselrand(c=10000,i="featureAll.ans.csv")
-f <<= nm.mcut(f="id,fldkey,way,val")
+f = nm.mselrand(c=50,i=inpname)
+f <<= nm.mcut(f="tid,item,val")
 f <<= nm.runfunc(check2,"1")
-f <<= nm.mcut(f="id,fldkey,way,val",o="xxv2")
-f.run(msg="on")
+f <<= nm.mcut(f="tid,item,val")
+print(f.run(msg="on"))
+
 
