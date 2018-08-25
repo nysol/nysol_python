@@ -250,6 +250,21 @@ class NysolMOD_CORE(object):
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
+	def fldname(self):
+		dupobj = copy.deepcopy(self)
+
+		# 不要 mod 除去 
+		itobj = dupobj.redirect(dupobj.nowdir)
+
+
+		xx = itermod.LineListIter(itobj)
+		head = xx.fldname
+		
+		n_core.close(xx.csvin)
+		n_core.cancel(xx.shobj)
+		return head
+		
+
 	# __getLineList処理は同じ
 	def convtype(self,dtype=None):
 		try:
