@@ -185,9 +185,10 @@ utilmod = Extension('nysol/util/_utillib',
 																'src/kgmod/kgMethod.cpp',
 																'src/kgmod/kgTempfile.cpp','src/kgmod/kgVal.cpp',
 																'src/kgmod/kgWildcard.cpp','src/kgmod/kgmod.cpp',
-																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp'
+																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp',
+																'src/mod/kgchkcsv.cpp'
 										],
-										include_dirs=['src','src/kgmod'],
+										include_dirs=['src','src/kgmod','src/mod'],
 										libraries=umodLibs
 										)
 
