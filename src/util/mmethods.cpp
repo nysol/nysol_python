@@ -196,7 +196,7 @@ PyObject* mchkcsv(PyObject* self, PyObject* args){
 		Py_RETURN_NONE ;
 
 	}catch(kgError& err){ // kgmod関係エラーのchatch
-		err.addModName("mheader");
+		err.addModName("mchkcsv");
 		kgMsg msg(kgMsg::ERR, &env);
 		msg.output(err.message());
 			Py_RETURN_NONE ;
