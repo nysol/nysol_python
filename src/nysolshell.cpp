@@ -42,10 +42,13 @@ static PyObject* setRtnData(long k,char * v){
 	PyObject* rtn = NULL;
 
 	if(*v=='\0'){
-
-		Py_INCREF(Py_None);
-		rtn = Py_None;
-
+		if(k==0){
+			rtn = Py_BuildValue("s", v);
+		}
+		else{
+			Py_INCREF(Py_None);
+			rtn = Py_None;
+		}
 	}
 	else if(k==0){ //str
 

@@ -5,15 +5,20 @@ import re
 def para2strStr(vals):
 	rtnStr = ""
 	for k, v in vals.items():
+
 		if isinstance(v,bool) :
 			if v==True:
 				rtnStr += "-" + k + " "
+
 		elif isinstance(v,str) :
 			rtnStr += k + "=" + v + " "
+
 		elif isinstance(v,float) :
 			rtnStr += k + "=" + str(v) + " "
+
 		elif isinstance(v,int) :
 			rtnStr += k + "=" + str(v) + " "
+
 		elif isinstance(v,list) :
 			plist = []
 			for val in v:
@@ -22,7 +27,24 @@ def para2strStr(vals):
 				elif isinstance(val,float) or isinstance(v,int) :
 					plist.append(str(val))
 			rtnStr += k + "=" + ",".join(plist) + " "
-			
+
+		elif isinstance(v,dict) :
+
+			plist = []
+			for vk, vv in v.items():
+				v1=""
+				if isinstance(vk,str) :
+					v1 = vk
+				elif isinstance(vk,float) or isinstance(vk,int) :
+					v1 = str(vk)
+				v2=""
+				if isinstance(vv,str) :
+					v2 = vv
+				elif isinstance(vv,float) or isinstance(vv,int) :
+					v2 = str(vk)
+				plist.append(v1+":" +v2)
+			rtnStr += k + "=" + ",".join(plist) + " "
+
 	return rtnStr
 
 
@@ -55,6 +77,24 @@ def para2str(vals): #クラスごとにいれる?
 					plist.append(val)
 				elif isinstance(val,float) or isinstance(v,int) :
 					plist.append(str(val))
+
+			rtnStr.append(k + "=" + ",".join(plist) )
+
+		elif isinstance(v,dict) :
+
+			plist = []
+			for vk, vv in v.items():
+				v1=""
+				if isinstance(vk,str) :
+					v1 = vk
+				elif isinstance(vk,float) or isinstance(vk,int) :
+					v1 = str(vk)
+				v2=""
+				if isinstance(vv,str) :
+					v2 = vv
+				elif isinstance(vv,float) or isinstance(vv,int) :
+					v2 = str(vk)
+				plist.append(v1+":" +v2)
 
 			rtnStr.append(k + "=" + ",".join(plist) )
 
