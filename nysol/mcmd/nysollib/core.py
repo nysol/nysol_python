@@ -532,11 +532,15 @@ class NysolMOD_CORE(object):
 		opos = []
 		kwd  = []
 		pos  = []
+		sumiobj=set([])
 
 		outll = self.outlist[k]
 
 		for i in range(len(outll)):
-
+			if outll[i] in sumiobj:
+				continue
+			sumiobj.add(outll[i])
+			
 			for ki in outll[i].inplist:
 
 				for ii in range(len(outll[i].inplist[ki])):
@@ -553,7 +557,7 @@ class NysolMOD_CORE(object):
 		teexxx = m2tee(i=self,sysadd=True)
 		teexxx.outlist[teexxx.nowdir] = [] 
 		self.nowdir = save_nowdir
-		
+
 		for p in range(len(opos)):
 
 			i = opos[p]
@@ -566,10 +570,10 @@ class NysolMOD_CORE(object):
  
 	@classmethod
 	def addTee(self,dupobj): 
+
 		addobj =[]
 
 		for obj in dupobj:
-
 			for k in obj.outlist.keys():
 
 				if len(obj.outlist[k])==0:
@@ -621,6 +625,7 @@ class NysolMOD_CORE(object):
 		add_mod =[]
 
 		for obj in sumiobj:
+
 			if isinstance(obj,NysolMOD_CORE):
 				if obj.name=="readlist":
 					continue
@@ -640,7 +645,84 @@ class NysolMOD_CORE(object):
 							obj.inplist[key][i]=rlmod
 
 					if len(obj.inplist[key])>1:
-	
+
+						ttl = len(obj.inplist[key])
+
+						layer=1
+						while 32 < ttl:
+							if ttl%32 :
+								ttl = int(ttl/32)
+							else:
+								ttl = int(ttl/32)+1
+							layer += 1 
+						
+						orginplist = obj.inplist[key]
+						
+						for i in reversed(range(layer)):
+
+							if i == 0 :
+								
+								m2cmod  = m2cat(sysadd=True)
+								m2cmod.inplist["i"] = orginplist
+								m2cmod.outlist[m2cmod.nowdir] = [obj]
+
+								for xval in orginplist:
+									if not isinstance(xval,NysolMOD_CORE):	
+										raise Exception("can not mutli input except nysol moudule")
+							
+									for okey in xval.outlist.keys():
+							
+										for ii in range(len(xval.outlist[okey])):
+											if obj == xval.outlist[okey][ii]:
+												xval.outlist[okey][ii] = m2cmod
+												break
+
+								obj.inplist[key] = [m2cmod]
+
+							else:
+								lttl = len(orginplist)
+								rem = lttl%32
+								div = int(lttl/32)
+								if rem != 0:
+									div +=1	
+									setend = rem 
+								else:
+									setend = 32 
+
+								newinplist = [None] * div
+								setbgn = 0
+								
+								for midi in range(div):
+
+
+									orginpsuv = [None] * (setend-setbgn)
+									for midj in range(setend-setbgn):
+										orginpsuv[midj] = orginplist[setbgn+midj]
+
+									m2cmod  = m2cat(sysadd=True)
+									m2cmod.inplist["i"] = orginpsuv
+									m2cmod.outlist[m2cmod.nowdir] = [obj]
+
+
+									for xval in orginpsuv:
+										if not isinstance(xval,NysolMOD_CORE):	
+											raise Exception("can not mutli input except nysol moudule")
+							
+										for okey in xval.outlist.keys():
+							
+											for ii in range(len(xval.outlist[okey])):
+												if obj == xval.outlist[okey][ii]:
+													xval.outlist[okey][ii] = m2cmod
+													break
+
+									newinplist[midi] = m2cmod
+									setbgn  = setend
+									setend += 32
+
+								orginplist = newinplist
+
+							
+						"""
 						m2cmod  = m2cat(i=obj.inplist[key],sysadd=True)
 						m2cmod.outlist[m2cmod.nowdir] = [obj]
 
@@ -655,6 +737,7 @@ class NysolMOD_CORE(object):
 										xval.outlist[okey][ii] = m2cmod
 
 						obj.inplist[key] = [m2cmod]
+						"""
 
 				for key in obj.outlist.keys():
 
@@ -697,7 +780,6 @@ class NysolMOD_CORE(object):
 			mod.check_dupObj(sumiobj,dupobj)
 
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
-
 
 		if len(dupobj)!=0:
 			add_DmodTee = NysolMOD_CORE.addTee(dupobj)
@@ -945,7 +1027,6 @@ class NysolMOD_CORE(object):
 		# 仮 kgshellへ移行
 		import psutil as ps
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
-
 
 		n_core.runLx(shobj,modlist,linklist)
 
