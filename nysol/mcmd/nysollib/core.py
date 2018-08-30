@@ -550,15 +550,16 @@ class NysolMOD_CORE(object):
 						pos.append(ii)
 
 		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
+		
+		ttl = len(opos)
 
-		self.outlist[k] = []
-		save_nowdir = self.nowdir
-		self.nowdir = k
-		teexxx = m2tee(i=self,sysadd=True)
-		teexxx.outlist[teexxx.nowdir] = [] 
-		self.nowdir = save_nowdir
-
+		stktee = []
 		for p in range(len(opos)):
+
+			if p % 32 ==0 :
+				teexxx = m2tee(sysadd=True)
+				teexxx.outlist[teexxx.nowdir] = [] 
+				stktee.append(teexxx)
 
 			i = opos[p]
 			ki = kwd[p]
@@ -567,6 +568,31 @@ class NysolMOD_CORE(object):
 			fifoxxx = teexxx.redirect(teexxx.nowdir)
 			fifoxxx.outlist[fifoxxx.nowdir]=[ outll[opos[i]] ]   
 			outll[opos[i]].inplist[ki][ii] = fifoxxx
+
+		
+		while len(stktee) != 1:
+			orgtee = stktee
+			stktee = []
+			stpos = 0
+			edpos = len(orgtee) if len(orgtee) < 32 else 32
+
+			while stpos < len(orgtee):
+				teexxx = m2tee(sysadd=True)
+				teexxx.outlist[teexxx.nowdir] = orgtee[stpos:edpos]
+				for xpos in range(stpos,edpos):
+					orgtee[xpos].inplist["i"] = [teexxx]
+					
+				stktee.append(teexxx)
+				stpos  = edpos
+				edpos = len(orgtee) if len(orgtee) < stpos + 32 else stpos + 32
+
+		self.outlist[k] = []
+		save_nowdir = self.nowdir
+		self.nowdir = k
+		stktee[0].inplist["i"] = [self]
+		self.outlist[k] = [ stktee[0] ]
+		self.nowdir = save_nowdir
+		
  
 	@classmethod
 	def addTee(self,dupobj): 
@@ -834,7 +860,7 @@ class NysolMOD_CORE(object):
 						iolist[no][1].append([uniqmod[ioobj],k])
 					elif isinstance(ioobj,(list,str)):
 						modlist[no][3][k]=ioobj
-
+						
 
 	@classmethod
 	def getLink(self,iolist,base,to):
@@ -1026,11 +1052,10 @@ class NysolMOD_CORE(object):
 			modlimt = int(kw_args["runlimit"])
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
-		
+
 		# 仮 kgshellへ移行
 		import psutil as ps
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
-
 		n_core.runLx(shobj,modlist,linklist)
 
 		return outfs
