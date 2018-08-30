@@ -631,8 +631,8 @@ class NysolMOD_CORE(object):
 					continue
 				if obj.name=="writelist":
 					continue
-				if obj.name=="m2cat":
-					continue
+				#if obj.name=="m2cat":
+				#	continue
 
 				for key in obj.inplist.keys():
 
@@ -661,23 +661,26 @@ class NysolMOD_CORE(object):
 						for i in reversed(range(layer)):
 
 							if i == 0 :
+								if obj.name=="m2cat":
+									obj.inplist["i"] = orginplist
 								
-								m2cmod  = m2cat(sysadd=True)
-								m2cmod.inplist["i"] = orginplist
-								m2cmod.outlist[m2cmod.nowdir] = [obj]
+								else:
+									m2cmod  = m2cat(sysadd=True)
+									m2cmod.inplist["i"] = orginplist
+									m2cmod.outlist[m2cmod.nowdir] = [obj]
 
-								for xval in orginplist:
-									if not isinstance(xval,NysolMOD_CORE):	
-										raise Exception("can not mutli input except nysol moudule")
+									for xval in orginplist:
+										if not isinstance(xval,NysolMOD_CORE):	
+											raise Exception("can not mutli input except nysol moudule")
 							
-									for okey in xval.outlist.keys():
+										for okey in xval.outlist.keys():
 							
-										for ii in range(len(xval.outlist[okey])):
-											if obj == xval.outlist[okey][ii]:
-												xval.outlist[okey][ii] = m2cmod
-												break
+											for ii in range(len(xval.outlist[okey])):
+												if obj == xval.outlist[okey][ii]:
+													xval.outlist[okey][ii] = m2cmod
+													break
 
-								obj.inplist[key] = [m2cmod]
+									obj.inplist[key] = [m2cmod]
 
 							else:
 								lttl = len(orginplist)
