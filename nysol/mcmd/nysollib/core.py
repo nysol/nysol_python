@@ -657,8 +657,6 @@ class NysolMOD_CORE(object):
 					continue
 				if obj.name=="writelist":
 					continue
-				#if obj.name=="m2cat":
-				#	continue
 
 				for key in obj.inplist.keys():
 
@@ -750,23 +748,6 @@ class NysolMOD_CORE(object):
 
 								orginplist = newinplist
 
-							
-						"""
-						m2cmod  = m2cat(i=obj.inplist[key],sysadd=True)
-						m2cmod.outlist[m2cmod.nowdir] = [obj]
-
-						for xval in obj.inplist[key]:
-							if not isinstance(xval,NysolMOD_CORE):	
-								raise Exception("can not mutli input except nysol moudule")
-						
-							for okey in xval.outlist.keys():
-							
-								for ii in range(len(xval.outlist[okey])):
-									if obj == xval.outlist[okey][ii]:
-										xval.outlist[okey][ii] = m2cmod
-
-						obj.inplist[key] = [m2cmod]
-						"""
 
 				for key in obj.outlist.keys():
 
