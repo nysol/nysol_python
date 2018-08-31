@@ -694,15 +694,18 @@ class NysolMOD_CORE(object):
 									m2cmod.outlist[m2cmod.nowdir] = [obj]
 
 									for xval in orginplist:
-										if not isinstance(xval,NysolMOD_CORE):	
-											raise Exception("can not mutli input except nysol moudule")
+										#if not isinstance(xval,NysolMOD_CORE):	
+										#	raise Exception("can not mutli input except nysol moudule")
+
+										if isinstance(xval,NysolMOD_CORE):
+											#	raise Exception("can not mutli input except nysol moudule")
 							
-										for okey in xval.outlist.keys():
+											for okey in xval.outlist.keys():
 							
-											for ii in range(len(xval.outlist[okey])):
-												if obj == xval.outlist[okey][ii]:
-													xval.outlist[okey][ii] = m2cmod
-													break
+												for ii in range(len(xval.outlist[okey])):
+													if obj == xval.outlist[okey][ii]:
+														xval.outlist[okey][ii] = m2cmod
+														break
 
 									obj.inplist[key] = [m2cmod]
 
@@ -732,15 +735,16 @@ class NysolMOD_CORE(object):
 
 
 									for xval in orginpsuv:
-										if not isinstance(xval,NysolMOD_CORE):	
-											raise Exception("can not mutli input except nysol moudule")
+										#if not isinstance(xval,NysolMOD_CORE):	
+										#	raise Exception("can not mutli input except nysol moudule")
+										if isinstance(xval,NysolMOD_CORE):
 							
-										for okey in xval.outlist.keys():
-							
-											for ii in range(len(xval.outlist[okey])):
-												if obj == xval.outlist[okey][ii]:
-													xval.outlist[okey][ii] = m2cmod
-													break
+											for okey in xval.outlist.keys():
+								
+												for ii in range(len(xval.outlist[okey])):
+													if obj == xval.outlist[okey][ii]:
+														xval.outlist[okey][ii] = m2cmod
+														break
 
 									newinplist[midi] = m2cmod
 									setbgn  = setend
@@ -825,13 +829,24 @@ class NysolMOD_CORE(object):
 			iolist[no]=[[],[]]
 
 			for k in obj.inplist.keys():
-
+				datacheck = 0
+				strstk=[]
 				for ioobj in obj.inplist[k]:
 					#uniqmodに無ければ今回のルート外のはず
 					if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod :
 						iolist[no][0].append([uniqmod[ioobj],k])
-					elif isinstance(ioobj,(list,str)):
+					elif isinstance(ioobj,str):
+						if datacheck > 1:
+							raise Exception("unsuppot mix input (str and list)")
+						strstk.append(ioobj)
+						datachek=1
+					elif isinstance(ioobj,list):
+						if datacheck != 0:
+							raise Exception("unsuppot mix input (str and list) or multi list ")
 						modlist[no][2][k]=ioobj
+						datachek=2
+				if len(strstk) != 0:
+					modlist[no][2][k]=",".join(strstk)
 
 			for k in obj.outlist.keys():
 
