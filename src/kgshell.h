@@ -117,6 +117,8 @@ class kgshell{
 	size_t _memttl;
 	int	_runlim;
 
+	PyThreadState *_save;
+
 	// pipe LIST
 	//map<int,int> _ipipe_map;
 	//map<int,int> _mpipe_map;
@@ -143,8 +145,6 @@ class kgshell{
 	vector< set<int> > _BLkRunlist;
 	int _blockmax;
 	kgSplitBlock _spblk;
-
-
 
 	argST *_argst;
 

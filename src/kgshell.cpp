@@ -140,6 +140,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	_th_st_pp = NULL;
 	_clen = 0;
 	_modlist=NULL;
+	_save=NULL;
 
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
@@ -596,7 +597,6 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk,bool outpipe)
 		fcntl(_csvpiped[1], F_SETFD, flags1 | FD_CLOEXEC);
 	}
 
-
 }
 
 int kgshell::threadStkINIT(pthread_attr_t *pattr){
@@ -786,10 +786,9 @@ int kgshell::runMain(
 	_th_rtn   = new int[_clen];
 
 
-	PyThreadState *_save;
-	if (!outpipe){ // iterの場合saveしない 確認用
+	//if (!outpipe){ // iterの場合saveしない? 確認用
 		_save = PyEval_SaveThread();
-	}
+	//}
 
 	for(int i=cmdlist.size()-1;i>=0;i--){
 
@@ -828,10 +827,9 @@ int kgshell::runMain(
 		// 呼び出しもとでキャンセルさせる
 		// チェック必要ここでしても問題ない iter場合の処理
 		// 別thread監視させる？
+		PyEval_RestoreThread(_save);
 		return _csvpiped[0];
 	}
-
-
 	// status check
 	pthread_mutex_lock(&_stsMutex);
 
