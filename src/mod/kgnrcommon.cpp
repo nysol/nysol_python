@@ -41,7 +41,7 @@ kgNrcommon::kgNrcommon(void)
 	_name    = "kgnrcommon";
 	_version = "###VERSION###";
 
-	_paralist = "i=,o=,m=,k=,K=,r=,R=,u=,-r,-q";
+	_paralist = "i=,o=,m=,k=,K=,rf=,R=,u=,-r,-q";
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY;
 
 	#include <help/en/kgnrcommonHelp.h>
@@ -76,7 +76,7 @@ void kgNrcommon::setArgsMain(void)
 	}
 
 	// v= 項目引数のセット(指定するのは１項目)
-	vector< vector<kgstr_t> >  vvs_rs = _args.toStringVecVec("r=","%:",2,true);
+	vector< vector<kgstr_t> >  vvs_rs = _args.toStringVecVec("rf=","%:",2,true);
 	// R= 項目引数のセット(指定するのは２項目)
 	vector< vector<kgstr_t> >  vvs_r = _args.toStringVecVec("R=","%:",2,true);
 
