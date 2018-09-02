@@ -945,14 +945,18 @@ class NysolMOD_CORE(object):
 		runcnt=0
 
 		for dobj in dupobjs:
-
+			
+			if dobj.disabled_ouputlist == True:
+				runcnt+=1
+				continue
+			
 			for k in dobj.outlist.keys():
 
 				if len(dobj.outlist[k]) == 0 and k == dobj.nowdir:
 					runcnt+=1
 
 				for e in dobj.outlist[k]:
-					if not isinstance(e,NysolMOD_CORE):
+					if not isinstance(e,NysolMOD_CORE) :
 						runcnt+=1
 
 		outfs   = [None]*len(dupobjs)		
