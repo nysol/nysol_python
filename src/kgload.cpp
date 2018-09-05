@@ -452,9 +452,14 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 						char * p = rls.getVal(j);
 
 						if(*p=='\0'){
-
-							Py_INCREF(Py_None);
-							PyList_SET_ITEM(tlist,j,Py_None);
+						
+							if(ptn[j]==0){
+								PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+							}
+							else{
+								Py_INCREF(Py_None);
+								PyList_SET_ITEM(tlist,j,Py_None);
+							}
 
 						}
 						else if(ptn[j]==0){

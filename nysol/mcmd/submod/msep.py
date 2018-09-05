@@ -6,6 +6,7 @@ from nysol.mcmd.nysollib import nysolutil as nutil
 class Nysol_Msep(NysolMOD_CORE): 
 
 	_kwd ,_inkwd,_outkwd = n_core.getparalist("msep",3)
+	_disabled_ouputlist = True
 
 	def __init__(self,*args, **kw_args) :
 		super(Nysol_Msep,self).__init__("msep",nutil.args2dict(args,kw_args,Nysol_Msep._kwd))

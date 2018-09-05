@@ -21,6 +21,8 @@
 #include <kgmod.h>
 #include <kgEnv.h>
 #include <kgCSV.h>
+#include <kgArgs.h>
+#include <kgchkcsv.h>
 #include <kgCSVout.h>
 #include <kgMessage.h>
 #include <kgMethod.h>
@@ -164,6 +166,44 @@ PyObject* mheader(PyObject* self, PyObject* args){
 			Py_RETURN_NONE ;
 	}
 }
+
+PyObject* mchkcsv(PyObject* self, PyObject* args){
+
+	kgEnv  env;
+	string name; // rubyスクリプト名
+	string argstr;
+	kgArgs modargs;
+  kgmod::kgChkcsv kgmod;
+
+	try { // kgmodのエラーはrubyのエラーとは別に検知する(メッセージ表示のため)
+
+		// 引数をopetionsにセット
+		char *fname=NULL;
+		int nfn = 0;
+		int local = 0;
+
+		if(!PyArg_ParseTuple(args, "s|ii", &fname,&nfn,&local)){
+			Py_RETURN_NONE ;
+		}
+		
+		modargs.add("i=",fname);
+		if(nfn){ modargs.add("-nfn",""); }
+		if(local){ modargs.add("-diagl",""); }
+		else     { modargs.add("-diag",""); }
+	  kgmod.init(modargs, &env);
+  	kgmod.run();
+
+		Py_RETURN_NONE ;
+
+	}catch(kgError& err){ // kgmod関係エラーのchatch
+		err.addModName("mchkcsv");
+		kgMsg msg(kgMsg::ERR, &env);
+		msg.output(err.message());
+			Py_RETURN_NONE ;
+	}
+}
+
+
 
 typedef struct {
   PyObject_HEAD
@@ -429,6 +469,7 @@ PyTypeObject PyMcsvout_Type = {
 static PyMethodDef utilmethods[] = {
 	{"mrecount",(PyCFunction)mrecount, METH_VARARGS  },
 	{"mheader" ,(PyCFunction)mheader , METH_VARARGS  },
+	{"mchkcsv" ,(PyCFunction)mchkcsv , METH_VARARGS  },
 	{NULL}
 };
 

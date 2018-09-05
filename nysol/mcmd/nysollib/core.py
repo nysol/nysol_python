@@ -244,7 +244,12 @@ class NysolMOD_CORE(object):
 		try:
 			x = itermod.LineListIter(self)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -266,31 +271,46 @@ class NysolMOD_CORE(object):
 		
 
 	# __getLineList処理は同じ
-	def convtype(self,dtype=None):
+	def convtype(self,dtype=None,header=False):
 		try:
 			x = itermod.LineListIter(self,dtype)
 			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
-
-	def __getLineList(self,dtype=None,skey=None,q=False):
-
-		try:
-			x = itermod.LineListIter(self,dtype,skey,q)
-			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False):
+	def __getLineList(self,dtype=None,skey=None,q=False,header=False):
+
 		try:
-			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q)
+			x = itermod.LineListIter(self,dtype,skey,q,header)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False,header=False):
+		try:
+			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q,header)
+
+			while(True):
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
+
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
@@ -301,7 +321,11 @@ class NysolMOD_CORE(object):
 		try:
 			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -313,7 +337,11 @@ class NysolMOD_CORE(object):
 
 			x = itermod.LineDictIter(self,dtype,skey,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -323,20 +351,20 @@ class NysolMOD_CORE(object):
 
 
 	# return generator
-	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False):
+	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
 			if keys!=None:
 
-				return self.__getLineListWithInfo(keys,skeys,dtype,q)
+				return self.__getLineListWithInfo(keys,skeys,dtype,q,header)
 
 			elif skeys!=None:
 
-				return self.__getLineList(dtype,skeys,q)
+				return self.__getLineList(dtype,skeys,q,header)
 
 			else:
-				return self.__getLineList(dtype,None)
+				return self.__getLineList(dtype,None,q,header)
 
 
 		elif otype == "dict":
@@ -361,13 +389,17 @@ class NysolMOD_CORE(object):
 
 
 	## generator rap
-	def __getBlockList(self,keys,skeys=None,dtype=None,q=False):
+	def __getBlockList(self,keys,skeys=None,dtype=None,q=False,header=False):
 
 		try:
 
-			x = itermod.BlkListIter(self,keys,skeys,dtype,q)
+			x = itermod.BlkListIter(self,keys,skeys,dtype,q,header)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 
@@ -380,7 +412,11 @@ class NysolMOD_CORE(object):
 
 			x = itermod.BlkDictIter(self,keys,skeys,dtype,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 
@@ -388,14 +424,14 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 	# return generator
-	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False):
+	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
-			return self.__getBlockList(keys,skeys,dtype,q)
+			return self.__getBlockList(keys,skeys,dtype,q,header)
 
 		elif otype == "dict":
-
+			
 			return self.__getBlockDict(keys,skeys,dtype,q)
 
 		else : 
@@ -532,11 +568,15 @@ class NysolMOD_CORE(object):
 		opos = []
 		kwd  = []
 		pos  = []
+		sumiobj=set([])
 
 		outll = self.outlist[k]
 
 		for i in range(len(outll)):
-
+			if outll[i] in sumiobj:
+				continue
+			sumiobj.add(outll[i])
+			
 			for ki in outll[i].inplist:
 
 				for ii in range(len(outll[i].inplist[ki])):
@@ -546,15 +586,16 @@ class NysolMOD_CORE(object):
 						pos.append(ii)
 
 		from nysol.mcmd.submod.m2tee import Nysol_M2tee as m2tee
-
-		self.outlist[k] = []
-		save_nowdir = self.nowdir
-		self.nowdir = k
-		teexxx = m2tee(i=self,sysadd=True)
-		teexxx.outlist[teexxx.nowdir] = [] 
-		self.nowdir = save_nowdir
 		
+		ttl = len(opos)
+
+		stktee = []
 		for p in range(len(opos)):
+
+			if p % 32 ==0 :
+				teexxx = m2tee(sysadd=True)
+				teexxx.outlist[teexxx.nowdir] = [] 
+				stktee.append(teexxx)
 
 			i = opos[p]
 			ki = kwd[p]
@@ -563,13 +604,38 @@ class NysolMOD_CORE(object):
 			fifoxxx = teexxx.redirect(teexxx.nowdir)
 			fifoxxx.outlist[fifoxxx.nowdir]=[ outll[opos[i]] ]   
 			outll[opos[i]].inplist[ki][ii] = fifoxxx
+
+		
+		while len(stktee) != 1:
+			orgtee = stktee
+			stktee = []
+			stpos = 0
+			edpos = len(orgtee) if len(orgtee) < 32 else 32
+
+			while stpos < len(orgtee):
+				teexxx = m2tee(sysadd=True)
+				teexxx.outlist[teexxx.nowdir] = orgtee[stpos:edpos]
+				for xpos in range(stpos,edpos):
+					orgtee[xpos].inplist["i"] = [teexxx]
+					
+				stktee.append(teexxx)
+				stpos  = edpos
+				edpos = len(orgtee) if len(orgtee) < stpos + 32 else stpos + 32
+
+		self.outlist[k] = []
+		save_nowdir = self.nowdir
+		self.nowdir = k
+		stktee[0].inplist["i"] = [self]
+		self.outlist[k] = [ stktee[0] ]
+		self.nowdir = save_nowdir
+		
  
 	@classmethod
 	def addTee(self,dupobj): 
+
 		addobj =[]
 
 		for obj in dupobj:
-
 			for k in obj.outlist.keys():
 
 				if len(obj.outlist[k])==0:
@@ -621,12 +687,11 @@ class NysolMOD_CORE(object):
 		add_mod =[]
 
 		for obj in sumiobj:
+
 			if isinstance(obj,NysolMOD_CORE):
 				if obj.name=="readlist":
 					continue
 				if obj.name=="writelist":
-					continue
-				if obj.name=="m2cat":
 					continue
 
 				for key in obj.inplist.keys():
@@ -640,21 +705,89 @@ class NysolMOD_CORE(object):
 							obj.inplist[key][i]=rlmod
 
 					if len(obj.inplist[key])>1:
-	
-						m2cmod  = m2cat(i=obj.inplist[key],sysadd=True)
-						m2cmod.outlist[m2cmod.nowdir] = [obj]
 
-						for xval in obj.inplist[key]:
-							if not isinstance(xval,NysolMOD_CORE):	
-								raise Exception("can not mutli input except nysol moudule")
+						ttl = len(obj.inplist[key])
+
+						layer=1
+						while 32 < ttl:
+							if ttl%32 :
+								ttl = int(ttl/32)
+							else:
+								ttl = int(ttl/32)+1
+							layer += 1 
 						
-							for okey in xval.outlist.keys():
-							
-								for ii in range(len(xval.outlist[okey])):
-									if obj == xval.outlist[okey][ii]:
-										xval.outlist[okey][ii] = m2cmod
+						orginplist = obj.inplist[key]
+						
+						for i in reversed(range(layer)):
 
-						obj.inplist[key] = [m2cmod]
+							if i == 0 :
+								if obj.name=="m2cat":
+									obj.inplist["i"] = orginplist
+								
+								else:
+									m2cmod  = m2cat(sysadd=True)
+									m2cmod.inplist["i"] = orginplist
+									m2cmod.outlist[m2cmod.nowdir] = [obj]
+
+									for xval in orginplist:
+										#if not isinstance(xval,NysolMOD_CORE):	
+										#	raise Exception("can not mutli input except nysol moudule")
+
+										if isinstance(xval,NysolMOD_CORE):
+											#	raise Exception("can not mutli input except nysol moudule")
+							
+											for okey in xval.outlist.keys():
+							
+												for ii in range(len(xval.outlist[okey])):
+													if obj == xval.outlist[okey][ii]:
+														xval.outlist[okey][ii] = m2cmod
+														break
+
+									obj.inplist[key] = [m2cmod]
+
+							else:
+								lttl = len(orginplist)
+								rem = lttl%32
+								div = int(lttl/32)
+								if rem != 0:
+									div +=1	
+									setend = rem 
+								else:
+									setend = 32 
+
+								newinplist = [None] * div
+								setbgn = 0
+								
+								for midi in range(div):
+
+
+									orginpsuv = [None] * (setend-setbgn)
+									for midj in range(setend-setbgn):
+										orginpsuv[midj] = orginplist[setbgn+midj]
+
+									m2cmod  = m2cat(sysadd=True)
+									m2cmod.inplist["i"] = orginpsuv
+									m2cmod.outlist[m2cmod.nowdir] = [obj]
+
+
+									for xval in orginpsuv:
+										#if not isinstance(xval,NysolMOD_CORE):	
+										#	raise Exception("can not mutli input except nysol moudule")
+										if isinstance(xval,NysolMOD_CORE):
+							
+											for okey in xval.outlist.keys():
+								
+												for ii in range(len(xval.outlist[okey])):
+													if obj == xval.outlist[okey][ii]:
+														xval.outlist[okey][ii] = m2cmod
+														break
+
+									newinplist[midi] = m2cmod
+									setbgn  = setend
+									setend += 32
+
+								orginplist = newinplist
+
 
 				for key in obj.outlist.keys():
 
@@ -698,7 +831,6 @@ class NysolMOD_CORE(object):
 
 		add_Dmod = NysolMOD_CORE.addIoMod(sumiobj,dupobj)
 
-
 		if len(dupobj)!=0:
 			add_DmodTee = NysolMOD_CORE.addTee(dupobj)
 			mods.extend(add_DmodTee)
@@ -733,13 +865,24 @@ class NysolMOD_CORE(object):
 			iolist[no]=[[],[]]
 
 			for k in obj.inplist.keys():
-
+				datacheck = 0
+				strstk=[]
 				for ioobj in obj.inplist[k]:
 					#uniqmodに無ければ今回のルート外のはず
 					if isinstance(ioobj,NysolMOD_CORE) and ioobj in uniqmod :
 						iolist[no][0].append([uniqmod[ioobj],k])
-					elif isinstance(ioobj,(list,str)):
+					elif isinstance(ioobj,str):
+						if datacheck > 1:
+							raise Exception("unsuppot mix input (str and list)")
+						strstk.append(ioobj)
+						datachek=1
+					elif isinstance(ioobj,list):
+						if datacheck != 0:
+							raise Exception("unsuppot mix input (str and list) or multi list ")
 						modlist[no][2][k]=ioobj
+						datachek=2
+				if len(strstk) != 0:
+					modlist[no][2][k]=",".join(strstk)
 
 			for k in obj.outlist.keys():
 
@@ -749,7 +892,7 @@ class NysolMOD_CORE(object):
 						iolist[no][1].append([uniqmod[ioobj],k])
 					elif isinstance(ioobj,(list,str)):
 						modlist[no][3][k]=ioobj
-
+						
 
 	@classmethod
 	def getLink(self,iolist,base,to):
@@ -838,14 +981,18 @@ class NysolMOD_CORE(object):
 		runcnt=0
 
 		for dobj in dupobjs:
-
+			
+			if dobj.disabled_ouputlist == True:
+				runcnt+=1
+				continue
+			
 			for k in dobj.outlist.keys():
 
 				if len(dobj.outlist[k]) == 0 and k == dobj.nowdir:
 					runcnt+=1
 
 				for e in dobj.outlist[k]:
-					if not isinstance(e,NysolMOD_CORE):
+					if not isinstance(e,NysolMOD_CORE) :
 						runcnt+=1
 
 		outfs   = [None]*len(dupobjs)		
@@ -941,12 +1088,10 @@ class NysolMOD_CORE(object):
 			modlimt = int(kw_args["runlimit"])
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
-		
+
 		# 仮 kgshellへ移行
 		import psutil as ps
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
-
-
 		n_core.runLx(shobj,modlist,linklist)
 
 		return outfs

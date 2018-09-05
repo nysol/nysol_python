@@ -41,7 +41,7 @@ kgRjoin::kgRjoin(void)
 	_name    = "kgrjoin";
 	_version = "###VERSION###";
 
-	_paralist = "f=,i=,o=,m=,k=,K=,r=,R=,-n,-lo,-q";
+	_paralist = "f=,i=,o=,m=,k=,K=,rf=,R=,-n,-lo,-q";
 	_paraflg = kgArgs::ALLPARAM;
 
 	#include <help/en/kgrjoinHelp.h>
@@ -78,7 +78,7 @@ void kgRjoin::setArgsMain(void)
 	vector< vector<kgstr_t> >  vvs = _args.toStringVecVec("f=",':',2,false);
 
 	// r= 項目引数のセット(指定するのは１項目)
-	vector< vector<kgstr_t> >  vvs_r = _args.toStringVecVec("r=","%:",2,true);
+	vector< vector<kgstr_t> >  vvs_r = _args.toStringVecVec("rf=","%:",2,true);
 	if( vvs_r[0].size()!=1){
 		ostringstream ss;
 		ss << "r= must take just one item : r= size:" << _rField.size() ;

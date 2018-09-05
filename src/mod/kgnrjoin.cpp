@@ -44,7 +44,7 @@ kgNrjoin::kgNrjoin(void)
 	_name    = "kgnrjoin";
 	_version = "###VERSION###";
 
-	_paralist = "f=,i=,o=,m=,k=,K=,r=,R=,-n,-N,-q";
+	_paralist = "f=,i=,o=,m=,k=,K=,rf=,R=,-n,-N,-q";
 	_paraflg = kgArgs::ALLPARAM;
 
 	#include <help/en/kgnrjoinHelp.h>
@@ -83,7 +83,7 @@ void kgNrjoin::setArgsMain(void)
 	vector< vector<kgstr_t> >  vvs = _args.toStringVecVec("f=",':',2,false);
 
 	// r= 項目引数のセット(指定するのは１項目)
-	vector< vector<kgstr_t> >  vvs_rs = _args.toStringVecVec("r=","%:",2,true);
+	vector< vector<kgstr_t> >  vvs_rs = _args.toStringVecVec("rf=","%:",2,true);
 
 
 	// R= 項目引数のセット(指定するのは２項目)

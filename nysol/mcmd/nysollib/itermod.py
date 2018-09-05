@@ -6,7 +6,7 @@ import psutil as ps
 
 class LineListIter(object):
 
-	def __init__(self,obj,dtype=None,skeys=None,q=False):
+	def __init__(self,obj,dtype=None,skeys=None,q=False,header=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -38,18 +38,25 @@ class LineListIter(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.header = header
+
 		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 
 	def __nextCore(self):
+		if self.header:
+			self.header = False
+			return self.fldname
+		
 		line = n_core.getLineList(self.csvin,self.dptn)
 		if line: 
 			return line
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 
 	def next(self):
 
@@ -107,7 +114,8 @@ class LineDictIter(object):
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 
 	def next(self):
 
@@ -119,7 +127,7 @@ class LineDictIter(object):
 
 class BlkListIter(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False,header=False):
 
 		if len(obj.outlist[obj.nowdir])!=0:
 			raise Exception("Do not specify last output ")
@@ -164,10 +172,15 @@ class BlkListIter(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.header = header
 		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
 	def __nextCore(self):
+
+		if self.header:
+			self.header = False
+			return [self.fldname]
 
 		line = n_core.getBlkList(self.csvin,self.dptn)
 		if line: 
@@ -175,7 +188,8 @@ class BlkListIter(object):
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 
 	def next(self):
 		
@@ -244,7 +258,8 @@ class BlkDictIter(object):
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 
 
 	def next(self):
@@ -258,7 +273,7 @@ class BlkDictIter(object):
 
 class LineListIterWithInfo(object):
 
-	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
+	def __init__(self,obj,keys,skeys=None,dtype=None,q=False,header=False):
 
 		if len(obj.outlist["o"])!=0:
 			raise Exception("Do not specify last output ")
@@ -306,12 +321,15 @@ class LineListIterWithInfo(object):
 			raise Exception("can not run iter")
 			return None
 
-
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 		self.fldname = n_core.fldname(self.csvin)
 		self.breakPre = True
 
 	def __nextCore(self):
+
+		if self.header:
+			self.header = False
+			return self.fldname,None,None
 		
 		data = n_core.getLineListWithInfo(self.csvin,self.dptn)
 		if data: 
@@ -321,7 +339,8 @@ class LineListIterWithInfo(object):
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 	
 	
 	def next(self):
@@ -399,7 +418,8 @@ class LineDictIterWithInfo(object):
 
 		n_core.close(self.csvin)
 		n_core.cancel(self.shobj)
-		raise StopIteration()
+		return
+		#raise StopIteration()
 
 
 	
