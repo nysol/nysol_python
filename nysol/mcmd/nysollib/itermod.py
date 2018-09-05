@@ -58,9 +58,6 @@ class LineListIter(object):
 		return
 		#raise StopIteration()
 
-	def __iter__(self):
-		return self.__next__()
-
 	def next(self):
 
 		return self.__nextCore()
