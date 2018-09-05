@@ -283,7 +283,7 @@ int kgPyfunc::run(
 				msg.append(successEndMsg());
 			}
 			else{
-				throw kgError("error occured in the function, check the detail error message by using run() instead of runs()");
+				throw kgError("error occured in the function, check the detail error message using try-exception in the function.");
 			}
 			return status;
 		}

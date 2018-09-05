@@ -244,7 +244,12 @@ class NysolMOD_CORE(object):
 		try:
 			x = itermod.LineListIter(self)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -266,31 +271,46 @@ class NysolMOD_CORE(object):
 		
 
 	# __getLineList処理は同じ
-	def convtype(self,dtype=None):
+	def convtype(self,dtype=None,header=False):
 		try:
 			x = itermod.LineListIter(self,dtype)
 			while(True):
-				yield next(x)
-		except GeneratorExit:
-			n_core.close(x.csvin)
-			n_core.cancel(x.shobj)
-
-	def __getLineList(self,dtype=None,skey=None,q=False):
-
-		try:
-			x = itermod.LineListIter(self,dtype,skey,q)
-			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
 
-	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False):
+	def __getLineList(self,dtype=None,skey=None,q=False,header=False):
+
 		try:
-			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q)
+			x = itermod.LineListIter(self,dtype,skey,q,header)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
+
+		except GeneratorExit:
+			n_core.close(x.csvin)
+			n_core.cancel(x.shobj)
+
+	def __getLineListWithInfo(self,keys,skeys=None,dtype=None,q=False,header=False):
+		try:
+			x = itermod.LineListIterWithInfo(self,keys,skeys,dtype,q,header)
+
+			while(True):
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
+
 		except GeneratorExit:
 			n_core.close(x.csvin)
 			n_core.cancel(x.shobj)
@@ -301,7 +321,11 @@ class NysolMOD_CORE(object):
 		try:
 			x = itermod.LineDictIterWithInfo(self,keys,skeys,dtype,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -313,7 +337,11 @@ class NysolMOD_CORE(object):
 
 			x = itermod.LineDictIter(self,dtype,skey,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 			n_core.close(x.csvin)
@@ -323,20 +351,20 @@ class NysolMOD_CORE(object):
 
 
 	# return generator
-	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False):
+	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
 			if keys!=None:
 
-				return self.__getLineListWithInfo(keys,skeys,dtype,q)
+				return self.__getLineListWithInfo(keys,skeys,dtype,q,header)
 
 			elif skeys!=None:
 
-				return self.__getLineList(dtype,skeys,q)
+				return self.__getLineList(dtype,skeys,q,header)
 
 			else:
-				return self.__getLineList(dtype,None)
+				return self.__getLineList(dtype,None,q,header)
 
 
 		elif otype == "dict":
@@ -361,13 +389,17 @@ class NysolMOD_CORE(object):
 
 
 	## generator rap
-	def __getBlockList(self,keys,skeys=None,dtype=None,q=False):
+	def __getBlockList(self,keys,skeys=None,dtype=None,q=False,header=False):
 
 		try:
 
-			x = itermod.BlkListIter(self,keys,skeys,dtype,q)
+			x = itermod.BlkListIter(self,keys,skeys,dtype,q,header)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 
@@ -380,7 +412,11 @@ class NysolMOD_CORE(object):
 
 			x = itermod.BlkDictIter(self,keys,skeys,dtype,q)
 			while(True):
-				yield next(x)
+				v = next(x)
+				if v==None:
+					break
+				yield v
+			return 
 
 		except GeneratorExit:
 
@@ -388,14 +424,14 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 	# return generator
-	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False):
+	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
-			return self.__getBlockList(keys,skeys,dtype,q)
+			return self.__getBlockList(keys,skeys,dtype,q,header)
 
 		elif otype == "dict":
-
+			
 			return self.__getBlockDict(keys,skeys,dtype,q)
 
 		else : 
