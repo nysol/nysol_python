@@ -17,18 +17,18 @@
 
  ////////// LICENSE INFO ////////////////////*/
 // =============================================================================
-/// kgcsv2arffHelp.h : kgcsv2arff help
+/// kgmcsv2convHelp.h : kgmcsv2conv help
 // =============================================================================
-_titleL="CSVからtex形式への変換";
-_docL="\
+_title="CSVからtex形式への変換";
+_doc="\
 \n\
-MCSV2JSOn CSVからtex形式への変換\n\
+mcsv2conv CSVからtex形式への変換\n\
 \n\
 csv形式のデータからjson形式のデータへ変換する。\n\
 \n\
 書式\n\
 \n\
-mcsv2json [k=] i= m= [o=] [s=] [-assert_nullin] [-nfn] [-nfno] [-x]\n\
+mcsv2conv [k=] i= m= [o=] [s=] [-assert_nullin] [-nfn] [-nfno] [-x]\n\
 [-q] [tmpPath=] [--help] [--helpl] [--version]\n\
 \n\
 パラメータ\n\

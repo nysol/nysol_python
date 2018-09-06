@@ -370,6 +370,18 @@ static makeVal(format,...){
 int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
 {
 	try {
+
+		if(!Py_IsInitialized()){ 
+			cerr << "loadinit" << endl;
+			Py_Initialize();
+		}
+
+		if (!PyEval_ThreadsInitialized())	{ 
+			cerr << "loadinitTH" << endl;
+			PyEval_InitThreads();
+		}
+
+
 		// パラメータチェック
 		_args.paramcheck("i=,dtype=,-header",kgArgs::COMMON|kgArgs::IODIFF);
 		if(inum>1){ 
@@ -422,14 +434,12 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 
 		if(PyList_Check(o_p)){
 			va_list v;
-			PyGILState_STATE gstate;
-			gstate = PyGILState_Ensure();
-
-
 			if(addhead){ 
 				vector<kgstr_t> flds = rls.fldName();
 				pthread_mutex_lock(mtx);
 				{
+					PyGILState_STATE gstate;
+					gstate = PyGILState_Ensure();
 					PyObject* hlist = PyList_New(flds.size());
 					for(size_t i=0; i < flds.size();i++){
 						const char * p = flds[i].c_str();
@@ -437,6 +447,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 					}
 					PyList_Append(o_p,hlist);
 					Py_DECREF(hlist);
+					PyGILState_Release(gstate);
 				}
 				pthread_mutex_unlock(mtx);
 			}
@@ -445,6 +456,10 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 			while( EOF != rls.read() ){
 				pthread_mutex_lock(mtx);
 				{
+
+					PyGILState_STATE gstate;
+					gstate = PyGILState_Ensure();
+
 					PyObject* tlist = PyList_New(rls.fldSize());
 					
 					for(size_t j=0 ;j<rls.fldSize();j++){
@@ -496,11 +511,11 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
 
+					PyGILState_Release(gstate);
 				}
 				pthread_mutex_unlock(mtx);
 			}
 			rls.close();
-			PyGILState_Release(gstate);
 		}
 		else{
 			throw kgError("not python list");

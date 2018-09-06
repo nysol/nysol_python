@@ -338,12 +338,22 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			
 			if(rtn==NULL){ return Py_BuildValue("");}
 
-			return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyGILState_STATE gstate;
+			gstate = PyGILState_Ensure();
+			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			return pry;
 		}
 		else{
+
+			//PyGILState_STATE _save = PyGILState_Ensure();
 			kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);	
 			if(rtn==NULL){ return Py_BuildValue("");}
-			return PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyGILState_STATE gstate;
+			gstate = PyGILState_Ensure();
+			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyGILState_Release(gstate);
+
+			return pry;
 		}
 
 		return Py_BuildValue("");

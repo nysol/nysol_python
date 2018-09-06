@@ -39,7 +39,6 @@ class LineListIter(object):
 			return None
 
 		self.header = header
-
 		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
