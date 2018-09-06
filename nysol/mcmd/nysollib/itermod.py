@@ -321,6 +321,8 @@ class LineListIterWithInfo(object):
 			raise Exception("can not run iter")
 			return None
 
+		self.header = header
+
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 		self.fldname = n_core.fldname(self.csvin)
 		self.breakPre = True
