@@ -13,6 +13,9 @@ from nysol.mcmd.nysollib import itermod
 
 class NysolMOD_CORE(object):
 
+	OutMsg   = False
+	RunLimit = -1
+		
 	def __init__(self,name=None,kwd=None) :
 
 		self.name     = name
@@ -439,6 +442,7 @@ class NysolMOD_CORE(object):
 			raise Exception("unsuport rtype" + otype)
 
 
+	""" F.w. 
 	def set_runlimit(self,lim):
 		self.runlimit=int(lim)
 		return self
@@ -450,7 +454,8 @@ class NysolMOD_CORE(object):
 	def msgOff(self):
 		self.msg=False
 		return self
-
+	"""
+	
 
 	def addPre(self,pre): 
 
@@ -497,6 +502,15 @@ class NysolMOD_CORE(object):
 
 				self.outlist[key].append(self.kwd[key])
 				del self.kwd[key]
+
+	@classmethod
+	def setMsgFlg(self,val):
+		NysolMOD_CORE.OutMsg = val
+
+	@classmethod
+	def setRunLimit(self,val):
+		NysolMOD_CORE.RunLimit = int(val)
+
 
 	@classmethod
 	def check_dupObjSub(self,sumiobj,dupobj,obj):
@@ -1077,8 +1091,8 @@ class NysolMOD_CORE(object):
 	@classmethod
 	def runs(self,mods,**kw_args):
 
-		msgF =mods[0].msg
-		modlimt = mods[0].runlimit
+		msgF    = NysolMOD_CORE.OutMsg 
+		modlimt = NysolMOD_CORE.RunLimit
 
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
@@ -1144,6 +1158,8 @@ class NysolMOD_CORE(object):
 
 		return NysolMOD_CORE.modelInfos([self])
 
+	def getMsgFlg(self):
+		return NysolMOD_CORE.OutMsg
 
 def runs(val,**kw_args):
 	return NysolMOD_CORE.runs(val,**kw_args)
@@ -1157,4 +1173,9 @@ def drawModelsD3(val,fname):
 def modelInfos(val):
 	return NysolMOD_CORE.modelInfos(val)
 
+def setMsgFlg(val):
+	NysolMOD_CORE.setMsgFlg(val)
+
+def setRunLimit(val):
+	NysolMOD_CORE.setRunLimit(val)
 

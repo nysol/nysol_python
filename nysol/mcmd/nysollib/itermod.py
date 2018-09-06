@@ -27,7 +27,7 @@ class LineListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -91,7 +91,7 @@ class LineDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -160,7 +160,7 @@ class BlkListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -235,7 +235,7 @@ class BlkDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -309,7 +309,7 @@ class LineListIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -391,7 +391,7 @@ class LineDictIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
