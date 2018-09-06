@@ -69,6 +69,14 @@ struct argST{
 	pthread_cond_t *forkCond;
 	int *runst;
 };
+struct watchST{
+	pthread_mutex_t *stMutex;
+	pthread_cond_t *stCond;
+	argST *argst;
+	kgEnv *env;
+	pthread_t* th_st_pp;
+	int clen;
+};
 
 struct cmdCapselST{
 	kgstr_t cmdname;
@@ -118,6 +126,10 @@ class kgshell{
 	int	_runlim;
 
 	PyThreadState *_save;
+	watchST _watchST;
+
+	bool _watchFlg;
+	pthread_t _th_st_watch;
 
 	// pipe LIST
 	//map<int,int> _ipipe_map;
@@ -203,7 +215,12 @@ class kgshell{
 	void err_OUTPUT(const string& v);
 
 	void runClean(void){
-
+		if(_watchFlg){
+			PyThreadState *savex = PyEval_SaveThread();
+			pthread_join(_th_st_watch,NULL);
+			PyEval_RestoreThread(savex);
+			_watchFlg=false;
+		}
 		if(_th_st_pp){
 			//エラー発生時はthread cancel
 			for(size_t j=0;j<_clen;j++){
@@ -242,6 +259,13 @@ public:
 	// コンストラクタ
 	kgshell(int mflg=false,int modlim = -1,size_t memttl=2000000000);
 	~kgshell(void){
+		if(_watchFlg){
+			PyThreadState *savex = PyEval_SaveThread();
+			pthread_join(_th_st_watch,NULL);
+			PyEval_RestoreThread(savex);
+
+			_watchFlg=false;
+		}
 		if(_th_st_pp){
 			vector<int> chk(_clen);
 			for(size_t i=0 ;i<_clen;i++){ 
@@ -277,6 +301,7 @@ public:
 	static void *run_writelist(void *arg);
 	static void *run_readlist(void *arg);
 	static void *run_pyfunc(void *arg);
+	static void *run_watch(void *arg);
 
 	int run(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);
 	int runx(vector<cmdCapselST> &cmdcap,vector<linkST> & plist);

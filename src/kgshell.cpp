@@ -141,6 +141,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	_clen = 0;
 	_modlist=NULL;
 	_save=NULL;
+	_watchFlg = false;
 
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
@@ -513,6 +514,82 @@ void *kgshell::run_pyfunc(void *arg){
 	return NULL;	
 }
 
+static void watch_raw_OUTPUT(const string& v,kgEnv *env){
+	kgMsgIncPySys msg(kgMsg::IGN, env);
+	msg.output_ignore(v);
+}
+static void watch_end_OUTPUT(const string& v,kgEnv *env){
+	kgMsgIncPySys msg(kgMsg::END, env);
+	ostringstream ss;
+	ss << "kgshell (" << v << ")"; 
+	msg.output(ss.str());
+}
+static void watch_war_OUTPUT(const string& v,kgEnv *env){
+	kgMsgIncPySys msg(kgMsg::WAR, env);
+	ostringstream ss;
+	ss << "kgshell (" << v << ")";
+	msg.output(ss.str());
+}
+static void watch_err_OUTPUT(const string& v,kgEnv *env){
+	kgMsgIncPySys msg(kgMsg::ERR, env);	
+	ostringstream ss;
+	ss << "kgshell (" << v << ")";
+	msg.output(ss.str());
+}
+
+void *kgshell::run_watch(void *arg){
+	watchST *wst =(watchST*)arg;
+	argST *a =wst->argst; 
+	int clen = wst->clen ;
+	pthread_mutex_t *stsMutex = wst->stMutex ;
+	pthread_cond_t *stCond  =	wst->stCond;
+	pthread_t * th_st_pp = wst->th_st_pp;
+	kgEnv * env = wst->env;
+
+	// status check
+	bool endFLG = true;	
+	pthread_mutex_lock(stsMutex);
+	while(1){
+		size_t pos = 0;
+		endFLG = true;
+		while(pos<clen){
+			if(a[pos].finflg==false){ endFLG=false;}
+			else if(a[pos].outputEND==false){
+				if(!a[pos].msg.empty()){
+					if(a[pos].status==2){
+						watch_end_OUTPUT(a[pos].msg,env);
+					}
+					else{
+						watch_raw_OUTPUT(a[pos].msg,env);
+					}
+				}
+				if(!a[pos].tag.empty()){
+					watch_raw_OUTPUT("#TAG# " + a[pos].tag,env);
+				}
+				a[pos].outputEND = true;
+			}
+			if(a[pos].status!=0&&a[pos].status!=2){
+ 				//エラー発生時はthread cancel
+				for(size_t j=0;j<clen;j++){
+					if(!a[j].finflg){
+						pthread_cancel(th_st_pp[j]);	
+					}
+				}
+				endFLG=true;
+				//errflg = true;
+				break;
+			}
+			pos++;
+		}
+		if (endFLG) break;
+		pthread_cond_wait(stCond,stsMutex);
+	}
+	pthread_mutex_unlock(stsMutex);
+
+	pthread_exit(0);
+	return NULL;	
+}
+
 void kgshell::raw_OUTPUT(const string& v){
 	kgMsgIncPySys msg(kgMsg::IGN, &_env);
 	msg.output_ignore(v);
@@ -827,9 +904,18 @@ int kgshell::runMain(
 		// 呼び出しもとでキャンセルさせる
 		// チェック必要ここでしても問題ない iter場合の処理
 		// 別thread監視させる？
+		_watchST.stMutex = &_stsMutex;
+		_watchST.stCond  = &_stsCond;
+		_watchST.argst   = _argst ;
+		_watchST.th_st_pp = _th_st_pp;
+		_watchST.clen = _clen;
+		_watchST.env = &_env;
 		PyEval_RestoreThread(_save);
+		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
+		_watchFlg=true;
 		return _csvpiped[0];
 	}
+
 	// status check
 	pthread_mutex_lock(&_stsMutex);
 

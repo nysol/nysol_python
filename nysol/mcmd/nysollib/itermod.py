@@ -27,7 +27,7 @@ class LineListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -39,7 +39,6 @@ class LineListIter(object):
 			return None
 
 		self.header = header
-
 		self.fldname = n_core.fldname(self.csvin)
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 
@@ -92,7 +91,7 @@ class LineDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -161,7 +160,7 @@ class BlkListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -236,7 +235,7 @@ class BlkDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -310,7 +309,7 @@ class LineListIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -320,6 +319,8 @@ class LineListIterWithInfo(object):
 			n_core.cancel(self.shobj)
 			raise Exception("can not run iter")
 			return None
+
+		self.header = header
 
 		self.dptn  = n_core.fldtp(self.csvin,dtype)
 		self.fldname = n_core.fldname(self.csvin)
@@ -390,7 +391,7 @@ class LineDictIterWithInfo(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.msg,runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
