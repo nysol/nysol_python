@@ -861,11 +861,7 @@ int kgshell::runMain(
 
 	_th_st_pp = new pthread_t[_clen];
 	_th_rtn   = new int[_clen];
-
-
-	//if (!outpipe){ // iterの場合saveしない? 確認用
-		_save = PyEval_SaveThread();
-	//}
+	_save = PyEval_SaveThread();
 
 	for(int i=cmdlist.size()-1;i>=0;i--){
 

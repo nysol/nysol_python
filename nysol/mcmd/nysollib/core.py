@@ -714,7 +714,7 @@ class NysolMOD_CORE(object):
 
 						if isinstance(xval,list) :
 
-							rlmod = mreadlist(xval,sysadd=True)
+							rlmod = mreadlist(xval,sysadd=True,nfn=True)
 							rlmod.outlist[rlmod.nowdir] = [obj]
 							obj.inplist[key][i]=rlmod
 
@@ -988,9 +988,9 @@ class NysolMOD_CORE(object):
 
 		# set list obj after deepcopy		
 		sumiobj=set([])
-
+		pos = 0
 		for mod in dupobjs: 
-			self.graphSetList(mod,sumiobj,listStks,0)
+			pos = self.graphSetList(mod,sumiobj,listStks,pos)
 
 		runcnt=0
 
@@ -1160,6 +1160,21 @@ class NysolMOD_CORE(object):
 
 	def getMsgFlg(self):
 		return NysolMOD_CORE.OutMsg
+
+	def modelcopy(self):
+		# stock list obj before deepcopy
+		listStks =[]
+		sumiobj=set([])
+
+		self.graphFindList(self,sumiobj,listStks)
+
+		dupobj = copy.deepcopy(self)
+
+		# set list obj after deepcopy		
+		sumiobj=set([])
+		self.graphSetList(dupobj,sumiobj,listStks,0)
+		return dupobj
+
 
 def runs(val,**kw_args):
 	return NysolMOD_CORE.runs(val,**kw_args)
