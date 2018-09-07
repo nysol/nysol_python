@@ -341,6 +341,7 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyGILState_Release(gstate);
 			return pry;
 		}
 		else{

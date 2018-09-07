@@ -714,7 +714,7 @@ class NysolMOD_CORE(object):
 
 						if isinstance(xval,list) :
 
-							rlmod = mreadlist(xval,sysadd=True)
+							rlmod = mreadlist(xval,sysadd=True,nfn=True)
 							rlmod.outlist[rlmod.nowdir] = [obj]
 							obj.inplist[key][i]=rlmod
 
