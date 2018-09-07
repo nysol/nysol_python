@@ -16,7 +16,7 @@ class LineListIter(object):
 			raise Exception("Do not suport writelist ")
 			return None
 
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		if skeys != None:
@@ -80,7 +80,7 @@ class LineDictIter(object):
 			return None
 
 			
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		if skeys != None:
@@ -143,7 +143,7 @@ class BlkListIter(object):
 		else:
 			raise Exception("unsuport TYPE")
 
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		sortkeys = copy.deepcopy(newkeys)
@@ -218,7 +218,7 @@ class BlkDictIter(object):
 		else:
 			raise Exception("unsuport TYPE")
 
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		sortkeys = copy.deepcopy(newkeys)
@@ -291,7 +291,7 @@ class LineListIterWithInfo(object):
 			raise Exception("unsuport TYPE")
 
 		
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 		from nysol.mcmd.submod.msortchk import Nysol_Msortchk as msortchk
 		sortkeys = copy.deepcopy(newkeys)
@@ -365,7 +365,7 @@ class LineDictIterWithInfo(object):
 			raise Exception("Do not suport writelist ")
 			return None
 
-		dupobj = copy.deepcopy(obj)
+		dupobj = obj.modelcopy()
 
 
 		if isinstance(keys,str) :
