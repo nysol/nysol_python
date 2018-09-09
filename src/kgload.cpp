@@ -372,12 +372,10 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 	try {
 
 		if(!Py_IsInitialized()){ 
-			cerr << "loadinit" << endl;
 			Py_Initialize();
 		}
 
 		if (!PyEval_ThreadsInitialized())	{ 
-			cerr << "loadinitTH" << endl;
 			PyEval_InitThreads();
 		}
 

@@ -70,8 +70,6 @@ void kgSel::setArgsMain(void)
 {
 	_iFile.read_header();
 
-	// -r 反転フラグ
-	_reverse = _args.toBool("-r");
 
 	// c= 式を文字列として取得
 	_expr    = _args.toString("c=",true);
@@ -86,6 +84,9 @@ void kgSel::setArgs(void)
 	// パラメータチェック
 	_args.paramcheck(_paralist,_paraflg);
 
+	// -r 反転フラグ
+	_reverse = _args.toBool("-r");
+
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env, _nfn_i);
 	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
@@ -96,6 +97,7 @@ void kgSel::setArgs(void)
 		_uFlg=true;
 		_uFile.open(str, _env, _nfn_o);
 	}
+
 	setArgsMain();
 
 }
@@ -109,6 +111,8 @@ void kgSel::setArgs(int inum,int *i_p,int onum, int* o_p)
 	try{
 		// パラメータチェック
 		_args.paramcheck(_paralist,_paraflg);
+		// -r 反転フラグ
+		_reverse = _args.toBool("-r");
 
 		if(inum>1 || onum>2){ throw kgError("no match IO");}
 
@@ -117,14 +121,34 @@ void kgSel::setArgs(int inum,int *i_p,int onum, int* o_p)
 		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 		iopencnt++;
 
-		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		// 出力チェック
+		kgstr_t okwd = "o=";
+		kgstr_t ukwd = "u=";
+		kgstr_t ofile0	= _args.toString(okwd,false);
+		kgstr_t ufile0  = _args.toString(ukwd,false);
+		int o_no = -1;
+		int u_no = -1;
+		if(onum>0){ o_no = *o_p;}
+		if(onum>1){ u_no = *(o_p+1);}
+		if(o_no==-1 && ofile0.empty()){
+			if(u_no!=-1 || !ufile0.empty()){
+				_reverse = !_reverse;
+				kgstr_t swptmp;
+				swptmp = ukwd ; ukwd = okwd;  okwd = swptmp;
+				int swptmpi;
+				swptmpi = u_no ; u_no = o_no ; o_no = swptmpi;
+			}
+		}
+
+
+		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString(okwd,true), _env,_nfn_o);}
 		oopencnt++;
 
-		kgstr_t ufile = _args.toString("u=",false);
+		kgstr_t ufile = _args.toString(ukwd,false);
 
-		if(onum>1 && *(o_p+1)>0){ 
-			_uFile.popen(*(o_p+1), _env,_nfn_o); 
+		if(u_no>0){ 
+			_uFile.popen(u_no, _env,_nfn_o); 
 			_uFlg=true;
 			oopencnt++;
 		}
