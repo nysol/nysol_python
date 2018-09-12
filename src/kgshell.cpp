@@ -1007,6 +1007,7 @@ int kgshell::runMain(
 				delete [] _argst[i].o_p;
 			}
 		}
+		delete [] _argst; 
 		_argst =NULL;
 	}
 	if(_th_st_pp){
