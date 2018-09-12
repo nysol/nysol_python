@@ -40,6 +40,7 @@ class kgSelrand:public kgModIncludeSort
 	int		 	 _cnt;			 // c=
 	double	 _percent;	 // p=
 	bool     _elsefile;	 // 不一致ファイルを使用するかどうか(u=の指定があればtrue)
+	bool     _outfile;
 	bool		 _cnt_flg;	 // c=が指定されていればtrue
 	bool     _b_flg;		 // -B
 	unsigned long _seed;			 // S=

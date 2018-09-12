@@ -147,6 +147,12 @@ PyObject* csvclose(PyObject* self, PyObject* args)
 	return PyLong_FromLong(1);
 }
 
+void py_kgcsv_free(PyObject *obj){
+	kgCSVfld *kcsv	= (kgCSVfld *)PyCapsule_GetPointer(obj,"kgCSVfldP");
+	if(kcsv){
+		delete kcsv;
+	}
+}
 
 
 void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCapsel, vector< linkST > & p_list){
@@ -340,7 +346,7 @@ PyObject* runITER(PyObject* self, PyObject* args)
 
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
-			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
 			return pry;
 		}
@@ -351,7 +357,7 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			if(rtn==NULL){ return Py_BuildValue("");}
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
-			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",NULL);
+			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
 
 			return pry;
@@ -401,7 +407,6 @@ PyObject* fldtp(PyObject* self, PyObject* args)
 			}
 			else if ( !strcmp(vv,"int")){
 				PyList_SetItem(rlist,j,Py_BuildValue("i", 1));
-				Py_BuildValue("i", 1);		
 			}
 			else if ( !strcmp(vv,"double")){
 				PyList_SetItem(rlist,j,Py_BuildValue("i", 2));

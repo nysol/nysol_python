@@ -63,8 +63,6 @@ void kgBest::setArgsMain(void)
 	// k= 項目引数のセット
 	vector<kgstr_t> vs = _args.toStringVector("k=",false);
 
-	// -r 条件反転: _outputは通常出力ならtrue,
-	_output = !_args.toBool("-r");
 
 	// 範囲決定 & _range_maxのセット
 	// R=の場合
@@ -189,6 +187,8 @@ void kgBest::setArgs(void)
 		_elsefile=true;
 		_uFile.open(ufile,_env,_nfn_o);
 	}
+	// -r 条件反転: _outputは通常出力ならtrue,
+	_output = !_args.toBool("-r");
 	setArgsMain();
 }
 
@@ -203,21 +203,44 @@ void kgBest::setArgs(int inum,int *i_p,int onum ,int *o_p)
 		// パラメータチェック
 		_args.paramcheck(_paralist,_paraflg);
 
+		// -r 条件反転: _outputは通常出力ならtrue,
+		_output = !_args.toBool("-r");
+
 		if(inum>1 || onum>2){ throw kgError("no match IO");}
 
-		// 入出力ファイルオープン
 		// 入出力ファイルオープン
 		if(inum==1 && *i_p>0){ _iFile.popen(*i_p, _env,_nfn_i); }
 		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 		iopencnt++;
 
-		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o);}
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+
+		// 出力チェック
+		kgstr_t okwd = "o=";
+		kgstr_t ukwd = "u=";
+		kgstr_t ofile0	= _args.toString(okwd,false);
+		kgstr_t ufile0  = _args.toString(ukwd,false);
+		int o_no = -1;
+		int u_no = -1;
+		if(onum>0){ o_no = *o_p;}
+		if(onum>1){ u_no = *(o_p+1);}
+		if(o_no==-1 && ofile0.empty()){
+			if(u_no!=-1 || !ufile0.empty()){
+				_output = !_output;
+				kgstr_t swptmp;
+				swptmp = ukwd ; ukwd = okwd;  okwd = swptmp;
+				int swptmpi;
+				swptmpi = u_no ; u_no = o_no ; o_no = swptmpi;
+			}
+		}
+
+
+		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o);}
+		else     { _oFile.open(_args.toString(okwd,true), _env,_nfn_o);}
 		oopencnt++;
 
-		kgstr_t ufile = _args.toString("u=",false);
+		kgstr_t ufile = _args.toString(ukwd,false);
 
-		if(onum>1 && *(o_p+1)>0){ 
+		if(u_no>0){ 
 			_uFile.popen(*(o_p+1), _env,_nfn_o); 
 			_elsefile=true;
 			oopencnt++;

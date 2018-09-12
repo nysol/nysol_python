@@ -142,6 +142,9 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	_modlist=NULL;
 	_save=NULL;
 	_watchFlg = false;
+	_runst   = NULL;
+	_argst =NULL;
+	_th_rtn = NULL;
 
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
@@ -992,17 +995,32 @@ int kgshell::runMain(
 			}
 		}
 		delete[] _modlist;
+		_modlist = NULL;
 	}
 
-	delete[] _th_st_pp;
-	delete[] _argst;
-	delete[] _th_rtn;
-	delete[] _runst;
-	_th_st_pp = NULL;
-	_argst = NULL;
-	_th_rtn = NULL;
-	_runst = NULL;
-	_modlist = NULL;
+	if(_argst){
+		for(size_t i=0 ;i<_clen;i++){
+			if(_argst[i].i_cnt!=0){
+				delete [] _argst[i].i_p;
+			}
+			if(_argst[i].o_cnt!=0){
+				delete [] _argst[i].o_p;
+			}
+		}
+		_argst =NULL;
+	}
+	if(_th_st_pp){
+		delete[] _th_st_pp;
+		_th_st_pp = NULL;
+	}
+	if(_th_rtn){
+		delete[] _th_rtn;
+		_th_rtn = NULL;
+	}
+	if(_runst){
+		delete[] _runst;
+		_runst = NULL;
+	}
 	if (errflg) { throw kgError("runmain on kgshell"); }
 	return 0;
 }

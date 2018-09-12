@@ -134,6 +134,7 @@ void kgSelrand::setArgs(void)
 		_elsefile=true;
 		_uFile.open(ufile,_env,_nfn_o);
 	}		
+	_outfile=true;
 	setArgsMain();
 
 }
@@ -155,22 +156,42 @@ void kgSelrand::setArgs(int inum,int *i_p,int onum, int* o_p)
 		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 		iopencnt++;
 
-		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		// 出力チェック
+		kgstr_t okwd = "o=";
+		kgstr_t ukwd = "u=";
+		kgstr_t ofile0	= _args.toString(okwd,false);
+		kgstr_t ufile0 = _args.toString(ukwd,false);
+		int o_no = -1;
+		int u_no = -1;
+		_outfile=true;
+		if(onum>0){ o_no = *o_p;}
+		if(onum>1){ u_no = *(o_p+1);}
+		if(o_no==-1 && ofile0.empty()){
+			if(u_no==-1 && ufile0.empty()){
+				throw kgError("input file is necessary");
+			}
+			else{
+				_outfile = false;
+			}
+		}
+
+
+		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o); }
+		else if(!ofile0.empty()){
+		 _oFile.open(ofile0, _env,_nfn_o);
+		}
 		oopencnt++;
 
-		kgstr_t ufile = _args.toString("u=",false);
-
-		if(onum>1 && *(o_p+1)>0){ 
-			_uFile.popen(*(o_p+1), _env,_nfn_o); 
+		if(u_no>0){ 
+			_uFile.popen(u_no, _env,_nfn_o); 
 			_elsefile=true;
 			oopencnt++;
 		}
-		else if(ufile.empty()){
+		else if(ufile0.empty()){
 			_elsefile=false;
 		}
 		else{
-			_uFile.open(ufile,_env,_nfn_o);
+			_uFile.open(ufile0 ,_env,_nfn_o);
 			_elsefile=true;
 		}
 		setArgsMain();
@@ -192,7 +213,7 @@ void kgSelrand::setArgs(int inum,int *i_p,int onum, int* o_p)
 int kgSelrand::runMain(void)
 {
 	// 項目名出力
-	_oFile.writeFldName(_iFile);
+	if(_outfile){_oFile.writeFldName(_iFile);}
 	if(_elsefile){ _uFile.writeFldName(_iFile); }
 
 	//乱数生成エンジン
@@ -254,7 +275,7 @@ int kgSelrand::runMain(void)
 				if(output){out_cnt--;}
 			}
 			if(output){
-					_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
+					if(_outfile){_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());}
 			}
 			else{
 					if(_elsefile){ _uFile.writeFld(_iFile.fldSize(),_iFile.getNewFld()); }
@@ -271,7 +292,7 @@ int kgSelrand::runMain(void)
  	   if(out_cnt>total) out_cnt=total;
 			while(_iFile.blkread() != EOF){
 				if( (rand_m()%total) < out_cnt ){
-					_oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld());
+					if(_outfile){ _oFile.writeFld(_iFile.fldSize(),_iFile.getBlkFld());}
 					out_cnt--;
 				}
 				else{
@@ -287,7 +308,7 @@ int kgSelrand::runMain(void)
 	// 終了処理
 	th_cancel();
 	_iFile.close();
-	_oFile.close();
+	if(_outfile){_oFile.close();}
 	if(_elsefile){ _uFile.close();}
 
 	return 0;

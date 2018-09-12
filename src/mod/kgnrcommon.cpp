@@ -117,8 +117,6 @@ void kgNrcommon::setArgsMain(void)
 		_range2_type = true;		
 	}
 
-	// -r 条件反転
-	_reverse = _args.toBool("-r");
 
 	if(_rField.size()!=1){
 		ostringstream ss;
@@ -140,6 +138,8 @@ void kgNrcommon::setArgs(void)
 {
 	// パラメータチェック
 	_args.paramcheck("i=,o=,m=,k=,K=,r=,R=,u=,-r,-q",kgArgs::COMMON|kgArgs::IODIFF|kgArgs::NULL_KEY);
+	// -r 条件反転
+	_reverse = _args.toBool("-r");
 
 	// 入出力ファイルオープン
 	kgstr_t ifile = _args.toString("i=",false);
@@ -168,23 +168,19 @@ void kgNrcommon::setArgs(int inum,int *i_p,int onum, int* o_p)
 	try{
 		// パラメータチェック
 		_args.paramcheck(_paralist,_paraflg);
+		// -r 条件反転
+		_reverse = _args.toBool("-r");
 
 		if(inum>2 || onum>2){ throw kgError("no match IO");}
 
 		// 入出力ファイルオープン
 		kgstr_t ifile = _args.toString("i=",false);
 		kgstr_t mfile = _args.toString("m=",false);
-		kgstr_t ufile = _args.toString("u=",false);
-		kgstr_t ofile = _args.toString("o=",false);
 
 		int i_p_t = -1;
 		int m_p_t = -1;
-		int o_p_t = -1;
-		int u_p_t = -1;
 		if(inum>0){ i_p_t = *i_p;     }
 		if(inum>1){ m_p_t = *(i_p+1); }
-		if(onum>0){ o_p_t = *o_p;     }
-		if(onum>1){ u_p_t = *(o_p+1); }
 
 
 		if((ifile.empty()&&i_p_t<=0) && ( mfile.empty()&&m_p_t<=0)){
@@ -204,6 +200,22 @@ void kgNrcommon::setArgs(int inum,int *i_p,int onum, int* o_p)
 		else       { _mFile.open(mfile, _env,_nfn_i);}
 		iopencnt++;
 
+		int o_p_t = -1;
+		int u_p_t = -1;
+		if(onum>0){ o_p_t = *o_p;     }
+		if(onum>1){ u_p_t = *(o_p+1); }
+		kgstr_t ufile = _args.toString("u=",false);
+		kgstr_t ofile = _args.toString("o=",false);
+
+		if(o_p_t==-1 && ofile.empty()){
+			if(u_p_t!=-1 || !ufile.empty()){
+				_reverse = !_reverse;
+				kgstr_t swptmp;
+				swptmp = ufile ; ufile = ofile;  ofile = swptmp;
+				int swptmpi;
+				swptmpi = u_p_t ; u_p_t = o_p_t ; o_p_t = swptmpi;
+			}
+		}
 
 		if(o_p_t>0){ _oFile.popen(o_p_t, _env,_nfn_o);}
 		else if( ofile.empty()){ 

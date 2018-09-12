@@ -1001,6 +1001,10 @@ class NysolMOD_CORE(object):
 				continue
 			
 			for k in dobj.outlist.keys():
+				# 不要 mod 除去
+				newlist = [e for e in dobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
+				dobj.outlist[k].clear()
+				dobj.outlist[k].extend(newlist)
 
 				if len(dobj.outlist[k]) == 0 and k == dobj.nowdir:
 					runcnt+=1
@@ -1009,20 +1013,16 @@ class NysolMOD_CORE(object):
 					if not isinstance(e,NysolMOD_CORE) :
 						runcnt+=1
 
-		outfs   = [None]*len(dupobjs)		
+
+		outfs   = [None]*len(dupobjs)
 		runobjs = [None]*runcnt
 		
 		rpos = 0
 
 		for i, dupobj in enumerate(dupobjs):
 
-			# 不要 mod 除去 & 元 output object セット
-			for k in dupobj.outlist.keys():
-				newlist = [e for e in dupobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
-				dupobj.outlist[k].clear()
-				dupobj.outlist[k].extend(newlist)
-
-			if True == dupobj.disabled_ouputlist or useIter: #統一的にする
+			 # 元 output object セット
+			if True == dupobj.disabled_ouputlist or useIter:
 
 				#  最終list不可はそのまま
 				runobjs[rpos]= dupobj			

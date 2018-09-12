@@ -248,6 +248,27 @@ class kgshell{
 			_th_st_pp = NULL;
 			_modlist = NULL;
 		}
+		if(_argst){
+			for(size_t i=0 ;i<_clen;i++){
+				if(_argst[i].i_cnt!=0){
+					delete [] _argst[i].i_p;
+				}
+				if(_argst[i].o_cnt!=0){
+					delete [] _argst[i].o_p;
+				}
+			}
+			delete[] _argst;
+			_argst =NULL;
+		}
+		if(_th_rtn){
+			delete[] _th_rtn;
+			_th_rtn = NULL;
+		}
+		if(_runst){
+			delete[] _runst;
+			_runst = NULL;
+		}
+
 	}
 	int setArgStIO(kgmod_ioinfo_t& iomap,string& cmdname,map<string,vector<int> > & iopipeMap,int **io_p);
 	void runInit(vector<cmdCapselST> &cmds,vector<linkST> & plist);
@@ -293,6 +314,29 @@ public:
 			}
 			delete[] _modlist;
 		}
+
+		if(_argst){
+			for(size_t i=0 ;i<_clen;i++){
+				if(_argst[i].i_cnt!=0){
+					delete [] _argst[i].i_p;
+				}
+				if(_argst[i].o_cnt!=0){
+					delete [] _argst[i].o_p;
+				}
+			}
+			delete[] _argst;
+			_argst =NULL;
+		}
+		if(_th_rtn){
+			delete[] _th_rtn;
+			_th_rtn = NULL;
+		}
+		if(_runst){
+			delete[] _runst;
+			_runst = NULL;
+		}
+
+
 		if(_iterrtn){ delete _iterrtn;}
 		if(_iterrtnk){ delete _iterrtnk;}
 	}
