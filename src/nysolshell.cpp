@@ -148,6 +148,7 @@ PyObject* csvclose(PyObject* self, PyObject* args)
 }
 
 void py_kgcsv_free(PyObject *obj){
+
 	kgCSVfld *kcsv	= (kgCSVfld *)PyCapsule_GetPointer(obj,"kgCSVfldP");
 	if(kcsv){
 		delete kcsv;
@@ -398,7 +399,9 @@ PyObject* fldtp(PyObject* self, PyObject* args)
 	PyObject* rlist = PyList_New(fcnt);
 
 	for(size_t j=0 ;j<fcnt;j++){
-		PyObject * v = PyDict_GetItem(tpmap, Py_BuildValue("s",kcfld->fldName(j).c_str()));
+		PyObject * key = Py_BuildValue("s",kcfld->fldName(j).c_str());
+		PyObject * v = PyDict_GetItem(tpmap,key);
+		Py_DECREF(key);
 		if(v){
 			char *vv = strGET(v);
 			if ( !strcmp(vv,"str")){
@@ -715,6 +718,7 @@ PyObject* getLineListWithInfo(PyObject* self, PyObject* args)
 
 
 void py_kgshell_free(PyObject *obj){
+
 	kgshell *ksh	= (kgshell *)PyCapsule_GetPointer(obj,"kgshellP");
 	if(ksh){
 		delete ksh;
