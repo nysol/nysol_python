@@ -1,13 +1,10 @@
 
 #include <iostream>
 #include <sstream> 
-//http://www.yukun.info/blog/2008/10/c-pthread-mutex-condition-variable.html
 #include <string>
 #include <vector>
 #include <queue>
-//#include <boost/thread.hpp>
-//#include <boost/thread/condition.hpp>
-//#include <boost/bind.hpp>
+#include <cerrno>
 #include <csignal>
 #include <fcntl.h>
 #include <sys/stat.h>
