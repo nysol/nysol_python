@@ -76,19 +76,18 @@ class NysolMOD_CORE(object):
 		for key in self.inplist.keys():
 
 			if key in self.kwd :
-
-				if isinstance(self.kwd[key],NysolMOD_CORE):	
-
-					self.kwd[key].outlist[self.kwd[key].nowdir].append(self)
-					self.inplist[key].append(self.kwd[key])
 				
-				elif isinstance(self.kwd[key],list):
+				if isinstance(self.kwd[key],list):
+
+					complexFlg = True
 
 					if isinstance(self.kwd[key][0],list):	
 
-						self.inplist[key].append(self.kwd[key])
-		
-					else:
+						if isinstance(self.kwd[key][0][0],(str,int,float)):
+
+							complexFlg = False
+						
+					if complexFlg:
 
 						for kval in self.kwd[key]:
 
@@ -96,12 +95,25 @@ class NysolMOD_CORE(object):
 								kval.outlist[kval.nowdir].append(self)
 
 							self.inplist[key].append(kval)
+					
+					else:
 
+						if isinstance(self.kwd[key],NysolMOD_CORE):	
+							self.kwd[key].outlist[self.kwd[key].nowdir].append(self)
+
+						self.inplist[key].append(self.kwd[key])
+
+
+				elif isinstance(self.kwd[key],NysolMOD_CORE):	
+
+					self.kwd[key].outlist[self.kwd[key].nowdir].append(self)
+					self.inplist[key].append(self.kwd[key])
 
 				else:
 
 					self.inplist[key].append(self.kwd[key])
 		
+
 				del self.kwd[key]
 		
 
@@ -721,6 +733,7 @@ class NysolMOD_CORE(object):
 					if len(obj.inplist[key])>1:
 
 						ttl = len(obj.inplist[key])
+						print(ttl)
 
 						layer=1
 						while 32 < ttl:
