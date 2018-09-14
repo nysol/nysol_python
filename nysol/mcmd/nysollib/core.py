@@ -479,10 +479,24 @@ class NysolMOD_CORE(object):
 
 		pre = other
 		precnt = len(pre.inplist[pre.nowidir])
+
 		while precnt != 0:
-			if precnt > 1 :
-				raise Exception("Multiple input")
-			pre = pre.inplist[pre.nowidir][0]
+
+			ck_o_pos = -1
+			ck_o_cnt = 0
+
+			for i,ck_o in enumerate(pre.inplist[pre.nowidir]):
+				if isinstance(ck_o,NysolMOD_CORE):
+					ck_o_pos  = i
+					ck_o_cnt += 1
+					
+			if ck_o_cnt > 1 :
+				raise Exception("unsuport Multiple nysol flow object input")
+			
+			if ck_o_cnt == 0 :
+				break
+
+			pre = pre.inplist[pre.nowidir][ck_o_pos]
 			precnt = len(pre.inplist[pre.nowidir])
 
 		pre.addPre(self)
