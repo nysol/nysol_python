@@ -71,28 +71,35 @@ def filenameEXTRACT(mlist,iolist,linklist):
 
 	addmod =[]
 	addfnod ={}
+	addlnod ={}
 
 	maxCnt = len(mlist)
 	for i, mm in enumerate(mlist):
-		
+
 		if len(mm[2]) != 0: # in
+
 			for k,v in mm[2].items():
-
-				if not isinstance(v, list) and v in addfnod:
-					newpos = addfnod[v] 
-				elif isinstance(v, list):
-					addfnod["ilist_"+str(i)]=maxCnt
-					iolist.append([[], []])
-					addmod.append(['list',["ilist_"+str(i)],{},{},''])
-					newpos = maxCnt
-					maxCnt+=1
+			
+				if isinstance(v, list):
+					vid = id(v)
+					if vid in addlnod:
+						newpos = addlnod[vid]
+					else:
+						addlnod[vid]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['list',["ilist_"+str(i)],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
 				else:
-					addfnod[v]=maxCnt
-					iolist.append([[], []])
-					addmod.append(['file',[v],{},{},''])
-					newpos = maxCnt
-					maxCnt+=1
-
+					if v in addfnod:
+						newpos = addfnod[v]
+					else:
+						addfnod[v]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['file',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+						
 				iolist[i][0].append([newpos,k])
 				iolist[newpos][1].append([i,'o'])
 				linklist.append([["o",newpos],[k,i]])
@@ -101,22 +108,32 @@ def filenameEXTRACT(mlist,iolist,linklist):
 		
 			for k,v in mm[3].items():
 
-				if not isinstance(v, list) and v in addfnod:
-					newpos = addfnod[v] 
+				if isinstance(v, list):
 
-				elif isinstance(v, list):
-					addfnod["olist_"+str(i)]=maxCnt
-					iolist.append([[], []])
-					addmod.append(['list',["olist_"+str(i)],{},{},''])
-					newpos = maxCnt
-					maxCnt+=1
+					vid = id(v)
+
+					if vid in addlnod:
+
+						newpos = addlnod[vid]
+
+					else:
+						addlnod[vid]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['list',["olist_"+str(i)],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
 
 				else:
-					addfnod[v]=maxCnt
-					iolist.append([[], []])
-					addmod.append(['file',[v],{},{},''])
-					newpos = maxCnt
-					maxCnt+=1
+				
+					if v in addfnod:
+						newpos = addfnod[v] 
+					else:
+						addfnod[v]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['file',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+				
 
 				iolist[i][1].append([newpos,k])
 				iolist[newpos][0].append([i,"i"])
