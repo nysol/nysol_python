@@ -747,8 +747,7 @@ class NysolMOD_CORE(object):
 					if len(obj.inplist[key])>1:
 
 						ttl = len(obj.inplist[key])
-						print(ttl)
-
+						
 						layer=1
 						while 32 < ttl:
 							if ttl%32 :
