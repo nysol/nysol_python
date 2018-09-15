@@ -115,6 +115,7 @@ class kgshell{
 
   kgEnv _env;
 	bool _nfni;
+	bool _mflg;
  	kgCSVfld* _iterrtn;
  	kgCSVkey* _iterrtnk;
 	pthread_t* _th_st_pp;

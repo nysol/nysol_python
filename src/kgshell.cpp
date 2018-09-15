@@ -149,7 +149,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
 	_memttl = memttl;
-
+	_mflg = mflg;
 	if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 		ostringstream ss;
 		ss << "init mutex error";
@@ -910,8 +910,10 @@ int kgshell::runMain(
 		_watchST.clen = _clen;
 		_watchST.env = &_env;
 		PyEval_RestoreThread(_save);
-		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
-		_watchFlg=true;
+		if(_mflg){
+			pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
+			_watchFlg=true;
+		}
 		return _csvpiped[0];
 	}
 
