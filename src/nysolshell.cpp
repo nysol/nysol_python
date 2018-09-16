@@ -43,7 +43,7 @@ static PyObject* setRtnData(long k,char * v){
 
 	if(*v=='\0'){
 		if(k==0){
-			rtn = Py_BuildValue("s", v);
+			rtn = PyUnicode_FromStringAndSize(v, strlen(v));
 		}
 		else{
 			Py_INCREF(Py_None);
@@ -52,15 +52,15 @@ static PyObject* setRtnData(long k,char * v){
 	}
 	else if(k==0){ //str
 
-		rtn = Py_BuildValue("s", v);
+		rtn = PyUnicode_FromStringAndSize(v, strlen(v));
 
 	}else if(k==1){ // int
 
-		rtn = Py_BuildValue("l", atol(v)); 
+		rtn = PyLong_FromLong(atol(v)); 
 
 	}else if(k==2){ // double
 
-		rtn = Py_BuildValue("d", atof(v));
+		rtn = PyFloat_FromDouble(atof(v));
 
 	}else if(k==3){ // bool
 
@@ -462,7 +462,7 @@ PyObject* getLineList(PyObject* self, PyObject* args)
 	for(size_t j=0 ;j<fcnt;j++){
 		long k = 0;
 		if(ptn!=NULL){ k = PyLong_AsLong ( PyList_GetItem(ptn,j) ); }
-		PyList_SetItem(rlist,j,setRtnData(k,kcfld->getVal(j)));
+		PyList_SET_ITEM(rlist,j,setRtnData(k,kcfld->getVal(j)));
 	}
 
 
