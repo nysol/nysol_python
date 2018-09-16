@@ -910,10 +910,9 @@ int kgshell::runMain(
 		_watchST.clen = _clen;
 		_watchST.env = &_env;
 		PyEval_RestoreThread(_save);
-		if(_mflg){
-			pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
-			_watchFlg=true;
-		}
+		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
+		_watchFlg=true;
+
 		return _csvpiped[0];
 	}
 
