@@ -3190,6 +3190,8 @@ void kgFunction_binomdist::run(void)
 			_result.r(boost::math::cdf(b,x));
 		}catch(bad_alloc){
 			_result.null(true);
+		}catch(...){
+			_result.null(true);
 		}
 
 		//_result.r(0.0);
