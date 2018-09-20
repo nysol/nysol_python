@@ -178,6 +178,8 @@ class NysolMOD_CORE(object):
 
 			while(True):
 				val = next(xx)
+				if val==None:
+					break
 				xval = val
 				if len(val)>xlim:
 					xval = val[:xmid]+["..."] + val[-xmid:]
