@@ -3186,11 +3186,17 @@ void kgFunction_binomdist::run(void)
 		double p = _args.at(2)->r();
 		//double q = 1-p;
 		try {
+
 			boost::math::binomial b(n,p);
 			_result.r(boost::math::cdf(b,x));
-		}catch(bad_alloc){
+
+		}catch (const boost::exception& e) {
+			_result.null(true);		
+		}
+		catch(bad_alloc){
 			_result.null(true);
-		}catch(...){
+		}
+		catch(...){
 			_result.null(true);
 		}
 
