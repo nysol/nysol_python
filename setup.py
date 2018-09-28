@@ -4,18 +4,17 @@ import os
 import subprocess
 
 args = ['xml2-config','--cflags']
-xxxxs= subprocess.check_output(args).decode().rstrip().split()
+xmlcflg= subprocess.check_output(args).decode().rstrip().split()
+args = ['xml2-config','--libs']
+xmllibs= subprocess.check_output(args).decode().rstrip().split()
 
 hedears = ['src','src/kgmod','src/mod']
-for xxx in xxxxs:
-	hedears.append(re.sub(r'^-I','',xxx))
-
 
 def checkLibRun(cc,fname,paras):
 	for para in paras:
 		try:
 			with open(os.devnull, 'w') as fnull:
-				exit_code = subprocess.call([cc, fname, "-l"+para],
+				exit_code = subprocess.call(cc + [ fname , "-l"+para],
                                     stdout=fnull, stderr=fnull)
 		except OSError :
 			exit_code = 1
@@ -27,7 +26,7 @@ def checkLibRun(cc,fname,paras):
 
 def check_for_boost():
 
-	import distutils.sysconfig
+	import sysconfig
 	import tempfile
 	import shutil
 	
@@ -36,10 +35,10 @@ def check_for_boost():
 	curdir = os.getcwd()
 	os.chdir(tmpdir)
 
-	compiler = os.environ.get('CC', distutils.sysconfig.get_config_var('CC'))
+	compiler = os.environ.get('CC', sysconfig.get_config_var('CC'))
 
 	# make sure to use just the compiler name without flags
-	compiler = compiler.split()[0]
+	compiler = compiler.split()
 	filename = 'test.cpp'
 	with open(filename,'w') as f :
 		f.write("""
@@ -74,7 +73,7 @@ def check_for_boost():
 	return boostFLG
 
 
-nmodLibs = ['pthread','xml2']
+nmodLibs = ['pthread']
 nmodLibs.extend(check_for_boost())
 umodLibs = ['pthread']
 umodLibs.extend(check_for_boost())
@@ -121,7 +120,9 @@ module1 = Extension('nysol/_nysolshell_core',
 																'src/mod/kgarff2csv.cpp','src/mod/kgtab2csv.cpp','src/mod/kgxml2csv.cpp'
                     	],
 										include_dirs=hedears,
-										libraries=nmodLibs
+										libraries=nmodLibs,
+ 										extra_compile_args=xmlcflg,
+ 										extra_link_args= xmllibs  
 										)
 
 lcmmod = Extension('nysol/take/_lcmlib',
@@ -251,6 +252,7 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',
 								'scripts/take/mclique.py',"scripts/take/mbipolish.py","scripts/take/mbiclique.py"],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
-											seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod,utilmod]
+										seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod
+										,utilmod]
 			)
        
