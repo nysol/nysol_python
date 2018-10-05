@@ -38,6 +38,8 @@ public:
 
 protected:
 	kgEnv* env_;
+	char _iStr[64];
+	char _oStr[64];
 
 	// ERR: 1以上
 	// WAR: 2以上

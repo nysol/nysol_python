@@ -987,7 +987,9 @@ int kgshell::runMain(
 				}
 				_argst[i].outputEND = true;
 				delete _modlist[i];
+				delete _envlist[i];
 				_modlist[i] =NULL;
+				_envlist[i] =NULL;
 			}
 			catch(kgError& err){
 				err_OUTPUT("script RUN KGERROR " + err.message(0));
@@ -999,7 +1001,9 @@ int kgshell::runMain(
 			}
 		}
 		delete[] _modlist;
+		delete[] _envlist;
 		_modlist = NULL;
+		_envlist =NULL;
 	}
 
 	if(_argst){

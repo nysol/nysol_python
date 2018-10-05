@@ -47,7 +47,7 @@ string kgTempfile::create(bool pipe, string prefix)
 	string ret;
  	char pidstr[64];
 	int tryCnt=0;
- 	sprintf(pidstr,"%ld",getpid());
+ 	sprintf(pidstr,"%d",getpid());
 
 	if(pipe){
 		for(; tryCnt<10; tryCnt++){ // あり得ないが、ファイル名が重複する場合を考慮し10回tryする。

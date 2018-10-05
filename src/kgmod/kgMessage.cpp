@@ -174,8 +174,14 @@ void kgMsg::output(kgMod* kgmod, string msg, const string& comment)
 		ss << kgmod->cmdline() << "; ";
 
 		//行数出力
-		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
-		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		if(kgmod->iRecNo()!=size_t(-1)){
+			sprintf(_iStr,"%zu",kgmod->iRecNo());
+			 ss << "IN="  << _iStr;
+		}
+		if(kgmod->oRecNo()!=size_t(-1)){
+			sprintf(_oStr,"%zu",kgmod->oRecNo());
+			ss << " OUT=" << _oStr;
+		}
 		WriteMsg(ss.str(),getTime());
 	}
 }
@@ -196,8 +202,14 @@ string kgMsg::outputMsg(kgMod* kgmod, string msg, const string& comment)
 		ss << kgmod->cmdline() << "; ";
 
 		//行数出力
-		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
-		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		if(kgmod->iRecNo()!=size_t(-1)){
+			sprintf(_iStr,"%zu",kgmod->iRecNo());
+			ss << "IN="  << _iStr;
+		}
+		if(kgmod->oRecNo()!=size_t(-1)){
+			sprintf(_oStr,"%zu",kgmod->oRecNo());
+			ss << " OUT=" << _oStr;
+		}
 		ss << "; " << getTime();
 		return ss.str();
 	}
@@ -222,8 +234,14 @@ void kgMsg::output(kgMod* kgmod, vector<string> vv, const string& comment){
 		ss << kgmod->cmdline() << "; ";
 
 		//行数出力
-		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
-		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		if(kgmod->iRecNo()!=size_t(-1)){
+			sprintf(_iStr,"%zu",kgmod->iRecNo());
+			ss << "IN="  << _iStr;
+		}
+		if(kgmod->oRecNo()!=size_t(-1)){
+			sprintf(_oStr,"%zu",kgmod->oRecNo());
+			ss << " OUT=" << _oStr;
+		}
 		WriteMsg(ss.str(),getTime());
 	}
 }
@@ -243,8 +261,14 @@ string kgMsg::outputMsg(kgMod* kgmod, vector<string> vv, const string& comment){
 		ss << kgmod->cmdline() << "; ";
 
 		//行数出力
-		if(kgmod->iRecNo()!=size_t(-1)) ss << "IN="  << kgmod->iRecNo();
-		if(kgmod->oRecNo()!=size_t(-1)) ss << " OUT=" << kgmod->oRecNo();
+		if(kgmod->iRecNo()!=size_t(-1)){
+			sprintf(_iStr,"%zu",kgmod->iRecNo());
+			ss << "IN="  << _iStr;
+		}
+		if(kgmod->oRecNo()!=size_t(-1)){
+			sprintf(_oStr,"%zu",kgmod->oRecNo());
+			ss << " OUT=" << _oStr;
+		}
 		ss << "; " << getTime();
 		return ss.str();
 	}
