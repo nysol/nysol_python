@@ -45,11 +45,14 @@ string kgTempfile::create(bool pipe, string prefix)
 	if(env_==0){ throw kgError("internal error: initialize kgTempfile");}
 
 	string ret;
+ 	char pidstr[64];
 	int tryCnt=0;
+ 	sprintf(pidstr,"%ld",getpid());
+
 	if(pipe){
 		for(; tryCnt<10; tryCnt++){ // あり得ないが、ファイル名が重複する場合を考慮し10回tryする。
  			ostringstream ss;
-			ss << env_->getTmpPath() << "/__KGTMP_" << getpid() << "_" << prefix << "_" << env_->randStr(14);
+			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << env_->randStr(14);
 			int fd = mkfifo(ss.str().c_str(),0600);
       if(fd==-1 && errno!=EINVAL)	{ continue;}
       else												{ ret=ss.str(); break;}
@@ -58,7 +61,7 @@ string kgTempfile::create(bool pipe, string prefix)
 		// 0バイトファイルを一時的に作成する(排他制御のため)
 		for(; tryCnt<10; tryCnt++){
  			ostringstream ss;
-			ss << env_->getTmpPath() << "/__KGTMP_" << getpid() << "_" << prefix << "_" << env_->randStr(14);
+			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << env_->randStr(14);
 			int fd = open(ss.str().c_str(),O_CREAT | O_EXCL, S_IRWXU);
 			if(fd==-1){ continue;}
 			else			{	close(fd); ret=ss.str(); break;}

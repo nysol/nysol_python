@@ -959,8 +959,11 @@ vector<vector <kgstr_t> > kglib::transVector( const vector<vector <kgstr_t> >& v
 // -----------------------------------------------------------------------------
 // intを文字列に変換する
 // -----------------------------------------------------------------------------
-kgstr_t kglib::toString(const int i, const string s1, const string s2){
+kgstr_t kglib::toString(const int i, const string s1, const string s2)
+{
+	char istr[64];
 	ostringstream ss;
+	sprintf(istr,"%d",i);
 	ss << s1 << i << s2;
 	return ss.str();
 }

@@ -31,7 +31,7 @@ using namespace boost;
 // -----------------------------------------------------------------------------
 kgEnv::kgEnv(kgEnv *src_env){
 
-	oSize_ = src_env->oSize() ;        // readのsize
+	oSize_ = src_env->oSize();        // readのsize
 	iSize_ = src_env->iSize();        // writeのsize
 	maxRecLen = src_env->getMaxRecLen();     // 一行の最大文字数
 	outBufSize = src_env->getOutBufSize();    // 出力バッファのサイズ
