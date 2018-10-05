@@ -270,7 +270,7 @@ void kgMod::init(size_t argc, const char* argv[], kgEnv* env) try
 	_env=env;
 	_args.add(argc, argv);
 	init();
-	signalset();
+	//signalset();
 	
 }catch(kgError& err){
   errorEnd(err);
@@ -281,7 +281,7 @@ void kgMod::init(kgArgs args, kgEnv* env)try
 	_env=env;
 	_args = args;
 	init();
-	signalset();
+	//signalset();
 	
 }catch(kgError& err){
   errorEnd(err);

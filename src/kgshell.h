@@ -123,6 +123,8 @@ class kgshell{
 	int *_th_rtn;
 	size_t _clen;
 	kgMod **_modlist;
+	kgEnv **_envlist;
+
 	size_t _memttl;
 	int	_runlim;
 
@@ -241,9 +243,11 @@ class kgshell{
 						}
 					}
 					_argst[i].outputEND = true;
-					if(_modlist[i]) { delete _modlist[i];}
+					if(_modlist[i]) { delete _modlist[i]; _modlist[i]=NULL; }
+					if(_envlist[i]) { delete _envlist[i]; _envlist[i]=NULL; }
 				}
 				delete[] _modlist;
+				delete[] _envlist;
 			}
 			delete[] _th_st_pp;
 			_th_st_pp = NULL;
@@ -310,10 +314,11 @@ public:
 		}
 		if(_modlist){
 			for(size_t i=0 ;i<_clen;i++){
-				if(_modlist[i]){ delete _modlist[i]; }
-				_modlist[i] =NULL;
+				if(_modlist[i]){ delete _modlist[i]; _modlist[i] = NULL; }
+				if(_envlist[i]){ delete _envlist[i]; _envlist[i] = NULL; }
 			}
 			delete[] _modlist;
+			delete[] _envlist;
 		}
 
 		if(_argst){

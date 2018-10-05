@@ -52,6 +52,7 @@ class kgEnv {
 	
 public:
 	kgEnv(void);
+	kgEnv(kgEnv* srcEnv);
 	~kgEnv(void){}
 	
 	// アクセッサ

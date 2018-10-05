@@ -29,6 +29,33 @@ using namespace boost;
 // -----------------------------------------------------------------------------
 // コンストラクタ
 // -----------------------------------------------------------------------------
+kgEnv::kgEnv(kgEnv *src_env){
+
+	oSize_ = src_env->oSize() ;        // readのsize
+	iSize_ = src_env->iSize();        // writeのsize
+	maxRecLen = src_env->getMaxRecLen();     // 一行の最大文字数
+	outBufSize = src_env->getOutBufSize();    // 出力バッファのサイズ
+	verboseLevel = src_env->getVerboseLevel();  // メッセージ出力をしないフラグ(kgInitで設定)
+	tmpPath = src_env->getTmpPath();       // 一時ファイル用ディレクトリパス名
+	encoding = src_env->getEncoding();      // CSVとコンソールのエンコーディング
+	noFldName = src_env->getNoFldName();     // 1行目は項目名行でない
+	_precision = src_env->precision();    // double型の出力有効桁数
+	_fldByNum = src_env->fldByNum();     // 項目番号で指定する
+	recursiveMsg_ = src_env->recursiveMsg(); // 再帰的にmodのエラーメッセージを出すかどうか
+	msgTimebyfsec_ = src_env-> msgTimebyfsec(); // fractional_secondsによる時刻表示
+	sigact_ = src_env->sigactcheck()  ;     // シグナルトラップ起動中かどうか(true:起動中, false:なし)
+	blockCount_ = src_env->getBlockCount();   // キー単位ごとに処理する際に使用するバッファ数
+
+	// 乱数初期化
+  unsigned long seed= static_cast<unsigned long>(boost::posix_time::microsec_clock::local_time().time_of_day().fractional_seconds());
+	try {
+		randStrAP_.set( new variate_generator< mt19937,uniform_int<> >(mt19937(seed),uniform_int<>(48,109) ) );
+	}catch(bad_alloc){
+		throw kgError("memory allocation error in kgEnv");
+	}
+} 
+
+
 kgEnv::kgEnv(void) 
 {
 	int   envVal;

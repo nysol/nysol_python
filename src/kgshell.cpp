@@ -140,6 +140,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	_th_st_pp = NULL;
 	_clen = 0;
 	_modlist=NULL;
+	_envlist=NULL;
 	_save=NULL;
 	_watchFlg = false;
 	_runst   = NULL;
@@ -789,6 +790,7 @@ int kgshell::runMain(
 	_modlist = new kgMod*[_clen];
 	_argst   = new argST[_clen];
 	_runst   = new int[_clen];
+	_envlist = new kgEnv*[_clen];
 
 	vector<int> cmdlist = _spblk.getModBlkInfo_M(iblk);
 
@@ -801,12 +803,13 @@ int kgshell::runMain(
 			err_OUTPUT("not 1 kgmod "+ cmdname);
 			return 1;
 		}
+		_envlist[i] = new kgEnv(&_env);
 		_modlist[i] = _kgmod_map.find(cmdname)->second() ;
 		kgArgs newArgs;
 		for(size_t j=0;j<cmds[cmdNo].paralist.size();j++){
 			newArgs.add(cmds[cmdNo].paralist[j]);
 		}
-		_modlist[i]->init(newArgs, &_env);
+		_modlist[i]->init(newArgs, _envlist[i]);
 
 		_argst[i].mobj= _modlist[i];
 		_argst[i].tag= cmds[cmdNo].tag;
