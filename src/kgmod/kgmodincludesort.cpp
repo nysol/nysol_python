@@ -60,16 +60,30 @@ void kgModIncludeSort::setSortMod(size_t num){
 	try {
 		_aps.set    ( new kgSortf[_sortModSize] );
 		_aps_pth.set( new pthread_t[_sortModSize] );
+		_ap_env.set( new kgEnv[_sortModSize] );
+		_ap_tp.set( new kgTempfile[_sortModSize] ) ;
 		
 	} catch(bad_alloc) {
 		throw kgError("memory allocation error on CSVin");
 	}
 	_inner_sort = _aps.get();
 	_th_st_p = _aps_pth.get();
+	_env_sort =	_ap_env.get();
+	_sortingFile =_ap_tp.get();
+	
+	int vlvl = 2;
+	if(_env->getVerboseLevel() != KG_VerboseLevel){
+		vlvl = _env->getVerboseLevel();
+	}
+	for(size_t i=0;i<_sortModSize;i++){
+		_env_sort[i].verblvl(vlvl);
+		_sortingFile[i].init(&_env_sort[i]);
+	}
 
 }
 
 void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num,bool numflg){
+
 	if(num>=_sortModSize){
 		throw kgError("sort module allocation error on kgModIncludeSort");
 	}
@@ -88,7 +102,7 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 	newArgs.add("i=",csv->fileName());
 	newArgs.add("f=",fldname);
 	if(numflg){newArgs.add("-x","");} 
-	_inner_sort[num].init(newArgs, &_env_sort);
+	_inner_sort[num].init(newArgs, &_env_sort[num]);
 	_inner_sort[num].replace_ifile(csv);
 	_inner_sort[num].prerun_noargs(piped[1]);
 	csv->clear();
@@ -148,15 +162,19 @@ void kgModIncludeSort::sortingRun(kgCSVfld* csv,vector<int>  fldnum,bool sortF)
 void kgModIncludeSort::init(kgArgs args, kgEnv* env)
 {
 	kgMod::init(args,env);
+	/*
 	if(_env->getVerboseLevel() == KG_VerboseLevel){_env_sort.verblvl(2);}
 	else{_env_sort.verblvl(_env->getVerboseLevel());}		
 	_sortingFile.init(&_env_sort);
+	*/
 }
 
 void kgModIncludeSort::init(size_t argc, const char* argv[], kgEnv* env)
 {
 	kgMod::init(argc,argv,env);		
+	/*
 	if(_env->getVerboseLevel() == KG_VerboseLevel){_env_sort.verblvl(2);}
 	else{_env_sort.verblvl(_env->getVerboseLevel());}		
 	_sortingFile.init(&_env_sort);
+	*/
 }

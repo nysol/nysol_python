@@ -37,17 +37,27 @@ class kgModIncludeSort : public kgMod
 	void sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num,bool numflg);
 
 protected:
-	kgTempfile _sortingFile;
+	//kgTempfile _sortingFile;
+  //kgEnv    _env_sort;
 	kgSortf *_inner_sort;
 	pthread_t *_th_st_p;
+	kgTempfile *_sortingFile;
+  kgEnv    *_env_sort;
+
+
 	size_t _sortModSize;
-  kgEnv    _env_sort;
 	kgAutoPtr2<kgSortf> _aps;
 	kgAutoPtr2<pthread_t> _aps_pth;
+	kgAutoPtr2<kgEnv> _ap_env;
+	kgAutoPtr2<kgTempfile> _ap_tp;
 
 	kgModIncludeSort(void){ _sortModSize=0; }
 	size_t getSmod(void){ return _sortModSize;}
-	void signalEnd(void){ _sortingFile.remove_all();	}
+	void signalEnd(void){ 
+		for(size_t i=0;i<_sortModSize;i++){
+			_sortingFile[i].remove_all();
+		}
+	}
 
 	void sortingRun(vector<kgCSVfld*> csv,vector< vector<kgstr_t> > fldname,bool sortF=false);
 	void sortingRun(kgCSVfld* csv,vector<kgstr_t> fldname,bool sortF=false);
