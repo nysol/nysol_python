@@ -964,7 +964,7 @@ kgstr_t kglib::toString(const int i, const string s1, const string s2)
 	char istr[64];
 	ostringstream ss;
 	sprintf(istr,"%d",i);
-	ss << s1 << i << s2;
+	ss << s1 << istr << s2;
 	return ss.str();
 }
 // -----------------------------------------------------------------------------
