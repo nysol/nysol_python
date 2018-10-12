@@ -161,6 +161,11 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 		ss << "init mutex error";
 		throw kgError(ss.str());
 	}
+	 if (pthread_mutex_init(&_iniMutex, NULL) == -1) { 
+		ostringstream ss;
+		ss << "init mutex error";
+		throw kgError(ss.str());
+	}
 
 	if (pthread_cond_init(&_stsCond, NULL) == -1) { 
 		ostringstream ss;
@@ -173,6 +178,12 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 		ss << "init cond mutex error";
 		throw kgError(ss.str());
 	}
+	if (pthread_cond_init(&_iniCond, NULL) == -1) { 
+		ostringstream ss;
+		ss << "init cond mutex error";
+		throw kgError(ss.str());
+	}
+
 	_tempFile.init(&_env);
 
 }
@@ -267,16 +278,24 @@ void *kgshell::run_func(void *arg){
 }
 
 void *kgshell::run_writelist(void *arg){
+
 	try{
+
 		string msg;
 		argST *a =(argST*)arg; 
+
+		PyGILState_STATE gstate;
+		gstate = PyGILState_Ensure();
+
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
+
+		PyGILState_Release(gstate);
+
 		pthread_mutex_lock(a->stMutex);
 		a->status = sts;
 		a->finflg=true;
 		a->msg.append(msg);
 		a->endtime=getNowTime(true);
-
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 
@@ -349,9 +368,12 @@ void *kgshell::run_writelist(void *arg){
 
 void *kgshell::run_readlist(void *arg){
 	try{
+
 		string msg;
 		argST *a =(argST*)arg; 
+
 		int sts = a->mobj->run(a->list,a->o_cnt,a->o_p,msg);
+
 		pthread_mutex_lock(a->stMutex);
 		a->status = sts;
 		a->finflg=true;
@@ -777,6 +799,9 @@ int kgshell::runMain(
 	int iblk,
 	bool outpipe){
 
+
+	_save = PyEval_SaveThread();
+
 	// thread attr init
 	pthread_attr_t pattr;
 	if ( threadStkINIT(&pattr) ){ return 1; } 
@@ -823,6 +848,9 @@ int kgshell::runMain(
 		_argst[i].kobj= cmds[cmdNo].kobj;
 		_argst[i].mutex = &_mutex;
 		_argst[i].forkCond = &_forkCond;
+		_argst[i].iniMutex = &_iniMutex;
+		_argst[i].iniCond = &_iniCond;
+
 		_argst[i].i_cnt= 0;
 		_argst[i].o_cnt= 0;
 		_argst[i].i_p= NULL;
@@ -867,7 +895,7 @@ int kgshell::runMain(
 
 	_th_st_pp = new pthread_t[_clen];
 	_th_rtn   = new int[_clen];
-	_save = PyEval_SaveThread();
+
 
 	for(int i=cmdlist.size()-1;i>=0;i--){
 
@@ -915,11 +943,11 @@ int kgshell::runMain(
 		PyEval_RestoreThread(_save);
 		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
 		_watchFlg=true;
-
 		return _csvpiped[0];
 	}
-
+	//_save = PyEval_SaveThread();
 	// status check
+
 	pthread_mutex_lock(&_stsMutex);
 
 	while(1){
@@ -928,6 +956,9 @@ int kgshell::runMain(
 		while(pos<_clen){
 			if(_argst[pos].finflg==false){ endFLG=false;}
 			else if(_argst[pos].outputEND==false){
+
+				PyEval_RestoreThread(_save);
+
 				if(!_argst[pos].msg.empty()){
 					if(_argst[pos].status==2){
 						end_OUTPUT(_argst[pos].msg);
@@ -939,7 +970,9 @@ int kgshell::runMain(
 				if(!_argst[pos].tag.empty()){
 					raw_OUTPUT("#TAG# " + _argst[pos].tag);
 				}
+				_save = PyEval_SaveThread();
 				_argst[pos].outputEND = true;
+
 			}
 			if(_argst[pos].status!=0&&_argst[pos].status!=2){
  				//エラー発生時はthread cancel
@@ -1039,12 +1072,12 @@ void kgshell::runInit(
 	vector<linkST> & plist
 ){
 
-	if(!Py_IsInitialized()){
-		Py_Initialize();
-	}
-	if (!PyEval_ThreadsInitialized())	{ 
-		PyEval_InitThreads();
-	}
+	//if(!Py_IsInitialized()){
+	//	Py_Initialize();
+	//}
+	//if (!PyEval_ThreadsInitialized())	{ 
+	//	PyEval_InitThreads();
+	//}
 	
 	// set block size  &  make run block 
 	if ( _runlim == -1){
@@ -1100,6 +1133,7 @@ void kgshell::runInit(
 			cmds[spedge[i].toID].paralist[pos]=newpara;
 		}
 	}
+	
 	return ;
 }
 

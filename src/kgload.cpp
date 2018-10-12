@@ -370,7 +370,7 @@ static makeVal(format,...){
 int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
 {
 	try {
-
+		/*
 		if(!Py_IsInitialized()){ 
 			Py_Initialize();
 		}
@@ -378,7 +378,12 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		if (!PyEval_ThreadsInitialized())	{ 
 			PyEval_InitThreads();
 		}
+		*/
+		
+		//pthread_mutex_lock(mtx);
 
+		PyThreadState *savex;
+		savex  = PyEval_SaveThread();
 
 		// パラメータチェック
 		_args.paramcheck("i=,dtype=,-header",kgArgs::COMMON|kgArgs::IODIFF);
@@ -429,15 +434,22 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		}
 		bool addhead = _args.toBool("-header");
 
+		PyEval_RestoreThread(savex);
 
 		if(PyList_Check(o_p)){
-			PyGILState_STATE gstate;
-			gstate = PyGILState_Ensure();
+
+			//PyGILState_STATE gstate;
+			//pthread_mutex_lock(mtx);
+			//{
+			//	gstate = PyGILState_Ensure();
+			//}
+			//pthread_mutex_unlock(mtx);
 
 			if(addhead){ 
 				vector<kgstr_t> flds = rls.fldName();
-				pthread_mutex_lock(mtx);
-				{
+				///PyEval_RestoreThread(savex);
+				//pthread_mutex_lock(mtx);
+				//{
 					//PyGILState_STATE gstate;
 					//gstate = PyGILState_Ensure();
 					PyObject* hlist = PyList_New(flds.size());
@@ -448,19 +460,24 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 					PyList_Append(o_p,hlist);
 					Py_DECREF(hlist);
 					//PyGILState_Release(gstate);
-				}
-				pthread_mutex_unlock(mtx);
+				//}
+				//pthread_mutex_unlock(mtx);
+				///savex = PyEval_SaveThread();
 			}
 
+			savex = PyEval_SaveThread();
 
 			while( EOF != rls.read() ){
 
-				pthread_mutex_lock(mtx);
-				{
+				PyEval_RestoreThread(savex);
+
+
+				//pthread_mutex_lock(mtx);
+				//{
 
 					//PyGILState_STATE gstate;
 					//gstate = PyGILState_Ensure();
-
+					///PyEval_RestoreThread(savex);
 					PyObject* tlist = PyList_New(rls.fldSize());
 					
 					for(size_t j=0 ;j<rls.fldSize();j++){
@@ -511,39 +528,52 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 					}
 					PyList_Append(o_p,tlist);
 					Py_DECREF(tlist);
+					///savex = PyEval_SaveThread();
+					savex = PyEval_SaveThread();
 
 					//PyGILState_Release(gstate);
-				}
-				pthread_mutex_unlock(mtx);
+				//}
+				//pthread_mutex_unlock(mtx);
 			}
-			PyGILState_Release(gstate);
+			
+			//pthread_mutex_lock(mtx);
+			//{
+			//	PyGILState_Release(gstate);
+			//}
+			//pthread_mutex_unlock(mtx);
+			PyEval_RestoreThread(savex);
+
 		}
 		else{
 			throw kgError("not python list");
 		}
 		rls.close();
 		msg.append(successEndMsg());
+		///PyEval_RestoreThread(savex);
+		//pthread_mutex_unlock(mtx);
+
+
 		return 0;
 
 	}
 	catch(kgError& err){
-		pthread_mutex_unlock(mtx);
+		//pthread_mutex_unlock(mtx);
 		msg.append(errorEndMsg(err));
 
 	}catch (const exception& e) {
-		pthread_mutex_unlock(mtx);
+		//pthread_mutex_unlock(mtx);
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
 
 	}catch(char * er){
-		pthread_mutex_unlock(mtx);
+		//pthread_mutex_unlock(mtx);
 		kgError err(er);
 		msg.append(errorEndMsg(err));
 
 	}
 	// KG_ABI_CATCH
 	catch(...){
-		pthread_mutex_unlock(mtx);
+		//pthread_mutex_unlock(mtx);
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
 		throw;

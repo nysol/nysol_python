@@ -65,8 +65,11 @@ struct argST{
 	vector<int> fdlist;
 	pthread_mutex_t *mutex;
 	pthread_mutex_t *stMutex;
+	pthread_mutex_t *iniMutex;
 	pthread_cond_t *stCond;
 	pthread_cond_t *forkCond;
+	pthread_cond_t *iniCond;
+	PyThreadState * newth;
 	int *runst;
 };
 struct watchST{
@@ -98,8 +101,11 @@ class kgshell{
 
 	pthread_mutex_t _mutex;
 	pthread_mutex_t _stsMutex;
+	pthread_mutex_t _iniMutex;
+
 	pthread_cond_t 	_stsCond;
 	pthread_cond_t 	_forkCond;
+	pthread_cond_t _iniCond;
 
 	template <class kgmodTP> void setMap(std::string,int runTP);
 
