@@ -101,12 +101,6 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 		if(inum==1 && *i_p > 0){ _iFile.popen(*i_p, _env,_nfn_i); }
 		else     { 
 			_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-			//kgstr_t iname = _args.toString("i=",false);
-			//if(iname.empty()){
-			//	_iFile.popen(0, _env,_nfn_i); 
-			//}else{
-			//	_iFile.open(iname, _env,_nfn_i); 
-			//}
 		}
 		iopencnt++;
 
@@ -369,20 +363,10 @@ static makeVal(format,...){
 // -----------------------------------------------------------------------------
 int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
 {
+
+	PyThreadState *savex = NULL;
 	try {
-		/*
-		if(!Py_IsInitialized()){ 
-			Py_Initialize();
-		}
 
-		if (!PyEval_ThreadsInitialized())	{ 
-			PyEval_InitThreads();
-		}
-		*/
-		
-		//pthread_mutex_lock(mtx);
-
-		PyThreadState *savex;
 		savex  = PyEval_SaveThread();
 
 		// パラメータチェック
@@ -435,6 +419,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		bool addhead = _args.toBool("-header");
 
 		PyEval_RestoreThread(savex);
+		savex=NULL;
 
 		if(PyList_Check(o_p)){
 
@@ -470,78 +455,64 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 			while( EOF != rls.read() ){
 
 				PyEval_RestoreThread(savex);
+				savex=NULL;
 
 
-				//pthread_mutex_lock(mtx);
-				//{
-
-					//PyGILState_STATE gstate;
-					//gstate = PyGILState_Ensure();
-					///PyEval_RestoreThread(savex);
-					PyObject* tlist = PyList_New(rls.fldSize());
+				PyObject* tlist = PyList_New(rls.fldSize());
 					
-					for(size_t j=0 ;j<rls.fldSize();j++){
+				for(size_t j=0 ;j<rls.fldSize();j++){
 
-						char * p = rls.getVal(j);
+					char * p = rls.getVal(j);
 
-						if(*p=='\0'){
+					if(*p=='\0'){
 						
-							if(ptn[j]==0){
-								PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
-							}
-							else{
-								Py_INCREF(Py_None);
-								PyList_SET_ITEM(tlist,j,Py_None);
-							}
-
-						}
-						else if(ptn[j]==0){
-
+						if(ptn[j]==0){
 							PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
-
 						}
-						else if(ptn[j]==1){
-
-							PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(p)));
-
+						else{
+							Py_INCREF(Py_None);
+							PyList_SET_ITEM(tlist,j,Py_None);
 						}
-						else if(ptn[j]==2){
 
-							PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(p)));
-
-						}
-						else if(ptn[j]==3){
-	
-							if(strlen(p)==1 && *p=='0'){
-
-								Py_INCREF(Py_False);
-								PyList_SET_ITEM(tlist,j,Py_False);
-							
-							}else{
-
-								Py_INCREF(Py_True);
-								PyList_SET_ITEM(tlist,j,Py_True);
-							
-							}
-
-						}
 					}
-					PyList_Append(o_p,tlist);
-					Py_DECREF(tlist);
-					///savex = PyEval_SaveThread();
-					savex = PyEval_SaveThread();
+					else if(ptn[j]==0){
 
-					//PyGILState_Release(gstate);
-				//}
-				//pthread_mutex_unlock(mtx);
+						PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+
+					}
+					else if(ptn[j]==1){
+
+						PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(p)));
+
+					}
+					else if(ptn[j]==2){
+
+						PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(p)));
+
+					}
+					else if(ptn[j]==3){
+	
+						if(strlen(p)==1 && *p=='0'){
+
+							Py_INCREF(Py_False);
+							PyList_SET_ITEM(tlist,j,Py_False);
+							
+						}else{
+
+							Py_INCREF(Py_True);
+							PyList_SET_ITEM(tlist,j,Py_True);
+							
+						}
+
+					}
+				}
+				PyList_Append(o_p,tlist);
+				Py_DECREF(tlist);
+				savex = PyEval_SaveThread();
 			}
 			
-			//pthread_mutex_lock(mtx);
-			//{
-			//	PyGILState_Release(gstate);
-			//}
-			//pthread_mutex_unlock(mtx);
 			PyEval_RestoreThread(savex);
+			savex=NULL;
 
 		}
 		else{
@@ -549,31 +520,27 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		}
 		rls.close();
 		msg.append(successEndMsg());
-		///PyEval_RestoreThread(savex);
-		//pthread_mutex_unlock(mtx);
-
-
 		return 0;
 
 	}
 	catch(kgError& err){
-		//pthread_mutex_unlock(mtx);
+		if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 		msg.append(errorEndMsg(err));
 
 	}catch (const exception& e) {
-		//pthread_mutex_unlock(mtx);
+		if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
 
 	}catch(char * er){
-		//pthread_mutex_unlock(mtx);
+		if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 		kgError err(er);
 		msg.append(errorEndMsg(err));
 
 	}
-	// KG_ABI_CATCH
+	// KG_ABI_CATCH 
 	catch(...){
-		//pthread_mutex_unlock(mtx);
+		if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 		kgError err("unknown error" );
 		msg.append(errorEndMsg(err));
 		throw;

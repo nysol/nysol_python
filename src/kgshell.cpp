@@ -279,16 +279,15 @@ void *kgshell::run_func(void *arg){
 
 void *kgshell::run_writelist(void *arg){
 
+	string msg;
+	argST *a ;
+	PyGILState_STATE gstate;
+	
 	try{
-
-		string msg;
-		argST *a =(argST*)arg; 
-
-		PyGILState_STATE gstate;
+		a = (argST*)arg; 
 		gstate = PyGILState_Ensure();
 
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
-
 		PyGILState_Release(gstate);
 
 		pthread_mutex_lock(a->stMutex);
@@ -301,6 +300,7 @@ void *kgshell::run_writelist(void *arg){
 
 	}
 	catch(kgError& err){
+		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -313,6 +313,7 @@ void *kgshell::run_writelist(void *arg){
 		pthread_mutex_unlock(a->stMutex);
 
 	}catch (const exception& e) {
+		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -325,6 +326,7 @@ void *kgshell::run_writelist(void *arg){
 		pthread_mutex_unlock(a->stMutex);
 
 	}catch(char * er){
+		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -339,6 +341,7 @@ void *kgshell::run_writelist(void *arg){
 	}
 #if !defined(__clang__) && defined(__GNUC__)
 	catch(abi::__forced_unwind&){  
+		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 2;
@@ -352,6 +355,7 @@ void *kgshell::run_writelist(void *arg){
 	}
 #endif	
 	catch(...){
+		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
 		pthread_mutex_lock(a->stMutex);
 		a->status = 1;
@@ -1000,7 +1004,7 @@ int kgshell::runMain(
 	if (!outpipe){ 
 		PyEval_RestoreThread(_save);
 	}
-
+	
 
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
