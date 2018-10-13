@@ -965,7 +965,7 @@ int kgshell::runMain(
 
 				if(!_argst[pos].msg.empty()){
 					if(_argst[pos].status==2){
-						end_OUTPUT(_argst[pos].msg);
+						err_OUTPUT(_argst[pos].msg);
 					}
 					else{
 						raw_OUTPUT(_argst[pos].msg);
@@ -1012,7 +1012,7 @@ int kgshell::runMain(
 				if(_argst[i].outputEND == false){
 					if(!_argst[i].msg.empty()){
 						if(_argst[i].status==2){
-							end_OUTPUT(_argst[i].msg);
+							err_OUTPUT(_argst[i].msg);
 						}
 						else{
 							raw_OUTPUT(_argst[i].msg);
