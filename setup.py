@@ -216,7 +216,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 
 setup(name = 'nysol',
 			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
-			version = '0.3.4',
+			version = '0.3.5',
 			description = 'This is nysol tools',
 			long_description="""\
 NYSOL (read as nee-sol) is a generic name of software tools and project activities designed for supporting big data analysis. The tools are developed from various large-scale data analysis and university research projects. NYSOL consists of two packages so far, namely MCMD and TAKE.
