@@ -86,15 +86,22 @@ class MparallelManager(object):
 			self.runpid[pid]=lane
 
 # 並列処理each
-def meach(func,para):
+def meach(func , para , *, mpCount=4 ,addcntNo=False,addprocNo=False ):
 
 	#tim = 5 if tF else -1
-
 	params = copy.deepcopy(para)
 	ttl    = len(params)
+	addpara=0
+	if addcntNo and addprocNo:
+		addpara=3
+	elif addcntNo :
+		addpara=1
+	elif addprocNo :
+		addpara=2
+
 	nowcnt = 0 
 
-	mpm = MparallelManager()
+	mpm = MparallelManager(mpCount)
 	#mpm.runStateCheker
 
 	while len(params)>0 :
@@ -103,10 +110,18 @@ def meach(func,para):
 		nowlane = mpm.getLane()
 		pid=os.fork()
 		if pid == 0:
-			func(param)
+			if addpara ==0 :
+				func(param)
+			elif addpara ==1 :
+				func(param,nowcnt)
+			elif addpara ==2 :
+				func(param,nowlane)
+			elif addpara ==3 :
+				func(param,nowcnt,nowlane)
 			os._exit(0)
 		else:
 			mpm.addPid(pid,nowlane)
+		nowcnt+=1
 		
 	mpm.waitall()
 	return []
