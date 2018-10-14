@@ -269,6 +269,95 @@ kgXml2csv::kgXml2csv(void)
 
 }
 
+void kgXml2csv::setArgsMain(void){
+
+	_oFile.setPrecision(_precision);
+
+	// SAXのイベントハンドラーの登録(NULLは何もしない)
+	_SAXFunctions.internalSubset       =NULL;
+	_SAXFunctions.isStandalone         =NULL;
+	_SAXFunctions.hasInternalSubset    =NULL;
+	_SAXFunctions.hasExternalSubset    =NULL;
+	_SAXFunctions.resolveEntity        =NULL;
+	_SAXFunctions.getEntity            =NULL;
+	_SAXFunctions.entityDecl           =NULL;
+	_SAXFunctions.notationDecl         =NULL;
+	_SAXFunctions.attributeDecl        =NULL;
+	_SAXFunctions.elementDecl          =NULL;
+	_SAXFunctions.unparsedEntityDecl   =NULL;
+	_SAXFunctions.setDocumentLocator   =NULL;
+	_SAXFunctions.startDocument        =NULL;
+	_SAXFunctions.endDocument          =NULL;
+
+	_SAXFunctions.startElement         =(startElementSAXFunc)start_element;
+	_SAXFunctions.endElement           =(endElementSAXFunc)end_element;
+	_SAXFunctions.reference            =NULL;
+	_SAXFunctions.characters           =(charactersSAXFunc) start_characters;
+	_SAXFunctions.ignorableWhitespace  =NULL;
+	_SAXFunctions.processingInstruction=NULL;
+	_SAXFunctions.comment              =NULL;
+	_SAXFunctions.warning              =NULL;
+	_SAXFunctions.error                =NULL;
+	_SAXFunctions.fatalError           =NULL;
+	_SAXFunctions.cdataBlock           =NULL;
+	_SAXFunctions.externalSubset       =NULL;
+
+	// k= 項目引数のセット
+	_key.path   = _args.toString("k=",true,true); // mandatory, nullNG
+	_key.in     =  false;
+	_key.length = _key.path.size();
+	if(_key.path.at(0)!='/'){
+		throw kgError("key XML path (k=) must be start with root '/'."); 
+	}
+
+	// f=で指定された項目の設定
+	// ex) f=element@att%f:name,element2@att2:name2
+
+	// 新項目名 :の後ろ
+	vector<vector<kgstr_t> > vv1 = _args.toStringVecVec("f=",':',2,true);
+	_fld.field = vv1.at(1);
+	_fld.cnt = vv1.at(0).size();
+
+	// :の前を次々に分割していく
+	vector<kgstr_t>::iterator str;
+	for(str=vv1.at(0).begin(); str!=vv1.at(0).end(); str++){
+		vector<kgstr_t> v1;
+		vector<kgstr_t> v2;
+
+		                v1 = splitToken(*str,'%');
+		if(v1.size()>0) v2 = splitToken(v1.at(0),'@');
+
+		// オプション %の後ろ
+		if(v1.size()>1) _fld.option.push_back(v1.at(1).c_str()[0]);
+		else            _fld.option.push_back('\0');
+
+		// 属性 @の後ろ
+		if(v2.size()>1) _fld.attribute.push_back(v2.at(1));
+		else            _fld.attribute.push_back("");
+
+		// 要素名 @の前
+		if(v2.size()>0) _fld.element.push_back(v2.at(0));
+		else            _fld.element.push_back("");
+	}
+
+	// 新項目名が指定されていなければエラー
+	//   要素名+属性名を新項目名として登録することも考えられるが今回は見送り
+	for(size_t i=0; i<_fld.field.size(); i++){
+		if(_fld.field.at(i)==""){
+			throw kgError("new field name must be specified"); 
+		}
+	}
+
+	// fld.in,fldDatの初期化
+	for(int i=0; i<_fld.cnt; i++){
+		_fldDat.push_back("");
+		_fld.in.push_back(false);
+	}
+
+}
+
+
+
 // -----------------------------------------------------------------------------
 // パラメータ設定
 // -----------------------------------------------------------------------------
@@ -279,303 +368,85 @@ void kgXml2csv::setArgs(void)
 
 	// 入出力ファイルオープン
   _oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	_oFile.setPrecision(_precision);
-
-	// SAXのイベントハンドラーの登録(NULLは何もしない)
-	_SAXFunctions.internalSubset       =NULL;
-	_SAXFunctions.isStandalone         =NULL;
-	_SAXFunctions.hasInternalSubset    =NULL;
-	_SAXFunctions.hasExternalSubset    =NULL;
-	_SAXFunctions.resolveEntity        =NULL;
-	_SAXFunctions.getEntity            =NULL;
-	_SAXFunctions.entityDecl           =NULL;
-	_SAXFunctions.notationDecl         =NULL;
-	_SAXFunctions.attributeDecl        =NULL;
-	_SAXFunctions.elementDecl          =NULL;
-	_SAXFunctions.unparsedEntityDecl   =NULL;
-	_SAXFunctions.setDocumentLocator   =NULL;
-	_SAXFunctions.startDocument        =NULL;
-	_SAXFunctions.endDocument          =NULL;
-
-	_SAXFunctions.startElement         =(startElementSAXFunc)start_element;
-	_SAXFunctions.endElement           =(endElementSAXFunc)end_element;
-	_SAXFunctions.reference            =NULL;
-	_SAXFunctions.characters           =(charactersSAXFunc) start_characters;
-	_SAXFunctions.ignorableWhitespace  =NULL;
-	_SAXFunctions.processingInstruction=NULL;
-	_SAXFunctions.comment              =NULL;
-	_SAXFunctions.warning              =NULL;
-	_SAXFunctions.error                =NULL;
-	_SAXFunctions.fatalError           =NULL;
-	_SAXFunctions.cdataBlock           =NULL;
-	_SAXFunctions.externalSubset       =NULL;
 
 	// xml入力ファイル名の設定
 	_fname=_args.toString("i=",false);
 	if(_fname.size()==0){
 		_fname="/dev/stdin";
 	}
-
-	// k= 項目引数のセット
-	_key.path   = _args.toString("k=",true,true); // mandatory, nullNG
-	_key.in     =  false;
-	_key.length = _key.path.size();
-	if(_key.path.at(0)!='/'){
-		throw kgError("key XML path (k=) must be start with root '/'."); 
-	}
-
-	// f=で指定された項目の設定
-	// ex) f=element@att%f:name,element2@att2:name2
-
-	// 新項目名 :の後ろ
-	vector<vector<kgstr_t> > vv1 = _args.toStringVecVec("f=",':',2,true);
-	_fld.field = vv1.at(1);
-	_fld.cnt = vv1.at(0).size();
-
-	// :の前を次々に分割していく
-	vector<kgstr_t>::iterator str;
-	for(str=vv1.at(0).begin(); str!=vv1.at(0).end(); str++){
-		vector<kgstr_t> v1;
-		vector<kgstr_t> v2;
-
-		                v1 = splitToken(*str,'%');
-		if(v1.size()>0) v2 = splitToken(v1.at(0),'@');
-
-		// オプション %の後ろ
-		if(v1.size()>1) _fld.option.push_back(v1.at(1).c_str()[0]);
-		else            _fld.option.push_back('\0');
-
-		// 属性 @の後ろ
-		if(v2.size()>1) _fld.attribute.push_back(v2.at(1));
-		else            _fld.attribute.push_back("");
-
-		// 要素名 @の前
-		if(v2.size()>0) _fld.element.push_back(v2.at(0));
-		else            _fld.element.push_back("");
-	}
-
-	// 新項目名が指定されていなければエラー
-	//   要素名+属性名を新項目名として登録することも考えられるが今回は見送り
-	for(size_t i=0; i<_fld.field.size(); i++){
-		if(_fld.field.at(i)==""){
-			throw kgError("new field name must be specified"); 
-		}
-	}
-
-	// fld.in,fldDatの初期化
-	for(int i=0; i<_fld.cnt; i++){
-		_fldDat.push_back("");
-		_fld.in.push_back(false);
-	}
+	setArgsMain();
 }
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgXml2csv::run(void) try 
-{
-	// パラメータセット＆入出力ファイルオープン
-	setArgs();
-
-	// 項目名の出力
-  if(!_nfn_o){
-		_oFile.writeFldNameCHK(_fld.field);
-	}
-
-	// SAX前処理
-	_ctxt=(xmlParserCtxtPtr)xmlCreateFileParserCtxt(_fname.c_str());
-	_state.ctxt=_ctxt;
-	if(!_ctxt){
-		throw kgError("not xml"); 
-	}
-	_ctxt->sax=&_SAXFunctions;
-	_ctxt->userData=&_state;
-
-	// parse実行
-	xmlParseDocument(_ctxt);
-
-	// 後処理
-	_ctxt->sax=NULL;
-	xmlFreeParserCtxt(_ctxt);
-
-	// 終了処理
-	_oFile.close();
-	successEnd();
-	return 0;
-
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
-}
 
 
 // -----------------------------------------------------------------------------
 // パラメータ設定
 // -----------------------------------------------------------------------------
-void kgXml2csv::setArgs(int i_p,int o_p ,string tpfname)
+void kgXml2csv::setArgs(int inum,int *i_p,int onum ,int *o_p,string tpfname)
 {
-	// パラメータチェック
-	_args.paramcheck("f=,i=,o=,k=");
 
-	// 入出力ファイルオープン
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+	int iopencnt = 0;
+	int oopencnt = 0;
 
-	// 入出力ファイルオープン
-	if(i_p>0){
-		kgAutoPtr2<char> buf_ap;
-		buf_ap.set( new char[KG_MaxRecLen] );
-		char *tmpbuf = buf_ap.get();
+	try{
+		// パラメータチェック
+		_args.paramcheck("f=,i=,o=,k=");
 
-		int ofd = ::open(tpfname.c_str(), KG_OOPEN_FLG , S_IRWXU);
-		if(ofd == -1 ){ throw kgError();}
-		while(1){
-			int rsize = ::read(i_p, tmpbuf , KG_MaxRecLen);
-			if(rsize<-1){ throw kgError("file read error"); }
-			if(rsize==0){ break;}
-			int wsize_ttl =0;
-			int wsize;
-			while(wsize_ttl<rsize){
-				wsize = ::write(ofd, tmpbuf , KG_MaxRecLen);
-				if(wsize<0){
-					if(errno==11){continue;}
-					break;
+		if(inum>1 || onum>1){ throw kgError("no match IO");}
+
+		if(inum==1 && *i_p>0){ 
+			kgAutoPtr2<char> buf_ap;
+			buf_ap.set( new char[KG_MaxRecLen] );
+			char *tmpbuf = buf_ap.get();
+
+			int ofd = ::open(tpfname.c_str(), KG_OOPEN_FLG , S_IRWXU);
+			if(ofd == -1 ){ throw kgError();}
+			while(1){
+				int rsize = ::read(*i_p, tmpbuf , KG_MaxRecLen);
+				if(rsize<-1){ throw kgError("file read error"); }
+				if(rsize==0){ break;}
+				int wsize_ttl =0;
+				int wsize;
+				while(wsize_ttl<rsize){
+					wsize = ::write(ofd, tmpbuf , KG_MaxRecLen);
+					if(wsize<0){
+						if(errno==11){continue;}
+						break;
+					}
+					wsize_ttl += wsize;
 				}
-				wsize_ttl += wsize;
 			}
+			::close(ofd);
+			::close(*i_p);
+			_fname=tpfname;
 		}
-		::close(ofd);
-		::close(i_p);
-		_fname=tpfname;
+		else     {
+			_fname=_args.toString("i=",true);
 
-	}
-	else{
-		// xml入力ファイル名の設定
-		_fname=_args.toString("i=",false);
-		if(_fname.size()==0){
-			_fname="/dev/stdin";
 		}
-	}
-	if(o_p>0){
-		_oFile.popen(o_p, _env,_nfn_o);
-	}else{
-		_oFile.open(_args.toString("o=",false), _env,_nfn_o);
-	}
+		iopencnt++;
 
+		if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
 
-	_oFile.setPrecision(_precision);
+		oopencnt++;
 
-	// SAXのイベントハンドラーの登録(NULLは何もしない)
-	_SAXFunctions.internalSubset       =NULL;
-	_SAXFunctions.isStandalone         =NULL;
-	_SAXFunctions.hasInternalSubset    =NULL;
-	_SAXFunctions.hasExternalSubset    =NULL;
-	_SAXFunctions.resolveEntity        =NULL;
-	_SAXFunctions.getEntity            =NULL;
-	_SAXFunctions.entityDecl           =NULL;
-	_SAXFunctions.notationDecl         =NULL;
-	_SAXFunctions.attributeDecl        =NULL;
-	_SAXFunctions.elementDecl          =NULL;
-	_SAXFunctions.unparsedEntityDecl   =NULL;
-	_SAXFunctions.setDocumentLocator   =NULL;
-	_SAXFunctions.startDocument        =NULL;
-	_SAXFunctions.endDocument          =NULL;
+		setArgsMain();
 
-	_SAXFunctions.startElement         =(startElementSAXFunc)start_element;
-	_SAXFunctions.endElement           =(endElementSAXFunc)end_element;
-	_SAXFunctions.reference            =NULL;
-	_SAXFunctions.characters           =(charactersSAXFunc) start_characters;
-	_SAXFunctions.ignorableWhitespace  =NULL;
-	_SAXFunctions.processingInstruction=NULL;
-	_SAXFunctions.comment              =NULL;
-	_SAXFunctions.warning              =NULL;
-	_SAXFunctions.error                =NULL;
-	_SAXFunctions.fatalError           =NULL;
-	_SAXFunctions.cdataBlock           =NULL;
-	_SAXFunctions.externalSubset       =NULL;
-
-
-	// k= 項目引数のセット
-	_key.path   = _args.toString("k=",true,true); // mandatory, nullNG
-	_key.in     =  false;
-	_key.length = _key.path.size();
-	if(_key.path.at(0)!='/'){
-		throw kgError("key XML path (k=) must be start with root '/'."); 
-	}
-
-	// f=で指定された項目の設定
-	// ex) f=element@att%f:name,element2@att2:name2
-
-	// 新項目名 :の後ろ
-	vector<vector<kgstr_t> > vv1 = _args.toStringVecVec("f=",':',2,true);
-	_fld.field = vv1.at(1);
-	_fld.cnt = vv1.at(0).size();
-
-	// :の前を次々に分割していく
-	vector<kgstr_t>::iterator str;
-	for(str=vv1.at(0).begin(); str!=vv1.at(0).end(); str++){
-		vector<kgstr_t> v1;
-		vector<kgstr_t> v2;
-
-		                v1 = splitToken(*str,'%');
-		if(v1.size()>0) v2 = splitToken(v1.at(0),'@');
-
-		// オプション %の後ろ
-		if(v1.size()>1) _fld.option.push_back(v1.at(1).c_str()[0]);
-		else            _fld.option.push_back('\0');
-
-		// 属性 @の後ろ
-		if(v2.size()>1) _fld.attribute.push_back(v2.at(1));
-		else            _fld.attribute.push_back("");
-
-		// 要素名 @の前
-		if(v2.size()>0) _fld.element.push_back(v2.at(0));
-		else            _fld.element.push_back("");
-	}
-
-	// 新項目名が指定されていなければエラー
-	//   要素名+属性名を新項目名として登録することも考えられるが今回は見送り
-	for(size_t i=0; i<_fld.field.size(); i++){
-		if(_fld.field.at(i)==""){
-			throw kgError("new field name must be specified"); 
+	}catch(...){
+		for(int i=iopencnt; i<inum ;i++){
+			if(*(i_p+i)>0){ ::close(*(i_p+i)); }
 		}
+		for(int i=oopencnt; i<onum ;i++){
+			if(*(o_p+i)>0){ ::close(*(o_p+i)); }
+		}
+		throw;
 	}
 
-	// fld.in,fldDatの初期化
-	for(int i=0; i<_fld.cnt; i++){
-		_fldDat.push_back("");
-		_fld.in.push_back(false);
-	}
 }
 
 
-// -----------------------------------------------------------------------------
-// 実行
-// -----------------------------------------------------------------------------
-int kgXml2csv::run(int i_p,int o_p) try 
-{
-
-	kgTempfile tempFile(_env);
-	string tName = tempFile.create();
-
-	// パラメータセット＆入出力ファイルオープン
-	setArgs(i_p,o_p,tName);
+int kgXml2csv::runMain(void){
 
 	// 項目名の出力
   if(!_nfn_o){
@@ -600,27 +471,112 @@ int kgXml2csv::run(int i_p,int o_p) try
 
 	// 終了処理
 	_oFile.close();
-	successEnd();
 	return 0;
 
-// 例外catcher
-}catch(kgOPipeBreakError& err){
-	// 終了処理
-	successEnd();
-	return 0;
-}catch(kgError& err){
-	errorEnd(err);
+
+}
+
+
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgXml2csv::run(void) 
+{
+	int sts=1;
+	try {
+		setArgs();
+		int sts = runMain();
+		successEnd();
+		return sts;
+
+	// 例外catcher
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		successEnd();
+		sts = 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		errorEnd(err);
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		errorEnd(err);
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		errorEnd(err);
+
+	}
+	catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		errorEnd(err);
+	}
 	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+}
+
+///* thraad cancel action
+static void cleanup_handler(void *arg)
+{
+    ((kgXml2csv*)arg)->runErrEnd();
+}
+
+// -----------------------------------------------------------------------------
+// 実行
+// -----------------------------------------------------------------------------
+int kgXml2csv::run(int inum,int *i_p,int onum, int* o_p,string &msg)
+{
+
+	int sts = 1;
+	pthread_cleanup_push(&cleanup_handler, this);	
+	try {
+		kgTempfile tempFile(_env);
+		string tName = tempFile.create();
+
+		// パラメータセット＆入出力ファイルオープン
+		setArgs(inum, i_p, onum,o_p,tName);
+		sts = runMain();
+		msg.append(successEndMsg());
+
+	// 例外catcher
+	}catch(kgOPipeBreakError& err){
+
+		runErrEnd();
+		msg.append(successEndMsg());
+		sts = 0;
+
+	}catch(kgError& err){
+
+		runErrEnd();
+		msg.append(errorEndMsg(err));
+
+	}catch (const exception& e) {
+
+		runErrEnd();
+		kgError err(e.what());
+		msg.append(errorEndMsg(err));
+
+	}catch(char * er){
+
+		runErrEnd();
+		kgError err(er);
+		msg.append(errorEndMsg(err));
+
+	}
+	KG_ABI_CATCH
+	catch(...){
+		runErrEnd();
+		kgError err("unknown error" );
+		msg.append(errorEndMsg(err));
+	}
+	pthread_cleanup_pop(0);
+	return sts;
+			
 }
