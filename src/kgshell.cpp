@@ -188,8 +188,6 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 
 }
 
-
-
 void *kgshell::run_func(void *arg){
 
 	try{

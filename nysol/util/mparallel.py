@@ -26,14 +26,16 @@ import copy
 	
 class MparallelManager(object):
 
-	def __init__(self,mp=4,tim=-1):
+	def __init__(self,mp=4):
 		self.mp = mp 					# パラレルサイズ
-		self.thInterval = tim # チェック間隔
 		self.runpid = {} 			# pid => laneNo ## 動いてるPROCESS
-		self.slppid = []			# [ [pid ,laneNo child pid] ... ## 休止中PROCESS
-		#self.mtx =  Mutex.new if @thInterval > 0
-		self.mtx =  None
 		self.LaneQue = list(range(mp))
+
+		# stsチェックするなら追加
+		#self.thInterval = tim # チェック間隔
+		#self.slppid = []			# [ [pid ,laneNo child pid] ... ## 休止中PROCESS
+		#self.mtx =  Mutex.new if @thInterval > 0
+		#self.mtx =  None
 
 
 	# プロセス終了確認
@@ -78,17 +80,15 @@ class MparallelManager(object):
 			self.waitLane()
 		return self.LaneQue.pop(0)
 		
+
 	def addPid(self,pid,lane):
-		if self.mtx :
-			pass
-			#@mtx.synchronize { @runpid[pid]=lane }
-		else:
-			self.runpid[pid]=lane
+
+		self.runpid[pid]=lane
+			
 
 # 並列処理each
 def meach(func , para , *, mpCount=4 ,addcntNo=False,addprocNo=False ):
 
-	#tim = 5 if tF else -1
 	params = copy.deepcopy(para)
 	ttl    = len(params)
 	addpara=0
@@ -102,7 +102,6 @@ def meach(func , para , *, mpCount=4 ,addcntNo=False,addprocNo=False ):
 	nowcnt = 0 
 
 	mpm = MparallelManager(mpCount)
-	#mpm.runStateCheker
 
 	while len(params)>0 :
 
