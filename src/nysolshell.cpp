@@ -281,8 +281,9 @@ PyObject* run(PyObject* self, PyObject* args)
 		vector< cmdCapselST > cmdCapsel;
 		vector< linkST > p_list;
 		runCore(mlist,linklist,cmdCapsel,p_list);
-		ksh->runx(cmdCapsel,p_list);
-
+		if(ksh->runx(cmdCapsel,p_list)){
+			return PyLong_FromLong(1); 
+		}
 		return PyLong_FromLong(0);
 	}
 	catch(kgError& err){

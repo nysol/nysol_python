@@ -1121,6 +1121,7 @@ class NysolMOD_CORE(object):
 
 		msgF    = NysolMOD_CORE.OutMsg 
 		modlimt = NysolMOD_CORE.RunLimit
+		threxc  = False
 
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
@@ -1129,12 +1130,18 @@ class NysolMOD_CORE(object):
 		if "runlimit" in kw_args:
 			modlimt = int(kw_args["runlimit"])
 
+		if "throwexc" in kw_args:
+			if kw_args["throwexc"] == True:
+				threxc =True
+
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
 
 		# 仮 kgshellへ移行
 		import psutil as ps
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
-		n_core.runLx(shobj,modlist,linklist)
+		sts = n_core.runLx(shobj,modlist,linklist)
+		if threxc and sts != 0 :
+			raise Exception("run error")
 
 		return outfs
 
