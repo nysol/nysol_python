@@ -128,6 +128,7 @@ public:
 	
 		try{
 			// mutexインスタンスにロックをかける
+			pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
 			pthread_mutex_lock(&_mutex);
 			{
 				// enqがdeqに追いついたら拡張
@@ -136,6 +137,7 @@ public:
 				else{ _enq=next; }// enqを一つ進める	
 			}
 			pthread_mutex_unlock(&_mutex);
+			pthread_cleanup_pop(0);
 
 			// readしてenq位置に格納
 			size_t maxSize = _blkSize;
@@ -183,7 +185,9 @@ public:
 			
 			bool fout=false;
 			size_t deq_tmp=0;
-
+			
+			bool rtnflg=false;
+			pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
 			pthread_mutex_lock(&_mutex);
 			{
 				if(_tmpname.size() ){
@@ -195,8 +199,7 @@ public:
 					if(_readEnd){
 						//boost rThreadState_.notify_one();
 						pthread_cond_signal(&_threadState);
-						pthread_mutex_unlock(&_mutex);
-						return 0;
+						rtnflg = true;
 					}else{
 						//boost wThreadState_.wait(mutex_);
 						pthread_cond_wait(&_threadState, &_mutex);
@@ -204,6 +207,11 @@ public:
 				}
 			}
 			pthread_mutex_unlock(&_mutex);
+			pthread_cleanup_pop(0);
+			if(rtnflg){
+				return 0;
+			}
+			
 			//ファイル出力が存在すればそっちから先に処理する
 			if(fout && deq_tmp != _deq){
 				kgAutoPtr2<char> buf_tmp_ap; 
@@ -277,13 +285,14 @@ public:
 					accSize+=static_cast<size_t>(wsize);
 					resSize-=static_cast<size_t>(wsize);
 				}
+				bool rtnflgf=false;
+				pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
 				pthread_mutex_lock(&_mutex);
 				{
 					// deqを一つ進める
 					if(_deq==_enq){
 						if(_readEnd){
-							pthread_mutex_unlock(&_mutex);
-							return 0;
+							rtnflgf = true;
 						}else{
 							//boostwThreadState_.wait(mutex_);
 							pthread_cond_wait(&_threadState, &_mutex);
@@ -292,7 +301,8 @@ public:
 					_deq=nextQue(_deq);
 				}
 				pthread_mutex_unlock(&_mutex);
-
+				pthread_cleanup_pop(0);
+				if(rtnflgf){ return 0; }
 			}
 			// read側が待ち状態にあれば起こす
 			pthread_cond_signal(&_threadState);

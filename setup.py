@@ -55,7 +55,7 @@ def check_for_boost():
 		['boost_filesystem-mt','boost_filesystem'],
 		['boost_regex-mt','boost_regex'],
 		['boost_system-mt','boost_system'],
-		['boost_date_time']
+		['boost_date_time-mt','boost_date_time']
 	]
 	for boostlist in boostLibLists:
 
