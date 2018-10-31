@@ -40,7 +40,7 @@ void kgshell::setMap(std::string name,int runTP){
 	_kgmod_Oinfo[name] = kgmodTP::_opara;
 }
 
-kgshell::kgshell(int mflg,int rumlim,size_t memttl){
+kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg){
 
 	setMap<kgPyfunc>("runfunc",3);
 	setMap<kgLoad>("writelist",1);
@@ -150,7 +150,10 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl){
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
 	_memttl = memttl;
-	_mflg = mflg;
+	_mflg   = mflg;
+	_pymsg  = pymsg;
+
+
 	if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 		ostringstream ss;
 		ss << "init mutex error";
@@ -542,27 +545,55 @@ void *kgshell::run_pyfunc(void *arg){
 	return NULL;	
 }
 
-static void watch_raw_OUTPUT(const string& v,kgEnv *env){
-	kgMsgIncPySys msg(kgMsg::IGN, env);
-	msg.output_ignore(v);
+static void watch_raw_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+	if(pymsg){
+		kgMsgIncPySys msg(kgMsg::IGN, env);
+		msg.output_ignore(v);
+	}else{
+		kgMsg msg(kgMsg::IGN, env);
+		msg.output_ignore(v);
+	}
 }
-static void watch_end_OUTPUT(const string& v,kgEnv *env){
-	kgMsgIncPySys msg(kgMsg::END, env);
-	ostringstream ss;
-	ss << "kgshell (" << v << ")"; 
-	msg.output(ss.str());
+static void watch_end_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+	if(pymsg){
+		kgMsgIncPySys msg(kgMsg::END, env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")"; 
+		msg.output(ss.str());
+	}else{
+		kgMsg msg(kgMsg::END, env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")"; 
+		msg.output(ss.str());
+	
+	}
 }
-static void watch_war_OUTPUT(const string& v,kgEnv *env){
-	kgMsgIncPySys msg(kgMsg::WAR, env);
-	ostringstream ss;
-	ss << "kgshell (" << v << ")";
-	msg.output(ss.str());
+static void watch_war_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+	if(pymsg){
+		kgMsgIncPySys msg(kgMsg::WAR, env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}else{
+		kgMsg msg(kgMsg::WAR, env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")"; 
+		msg.output(ss.str());	
+	}
 }
-static void watch_err_OUTPUT(const string& v,kgEnv *env){
-	kgMsgIncPySys msg(kgMsg::ERR, env);	
-	ostringstream ss;
-	ss << "kgshell (" << v << ")";
-	msg.output(ss.str());
+static void watch_err_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+	if(pymsg){
+		kgMsgIncPySys msg(kgMsg::ERR, env);	
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}else{
+		kgMsg msg(kgMsg::ERR, env);	
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	
+	}
 }
 
 void *kgshell::run_watch(void *arg){
@@ -573,7 +604,7 @@ void *kgshell::run_watch(void *arg){
 	pthread_cond_t *stCond  =	wst->stCond;
 	pthread_t * th_st_pp = wst->th_st_pp;
 	kgEnv * env = wst->env;
-
+	bool pymsg = wst->pymsg;
 	// status check
 	bool endFLG = true;	
 	pthread_mutex_lock(stsMutex);
@@ -585,14 +616,14 @@ void *kgshell::run_watch(void *arg){
 			else if(a[pos].outputEND==false){
 				if(!a[pos].msg.empty()){
 					if(a[pos].status==2){
-						watch_end_OUTPUT(a[pos].msg,env);
+						watch_end_OUTPUT(a[pos].msg,env,pymsg);
 					}
 					else{
-						watch_raw_OUTPUT(a[pos].msg,env);
+						watch_raw_OUTPUT(a[pos].msg,env,pymsg);
 					}
 				}
 				if(!a[pos].tag.empty()){
-					watch_raw_OUTPUT("#TAG# " + a[pos].tag,env);
+					watch_raw_OUTPUT("#TAG# " + a[pos].tag,env,pymsg);
 				}
 				a[pos].outputEND = true;
 			}
@@ -619,26 +650,61 @@ void *kgshell::run_watch(void *arg){
 }
 
 void kgshell::raw_OUTPUT(const string& v){
-	kgMsgIncPySys msg(kgMsg::IGN, &_env);
-	msg.output_ignore(v);
+	if(_pymsg){
+		kgMsgIncPySys msg(kgMsg::IGN, &_env);
+		msg.output_ignore(v);
+	}
+	else{
+		kgMsg msg(kgMsg::IGN, &_env);
+		msg.output_ignore(v);
+	
+	}
 }
 void kgshell::end_OUTPUT(const string& v){
-	kgMsgIncPySys msg(kgMsg::END, &_env);
-	ostringstream ss;
-	ss << "kgshell (" << v << ")"; 
-	msg.output(ss.str());
+	if(_pymsg){
+		kgMsgIncPySys msg(kgMsg::END, &_env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")"; 
+		msg.output(ss.str());
+	}
+	else{
+		kgMsg msg(kgMsg::END, &_env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")"; 
+		msg.output(ss.str());
+	}
 }
+
 void kgshell::war_OUTPUT(const string& v){
-	kgMsgIncPySys msg(kgMsg::WAR, &_env);
-	ostringstream ss;
-	ss << "kgshell (" << v << ")";
-	msg.output(ss.str());
+
+	if(_pymsg){
+		kgMsgIncPySys msg(kgMsg::WAR, &_env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}
+	else{
+		kgMsg msg(kgMsg::WAR, &_env);
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}
+
 }
 void kgshell::err_OUTPUT(const string& v){
-	kgMsgIncPySys msg(kgMsg::ERR, &_env);	
-	ostringstream ss;
-	ss << "kgshell (" << v << ")";
-	msg.output(ss.str());
+
+	if(_pymsg){
+		kgMsgIncPySys msg(kgMsg::ERR, &_env);	
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}
+	else{
+		kgMsg msg(kgMsg::ERR, &_env);	
+		ostringstream ss;
+		ss << "kgshell (" << v << ")";
+		msg.output(ss.str());
+	}
 }
 
 void kgshell::makePipeList(vector<linkST> & plist,int iblk,bool outpipe)
@@ -942,6 +1008,7 @@ int kgshell::runMain(
 		_watchST.th_st_pp = _th_st_pp;
 		_watchST.clen = _clen;
 		_watchST.env = &_env;
+		_watchST.pymsg = _pymsg;
 		PyEval_RestoreThread(_save);
 		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
 		_watchFlg=true;

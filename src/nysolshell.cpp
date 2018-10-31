@@ -779,11 +779,12 @@ PyObject* getparams(PyObject* self, PyObject* args){
 PyObject* start(PyObject* self, PyObject* args){
 	int mflg;
 	int rulim;
+	int pymsg;
 	size_t ttlmem;
-	if (!PyArg_ParseTuple(args, "iiL", &mflg , &rulim,&ttlmem)){
+	if (!PyArg_ParseTuple(args, "iiLi", &mflg , &rulim,&ttlmem,&pymsg)){
 		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
   }else{
-		return PyCapsule_New(new kgshell(mflg,rulim,ttlmem),"kgshellP",py_kgshell_free);
+		return PyCapsule_New(new kgshell(mflg,rulim,ttlmem,pymsg),"kgshellP",py_kgshell_free);
   }
 }
 

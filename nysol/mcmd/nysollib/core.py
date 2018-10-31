@@ -1136,9 +1136,20 @@ class NysolMOD_CORE(object):
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
 
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
 		# 仮 kgshellへ移行
 		import psutil as ps
-		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total)
+		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg)
 		sts = n_core.runLx(shobj,modlist,linklist)
 		if threxc and sts != 0 :
 			raise Exception("run error")

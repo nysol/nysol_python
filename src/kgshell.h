@@ -79,6 +79,7 @@ struct watchST{
 	kgEnv *env;
 	pthread_t* th_st_pp;
 	int clen;
+	bool pymsg;
 };
 
 struct cmdCapselST{
@@ -122,6 +123,7 @@ class kgshell{
   kgEnv _env;
 	bool _nfni;
 	bool _mflg;
+	bool _pymsg;
  	kgCSVfld* _iterrtn;
  	kgCSVkey* _iterrtnk;
 	pthread_t* _th_st_pp;
@@ -289,7 +291,7 @@ class kgshell{
 
 public:
 	// コンストラクタ
-	kgshell(int mflg=false,int modlim = -1,size_t memttl=2000000000);
+	kgshell(int mflg=false,int modlim = -1,size_t memttl=2000000000,int pymsg=0);
 	~kgshell(void){
 		if(_watchFlg){
 			PyThreadState *savex = PyEval_SaveThread();

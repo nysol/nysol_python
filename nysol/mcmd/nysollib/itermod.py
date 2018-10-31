@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import os
 import nysol._nysolshell_core as n_core
 # 仮 kgshellへ移行
 import psutil as ps
@@ -26,8 +27,19 @@ class LineListIter(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
+
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -91,7 +103,18 @@ class LineDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -160,7 +183,18 @@ class BlkListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -234,8 +268,19 @@ class BlkDictIter(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -308,8 +353,19 @@ class LineListIterWithInfo(object):
 				
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -390,8 +446,19 @@ class LineDictIterWithInfo(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
+		py_msg=False
+		try:
+			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+				py_msg = True
+		except:
+			pass
+
+		kgpymsg = os.environ.get('KG_UsingPySysMsg')
+		if kgpymsg != None: 
+			py_msg = bool(int(kgpymsg))
+
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,ps.virtual_memory().total,py_msg)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
