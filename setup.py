@@ -149,6 +149,25 @@ lcmtransmod = Extension('nysol/take/_lcmtranslib',
 										include_dirs=['src','src/kgmod','src/mod']
 										)
 
+mmaketramod = Extension('nysol/take/_mmaketralib',
+                    sources = ['src/take/mmaketrarun.cpp',
+                    						'src/take/mmaketra/kgmaketra.cpp',
+                    						'src/kgmod/kgArgFld.cpp',
+																'src/kgmod/kgArgs.cpp','src/kgmod/kgCSV.cpp',
+																'src/kgmod/kgCSVout.cpp','src/kgmod/kgCSVutils.cpp',
+																'src/kgmod/kgEnv.cpp','src/kgmod/kgError.cpp',
+																'src/kgmod/kgFldBuffer.cpp',
+																'src/kgmod/kgMessage.cpp',
+																'src/kgmod/kgMethod.cpp',
+																'src/kgmod/kgTempfile.cpp','src/kgmod/kgVal.cpp',
+																'src/kgmod/kgWildcard.cpp','src/kgmod/kgmod.cpp',
+																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp',                    
+                    ],
+ 										extra_compile_args=['-Wno-format-security','-Wno-error'],
+										include_dirs=['src','src/kgmod','src/mod','src/take/mmaketra']
+										)
+
+
 
 sspcmod = Extension('nysol/take/_sspclib',
                     sources = ['src/take/sspcrap.c'],
@@ -253,6 +272,6 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 								'scripts/take/mclique.py',"scripts/take/mbipolish.py","scripts/take/mbiclique.py"],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
 										seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod
-										,utilmod]
+										,utilmod,mmaketramod]
 			)
        
