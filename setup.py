@@ -77,6 +77,9 @@ nmodLibs = ['pthread']
 nmodLibs.extend(check_for_boost())
 umodLibs = ['pthread']
 umodLibs.extend(check_for_boost())
+mmodLibs = ['pthread']
+mmodLibs.extend(check_for_boost())
+
 
 module1 = Extension('nysol/_nysolshell_core',
                     sources = ['src/mod/kgsortchk.cpp','src/mod/kg2tee.cpp','src/mod/kgfifo.cpp','src/mod/kgtrafld.cpp',
@@ -164,7 +167,8 @@ mmaketramod = Extension('nysol/take/_mmaketralib',
 																'src/kgmod/kgmodincludesort.cpp','src/kgmod/kgsortf.cpp',                    
                     ],
  										extra_compile_args=['-Wno-format-security','-Wno-error'],
-										include_dirs=['src','src/kgmod','src/mod','src/take/mmaketra']
+										include_dirs=['src','src/kgmod','src/mod','src/take/mmaketra'],
+										libraries=mmodLibs
 										)
 
 

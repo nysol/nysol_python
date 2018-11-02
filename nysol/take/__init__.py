@@ -3,6 +3,7 @@ from . import _lcmlib
 from . import _lcmseq_zerolib 
 from . import _lcmseqlib  
 from . import _lcmtranslib 
+from . import _mmaketralib 
 from . import _macelib 
 from . import _medsetlib 
 from . import _simsetlib 

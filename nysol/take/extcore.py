@@ -34,6 +34,8 @@ from nysol.take import _lcmlib as lib_lcm
 from nysol.take import _lcmseq_zerolib as lib_lcmseq0
 from nysol.take import _lcmseqlib  as lib_lcmseq
 from nysol.take import _lcmtranslib  as lib_lcmtarns
+from nysol.take import _mmaketralib  as lib_mmaketra
+
 from nysol.take import _macelib as lib_mace
 from nysol.take import _medsetlib as lib_medset
 from nysol.take import _simsetlib as lib_simset
@@ -972,5 +974,12 @@ def lcmtrans(inf,ptn,outf):
 	lcmの結果をcsvへと変換する
 	"""
 	return lib_lcmtarns.lcmtrans_run(inf,ptn,outf)
+
+
+def mmaketra(**kw_args):
+	"""
+	csvからtraデータへと変換する
+	"""
+	return lib_mmaketra.mmaketra_run(**kw_args)
 	
 	
