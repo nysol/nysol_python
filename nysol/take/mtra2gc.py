@@ -217,9 +217,13 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 
 
 		f0 = nm.mcut(f=itemFN+":##item",i=iFile).mcount(k="##item",a="##freq",o=mapFile)
-		f1 = nm.mtra(k=idFN,f=itemFN+":##num",i=iFile).mcut(f="##num",nfno=True,o=oFile)
+		f0.run()
 
-		nm.runs([f0,f1])
+		extTake.mmaketra(i=iFile,o=oFile,f=itemFN,k=idFN)
+		#f1 = nm.mtra(k=idFN,f=itemFN+":##num",i=iFile).mcut(f="##num",nfno=True,o=oFile)
+
+
+		#nm.runs([f0,f1])
 		# #{mapFile}"
 		# ##item,##freq%0nr,##num
 		# b,4,0
@@ -234,13 +238,18 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		f0   = nm.mcut(f=itemFN+":##item",i=iFile)
 		f0 <<= nm.mcount(k="##item",a="##freq")
 		f0 <<= nm.mnumber(s="##freq%nr",a="##num",o=mapFile)
+		f0.run()
 
-		f1   = nm.mjoin(k=itemFN,K="##item",m=f0,f="##num",i=iFile)
-		f1 <<= nm.mtra(k=idFN,f="##num")
-		f1 <<= nm.mnumber(q=True,a="##traID")
-		f1 <<= nm.mcut(f="##num",nfno=True,o=oFile)
-		
+		f1   = nm.mjoin(k=itemFN,K="##item",f="##num",m=mapFile,i=iFile,o=xxtra)
 		f1.run()
+		
+		#f1 <<= nm.mtra(k=idFN,f="##num")
+		#f1 <<= nm.mnumber(q=True,a="##traID")
+		#f1 <<= nm.mcut(f="##num",nfno=True,o=oFile)
+
+		extTake.mmaketra(i=xxtra,o=oFile,f="##num",k=idFN)
+
+		#f1.run()
 
 		# ##item,##freq%0nr,##num
 		# b,4,0

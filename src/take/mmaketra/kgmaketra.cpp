@@ -53,6 +53,7 @@ kgMaketra::kgMaketra(void)
 // -----------------------------------------------------------------------------
 void kgMaketra::setArgs(void)
 {
+	_env->verblvl(1);
 	// パラメータチェック
 	_args.paramcheck("f=,s=,k=,i=,o=,-q");
 
@@ -90,17 +91,30 @@ int kgMaketra::run(void)
 		// パラメータセット＆入出力ファイルオープン
 		setArgs();
 
-		// 入力ファイルにkey項目番号をセットする．
 		_iFile.setKey(_kField.getNum());
 
+		bool writeflg=false;
+
 		while( EOF != _iFile.read() ){
+
 			if( _iFile.keybreak() ){
 				_oFile.writeEol();
 				if((_iFile.status() & kgCSV::End )) break;
+				writeflg=false;
 			}
+			
 			for(vector<kgstr_t>::size_type i=0; i<_fField.size(); i++){
-				_oFile.writeStr(_iFile.getNewVal(_fField.num(i)));
-				_oFile.writeStr(" ");
+
+				char *strtmp = _iFile.getNewVal(_fField.num(i));
+
+				if(*strtmp=='\0'){ continue;}
+
+				if(writeflg==false){ writeflg=true; }
+				else               { _oFile.writeStr(" ");}
+
+				_oFile.writeStr(strtmp);
+
+
 			}
 		}
 		//ASSERT keynull_CHECK
