@@ -229,7 +229,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 										'src/vsop/SAPPOROBDD/app/VSOP/print.cc'
                     ],
 										define_macros=[('B_64', None),('_NO_MAIN_',None)],
- 										extra_compile_args=['-Wno-format-security','-Wno-error'],
+ 										extra_compile_args=['-Wno-format-security','-Wno-error','-Wno-narrowing'],
 										include_dirs=[
 											'src/vsop/SAPPOROBDD/include',
 											'src/vsop/SAPPOROBDD/src/BDDLCM/',
