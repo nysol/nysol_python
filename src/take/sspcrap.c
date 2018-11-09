@@ -7,7 +7,7 @@ PyMODINIT_FUNC PyInit__sspclib(void);
 #else
 void init_sspclib(void);
 #endif
-
+/*
 static char* strGET(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_AsUTF8(data);
@@ -15,6 +15,14 @@ static char* strGET(PyObject* data){
 	return PyString_AsString(data);
 #endif
 }
+*/
+#if PY_MAJOR_VERSION >= 3
+ #define strGET PyUnicode_AsUTF8
+#else		
+ #define strGET PyString_AsString;
+#endif
+
+
 static int strCHECK(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
 	return PyUnicode_Check(data);

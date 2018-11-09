@@ -19,14 +19,14 @@ extern "C" {
 #endif
 
 
-static char* strGET(PyObject* data){
+//static char* strGET(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
-	return PyUnicode_AsUTF8(data);
+ #define strGET PyUnicode_AsUTF8
 #else		
-	return PyString_AsString(data);
+ #define strGET PyString_AsString
 #endif
 
-}
+//}
 
 static bool strCHECK(PyObject* data){
 
