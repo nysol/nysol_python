@@ -630,7 +630,7 @@ CtoI * int2ctoi(int val)
 	return rtnctoi;
 }
 
-CtoI* string2ctoi(char *str)
+CtoI* string2ctoi(const char *str)
 {
 	// 文字列複製する
 	char *org = new char [strlen(str)+1];

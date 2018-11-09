@@ -367,13 +367,14 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 	    return -1;
 		}
   }
-	char * tval="1";
-	char * fval="0";
+	const char * tval="1";
+	const char * fval="0";
   if(boollist){
   	if(strCHECK(boollist)){
-			vector<char *> blist = splitToken(strGET(boollist), ',');
-			if(blist.size()>0){ tval =blist[0];}
-			if(blist.size()>1){ fval =blist[1];}
+  		string bstr(strGET(boollist));
+			vector<string> blist = splitToken(bstr, ',');
+			if(blist.size()>0){ tval =blist[0].c_str();}
+			if(blist.size()>1){ fval =blist[1].c_str();}
   	}
 		else if(PyList_Check(boollist)){
 			if(PyList_Size(boollist)>0){  tval = strGET( PyList_GetItem(boollist ,0)); } 

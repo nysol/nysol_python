@@ -182,7 +182,7 @@ void runCore(PyObject* mlist,PyObject* linklist ,vector< cmdCapselST > & cmdCaps
 				cmpcaplocal.paralist.push_back(strGET(parainfo));
 			}
 			else if( PyList_Check( parainfo ) ){
-				char * kwd = strGET(PyList_GetItem(parainfo ,0));
+				const char * kwd = strGET(PyList_GetItem(parainfo ,0));
 				if( !strcmp(kwd,"runfunc_func") ){
 					cmpcaplocal.fobj=PyList_GetItem(parainfo ,1);
 				}
@@ -404,7 +404,7 @@ PyObject* fldtp(PyObject* self, PyObject* args)
 		PyObject * v = PyDict_GetItem(tpmap,key);
 		Py_DECREF(key);
 		if(v){
-			char *vv = strGET(v);
+			const char *vv = strGET(v);
 			if ( !strcmp(vv,"str")){
 				PyList_SetItem(rlist,j,Py_BuildValue("i", 0));
 						
