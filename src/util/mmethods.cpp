@@ -358,7 +358,7 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 					cerr << "not suport TYPE" << endl;
 	 		   return -1;	
 				}
-				char * v = strGET( PyList_GetItem(head ,i) );
+				const char * v = strGET( PyList_GetItem(head ,i) );
 				self->ss->writeStr(v,i==self->fldcnt-1);
 			}
 		}
