@@ -315,6 +315,7 @@ static void mcsvout_dealloc(PyMcsvoutObject* self) {
 
 static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds) 
 {
+	try {
 	static char *kwlist[] = {"o","f", "size","precision","bool",NULL};
   char *fname =NULL;
   PyObject* head=NULL;
@@ -355,16 +356,16 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 			}
 			for(size_t i=0 ; i<self->fldcnt;i++){
 				if(!strCHECK(PyList_GetItem(head ,i))){
-					cerr << "not suport TYPE" << endl;
-	 		   return -1;	
+					PyErr_SetString(PyExc_RuntimeError,"not suport TYPE");
+				 	return -1;
 				}
 				const char * v = strGET( PyList_GetItem(head ,i) );
 				self->ss->writeStr(v,i==self->fldcnt-1);
 			}
 		}
 		else{
-			cerr << "not suport TYPE" << endl;
-	    return -1;
+			PyErr_SetString(PyExc_RuntimeError,"not suport TYPE");
+		 	return -1;
 		}
   }
 	const char * tval="1";
@@ -381,15 +382,19 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 			if(PyList_Size(boollist)>1){  fval = strGET( PyList_GetItem(boollist ,1)); } 
 		}
 		else{
-			cerr << "not suport TYPE" << endl;
-	    return -1;
+			PyErr_SetString(PyExc_RuntimeError,"not suport TYPE");
+		 	return -1;
 		}
   }
   self->truestr = new char[strlen(tval)+1];
   self->falsestr = new char[strlen(fval)+1];
-  strcpy(self->truestr,tval);
-  strcpy(self->falsestr,fval);
-
+ 	strcpy(self->truestr,tval);
+	strcpy(self->falsestr,fval);
+  }
+	catch(kgError& err){
+		PyErr_SetString(PyExc_RuntimeError,err.message(0).c_str());
+	 	return -1;
+	}
   return 0;
 }
 
