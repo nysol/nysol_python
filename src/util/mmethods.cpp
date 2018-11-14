@@ -49,7 +49,7 @@ static char* strGET(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
  #define strGET PyUnicode_AsUTF8
 #else		
- #define strGET PyString_AsString;
+ #define strGET PyString_AsString
 #endif
 
 
