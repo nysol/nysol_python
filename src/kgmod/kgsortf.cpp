@@ -596,7 +596,7 @@ void* kgSortf::run_sort_thread(void *obj){
 // 入力: CSV file
 // 出力: sort済みのoCnt個のCSV file , ファイル番号 0?oCnt(返値)
 // -----------------------------------------------------------------------------
-int kgSortf::sort(kgCSVfld& csv) throw(kgError) 
+int kgSortf::sort(kgCSVfld& csv)
 {
 	size_t fldCnt = csv.fldSize();
 

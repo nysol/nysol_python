@@ -51,9 +51,9 @@ public:
 	kgArgFld() : _csv(0){}
 
 	// set関数
-	void set(vector< vector<kgstr_t> >& vvs, kgCSV* csv ,bool fldno, bool attrEval=true) throw(kgError);
-	void set(vector<kgstr_t>& vs, kgCSV* csv,bool fldno) throw(kgError);
-	void set(kgstr_t& s, kgCSV* csv,bool fldno) throw(kgError);
+	void set(vector< vector<kgstr_t> >& vvs, kgCSV* csv ,bool fldno, bool attrEval=true);
+	void set(vector<kgstr_t>& vs, kgCSV* csv,bool fldno);
+	void set(kgstr_t& s, kgCSV* csv,bool fldno);
 
 	// 登録されている項目名数
 	size_t size(void)			const { return _name.size();}
