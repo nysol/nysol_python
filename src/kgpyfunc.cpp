@@ -227,7 +227,7 @@ int kgPyfunc::run(
 
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
-			PyOS_AfterFork();
+			pyAfterFORK();
 			for(size_t i=0; i<fdlist.size();i++){ // 不必要FDclose
 				if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){
 					close(fdlist[i]);
