@@ -130,7 +130,7 @@ void kgCut::setArgs(int inum,int *i_p,int onum ,int *o_p)
 }
 
 // -----------------------------------------------------------------------------
-void kgCut::writeFldName(const vector<int>& fld,bool reverse) throw(kgError)
+void kgCut::writeFldName(const vector<int>& fld,bool reverse)
 {
 	if( _oFile.noFldName( ) ) return;
 	if(fld.size()<=0){ throw kgError("no output fields"); }

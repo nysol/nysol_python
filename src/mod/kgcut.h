@@ -44,7 +44,7 @@ class kgCut : public kgMod {
 	void setArgs(int inum,int *i,int onum, int* o);
 
 	// CSV項目名出力
-	void writeFldName(const vector<int>& fld ,bool reverse) throw(kgError);
+	void writeFldName(const vector<int>& fld ,bool reverse);
 
 	int runMain(void);
 	void setArgsMain(void);	

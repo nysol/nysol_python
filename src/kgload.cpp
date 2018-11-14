@@ -137,7 +137,7 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 int kgLoad::run(void)
 {
 	try {
-		size_t fcnt=0;
+		//size_t fcnt=0;
 		// パラメータセット＆入出力ファイルオープン
 		setArgs();
 
@@ -148,7 +148,7 @@ int kgLoad::run(void)
 				char * data = _iFile.getRec();
 				string hdata = data;
 				head = splitToken(hdata,',');
-				fcnt = head.size();
+				//fcnt = head.size();
 			}
 			// headerを出力するとき
 			if(!_nfn_o){ _oFile.writeFldName(head);}
@@ -195,7 +195,7 @@ int kgLoad::run(void)
 int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	try {
-		size_t fcnt=0;
+		//size_t fcnt=0;
 		// パラメータセット＆入出力ファイルオープン
 		setArgs(inum, i_p,onum, o_p);
 		// headerがあるとき
@@ -205,7 +205,7 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 				char * data = _iFile.getRec();
 				string hdata = data;
 				head = splitToken(hdata,',');
-				fcnt = head.size();
+				//fcnt = head.size();
 			}
 			// headerを出力するとき
 			if(!_nfn_o){ _oFile.writeFldName(head);}

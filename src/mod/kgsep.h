@@ -45,7 +45,7 @@ class kgSep : public kgModIncludeSort
 	void setArgs(void);
 	void setArgs(int inum,int *i,int onum, int* o);
 	void setArgsMain(void);	
-	void writeFldName(void) throw(kgError);
+	void writeFldName(void);
 
 	int runMain(void);
 

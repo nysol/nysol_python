@@ -120,7 +120,7 @@ void kgSep::setArgs(void)
 
 }
 
-void kgSep::writeFldName() throw(kgError)
+void kgSep::writeFldName()
 {
 	if( _oFile.noFldName( ) ) return;
 	if (_fField.size()==0){

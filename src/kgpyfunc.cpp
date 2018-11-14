@@ -30,6 +30,14 @@ using namespace std;
 using namespace kglib;
 using namespace kgmod;
 
+
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >=7
+	#define pyAfterFORK PyOS_AfterFork_Child
+#else		
+	#define pyAfterFORK PyOS_AfterFork
+#endif
+
+
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
@@ -134,7 +142,7 @@ int kgPyfunc::run(
 
 			if(!Py_IsInitialized()){ Py_Initialize(); }
 			if (!PyEval_ThreadsInitialized())	{  PyEval_InitThreads(); }
-			PyOS_AfterFork();
+			pyAfterFORK();
 
 			//for(size_t i=0; i<fdlist.size();i++){
 			//	if ( fdlist[i] != i_p_t && fdlist[i] != o_p_t ){

@@ -485,7 +485,7 @@ int kgXml2csv::run(void)
 	int sts=1;
 	try {
 		setArgs();
-		int sts = runMain();
+		sts = runMain();
 		successEnd();
 		return sts;
 

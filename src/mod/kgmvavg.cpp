@@ -181,7 +181,7 @@ void kgMvavg::simpleMA()
 {
 	vector<double> sumV(_fField.size() ,0);
 	size_t pointer=0;
-	bool   out    = false;
+	//bool   out    = false;
 	size_t recNo=0;
 
 	// データ集計＆出力
@@ -194,7 +194,7 @@ void kgMvavg::simpleMA()
 				_nullv.at(i)=true;
 			}
 			pointer=0;
-			out    = false;
+			//out    = false;
 			recNo=1;
 			for(std::size_t i=0; i<_fField.size(); i++){
 				sumV.at(i) = 0;
@@ -268,8 +268,8 @@ void kgMvavg::weightedMA()
 
 	// _valをFIFOキューと見立てたときのデキュー
 	size_t pointer=0;
-	bool   filled = false;
-	bool   out    = false;
+	//bool   filled = false;
+	//bool   out    = false;
 
 	size_t recNo=0;
 
@@ -283,8 +283,8 @@ void kgMvavg::weightedMA()
 				_nullv.at(i)=true;
 			}
 			pointer=0;
-			filled = false;
-			out    = false;
+			//filled = false;
+			//out    = false;
 			recNo=1;
 			for(std::size_t i=0; i<_fField.size(); i++){
 				sumV.at(i) = 0;
