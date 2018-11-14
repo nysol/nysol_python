@@ -57,7 +57,7 @@ PyObject* mmaketra_run(PyObject* self, PyObject* args, PyObject* kwds)
 	kgArgs modargs;
   kgmod::kgMaketra kgmod;
 
-	static char *kwlist[] = {"i","o","k","f","s","q",NULL};
+	static const char *kwlist[] = {"i","o","k","f","s","q",NULL};
 	char * inf =NULL;
 	char * outf=NULL;
   PyObject* kval=NULL;
@@ -66,7 +66,7 @@ PyObject* mmaketra_run(PyObject* self, PyObject* args, PyObject* kwds)
 	int qval = 0;
 
 	if (! PyArg_ParseTupleAndKeywords(
-					args, kwds, "ss|OOOi", kwlist, 
+					args, kwds, "ss|OOOi", const_cast<char**>(kwlist), 
 					&inf,&outf,&kval,&fval,&sval,&qval))
 	{
     return NULL;
@@ -83,7 +83,8 @@ PyObject* mmaketra_run(PyObject* self, PyObject* args, PyObject* kwds)
   	}
 		else if(PyList_Check(kval)){
 			kgstr_t kstr; 
-			for(size_t i=0 ; i< PyList_Size(kval);i++){
+			size_t lsizek = PyList_Size(kval);
+			for(size_t i=0 ; i<lsizek ;i++){
 				if(!strCHECK(PyList_GetItem(kval ,i))){
 					cerr << "not suport TYPE" << endl;
 	 		   	return PyLong_FromLong(-1);
@@ -103,7 +104,8 @@ PyObject* mmaketra_run(PyObject* self, PyObject* args, PyObject* kwds)
   	}
 		else if(PyList_Check(fval)){
 			kgstr_t fstr; 
-			for(size_t i=0 ; i< PyList_Size(fval);i++){
+			size_t lsizef = PyList_Size(fval);
+			for(size_t i=0 ; i< lsizef;i++){
 				if(!strCHECK(PyList_GetItem(fval ,i))){
 					cerr << "not suport TYPE" << endl;
 	 		   	return PyLong_FromLong(-1);
@@ -123,7 +125,8 @@ PyObject* mmaketra_run(PyObject* self, PyObject* args, PyObject* kwds)
   	}
 		else if(PyList_Check(sval)){
 			kgstr_t sstr; 
-			for(size_t i=0 ; i< PyList_Size(sval);i++){
+			size_t lsizes = PyList_Size(sval);
+			for(size_t i=0 ; i< lsizes;i++){
 				if(!strCHECK(PyList_GetItem(sval ,i))){
 					cerr << "not suport TYPE" << endl;
 	 		   	return PyLong_FromLong(-1);
