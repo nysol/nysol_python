@@ -268,6 +268,9 @@ int kgPyfunc::run(
 			pthread_mutex_lock(mtx);
 			int rtnx = pthread_cond_signal(forkCond);
 			pthread_mutex_unlock(mtx);
+			if(rtnx!=0){
+				throw kgError("pthread_cond_signal error");
+			}
 			while(1){
 				if(*runst){
 					write(finchek[1],"OK", strlen("OK"));

@@ -2220,7 +2220,7 @@ void kgFunction_hours_t::run(void)
 	if( _args.at(0)->null() ){
 		_result.null(true);
 	}else{
-		sprintf( _buf,"%02d", _args.at(0)->t()->time_of_day().hours());
+		sprintf( _buf,"%02d", static_cast<int>(_args.at(0)->t()->time_of_day().hours()));
 		_result.s(_buf);
 	}
 }
@@ -2243,7 +2243,7 @@ void kgFunction_minutes_t::run(void)
 	if( _args.at(0)->null() ){
 		_result.null(true);
 	}else{
-		sprintf( _buf,"%02d", _args.at(0)->t()->time_of_day().minutes());
+		sprintf( _buf,"%02d", static_cast<int>(_args.at(0)->t()->time_of_day().minutes()));
 		_result.s(_buf);
 	}
 }
@@ -2280,7 +2280,7 @@ void kgFunction_seconds_t::run(void)
 	if( _args.at(0)->null() ){
 		_result.null(true);
 	}else{
-		sprintf( _buf,"%02d", _args.at(0)->t()->time_of_day().seconds());
+		sprintf( _buf,"%02d", static_cast<int>(_args.at(0)->t()->time_of_day().seconds()));
 		_result.s(_buf);
 	}
 }
@@ -2296,7 +2296,7 @@ void kgFunction_useconds_t::run(void)
 		char fmt[32];
 		sprintf(fmt,"%%02d.%%0%dlld",time_duration::num_fractional_digits() );
 		sprintf(_buf,fmt, 
-			_args.at(0)->t()->time_of_day().seconds(),
+			static_cast<int>(_args.at(0)->t()->time_of_day().seconds()),
 			_args.at(0)->t()->time_of_day().fractional_seconds()
 		);
 		_result.s(_buf);

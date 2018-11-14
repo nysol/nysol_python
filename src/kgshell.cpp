@@ -568,6 +568,7 @@ static void watch_end_OUTPUT(const string& v,kgEnv *env,bool pymsg){
 	
 	}
 }
+/*  今の所必要なし
 static void watch_war_OUTPUT(const string& v,kgEnv *env,bool pymsg){
 	if(pymsg){
 		kgMsgIncPySys msg(kgMsg::WAR, env);
@@ -595,7 +596,7 @@ static void watch_err_OUTPUT(const string& v,kgEnv *env,bool pymsg){
 	
 	}
 }
-
+*/
 void *kgshell::run_watch(void *arg){
 	watchST *wst =(watchST*)arg;
 	argST *a =wst->argst; 
@@ -609,7 +610,7 @@ void *kgshell::run_watch(void *arg){
 	bool endFLG = true;	
 	pthread_mutex_lock(stsMutex);
 	while(1){
-		size_t pos = 0;
+		int pos = 0;
 		endFLG = true;
 		while(pos<clen){
 			if(a[pos].finflg==false){ endFLG=false;}
@@ -629,7 +630,7 @@ void *kgshell::run_watch(void *arg){
 			}
 			if(a[pos].status!=0&&a[pos].status!=2){
  				//エラー発生時はthread cancel
-				for(size_t j=0;j<clen;j++){
+				for(int j=0;j<clen;j++){
 					if(!a[j].finflg){
 						pthread_cancel(th_st_pp[j]);	
 					}
@@ -782,6 +783,10 @@ int kgshell::threadStkINIT(pthread_attr_t *pattr){
 
 	size_t base ;
 	int ret = pthread_attr_init(pattr);
+	if(ret!=0){
+		err_OUTPUT("pythead init error"  );
+		return 1;
+	}
 	pthread_attr_getstacksize(pattr,&base);
 	if( stacksize > base ){
 		if( pthread_attr_setstacksize(pattr,stacksize)	){

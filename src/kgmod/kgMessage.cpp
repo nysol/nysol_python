@@ -65,6 +65,7 @@ bool kgMsg::isOn(void){
 			case END: if(vl>=3) result=true; break;
 			case MSG: if(vl>=4) result=true; break;
 			case DEB: if(vl>=5) result=true; break;
+			case IGN: break;
  		}
 	}
 	return result;
@@ -80,6 +81,7 @@ string kgMsg::header(void){
 		case END: ss << "#END#"    ; break;
 		case MSG: ss << "#MSG#"    ; break;
 		case DEB: ss << "#DEBUG#"  ; break;
+		case IGN: break;
 	}
 	return ss.str();
 }

@@ -450,9 +450,9 @@ void kgCSVout::writeTime(const boost::posix_time::ptime& val){
 	  static_cast<int>(val.date().year() ),
 	  static_cast<int>(val.date().month()),
 	  static_cast<int>(val.date().day()  ),
-	                   val.time_of_day().hours()  ,
-	                   val.time_of_day().minutes(),
-                     val.time_of_day().seconds()
+	  static_cast<int>(val.time_of_day().hours())  ,
+	  static_cast<int>(val.time_of_day().minutes()),
+	  static_cast<int>(val.time_of_day().seconds())
                      );
   }else{
 		char fmt[128];
@@ -461,9 +461,9 @@ void kgCSVout::writeTime(const boost::posix_time::ptime& val){
 		  static_cast<int>(val.date().year() ),
 		  static_cast<int>(val.date().month()),
 	 		static_cast<int>(val.date().day()  ),
-			val.time_of_day().hours()  ,
-			val.time_of_day().minutes(),
-			val.time_of_day().seconds(),
+	 		static_cast<int>(val.time_of_day().hours())  ,
+	 		static_cast<int>(val.time_of_day().minutes()),
+			static_cast<int>(val.time_of_day().seconds()),
 			val.time_of_day().fractional_seconds()
     );  
   }      
@@ -496,9 +496,9 @@ void kgCSVout::writeTime(const boost::posix_time::ptime& val, const bool eol){
 	  static_cast<int>(val.date().year() ),
 	  static_cast<int>(val.date().month()),
 	  static_cast<int>(val.date().day()  ),
-	                   val.time_of_day().hours()  ,
-	                   val.time_of_day().minutes(),
-                     val.time_of_day().seconds()
+	  static_cast<int>(val.time_of_day().hours())  ,
+	  static_cast<int>(val.time_of_day().minutes()),
+	  static_cast<int>(val.time_of_day().seconds())
                      );
   }else{
 
@@ -508,9 +508,9 @@ void kgCSVout::writeTime(const boost::posix_time::ptime& val, const bool eol){
 		  static_cast<int>(val.date().year() ),
 		  static_cast<int>(val.date().month()),
 	 		static_cast<int>(val.date().day()  ),
-			val.time_of_day().hours()  ,
-			val.time_of_day().minutes(),
-			val.time_of_day().seconds(),
+	 		static_cast<int>(val.time_of_day().hours())  ,
+	  	static_cast<int>(val.time_of_day().minutes()),
+			static_cast<int>(val.time_of_day().seconds()),
 			val.time_of_day().fractional_seconds()
     );  
     //後ろ０クリア

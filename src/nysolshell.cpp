@@ -18,25 +18,16 @@ extern "C" {
 }
 #endif
 
-
 //static char* strGET(PyObject* data){
+//static bool strCHECK(PyObject* data){
 #if PY_MAJOR_VERSION >= 3
- #define strGET PyUnicode_AsUTF8
+ #define strGET   PyUnicode_AsUTF8
+ #define strCHECK PyUnicode_Check
 #else		
- #define strGET PyString_AsString
+ #define strGET   PyString_AsString
+ #define strCHECK PyString_Check
 #endif
 
-//}
-
-static bool strCHECK(PyObject* data){
-
-#if PY_MAJOR_VERSION >= 3
-	return PyUnicode_Check(data);
-#else		
-	return PyString_Check(data);
-#endif
-
-}
 
 static PyObject* setRtnData(long k,char * v){
 	PyObject* rtn = NULL;

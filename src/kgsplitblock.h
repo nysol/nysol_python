@@ -37,14 +37,14 @@ struct laySt{
 };
 
 class kgSplitBlock{
-	int _node;
-	int _blockLimit;
-	int _now_bpos;
+
+	size_t _node;
+	size_t _blockLimit;
 
 	vector <linkST> _edge;
 	vector<int>	_modBLkNo;
 	vector<int> _likBLkNo;
-	vector<int> _BLkcnt;
+	vector<size_t> _BLkcnt;
 	set<int>    _stPos;
 	vector< vector<int> > _BLkstPos;
 
@@ -109,7 +109,7 @@ class kgSplitBlock{
 
 		int getModBlkSize_M(int i){ 
 			int rtn = 0;
-			for(int j=0;j<_runUnitBLklist[i].size();j++){
+			for(size_t j=0;j<_runUnitBLklist[i].size();j++){
 				rtn += getModBlkSize(_runUnitBLklist[i][j]);
 			}
 			return rtn; 
@@ -117,7 +117,7 @@ class kgSplitBlock{
 
 		int getLinkBlkSize_M(int i){
 			int rtn = 0;
-			for(int j=0;j<_runUnitBLklist[i].size();j++){
+			for(size_t j=0;j<_runUnitBLklist[i].size();j++){
 				rtn += getLinkBlkSize(_runUnitBLklist[i][j]);
 			}
 			return rtn;
@@ -125,7 +125,7 @@ class kgSplitBlock{
 		
 		vector<int> getLinkBlkInfo_M(int i){
 			vector<int> rtn;
-			for(int j=0;j<_runUnitBLklist[i].size();j++){
+			for(size_t j=0;j<_runUnitBLklist[i].size();j++){
 				vector<int> addvec = getLinkBlkInfo(_runUnitBLklist[i][j]);
 				rtn.insert(rtn.end(), addvec.begin(), addvec.end());
 			}
@@ -133,7 +133,7 @@ class kgSplitBlock{
 		}
 		vector<int> getModBlkInfo_M(int i){
 			vector<int> rtn;
-			for(int j=0;j<_runUnitBLklist[i].size();j++){
+			for(size_t j=0;j<_runUnitBLklist[i].size();j++){
 				vector<int> addvec = getModBlkInfo(_runUnitBLklist[i][j]);
 				rtn.insert(rtn.end(), addvec.begin(), addvec.end());
 			}

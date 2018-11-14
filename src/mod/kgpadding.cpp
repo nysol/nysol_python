@@ -255,7 +255,11 @@ void kgPadding::writePading(ptime& val,int outtype)
 {
 	time_duration td=val.time_of_day();
 	char buf[16];
-	sprintf(buf,"%02d%02d%02d",td.hours(),td.minutes(),td.seconds());
+	sprintf(buf,"%02d%02d%02d",
+		static_cast<int>(td.hours()),
+		static_cast<int>(td.minutes()),
+		static_cast<int>(td.seconds())
+	);
 	writePading(buf,outtype);
 }
 // -----------------------------------------------------------------------------

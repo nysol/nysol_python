@@ -100,7 +100,6 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 		}
 		_iFiles = new kgCSVfld*[_itotal];
 	
-		size_t pos =0;
 		for(int i=0; i<inum ;i++){
 			_iFiles[i] = new kgCSVfld;
 			_iFiles[i]->popen(*(i_p+i), _env,_nfn_i);

@@ -37,31 +37,19 @@ extern "C" {
 	void init_utillib(void);
 }
 #endif
-/*
-static char* strGET(PyObject* data){
-#if PY_MAJOR_VERSION >= 3
-	return PyUnicode_AsUTF8(data);
-#else		
-	return PyString_AsString(data);
-#endif
-}
-*/
+
+
 #if PY_MAJOR_VERSION >= 3
  #define strGET PyUnicode_AsUTF8
+ #define strCHECK PyUnicode_Check
+ #define numCHECK(data) (PyLong_Check(data))
 #else		
  #define strGET PyString_AsString
+ #define strCHECK PyString_Check
+ #define numCHECK(data) (PyInt_Check(data)||PyLong_Check(data))
 #endif
 
-
-static bool strCHECK(PyObject* data){
-
-#if PY_MAJOR_VERSION >= 3
-	return PyUnicode_Check(data);
-#else		
-	return PyString_Check(data);
-#endif
-
-}
+/*
 static bool numCHECK(PyObject* data){
 
 #if PY_MAJOR_VERSION >= 3
@@ -69,8 +57,8 @@ static bool numCHECK(PyObject* data){
 #else		
 	return PyInt_Check(data) || PyLong_Check(data);
 #endif
-
 }
+*/
 
 
 // =============================================================================
@@ -209,17 +197,16 @@ PyObject* mchkcsv(PyObject* self, PyObject* args){
 	}
 }
 
-
-
 typedef struct {
   PyObject_HEAD
   kgCSVout* ss;
 	kgEnv  *env;
-	int    fldcnt;
+	size_t fldcnt;
 	char * truestr;
 	char * falsestr;
 
 } PyMcsvoutObject;
+
 
 static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 
@@ -231,12 +218,12 @@ static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 		return Py_BuildValue("");
 	}
 	
-	Py_ssize_t msize = PyList_Size(rcvobj);
+	size_t msize = PyList_Size(rcvobj);
 
 	size_t lastsize = (self->fldcnt==0) ? msize : self->fldcnt;
 	size_t osize = ( self->fldcnt==0 || self->fldcnt > msize )? msize :self->fldcnt;
 	
-	for(Py_ssize_t i=0 ; i< osize ; i++){
+	for(size_t i=0 ; i< osize ; i++){
 		PyObject* v = PyList_GetItem(rcvobj ,i);
 		
 		if(strCHECK(v)){
@@ -258,6 +245,7 @@ static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 			self->ss->writeStr("",i==lastsize-1);
 		}
 	}
+
 	// 配列のサイズが項目名サイズより小さい時は、null値を出力。
 	if(osize < lastsize){
 		for(size_t i=osize; i<lastsize; i++){
@@ -316,7 +304,7 @@ static void mcsvout_dealloc(PyMcsvoutObject* self) {
 static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds) 
 {
 	try {
-	static char *kwlist[] = {"o","f", "size","precision","bool",NULL};
+	static const char *kwlist[] = {"o","f", "size","precision","bool",NULL};
   char *fname =NULL;
   PyObject* head=NULL;
   int fsize=0;
@@ -324,7 +312,7 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
   PyObject* boollist=NULL;
 
 	if (! PyArg_ParseTupleAndKeywords(
-					args, kwds, "s|OiiO", kwlist, 
+					args, kwds, "s|OiiO", const_cast<char**>(kwlist), 
 					&fname,&head,&fsize,&precision,&boollist))
 	{
     return -1;
@@ -351,7 +339,8 @@ static int mcsvout_init(PyMcsvoutObject* self, PyObject* args, PyObject* kwds)
 			}
   	}
 		else if(PyList_Check(head)){
-			if( self->fldcnt==0 || self->fldcnt > PyList_Size(head) ){
+			size_t lsize = PyList_Size(head);
+			if( self->fldcnt==0 || self->fldcnt > lsize ){
 				self->fldcnt = PyList_Size(head);
 			}
 			for(size_t i=0 ; i<self->fldcnt;i++){

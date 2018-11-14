@@ -45,7 +45,7 @@ class kgPyfunc : public kgMod
 //	char * const * 
 	kgstr_t _cmdstr;
 	vector<kgstr_t> _cmdstrv;
-	char const ** _cmdars;
+	//char const ** _cmdars;
 
 public:
 	static const char * _ipara[];

@@ -29,11 +29,7 @@ int kgSplitBlock::reblock(int blockNo,int nowbpos){
 
 	int nowsize = 0;
 	for(i_iv_itr it = _layer_maps[blockNo].begin() ; it!= _layer_maps[blockNo].end();it++){
-		//cerr << "it-second:" << "(" << it->second.size() << ")" ;
-		//for(size_t j=0;j<it->second.size();j++){
-		//	cerr << " " << it->second.at(j);
-		//}
-		//cerr << endl;
+
 		if(nowsize + it->second.size() > _blockLimit){
 			nowbpos++;
 			nowsize = 0 ;
@@ -117,7 +113,7 @@ void kgSplitBlock::makeLayer(int blockNo,vector<int>& stps,i_iv_t & layermap){
 	//vector<int> nextlayer;
 	
 	while(1){
-		for ( int i =0 ; i<newstps.size() ; i++){
+		for ( size_t i =0 ; i<newstps.size() ; i++){
 			int st = newstps[i];
 			
 			while(1){
@@ -126,7 +122,7 @@ void kgSplitBlock::makeLayer(int blockNo,vector<int>& stps,i_iv_t & layermap){
 				}
 				if(_t2f_map.find(st) != _t2f_map.end()){
 					bool preSumi = true;
-					for(int j=0 ;j<_t2f_map[st].size();j++){
+					for(size_t j=0 ;j<_t2f_map[st].size();j++){
 						if ( _id_layer.find(_t2f_map[st][j]) == _id_layer.end()){
 							preSumi = false;
 							break;
@@ -176,7 +172,7 @@ void kgSplitBlock::makeLayer(int blockNo,vector<int>& stps,i_iv_t & layermap){
 					st = _f2t_map[st][0];
 				}
 				else{
-					for(int j=0 ;j<_f2t_map[st].size();j++){
+					for(size_t j=0 ;j<_f2t_map[st].size();j++){
 						 nextstps.insert(_f2t_map[st][j]);
 					}
 					break;
@@ -253,7 +249,7 @@ int kgSplitBlock::makeBLK(void){
 
 	// calc start point & edge map
 	vector<bool> notStart(_node,false);
-	for(int i=0;i<_edge.size();i++){
+	for(size_t i=0;i<_edge.size();i++){
 		notStart[_edge[i].toID]=true;
 		if ( _edge_map.find(_edge[i].toID) == _edge_map.end() ){
 			vector<int> newvec;
@@ -280,7 +276,7 @@ int kgSplitBlock::makeBLK(void){
 	}
 
 	// find  start point & (juction f.w.)
-	for(int i=0;i<_node;i++){
+	for(size_t i=0;i<_node;i++){
 		if(notStart[i]==false){ _stPos.insert(i); }
 	}
 
@@ -411,7 +407,7 @@ void kgSplitBlock::blockSplit(int maxsize){
 	}
 */
 
-	for(int i=0;i<_node;i++){
+	for(size_t i=0;i<_node;i++){
 		_BLkmodlist[_modBLkNo[i]].push_back(i);
 	}
 
@@ -447,7 +443,7 @@ void kgSplitBlock::blockSplit(int maxsize){
 
 
 	// set block No (mod&link) 
-	for(int i=0;i<_edge.size();i++){
+	for(size_t i=0;i<_edge.size();i++){
 		// runbluckされてたのはsplit
 		//int to_runBLKID = ;
 		//int fr_runBLKID = ;

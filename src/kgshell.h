@@ -180,13 +180,13 @@ class kgshell{
 			cerr << i << ":"<< _argst[i].mobj->name() << " " << _argst[i].i_cnt << " " << _argst[i].o_cnt ;
 			if ( _argst[i].i_cnt > 0&& _argst[i].i_p!=NULL){
 				cerr << " i:" ;
-				for(size_t j=0; j< _argst[i].i_cnt;j++){
+				for(int j=0; j< _argst[i].i_cnt;j++){
 					cerr <<  *(_argst[i].i_p+j) << " " ;
 				}
 			}
 			if ( _argst[i].o_cnt > 0 && _argst[i].o_p!=NULL){
 				cerr << " o:" ;
-				for(size_t j=0; j< _argst[i].o_cnt;j++){
+				for(int j=0; j< _argst[i].o_cnt;j++){
 					cerr <<  *(_argst[i].o_p+j) << " " ;
 				}
 			}
