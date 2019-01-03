@@ -156,7 +156,8 @@ def args2dict(args, kw_args,klist,uk=None):
 
 		else:
 			exval.append(k)
-			raise TypeError(k + " is not keyword")
+			wxc = TypeError(k + " is not keyword")
+			raise (wxc)
 			
 	for k in exval:
 		del kw_args[k]

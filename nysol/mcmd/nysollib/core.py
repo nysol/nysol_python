@@ -368,17 +368,18 @@ class NysolMOD_CORE(object):
 
 
 	# return generator
-	def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False,header=False):
+	# def getline(self,dtype=None,keys=None,skeys=None,otype="list",q=False,header=False):
+	def getline(self,dtype=None,k=None,s=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
-			if keys!=None:
+			if k!=None:
 
-				return self.__getLineListWithInfo(keys,skeys,dtype,q,header)
+				return self.__getLineListWithInfo(k,s,dtype,q,header)
 
-			elif skeys!=None:
+			elif s!=None:
 
-				return self.__getLineList(dtype,skeys,q,header)
+				return self.__getLineList(dtype,s,q,header)
 
 			else:
 				return self.__getLineList(dtype,None,q,header)
@@ -386,21 +387,22 @@ class NysolMOD_CORE(object):
 
 		elif otype == "dict":
 
-			if keys!=None :
+			if k!=None :
 
-				return self.__getLineDictWithInfo(keys,skeys,dtype,q)
+				return self.__getLineDictWithInfo(k,s,dtype,q)
 
-			elif skeys!=None:
+			elif s!=None:
 
-				return self.__getLineDict(dtype,skeys,q)
+				return self.__getLineDict(dtype,s,q)
 
 			else:
 				
 				return self.__getLineDict(dtype,None)
 
 		else:
+			wxc = Exception("unsuport rtype" + rtype)
 
-			raise Exception("unsuport rtype" + rtype)
+			raise wxc
 
 
 
@@ -441,15 +443,15 @@ class NysolMOD_CORE(object):
 			n_core.cancel(x.shobj)
 
 	# return generator
-	def keyblock(self,keys,skeys=None,dtype=None,otype="list",q=False,header=False):
+	def keyblock(self,k,s=None,dtype=None,otype="list",q=False,header=False):
 
 		if otype == "list":
 
-			return self.__getBlockList(keys,skeys,dtype,q,header)
+			return self.__getBlockList(k,s,dtype,q,header)
 
 		elif otype == "dict":
 			
-			return self.__getBlockDict(keys,skeys,dtype,q)
+			return self.__getBlockDict(k,s,dtype,q)
 
 		else : 
 
