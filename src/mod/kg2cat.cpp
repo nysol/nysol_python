@@ -48,6 +48,8 @@ kg2Cat::kg2Cat(void)
 	#endif
 	_first = true;
 	_iCnt = 0;
+	_itotal = 0;
+	_iFiles = NULL;
 }
 
 
@@ -90,7 +92,13 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 	
 		//in
 		vector<kgstr_t> isf = _args.toStringVector("i=",false);
-	
+		/*
+		vector<kgstr_t> pisf = _args.toStringVector("i=",false);
+		vector<kgstr_t> isf;
+		if(!isf.empty()){
+			isf = kgFilesearch(pisf,true,false);
+		}
+		*/
 		_itotal = isf.size() + inum ;
 		if(_itotal==0){// maxサイズの制限も入れる
 				throw kgError("no match IO");
@@ -180,6 +188,12 @@ int kg2Cat::runMain()
 	}
 	_oFile.close();
 
+	for(size_t i=0 ; i<_itotal ;i++){
+		delete _iFiles[i];
+	}
+	delete _iFiles;
+	_iFiles =NULL;
+	_itotal=0;
 	return 0;
 
 // 例外catcher

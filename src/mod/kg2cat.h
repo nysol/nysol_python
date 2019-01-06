@@ -57,7 +57,12 @@ public:
 
 	// コンストラクタ
 	kg2Cat(void);
-	~kg2Cat(void){}
+	~kg2Cat(void){
+		for(size_t i=0 ; i<_itotal ;i++){
+			delete _iFiles[i];
+		}
+		delete _iFiles;
+	}
 
 	// 処理行数取得メソッド
 	size_t iRecNo(void) const { return _iCnt; }
