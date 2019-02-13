@@ -1049,12 +1049,13 @@ int kgshell::runMain(
 
 			}
 			if(_argst[pos].status!=0&&_argst[pos].status!=2){
- 				//エラー発生時はthread cancel
+ 				//エラー発生時はthread cancel した方がいい？ <<=ややこしくなりそうなので保留
+ 				/*
 				for(size_t j=0;j<_clen;j++){
 					if(!_argst[j].finflg){
 						pthread_cancel(_th_st_pp[j]);	
 					}
-				}
+				}*/
 				endFLG=true;
 				errflg = true;
 				break;
@@ -1066,9 +1067,10 @@ int kgshell::runMain(
 	}
 
 	pthread_mutex_unlock(&_stsMutex);
-
 	for(size_t i=_clen;i>0;i--){
-		pthread_join(_th_st_pp[i-1],NULL);
+		int ret;
+		int status;
+		ret = pthread_join(_th_st_pp[i-1],(void**)&status);
 	}
 
 	if (!outpipe){ 

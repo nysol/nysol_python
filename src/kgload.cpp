@@ -302,7 +302,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 				while( nowlin < max ){
 					PyObject* ddata = PyList_GetItem(i_p, nowlin);
 					if( fldsize != PyList_Size(ddata) ){
-						kgError err("unmatch fld size" );	
+						throw kgError("unmatch field size" );	
 					}
 					for(Py_ssize_t i=0 ; i<fldsize;i++){
 						PyObject* fval = PyList_GetItem(ddata,i);
