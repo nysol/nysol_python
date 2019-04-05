@@ -58,7 +58,7 @@ kg2Cross::kg2Cross(void)
 {
 	_name    = "kg2cross";
 	_version = "###VERSION###";
-	_paralist = "f=,s=,a=,k=,v=,i=,o=,fixfld=,-q";
+	_paralist = "f=,s=,a=,k=,v=,i=,o=,fixfld=,-q,-r";
 	_paraflg = kgArgs::ALLPARAM;
 
 	#include <help/en/kg2crossHelp.h>	
@@ -188,17 +188,39 @@ void kg2Cross::setArgsMain(void)
 	else								 { _n_flg=true;	 }
 
 	bool seqflg = _args.toBool("-q");
+
+	_r_flg = _args.toBool("-r");
+
 	if(_nfn_i) { seqflg = true; }
 
 	if(!seqflg&&!vk.empty()){ sortingRun(&_iFile,vk);}
 
 	_kField.set(vk, &_iFile, _fldByNum);
-	_fField.set(vf, &_iFile, _fldByNum);
 	_sField.set(vs, &_iFile, _fldByNum);
+
+	if(_r_flg){
+		set <int> exfld;
+		for(size_t i=0 ; i < _kField.size() ;i++){
+			exfld.insert(_kField.num(i));
+		}
+		for(size_t i=0 ; i < _sField.size() ;i++){
+			exfld.insert(_sField.num(i));
+		}
+		_fField.setR(vf, &_iFile, _fldByNum ,exfld);
+		if(_fField.size() == 0){
+			throw kgError("f= is empty for using -r");	
+		}
+	}
+	else{
+		_fField.set(vf, &_iFile, _fldByNum);
+	}
 
 	// ー => |　:: a=必須 f=必須             v=オプション
 	// | => ー　:: s=必須 f=必須 k=オプション  v=オプション
 	if(_a_str.size()==0){
+
+		if(_r_flg){ throw kgError("not use -r without a="); }
+
 		if(_sField.size()!=1){ throw kgError("s= takes just one field name."); }
 		if(_fField.size()!=1){ throw kgError("f= takes just one field name."); }
 
