@@ -42,7 +42,7 @@ kgSep::kgSep(void)
 {
 	_name    = "kgsep";
 	_version = "###VERSION###";
-	_paralist = "d=,i=,-p,-q,f=";
+	_paralist = "d=,i=,-p,-q,f=,s=";
 	_paraflg = kgArgs::COMMON|kgArgs::NULL_IN;
 
 	#include <help/en/kgsepHelp.h>
@@ -66,13 +66,25 @@ void kgSep::setArgsMain(void)
 
 	vector<kgstr_t> vf = _args.toStringVector("f=",false);
 
+	// s= 項目引数のセット
+	vector< vector<kgstr_t> > vs_s = _args.toStringVecVec("s=","%",2,false);
+
 	bool seqflg = _args.toBool("-q");
 	if(_nfn_i) { seqflg = true; }
 	if(!seqflg){ 
-		sortingRun(&_iFile,_dField);
+		//sortingRun(&_iFile,_dField);
+		vector<kgstr_t> vsk;
+		for(size_t i=0;i<_dField.size();i++){
+			vsk.push_back( _iFile.fldName(_dField[i]) );
+		}
+		vector<kgstr_t> vs_ss = _args.toStringVector("s=",false);
+		vsk.insert(vsk.end(),vs_ss.begin(),vs_ss.end());
+		sortingRun(&_iFile,vsk);
+		
 	}
 
 	_fField.set(vf, &_iFile,_fldByNum);
+	_sField.set(vs_s, &_iFile,_fldByNum);
 
 	// -p
 	_mkdir_flg = _args.toBool("-p");
@@ -123,11 +135,38 @@ void kgSep::setArgs(void)
 void kgSep::writeFldName()
 {
 	if( _oFile.noFldName( ) ) return;
+
 	if (_fField.size()==0){
-		_oFile.writeFldName(_iFile);
-	}else{
-		vector<kgstr_t> outfld = _fField.getName();
-		_oFile.writeFldName(outfld);
+		if(_sField.size()!=0){
+			_oFile.writeFldName(_sField,kgstr_t("%"));
+		}
+		else{		
+			_oFile.writeFldName(_iFile);
+		}
+	}
+	else{
+		if(_sField.size()!=0){
+			vector<kgstr_t> outfld;
+			for(size_t i=0; i<_fField.size();i++){
+				kgstr_t oName;
+				oName = _iFile.fldName(_fField.num(i));
+				oName.append(_iFile.sortParaStr(_fField.num(i),_dField.size()));
+				outfld.push_back(oName);
+			}
+			_oFile.writeFldName(outfld);
+
+		}
+		else{
+			vector<kgstr_t> outfld;
+			for(size_t i=0; i<_fField.size();i++){
+				kgstr_t oName;
+				oName = _iFile.fldName(_fField.num(i));
+				oName.append(_iFile.sortParaStr(_fField.num(i)));
+				outfld.push_back(oName);
+			}
+			_oFile.writeFldName(outfld);
+
+		}	
 	}
 } 
 
