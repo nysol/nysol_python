@@ -20,6 +20,7 @@
 // kgTempfile.h : 一時ファイルクラス
 // ============================================================================
 #pragma once
+#include <cstdio>
 #include <string>
 #include <kgEnv.h>
 
