@@ -72,6 +72,7 @@ kgLoad::kgLoad(void)
 	_paraflg = kgArgs::COMMON|kgArgs::IODIFF;
 
 	_titleL = _title = "";
+	_dict = false;
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
@@ -118,6 +119,7 @@ void kgLoad::setArgs(int inum,int *i_p,int onum,int* o_p)
 
 
 		_iFile.read_header();
+
 
 	}catch(...){
 		for(int i=iopencnt; i<inum ;i++){
@@ -378,7 +380,10 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 		savex  = PyEval_SaveThread();
 
 		// パラメータチェック
-		_args.paramcheck("i=,dtype=,-header",kgArgs::COMMON|kgArgs::IODIFF);
+		_args.paramcheck("i=,dtype=,-header,-dict",kgArgs::COMMON|kgArgs::IODIFF);
+
+		_dict = _args.toBool("-dict");
+
 		if(inum>1){ 
 			for(int i=0; i<inum ;i++){
 				if(*(i_p+i)>0){ ::close(*(i_p+i)); }
@@ -464,58 +469,115 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 
 				PyEval_RestoreThread(savex);
 				savex=NULL;
+				
+				if(_dict){
 
-
-				PyObject* tlist = PyList_New(rls.fldSize());
+				  PyObject* dictv = PyDict_New();
 					
-				for(size_t j=0 ;j<rls.fldSize();j++){
+					for(size_t j=0 ;j<rls.fldSize();j++){
 
-					char * p = rls.getVal(j);
+						char * p = rls.getVal(j);
 
-					if(*p=='\0'){
+						if(*p=='\0'){
 						
-						if(ptn[j]==0){
-							PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+							if(ptn[j]==0){
+								PyObject* vv = PyUnicode_FromStringAndSize(p, strlen(p));
+								PyDict_SetItemString(dictv,rls.fldName(j).c_str(),vv);
+								Py_DECREF(vv);
+							}
+							else{
+								PyDict_SetItemString(dictv,rls.fldName(j).c_str(),Py_None);
+							}
 						}
-						else{
-							Py_INCREF(Py_None);
-							PyList_SET_ITEM(tlist,j,Py_None);
+						else if(ptn[j]==0){
+							PyObject* vv = PyUnicode_FromStringAndSize(p, strlen(p));
+							PyDict_SetItemString(dictv,rls.fldName(j).c_str(),vv);
+							Py_DECREF(vv);
 						}
+						else if(ptn[j]==1){
+							PyObject* vv = PyLong_FromLong(atol(p));
+							PyDict_SetItemString(dictv,rls.fldName(j).c_str(),vv);
+							Py_DECREF(vv);
+							
+						}
+						else if(ptn[j]==2){
+							PyObject* vv = PyFloat_FromDouble(atof(p));
+							PyDict_SetItemString(dictv,rls.fldName(j).c_str(),vv);
+							Py_DECREF(vv);
 
-					}
-					else if(ptn[j]==0){
-
-						PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
-
-					}
-					else if(ptn[j]==1){
-
-						PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(p)));
-
-					}
-					else if(ptn[j]==2){
-
-						PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(p)));
-
-					}
-					else if(ptn[j]==3){
+						}
+						else if(ptn[j]==3){
 	
-						if(strlen(p)==1 && *p=='0'){
-
-							Py_INCREF(Py_False);
-							PyList_SET_ITEM(tlist,j,Py_False);
+							if(strlen(p)==1 && *p=='0'){
+								PyDict_SetItemString(dictv,rls.fldName(j).c_str(),Py_False);
 							
-						}else{
-
-							Py_INCREF(Py_True);
-							PyList_SET_ITEM(tlist,j,Py_True);
+							}else{
+								PyDict_SetItemString(dictv,rls.fldName(j).c_str(),Py_True);
 							
+							}
+
 						}
-
 					}
+				
+					PyList_Append(o_p,dictv);
+					Py_DECREF(dictv);
 				}
-				PyList_Append(o_p,tlist);
-				Py_DECREF(tlist);
+
+				else{
+
+					PyObject* tlist = PyList_New(rls.fldSize());
+					
+					for(size_t j=0 ;j<rls.fldSize();j++){
+
+						char * p = rls.getVal(j);
+
+						if(*p=='\0'){
+						
+							if(ptn[j]==0){
+								PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+							}
+							else{
+								Py_INCREF(Py_None);
+								PyList_SET_ITEM(tlist,j,Py_None);
+							}
+
+						}
+						else if(ptn[j]==0){
+
+							PyList_SET_ITEM(tlist,j,PyUnicode_FromStringAndSize(p, strlen(p)));
+
+						}
+						else if(ptn[j]==1){
+
+							PyList_SET_ITEM(tlist,j,PyLong_FromLong(atol(p)));
+
+						}
+						else if(ptn[j]==2){
+
+							PyList_SET_ITEM(tlist,j,PyFloat_FromDouble(atof(p)));
+
+						}
+						else if(ptn[j]==3){
+	
+							if(strlen(p)==1 && *p=='0'){
+
+								Py_INCREF(Py_False);
+								PyList_SET_ITEM(tlist,j,Py_False);
+							
+							}else{
+
+								Py_INCREF(Py_True);
+								PyList_SET_ITEM(tlist,j,Py_True);
+							
+							}
+
+						}
+					}
+				
+					PyList_Append(o_p,tlist);
+					Py_DECREF(tlist);
+				}
+
 				savex = PyEval_SaveThread();
 			}
 			

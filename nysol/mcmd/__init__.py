@@ -3,6 +3,7 @@ from .submod.readcsv import Nysol_Readcsv as readcsv
 from .submod.readlist import Nysol_Readlist as readlist
 from .submod.writecsv import Nysol_Writecsv as writecsv
 from .submod.writelist import Nysol_Writelist as writelist
+from .submod.writedict import Nysol_Writedict as writedict
 from .submod.mfifo import Nysol_Mfifo as mfifo
 from .submod.m2cross import Nysol_M2cross as m2cross
 from .submod.maccum import Nysol_Maccum as maccum

@@ -41,7 +41,7 @@ class kgLoad : public kgMod
 	// 引数
 	kgCSVrecSimple _iFile; // i=
 	kgCSVout _oFile;       // o=
-
+	bool _dict;
 	// 引数セット
 	void setArgs(void);
 	void setArgs(int inum,int *i,int onum, int* o);
