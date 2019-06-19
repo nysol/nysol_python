@@ -226,7 +226,7 @@ void kgNrcommon::setArgs(int inum,int *i_p,int onum, int* o_p)
 
 		if(u_p_t>0){ 
 			_elsefile=true;
-			_oFile.popen(u_p_t, _env,_nfn_o);
+			_uFile.popen(u_p_t, _env,_nfn_o);
 		}
 		else if(ufile.empty()){
 			_elsefile=false; 

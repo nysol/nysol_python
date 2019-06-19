@@ -187,7 +187,7 @@ void kgCommon::setArgs(int inum,int *i_p,int onum ,int *o_p)
 
 		if(u_no>0){ 
 			_elsefile=true;
-			_oFile.popen(u_no, _env,_nfn_o);
+			_uFile.popen(u_no, _env,_nfn_o);
 			oopencnt++;
 		}
 		else if(ufile.empty()){
