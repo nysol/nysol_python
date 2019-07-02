@@ -1124,10 +1124,20 @@ class NysolMOD_CORE(object):
 		msgF    = NysolMOD_CORE.OutMsg 
 		modlimt = NysolMOD_CORE.RunLimit
 		threxc  = False
+		logDir = ""
+
 
 		if "msg" in kw_args:
 			if kw_args["msg"] == "on" :
 				msgF = True
+
+		if "dlog" in kw_args:
+			if type(kw_args["dlog"]) is str and kw_args["dlog"] != "":
+				import nysol.util as nu
+				msgF = True
+				logDir = kw_args["dlog"]
+				nu.mkDir(logDir)
+
 
 		if "runlimit" in kw_args:
 			modlimt = int(kw_args["runlimit"])
@@ -1151,7 +1161,7 @@ class NysolMOD_CORE(object):
 
 		# 仮 kgshellへ移行
 		import psutil as ps
-		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg)
+		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg,logDir)
 		sts = n_core.runLx(shobj,modlist,linklist)
 		if threxc and sts != 0 :
 			raise Exception("run error")
