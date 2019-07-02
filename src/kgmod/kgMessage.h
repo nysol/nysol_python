@@ -74,9 +74,23 @@ public:
 	string outputMsg(kglib::kgMod* kgmod, string v, const string& comment="");
 	string outputMsg(kgMod* kgmod, vector<string> vv, const string& comment="");
 
+};
 
+// メッセージ出力クラス
+class kgMsg4Dict : public kgMsg{
+
+	private:
+		string _logDir;
+		void WriteMsg4Dict(string v ,string t);
+
+	public:
+		kgMsg4Dict(kgMsg::Plevel plevel, kgEnv* env,string logdir):kgMsg(plevel,env),_logDir(logdir){}
+
+		void output(const string& v, const string& comment="");
+		void output_ignore(const string& v);
 
 };
+
 
 } //////////////////////////////////////////////////////////////// end namespace
 

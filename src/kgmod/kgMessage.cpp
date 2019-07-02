@@ -277,3 +277,67 @@ string kgMsg::outputMsg(kgMod* kgmod, vector<string> vv, const string& comment){
 	return ""	;
 }
 
+
+// -----------------------------------------------------------------------------
+// 出力処理
+// -----------------------------------------------------------------------------
+void kgMsg4Dict::WriteMsg4Dict(string v ,string t)
+{
+	
+	ostringstream ss;
+	char buf[128];
+	boost::posix_time::ptime fntime = microsec_clock::local_time();
+	
+	sprintf(buf,"/%04d%02d%02dT%02d%02d%02d.%d",
+		static_cast<int>(fntime.date().year()),
+		static_cast<int>(fntime.date().month()),
+		static_cast<int>(fntime.date().day()),
+		static_cast<int>(fntime.time_of_day().hours()),
+		static_cast<int>(fntime.time_of_day().minutes()),
+		static_cast<int>(fntime.time_of_day().seconds()),
+		static_cast<int>(fntime.time_of_day().fractional_seconds())
+	);
+	ss << _logDir << buf;
+	FILE *ofp = fopen(ss.str().c_str(),"a");
+	if(ofp==NULL){
+		struct flock lock;
+	  lock.l_type = F_WRLCK;
+	  lock.l_whence = SEEK_SET;
+	  lock.l_start = 0;
+	  lock.l_len = 0;
+		if( fcntl(2,F_SETLKW, &lock) >=0 ){
+			cerr << v << "; " <<t << endl;
+			cerr << "cann't use logdir:" << _logDir << endl;
+			lock.l_type = F_UNLCK;
+			fcntl(2,F_SETLKW, &lock);
+		}
+		else{
+			cerr << v << "; " <<t << endl;
+			cerr << "cann't use logdir:" << _logDir << endl;
+		}
+	}
+	else{//ロック必要？
+		fprintf(ofp,"%s ; %s\n",v.c_str(),t.c_str());
+		fclose(ofp);
+	}
+}
+// -----------------------------------------------------------------------------
+// v + commentをメッセージ出力する
+// -----------------------------------------------------------------------------
+void kgMsg4Dict::output_ignore(const string& v)
+{
+	WriteMsg4Dict(v,getTime());
+}
+
+// -----------------------------------------------------------------------------
+// v + commentをメッセージ出力する
+// -----------------------------------------------------------------------------
+void kgMsg4Dict::output(const string& v, const string& comment)
+{
+	if(isOn()){
+		ostringstream ss;
+		ss << header() << " " << comment << "; " << v;
+		WriteMsg4Dict(ss.str(),getTime());
+	}
+}
+

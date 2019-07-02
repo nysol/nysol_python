@@ -772,10 +772,12 @@ PyObject* start(PyObject* self, PyObject* args){
 	int rulim;
 	int pymsg;
 	size_t ttlmem;
-	if (!PyArg_ParseTuple(args, "iiLi", &mflg , &rulim,&ttlmem,&pymsg)){
+	char *logD;
+
+	if (!PyArg_ParseTuple(args, "iiLis", &mflg , &rulim,&ttlmem,&pymsg,&logD)){
 		return PyCapsule_New(new kgshell(false),"kgshellP",py_kgshell_free);
   }else{
-		return PyCapsule_New(new kgshell(mflg,rulim,ttlmem,pymsg),"kgshellP",py_kgshell_free);
+		return PyCapsule_New(new kgshell(mflg,rulim,ttlmem,pymsg,logD),"kgshellP",py_kgshell_free);
   }
 }
 

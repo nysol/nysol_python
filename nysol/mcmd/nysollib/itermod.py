@@ -37,6 +37,11 @@ class LineListIter(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
+
 
 		memsize = 2000000000
 		try:
@@ -45,7 +50,7 @@ class LineListIter(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -120,6 +125,10 @@ class LineDictIter(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
 
 		memsize = 2000000000
 		try:
@@ -127,7 +136,7 @@ class LineDictIter(object):
 		except:
 			pass
 
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -207,13 +216,18 @@ class BlkListIter(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
+
 		memsize = 2000000000
 		try:
 			memsize = ps.virtual_memory().total
 		except:
 			pass
 
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -298,13 +312,18 @@ class BlkDictIter(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
+
 		memsize = 2000000000
 		try:
 			memsize = ps.virtual_memory().total
 		except:
 			pass
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -388,6 +407,11 @@ class LineListIterWithInfo(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
+
 		memsize = 2000000000
 		try:
 			memsize = ps.virtual_memory().total
@@ -395,7 +419,7 @@ class LineListIterWithInfo(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -487,6 +511,11 @@ class LineDictIterWithInfo(object):
 		if kgpymsg != None: 
 			py_msg = bool(int(kgpymsg))
 
+		kglogdir = os.environ.get('KG_UsingLogD')
+		kglogD = ""
+		if kglogdir != None: 
+			kglogD = str(kglogD)
+
 		memsize = 2000000000
 		try:
 			memsize = ps.virtual_memory().total
@@ -494,7 +523,7 @@ class LineDictIterWithInfo(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			

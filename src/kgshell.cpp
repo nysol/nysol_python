@@ -40,7 +40,7 @@ void kgshell::setMap(std::string name,int runTP){
 	_kgmod_Oinfo[name] = kgmodTP::_opara;
 }
 
-kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg){
+kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 
 	setMap<kgPyfunc>("runfunc",3);
 	setMap<kgLoad>("writelist",1);
@@ -146,13 +146,22 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg){
 	_runst   = NULL;
 	_argst =NULL;
 	_th_rtn = NULL;
-
+	
 	if(!mflg){  _env.verblvl(2);	}
 	_runlim = rumlim;
 	_memttl = memttl;
 	_mflg   = mflg;
 	_pymsg  = pymsg;
 
+	// logdirが指定された場合  _pymsg は無効になる
+	if(logdir==NULL){ _logdir = ""; }
+	else {	
+		_logdir = kgstr_t(logdir);
+		if(_logdir.back()=='/'){
+			_logdir.pop_back();
+		}
+		_pymsg = false;
+	}
 
 	if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 		ostringstream ss;
@@ -545,27 +554,41 @@ void *kgshell::run_pyfunc(void *arg){
 	return NULL;	
 }
 
-static void watch_raw_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+static void watch_raw_OUTPUT(const string& v,kgEnv *env,bool pymsg, string& logd){
 	if(pymsg){
 		kgMsgIncPySys msg(kgMsg::IGN, env);
 		msg.output_ignore(v);
 	}else{
-		kgMsg msg(kgMsg::IGN, env);
-		msg.output_ignore(v);
+		if(logd==""){
+			kgMsg msg(kgMsg::IGN, env);
+			msg.output_ignore(v);
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::IGN, env,logd);
+			msg.output_ignore(v);
+		
+		}
 	}
 }
-static void watch_end_OUTPUT(const string& v,kgEnv *env,bool pymsg){
+static void watch_end_OUTPUT(const string& v,kgEnv *env,bool pymsg,string& logd){
 	if(pymsg){
 		kgMsgIncPySys msg(kgMsg::END, env);
 		ostringstream ss;
 		ss << "kgshell (" << v << ")"; 
 		msg.output(ss.str());
 	}else{
-		kgMsg msg(kgMsg::END, env);
-		ostringstream ss;
-		ss << "kgshell (" << v << ")"; 
-		msg.output(ss.str());
-	
+		if(logd==""){
+			kgMsg msg(kgMsg::END, env);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")"; 
+			msg.output(ss.str());
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::END, env,logd);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")"; 
+			msg.output(ss.str());
+		}
 	}
 }
 /*  今の所必要なし
@@ -606,6 +629,7 @@ void *kgshell::run_watch(void *arg){
 	pthread_t * th_st_pp = wst->th_st_pp;
 	kgEnv * env = wst->env;
 	bool pymsg = wst->pymsg;
+	kgstr_t logdir = wst->logdir;
 	// status check
 	bool endFLG = true;	
 	pthread_mutex_lock(stsMutex);
@@ -617,14 +641,14 @@ void *kgshell::run_watch(void *arg){
 			else if(a[pos].outputEND==false){
 				if(!a[pos].msg.empty()){
 					if(a[pos].status==2){
-						watch_end_OUTPUT(a[pos].msg,env,pymsg);
+						watch_end_OUTPUT(a[pos].msg,env,pymsg,logdir);
 					}
 					else{
-						watch_raw_OUTPUT(a[pos].msg,env,pymsg);
+						watch_raw_OUTPUT(a[pos].msg,env,pymsg,logdir);
 					}
 				}
 				if(!a[pos].tag.empty()){
-					watch_raw_OUTPUT("#TAG# " + a[pos].tag,env,pymsg);
+					watch_raw_OUTPUT("#TAG# " + a[pos].tag,env,pymsg,logdir);
 				}
 				a[pos].outputEND = true;
 			}
@@ -656,9 +680,14 @@ void kgshell::raw_OUTPUT(const string& v){
 		msg.output_ignore(v);
 	}
 	else{
-		kgMsg msg(kgMsg::IGN, &_env);
-		msg.output_ignore(v);
-	
+		if(_logdir==""){
+			kgMsg msg(kgMsg::IGN, &_env);
+			msg.output_ignore(v);
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::IGN, &_env,_logdir);
+			msg.output_ignore(v);
+		}
 	}
 }
 void kgshell::end_OUTPUT(const string& v){
@@ -669,10 +698,18 @@ void kgshell::end_OUTPUT(const string& v){
 		msg.output(ss.str());
 	}
 	else{
-		kgMsg msg(kgMsg::END, &_env);
-		ostringstream ss;
-		ss << "kgshell (" << v << ")"; 
-		msg.output(ss.str());
+		if(_logdir==""){
+			kgMsg msg(kgMsg::END, &_env);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")"; 
+			msg.output(ss.str());
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::END, &_env,_logdir);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")"; 
+			msg.output(ss.str());
+		}
 	}
 }
 
@@ -685,10 +722,19 @@ void kgshell::war_OUTPUT(const string& v){
 		msg.output(ss.str());
 	}
 	else{
-		kgMsg msg(kgMsg::WAR, &_env);
-		ostringstream ss;
-		ss << "kgshell (" << v << ")";
-		msg.output(ss.str());
+		if(_logdir==""){
+			kgMsg msg(kgMsg::WAR, &_env);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")";
+			msg.output(ss.str());
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::WAR, &_env,_logdir);
+			ostringstream ss;
+			ss << "kgshell (" << v << ")";
+			msg.output(ss.str());
+		
+		}
 	}
 
 }
@@ -701,10 +747,18 @@ void kgshell::err_OUTPUT(const string& v){
 		msg.output(ss.str());
 	}
 	else{
-		kgMsg msg(kgMsg::ERR, &_env);	
-		ostringstream ss;
-		ss << "kgshell (" << v << ")";
-		msg.output(ss.str());
+		if(_logdir==""){
+			kgMsg msg(kgMsg::ERR, &_env);	
+			ostringstream ss;
+			ss << "kgshell (" << v << ")";
+			msg.output(ss.str());
+		}
+		else{
+			kgMsg4Dict msg(kgMsg::ERR, &_env,_logdir);	
+			ostringstream ss;
+			ss << "kgshell (" << v << ")";
+			msg.output(ss.str());
+		}
 	}
 }
 
@@ -1014,6 +1068,7 @@ int kgshell::runMain(
 		_watchST.clen = _clen;
 		_watchST.env = &_env;
 		_watchST.pymsg = _pymsg;
+		_watchST.logdir = _logdir;
 		PyEval_RestoreThread(_save);
 		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
 		_watchFlg=true;
