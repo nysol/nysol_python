@@ -1134,7 +1134,6 @@ class NysolMOD_CORE(object):
 		if "dlog" in kw_args:
 			if type(kw_args["dlog"]) is str and kw_args["dlog"] != "":
 				import nysol.util as nu
-				msgF = True
 				logDir = kw_args["dlog"]
 				nu.mkDir(logDir)
 
