@@ -236,7 +236,6 @@ static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 			self->ss->writeStr(self->falsestr,i==lastsize-1); 
 		}
 		else if(numCHECK(v)){
-			cerr << "64" << endl;
 			self->ss->writeLong(PyLong_AsLong(v),i==lastsize-1);
 		}
 		else if(PyFloat_Check(v)){
@@ -247,7 +246,7 @@ static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 				self->ss->writeLong(PyLong_AsLong(v),i==lastsize-1);
 			}
 			else if(!strncmp(Py_TYPE(v)->tp_name,"numpy.float",11)){
-				self->ss->writeLong(PyLong_AsLong(v),i==lastsize-1);
+				self->ss->writeDbl(PyFloat_AsDouble(v),i==lastsize-1);
 			}
 			else{
 				self->ss->writeStr("",i==lastsize-1);
