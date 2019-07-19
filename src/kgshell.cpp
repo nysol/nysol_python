@@ -157,8 +157,8 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	if(logdir==NULL){ _logdir = ""; }
 	else {	
 		_logdir = kgstr_t(logdir);
-		if(_logdir.back()=='/'){
-			_logdir.pop_back();
+		if(_logdir[_logdir.size()-1]=='/'){
+			_logdir.erase(_logdir.begin()+_logdir.size()-1);
 		}
 		_pymsg = false;
 	}
