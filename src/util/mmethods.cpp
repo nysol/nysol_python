@@ -242,7 +242,12 @@ static PyObject* mcsvout_write(PyMcsvoutObject* self,PyObject* args) {
 			self->ss->writeDbl(PyFloat_AsDouble(v),i==lastsize-1);
 		}
 		else{
-			self->ss->writeStr("",i==lastsize-1);
+			if(!strcmp(Py_TYPE(v)->tp_name,"numpy.int32")){
+				self->ss->writeLong(PyLong_AsLong(v),i==lastsize-1);
+			}
+			else{
+				self->ss->writeStr("",i==lastsize-1);
+			}
 		}
 	}
 
