@@ -3,6 +3,8 @@
 import os
 import shutil
 import nysol.mcmd as nm
+import nysol.util as nu
+
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 from nysol import take as nt
@@ -255,6 +257,16 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			if int(s) < 0 :
 				raise Exception("rank= takes positive integer")
 
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
+
 
 	def __init__(self,**kwd):
 
@@ -266,7 +278,13 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 	# ============
 	# entry point
-	def run(self):
+	def run(self,**kw_args):
+
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
+
 		temp=mtemp.Mtemp()
 
 		### mtra2gc
@@ -297,7 +315,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		param["no"] = xxsimgN
 		param["eo"] = xxsimgE0
 
-		nt.mtra2gc(**param).run()
+		nt.mtra2gc(**param).run(**kw_args)
 
 		f=nm.readcsv(xxsimgE0)
 		for i in range(self.filterSize):
@@ -331,7 +349,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			paramf["rank"] = self.rank[i]
 			paramf["directed"] = True
 
-			nt.mfriends(**paramf).run()
+			nt.mfriends(**paramf).run(**kw_args)
 			
 			frec2 = nm.mfsort(f="node1,node2",i=xxfriendE)
 			frec2 <<= nm.msummary(k="node1,node2",f=self.sim[i],c="count,mean")
@@ -378,7 +396,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			"""
 			#これだめ
 			fo = nm.mcat(i=xxfriends+"/e_*").mselstr(f="dir",v="W")
-			fu = fo.direction("u") # これは再考
+			fu = fo.redirect("u") # これは再考
 			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
 			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
 			#f  =   nm.m2cat()
@@ -393,4 +411,5 @@ confidence,1,f,c,0.3333333333,F,8888FF
 
 		nm.mcat(i=xxfriends+"/n_0",o=self.onFile).run()
 
+		nu.mmsg.endLog(self.__cmdline())
 

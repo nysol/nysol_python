@@ -6,6 +6,8 @@ import os.path
 import shutil
 
 import nysol.mcmd as nm
+import nysol.util as nu
+
 import nysol.util.mtemp as mtemp
 from nysol.take import graph as ntg
 from nysol.take import extcore as extTake
@@ -164,6 +166,17 @@ c,d
 
 		if self.outDir and not os.path.isdir(self.outDir) :
 			os.makedirs(self.outDir)
+			
+		self.args = {}
+		self.args["sim"] = sim 
+		self.args["th"] = th 
+		self.args["indirect"] = indirect 
+		self.args["sup"] = sup
+		self.args["iter"] = iter
+		if O != None :
+			self.args["O"] = O 
+		if log != None :
+			self.args["log"] = log 
 
 	# count node size and edge size for sspc's output file
 	def calGsize(self,file):
@@ -201,8 +214,24 @@ c,d
 		return True
 
 
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
+
+
 	# execute
-	def run(self):
+	def run(self,**kw_args):
+
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
 
 		from datetime import datetime	
 		t = datetime.now()
@@ -313,6 +342,8 @@ c,d
 				kv.append(["dens"+str(i) ,str(denses[i])]);
 
 			nm.writecsv(i=kv,o=self.logFile).run()
+
+		nu.mmsg.endLog(self.__cmdline())
 
 		return self.go
 	 

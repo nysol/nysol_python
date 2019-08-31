@@ -170,6 +170,16 @@ id,node,size
 
 		self.all = kwd["all"] if "all" in kwd else False
 
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
+
 	def __init__(self,**kwd):
 
 		#パラメータチェック
@@ -198,7 +208,12 @@ id,node,size
 		f.run()
 	# ============
 	# entry point
-	def run(self):
+	def run(self,**kw_args):
+	
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
 
 		from datetime import datetime	
 		t = datetime.now()
@@ -277,6 +292,8 @@ id,node,size
 				kv.append([k,str(v)])
 			kv.append(["time",str(procTime)])
 			nm.writecsv(i=kv,o=self.logFile).run()
+
+		nu.mmsg.endLog(self.__cmdline())
 
 
 

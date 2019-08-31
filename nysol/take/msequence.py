@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 import nysol.mcmd as nm
+import nysol.util as nu
+
 from nysol.take.lib.base import seqDB as sdb
 from nysol.take.lib import taxonomy as taxolib
 from nysol.take.lib import enumLcmSeq as elcmSeq
@@ -164,14 +166,29 @@ class msequence(object):
 			if self.eArgs["gap"] > self.eArgs["win"] :
 				raise Exception("win= must be greater than or equal to gap=")
 
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
 
 
 	def __init__(self,**kwd):
 		#パラメータチェック
+		self.args = kwd
 		self.__param_check_set(kwd)
 
 
-	def run(self):
+	def run(self,**kw_args):
+
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
 
 		# seq型DBの読み込み
 		db=sdb.SeqDB(self.iFile,self.idFN,self.timeFN,self.itemFN,self.eArgs["padding"],self.clsFN)
@@ -200,3 +217,4 @@ class msequence(object):
 		lcm.output(self.outPath)
 
 
+		nu.mmsg.endLog(self.__cmdline())

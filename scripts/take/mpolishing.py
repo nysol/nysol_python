@@ -28,7 +28,7 @@ for k,v in args.keyValue.items():
 	else:	
 		para[re.sub(r'=$',"",k)]=v
 
-gobj = nt.mpolishing(**para).run()
+gobj = nt.mpolishing(**para).run(msg="on")
 
 ofile_e =args.str("eo=")
 ofile_n =args.str("no=")

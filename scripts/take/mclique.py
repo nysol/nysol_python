@@ -6,5 +6,5 @@ import nysol.take as nt
 
 
 args=margs.Margs(sys.argv,"ei=,ef=,ni=,nf=,-all,o=,l=,u=,log=","ei=,ef=")
-nt.mclique(**(args.kvmap())).run()
+nt.mclique(**(args.kvmap())).run(msg="on")
 

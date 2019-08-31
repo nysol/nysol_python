@@ -3,6 +3,8 @@
 import os
 import shutil
 import nysol.mcmd as nm
+import nysol.util as nu
+
 import nysol.util.mtemp as mtemp
 import nysol.util.margs as margs
 
@@ -133,14 +135,30 @@ d,c,0.30
 		self.logFile = kwd["log"] if "log" in kwd else None 
 	
 	
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
 
 
 	def __init__(self,**kwd):
 		#パラメータチェック
+		self.args = kwd
 		self.__param_check_set(kwd)
 
 
-	def run(self):
+	def run(self,**kw_args):
+
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
+
 		wf=mtemp.Mtemp()
 		xxpal = wf.file()
 		xxa   = wf.file()
@@ -206,4 +224,5 @@ d,c,0.30
 		if self.ni and self.no :
 			shutil.copyfile(self.ni,self.no)
 
+		nu.mmsg.endLog(self.__cmdline())
 

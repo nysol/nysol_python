@@ -6,5 +6,5 @@ import nysol.take as nt
 
 
 args=margs.Margs(sys.argv,"i=,x=,O=,tid=,item=,cls=,taxo=,type=,s=,S=,sx=,Sx=,g=,p=,-uniform,l=,u=,top=,T=,-replaceTaxo")
-nt.mitemset(**(args.kvmap())).run()
+nt.mitemset(**(args.kvmap())).run(msg="on")
 

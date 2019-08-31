@@ -4,6 +4,7 @@ import os
 import shutil
 
 import nysol.mcmd as nm
+import nysol.util as nu
 import nysol.util.margs as margs
 import nysol.util.mtemp as mtemp
 from nysol.take import extcore as extTake
@@ -195,6 +196,16 @@ b c d,D,3,1
 				if maxSize[1] != "":
 					self.maxSize2 = maxSize[1]
 
+	def __cmdline(self):
+		cmdline = self.__class__.__name__
+		for k,v in self.args.items():
+			if type(v) is bool :
+				if v == True :
+					cmdline += " -" + str(k)
+			else:
+				cmdline += " " + str(k) + "=" + str(k)
+		return cmdline 
+
 	def __init__(self,**kwd):
 		#パラメータチェック
 		self.args = kwd
@@ -230,7 +241,12 @@ b c d,D,3,1
 
 	# ============
 	# entry point
-	def run(self):
+	def run(self,**kw_args):
+
+		os.environ['KG_ScpVerboseLevel'] = "2"
+		if "msg" in kw_args:
+			if kw_args["msg"] == "on":
+				os.environ['KG_ScpVerboseLevel'] = "4"
 
 		tempW	= mtemp.Mtemp()
 
@@ -300,3 +316,4 @@ b c d,D,3,1
 			f_e4 <<= nm.mcut(f="node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile)
 			f_e4.run()
 
+		nu.mmsg.endLog(self.__cmdline())

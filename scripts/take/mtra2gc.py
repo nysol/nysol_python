@@ -5,6 +5,6 @@ import nysol.util.margs as margs
 import nysol.take as nt
 
 args=margs.Margs(sys.argv,"i=,no=,eo=,log=,tid=,item=,s=,S=,sim=,th=,-node_support,T=,-num","i=,tid=,item=,eo=")
-nt.mtra2gc(**(args.kvmap())).run()
+nt.mtra2gc(**(args.kvmap())).run(msg="on")
 
 
