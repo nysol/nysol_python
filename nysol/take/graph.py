@@ -50,6 +50,8 @@ class graph(object):
 		self.eFileN	= edgeFile
 		if title1 is None or title2 is None :
 			mcmd = nm.mcut(nfni=True,f="0:e1,1:e2",i=self.eFileN)
+			self.edgeFN1 = "e1"
+			self.edgeFN2 = "e2"
 		else :
 			self.edgeFN1 = title1
 			self.edgeFN2 = title2
@@ -62,6 +64,10 @@ class graph(object):
 		if title1 is not None and title2 is not None :
 			self.edgeFN1 = title1
 			self.edgeFN2 = title2
+		else:
+			self.edgeFN1 = "e1"
+			self.edgeFN2 = "e2"
+			
 		mcmd = nm.mcut(nfni=True,f="0:e1,1:e2",i=edgeList)
 		self.__wfE = self.__tempW.file()
 		mcmd <<= nm.mnumber(q=True,a="no",o=self.__wfE)
