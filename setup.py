@@ -238,7 +238,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 										)
 
 setup(name = 'nysol',
-			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
+			packages=['nysol','nysol/util','nysol/mcmd','nysol/mcmd/submod','nysol/mcmd/nysollib','nysol/take','nysol/mining','nysol/vsop','nysol/take/lib','nysol/take/lib/base'],
 			version = '0.3.7',
 			description = 'This is nysol tools',
 			long_description="""\
@@ -273,7 +273,8 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 			scripts=['scripts/take/mfriends.py','scripts/take/mitemset.py',
 								'scripts/take/mpolishing.py','scripts/take/msequence.py',
 								'scripts/take/mtra2gc.py','scripts/take/mpal.py',
-								'scripts/take/mclique.py',"scripts/take/mbipolish.py","scripts/take/mbiclique.py"],
+								'scripts/take/mclique.py',"scripts/take/mbipolish.py","scripts/take/mbiclique.py",
+								'scripts/mining/mspade.py'],
 			ext_modules =[module1,lcmmod,sspcmod,grhfilmod,macemod,seqmod,
 										seqmodzero,lcmtransmod,macemod,simsetmod,medsetmod,vsopmod
 										,utilmod,mmaketramod]
