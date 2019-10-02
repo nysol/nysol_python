@@ -268,9 +268,9 @@ class Lattice:
 					if item in freqOnePattern:
 						seq.append((item,eid))
 
-			#print("seq",seq)
+			print("seq",seq)
 			# seq [('D', 0), ('A', 1), ('B', 1), ('A', 2), ('B', 2), ('F', 2), ('A', 3), ('D', 3), ('F', 3)]
-
+			
 			done=set()
 			for i in range(len(seq)-1):
 				for j in range(i+1,len(seq)):
@@ -291,12 +291,17 @@ class Lattice:
 					if item2 not in counter[item1]:
 						counter[item1][item2]={}
 						idList[item1][item2]={}
+					print("aaaa") 
+					print(item1) 
+					print(item2) 
+					print(token) 
 					if token not in counter[item1][item2]:
 						counter[item1][item2][token]=0
 						idList[item1][item2][token]=[]
-					if item1+item2+str(token) not in done:
+					#if item1+item2+str(token) not in done:
+					if str(item1)+str(item2)+str(token) not in done:
 						counter[item1][item2][token]+=1
-						done.add(item1+item2+str(token))
+						done.add(str(item1)+str(item2)+str(token))
 					#if (sid,time1,time2) not in idList[item1][item2][token]: ##### 遅い
 					idList[item1][item2][token].append((sid,time1,time2)) # idListは全てを記録
 
@@ -773,7 +778,7 @@ class Spade:
 			for eid,element in enumerate(patArr):
 				for item in element:
 					pats.append([name,self.pid,eid,item])
-			if oParams["oOccs"]!=None:
+			if "oOccs" in oParams:
 				sidPrev=None
 				for line in node.idList:
 					sid=line[0]
@@ -836,7 +841,9 @@ class Spade:
 
 		###### 列挙
 		lattice={}
+		print(datas.keys()) 
 		for tName in datas.keys():
+			print(tName)
 			# 対象クラスのsequence列挙
 			lattice[tName]=Lattice(len(datas[tName]),self.eParams)
 			lattice[tName].addOnePattern(datas[tName],self.eParams)
