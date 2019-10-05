@@ -178,7 +178,7 @@ class Node:
 		if doOutput:
 			# nodeをpriority queueに入れる
 			node=(self.level,self.length,self.frequency,self.pattern,self)
-			if len(pQue)>=oParams["topk"]:
+			if "topk" in oParams and oParams["topk"] != None and len(pQue)>=oParams["topk"]:
 				#print(pQue)
 				#print(node)
 				heapq.heappushpop(pQue,node)
@@ -268,7 +268,7 @@ class Lattice:
 					if item in freqOnePattern:
 						seq.append((item,eid))
 
-			print("seq",seq)
+			#print("seq",seq)
 			# seq [('D', 0), ('A', 1), ('B', 1), ('A', 2), ('B', 2), ('F', 2), ('A', 3), ('D', 3), ('F', 3)]
 			
 			done=set()
@@ -291,10 +291,7 @@ class Lattice:
 					if item2 not in counter[item1]:
 						counter[item1][item2]={}
 						idList[item1][item2]={}
-					print("aaaa") 
-					print(item1) 
-					print(item2) 
-					print(token) 
+
 					if token not in counter[item1][item2]:
 						counter[item1][item2][token]=0
 						idList[item1][item2][token]=[]
@@ -619,28 +616,27 @@ class Lattice:
 def _readCSV_sub(iFile):
 	data=[]
 	for block in nm.mcat(i=iFile).keyblock(k="sid",s="sid,eid%n,item",dtype={"sid":"str","eid":"int","item":"str"},otype="dict"):
-		# print(block)
+
 		sid=block["sid"][0]
 		seq=[]
 		elements=[]
 		element=[]
 		eidPrev=block["eid"][0]
-		#print(block["eid"])
-		#print(block["item"])
+
 		for i in range(len(block["eid"])):
 			eid =block["eid"][i]
 			item=block["item"][i]
-			# print(sid,eid,item)
 			if eid!=eidPrev:
-				#print("break")
 				elements.append([eidPrev,element])
 				element=[]
+
 			element.append(item)
 			eidPrev=eid
+
 		elements.append([eidPrev,element])
 
-		#print(sid,eid,item)
 		data.append([sid,elements])
+
 	return data
 
 # CSVデータを読み込みlistデータに格納
@@ -772,7 +768,6 @@ class Spade:
 		occs=[]
 		for node in nodes:
 			patArr=pat2arr(node.pattern)
-			# print(patArr)
 			# [['D'], ['C'], ['F', 'D']]
 			stats.append([name,self.pid,node.level,node.length,node.frequency,node.freqOther,node.pprob])
 			for eid,element in enumerate(patArr):
@@ -787,11 +782,12 @@ class Spade:
 					occs.append([name,self.pid,sid])
 					sidPrev=sid
 			self.pid+=1
+		
 		return (pats,stats,occs)
 
 	def writeCSV(self,rules,oParams):
 		# 出力
-		if "rule" in self.oParams:
+		if "rule" in self.oParams and self.oParams["rule"]==None:
 			pass
 		else:
 			oCSVpats=None
@@ -799,7 +795,7 @@ class Spade:
 			oCSVoccs=None
 			if oParams["oPats"]!=None:
 				oCSVpats=mcsvout(f="class,pid,eid,item",o=oParams["oPats"])
-			if oParams["oStats"]!=None:
+			if "oStats" in self.oParams and oParams["oStats"]!=None:
 				oCSVstats=mcsvout(f="class,pid,size,length,frequency,freqOther,pprob",o=oParams["oStats"])
 			if oParams["oOccs"]!=None:
 				oCSVoccs=mcsvout(f="class,pid,sid",o=oParams["oOccs"])
@@ -823,6 +819,7 @@ class Spade:
 				oCSVoccs.close()
 
 	def run(self):
+
 		###### データのセット
 		# listデータ(優先)
 		#if self.iParams["iData"]!=None:
@@ -839,20 +836,18 @@ class Spade:
 		else:
 			raise ValueError("either iData or iFile should be specified for input data.")
 
+		
 		###### 列挙
 		lattice={}
-		print(datas.keys()) 
 		for tName in datas.keys():
-			print(tName)
 			# 対象クラスのsequence列挙
 			lattice[tName]=Lattice(len(datas[tName]),self.eParams)
 			lattice[tName].addOnePattern(datas[tName],self.eParams)
-			if self.eParams["maxSize"]>=2:
+			if "maxSize" in self.eParams and self.eParams["maxSize"] !=None and self.eParams["maxSize"]>=2:
 				lattice[tName].addTwoPattern(datas[tName],self.eParams)
 				if self.eParams["maxSize"]>=3:
 					lattice[tName].enum(self.eParams)
-			#lattice[tName].show()
-			#exit()
+
 
 			# 対象クラス以外のクラスのsequence列挙
 			for oName in datas.keys():
@@ -864,7 +859,7 @@ class Spade:
 					lattice[tName].addTwoPattern(datas[oName],self.eParams,other=True)
 					if self.eParams["maxSize"]>=3:
 						lattice[tName].countOther(self.eParams)
-			#lattice[tName].show()
+
 
 			# 列挙後の計算
 			lattice[tName].postCal()
@@ -874,6 +869,7 @@ class Spade:
 		rules={}
 		self.pid=0
 		for name in lattice.keys():
+			#print(name)
 			#lattice[name].show()
 			#lattice[name].show(simple=False,redundant=True)
 			#exit()

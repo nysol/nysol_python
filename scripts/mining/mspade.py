@@ -110,12 +110,13 @@ for p in paraList[0] :
 	elif paraType[p] == "str":
 		val = args.str(p)	
 	elif paraType[p] == "fldstr":
-		val = args.str(p).split(",")
+		if args.str(p) != None:
+			val = args.str(p).split(",")
 	elif paraType[p] == "float":
 		val = args.float(p)	
 	elif paraType[p] == "bool":
 		val = args.bool(p)	
-
+		
 	if p in paraconvList :
 		iParams[paraconvList[p]] = val
 	else:
