@@ -900,6 +900,29 @@ class NysolMOD_CORE(object):
 					obj.selectUniqMod(sumiobj,modlist)
 
 
+
+	def checkRmObj(self,kwd , pos ,mods):
+
+		if len(mods) == 1:
+			return True
+		
+		mod = self.outlist[kwd][pos]
+
+		for ckmod in mods:
+			if ckmod == mod :
+				return False
+
+		for k in mod.outlist.keys():
+			for i,e in  enumerate(mod.outlist[k]):
+				if isinstance(e,NysolMOD_CORE):
+					  
+					if not mod.checkRmObj(k,i,mods):
+						return False
+					
+		return True
+
+
+
 	@classmethod
 	def makeModList(self,uniqmod,modlist,iolist): # iolist標準化
 
@@ -1022,6 +1045,31 @@ class NysolMOD_CORE(object):
 		for mod in dupobjs: 
 			pos = self.graphSetList(mod,sumiobj,listStks,pos)
 
+		# remove Unnecessary object
+		if len(dupobjs) > 1:
+			for dobj in dupobjs: 
+				for k in dobj.outlist.keys():
+					newlist = []
+					for i,e in  enumerate(dobj.outlist[k]):
+						if isinstance(e,NysolMOD_CORE):
+							if dobj.checkRmObj(k,i,dupobjs):
+								continue
+						newlist.append(e)
+
+					dobj.outlist[k].clear()
+					dobj.outlist[k].extend(newlist)
+						
+
+		else:
+
+			if dupobjs[0].disabled_ouputlist == False:
+				for k in dupobjs[0].outlist.keys():
+					# 不要 mod 除去
+					newlist = [e for e in dupobjs[0].outlist[k] if not isinstance(e,NysolMOD_CORE)]
+					dupobjs[0].outlist[k].clear()
+					dupobjs[0].outlist[k].extend(newlist)
+
+
 		runcnt=0
 
 		for dobj in dupobjs:
@@ -1032,11 +1080,18 @@ class NysolMOD_CORE(object):
 			
 			for k in dobj.outlist.keys():
 				# 不要 mod 除去
-				newlist = [e for e in dobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
-				dobj.outlist[k].clear()
-				dobj.outlist[k].extend(newlist)
+				#newlist = [e for e in dobj.outlist[k] if not isinstance(e,NysolMOD_CORE)]
+				#dobj.outlist[k].clear()
+				#dobj.outlist[k].extend(newlist)
 
-				if len(dobj.outlist[k]) == 0 and k == dobj.nowdir:
+				#全てNysolMOD_COREか
+				allNcore = True
+				for ki in range(len(dobj.outlist[k])):
+					if not isinstance(dobj.outlist[k][ki],NysolMOD_CORE):
+						allNcore = False
+						break
+
+				if allNcore  and k == dobj.nowdir:
 					runcnt+=1
 
 				for e in dobj.outlist[k]:
@@ -1073,7 +1128,14 @@ class NysolMOD_CORE(object):
 
 				for k in dupobj.outlist.keys():
 
-					if len(dupobj.outlist[k]) == 0 and k == dupobj.nowdir:
+					#全てNysolMOD_COREか
+					allNcore = True
+					for ki in range(len(dupobj.outlist[k])):
+						if not isinstance(dupobj.outlist[k][ki],NysolMOD_CORE):
+							allNcore = False
+							break
+
+					if allNcore  and k == dupobj.nowdir:
 						runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
 						outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
 						rpos+=1
@@ -1089,16 +1151,20 @@ class NysolMOD_CORE(object):
 							dupobj.outlist[k][ki] = wobj
 							runobjs[rpos]= wobj
 
-						else:
+							if  k == dupobj.nowdir and not isinstance(dupobj.outlist[k][ki],NysolMOD_CORE):
+								outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
+
+							rpos += 1
+
+						elif not isinstance(dupobj.outlist[k][ki],NysolMOD_CORE):
 
 							runobjs[rpos]= dupobj
 							
-						if  k == dupobj.nowdir:
-							outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
+							if  k == dupobj.nowdir and not isinstance(dupobj.outlist[k][ki],NysolMOD_CORE):
+								outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
 
-						rpos += 1
+							rpos += 1
 
-			
 
 		self.change_modNetworks(runobjs)
 		
