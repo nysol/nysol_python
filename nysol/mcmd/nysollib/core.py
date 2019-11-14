@@ -692,7 +692,11 @@ class NysolMOD_CORE(object):
 					if isinstance(obj.outlist[k][0],list): #多分いらん
 
 						from nysol.mcmd.submod.writelist import Nysol_Writelist as mwritelist
-						wobj = mwritelist(obj.outlist[k][0],sysadd=True)
+						if "nfn" in obj.kwd and obj.kwd["nfn"] == True :
+							wobj = mwritelist(obj.outlist[k][0],sysadd=True,nfn=True)
+						else:
+							wobj = mwritelist(obj.outlist[k][0],sysadd=True)
+
 						wobj.inplist[wobj.nowidir]=[obj]
 						obj.outlist[k][0] = wobj
 						addobj.append(wobj)
@@ -853,8 +857,13 @@ class NysolMOD_CORE(object):
 								add_mod.append(wcsv_o)
 
 							if isinstance(obj.outlist[key][i],list) :
-								wlmod = mwritelist(obj.outlist[key][i],sysadd=True)
+								if "nfn" in obj.kwd and obj.kwd["nfn"] == True :
+									wlmod = mwritelist(obj.outlist[key][i],sysadd=True ,nfn=True)
+								else:
+									wlmod = mwritelist(obj.outlist[key][i],sysadd=True)
+								
 								wlmod.inplist[wlmod.nowidir]=[obj]
+
 								obj.outlist[key][i] = wlmod
 								if obj in dupobj:
 									dupobj[obj] += 1
@@ -1136,7 +1145,11 @@ class NysolMOD_CORE(object):
 							break
 
 					if allNcore  and k == dupobj.nowdir:
-						runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
+						if "nfn" in dupobj.kwd and dupobj.kwd["nfn"] == True :
+							runobjs[rpos]= dupobj.writelist(list(),sysadd=True,nfn=True)
+						else:
+							runobjs[rpos]= dupobj.writelist(list(),sysadd=True)
+							
 						outfs[i] = runobjs[rpos].outlist[runobjs[rpos].nowdir][0]
 						rpos+=1
 						continue
