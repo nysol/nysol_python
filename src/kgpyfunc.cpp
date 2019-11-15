@@ -237,9 +237,29 @@ int kgPyfunc::run(
 				dup2(i_p_t, 0);
 				close(i_p_t);
 			} 
+			else if( _args.toString("i=").size()!=0){
+				int fd = ::open(_args.toString("i=").c_str(), KG_IOPEN_FLG);
+				if(fd == -1 ){ 
+					cerr  << "file write open error: " + _args.toString("i=") << endl;
+				}
+				else{
+					dup2(fd, 0);
+					close(fd);
+				}
+			}
 			if(o_p_t>0){
 				dup2(o_p_t, 1);
 				close(o_p_t);
+			}
+			else if( _args.toString("o=").size()!=0){
+				int fd = ::open(_args.toString("o=").c_str(), KG_OOPEN_FLG , S_IRWXU);
+				if(fd == -1 ){ 
+					cerr  << "file write open error: " + _args.toString("o=") << endl;
+				}
+				else{
+					dup2(fd, 1);
+					close(fd);
+				}
 			}
 
 			write(initchek[1],"OK", strlen("OK"));
