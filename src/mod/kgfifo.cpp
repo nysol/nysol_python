@@ -353,7 +353,8 @@ kgFifo::kgFifo(void){
 	#ifdef JPN_FORMAT
 		#include <help/jp/kgfifoHelp.h>
 	#endif
-
+	_iFD = -1;
+	_oFD = -1;
 }
 
 // -----------------------------------------------------------------------------
@@ -472,6 +473,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 
 void kgFifo::oClose(void){
 	//flush();
+	if(_oFD == -1) return;
 	try {
 		::close(_oFD);
 	}catch(kgError& err){
@@ -482,6 +484,7 @@ void kgFifo::oClose(void){
 }
 
 void kgFifo::iClose(void) {
+	if(_iFD == -1) return;
 	try {
 		::close(_iFD);
 	}catch(kgError& err){
@@ -492,10 +495,18 @@ void kgFifo::iClose(void) {
 }
 void kgFifo::rw_cancel(void){
 
-  pthread_cancel(_thr_write);
-	pthread_cancel(_thr_read);
-  pthread_join(_thr_write, NULL);
-	pthread_join(_thr_read, NULL);
+	if(_oFD != -1) {
+		pthread_cancel(_thr_write);
+	}
+	if(_iFD != -1) {
+		pthread_cancel(_thr_read);
+	}
+	if(_oFD != -1) {
+	  pthread_join(_thr_write, NULL);
+	}
+	if(_iFD != -1) {
+		pthread_join(_thr_read, NULL);
+	}
 	oClose();
 	iClose();
 }
