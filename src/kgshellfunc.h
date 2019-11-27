@@ -99,5 +99,6 @@
 #include <kgpyfunc.h>
 #include <kgunicat.h>
 #include <kg2cat.h>
+#include <kgkmeans.h>
 #include <kgsortchk.h>
 

@@ -133,6 +133,8 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kgShuffle>("mshuffle",0);
 	setMap<kg2Cat>("m2cat",0);
 	setMap<kgUnicat>("municat",0);
+	setMap<kgKmeans>("mkmeans",0);
+
 
 	_nfni = false;
 	_iterrtn= NULL;
