@@ -156,7 +156,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	_pymsg  = pymsg;
 
 	// logdirが指定された場合  _pymsg は無効になる
-	if(logdir==NULL){ _logdir = ""; }
+	if(logdir==NULL||*logdir=='\0'){ _logdir = ""; }
 	else {	
 		_logdir = kgstr_t(logdir);
 		if(_logdir[_logdir.size()-1]=='/'){
