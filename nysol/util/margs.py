@@ -221,7 +221,7 @@ class Margs(object): #みなおすこと
 		if key in self.keyValue :
 			return self.keyValue[key]
 		else :
-			return None
+			return False
 
 	#== ファイル型引数の値のチェックと取得
 	# 返値: 引数で指定されたファイル名(String)

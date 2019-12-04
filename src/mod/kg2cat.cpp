@@ -107,6 +107,10 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 				throw kgError("unsuport IO size");
 		}
 		_iFiles = new kgCSVfld*[_itotal];
+		for(int i=0; i<_itotal ;i++){
+			_iFiles[i] = NULL;
+		}
+
 	
 		for(int i=0; i<inum ;i++){
 			_iFiles[i] = new kgCSVfld;

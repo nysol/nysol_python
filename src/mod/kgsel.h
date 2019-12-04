@@ -45,6 +45,7 @@ class kgSel:public kgMod
 	bool			_reverse;// -r
 	kgCSVout  _uFile;  // u=
 	bool      _uFlg;
+	bool			_oskip;// -r
 
 	kgFuncMap _funcMap;
 

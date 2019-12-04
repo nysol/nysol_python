@@ -133,6 +133,8 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kgShuffle>("mshuffle",0);
 	setMap<kg2Cat>("m2cat",0);
 	setMap<kgUnicat>("municat",0);
+	setMap<kgKmeans>("mkmeans",0);
+
 
 	_nfni = false;
 	_iterrtn= NULL;
@@ -154,7 +156,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	_pymsg  = pymsg;
 
 	// logdirが指定された場合  _pymsg は無効になる
-	if(logdir==NULL){ _logdir = ""; }
+	if(logdir==NULL||*logdir=='\0'){ _logdir = ""; }
 	else {	
 		_logdir = kgstr_t(logdir);
 		if(_logdir[_logdir.size()-1]=='/'){

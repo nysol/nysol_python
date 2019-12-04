@@ -61,6 +61,7 @@ kgSel::kgSel(void)
 	#ifdef JPN_FORMAT
 		#include <help/jp/kgselHelp.h>
 	#endif
+	_oskip = false;
 
 }
 // -----------------------------------------------------------------------------
@@ -132,17 +133,24 @@ void kgSel::setArgs(int inum,int *i_p,int onum, int* o_p)
 		if(onum>1){ u_no = *(o_p+1);}
 		if(o_no==-1 && ofile0.empty()){
 			if(u_no!=-1 || !ufile0.empty()){
-				_reverse = !_reverse;
-				kgstr_t swptmp;
-				swptmp = ukwd ; ukwd = okwd;  okwd = swptmp;
-				int swptmpi;
-				swptmpi = u_no ; u_no = o_no ; o_no = swptmpi;
+				//_reverse = !_reverse;
+				//kgstr_t swptmp;
+				//swptmp = ukwd ; ukwd = okwd;  okwd = swptmp;
+				//int swptmpi;
+				//swptmpi = u_no ; u_no = o_no ; o_no = swptmpi;
+				_oskip=true;
 			}
 		}
 
 
-		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString(okwd,true), _env,_nfn_o);}
+		if(o_no>0){ 
+			_oFile.popen(o_no, _env,_nfn_o); 
+		}
+		else     { 
+			if(!_oskip){
+				_oFile.open(_args.toString(okwd,true), _env,_nfn_o);
+			}
+		}
 		oopencnt++;
 
 		kgstr_t ufile = _args.toString(ukwd,false);
@@ -352,7 +360,9 @@ int kgSel::runMain(void)
 	_prvRsl.null(true);
 
 	// 項目名の出力
-	_oFile.writeFldName(_iFile);
+	if(!_oskip){
+		_oFile.writeFldName(_iFile);
+	}
 	if(_uFlg) _uFile.writeFldName(_iFile);
 
 	// データ出力
@@ -362,7 +372,9 @@ int kgSel::runMain(void)
 		// 計算の実行(トップノード関数の_resultの値が最終結果)
 		calculate(info.trees.begin());
 		if(result->b()!=_reverse && !result->null()){
-			_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
+			if(!_oskip){
+				_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
+			}
 		}
 		else if(_uFlg){
 			_uFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
