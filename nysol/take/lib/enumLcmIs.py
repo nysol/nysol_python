@@ -408,7 +408,9 @@ class LcmIs(object):
 		:type outpath: str
 		:param outpath: 結果を出力するパス名。存在しなければエラーとなるので、事前にディレクトリを作成しておくこと。
 		"""
-		shutil.move(self.pFile,outpath+"/patterns.csv")
+		nm.mfldname(q=True,i=self.pFile,o=outpath+"/patterns.csv").run()
+		#shutil.move(self.pFile,outpath+"/patterns.csv")
 		if not self.skipTP:
-			shutil.move(self.tFile,outpath+"/tid_pats.csv")
+			nm.mfldname(q=True,i=self.tFile,o=outpath+"/tid_pats.csv").run()
+			#shutil.move(self.tFile,outpath+"/tid_pats.csv")
   		

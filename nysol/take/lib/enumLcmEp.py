@@ -128,11 +128,13 @@ class LcmEp(object):
 			# S=10
 			# S=c1:10,c2:15
 			if "minCnt" in eArgs :
-				if isinstance(eArgs["minCnt"],dict):
+				# minCnt(S=をクラスごとできるようにしている形跡：使われない)
+				if isinstance(eArgs["minCnt"],dict): 
 					self.minPos = eArgs["minCnt"][cName]
 				else:
 					self.minPos = eArgs["minCnt"]
 			else:
+				# minSup(s=をクラスごとできるようにしている形跡：使われない)
 				if isinstance(eArgs["minSup"],dict):
 					self.minPos = int(eArgs["minSup"][cName] * float(posSize) + 0.99)
 				else:
@@ -140,17 +142,20 @@ class LcmEp(object):
 
 			# 最大サポートと最大サポート件数
 			if "maxCnt" in eArgs:
+				# maxSup(Sx=をクラスごとできるようにしている形跡：使われない)
 				if isinstance(eArgs["maxCnt"],dict):
 					self.maxPos = eArgs["maxCnt"][cName]
 				else:
 					self.maxPos = eArgs["maxCnt"]
 
 			elif "maxSup" in eArgs:
+				# maxSup(sx=をクラスごとできるようにしている形跡：使われない)
 				if isinstance(eArgs["maxSup"],dict):
 					self.maxPos = int(eArgs["maxSup"][cName] * float(posSize) + 0.99)
 				else:
 					self.maxPos = int(eArgs["maxSup"] * float(posSize) + 0.99)
 			else:
+
 				self.maxPos = None
 
 
@@ -305,6 +310,8 @@ class LcmEp(object):
 
 
 	def output(self,outpath):
-		shutil.move(self.pFile,outpath+"/patterns.csv")
+		nm.mfldname(q=True,i=self.pFile,o=outpath+"/patterns.csv").run()
+		#shutil.move(self.pFile,outpath+"/patterns.csv")
 		if self.outtf:
-			shutil.move(self.tFile,outpath+"/tid_pats.csv")
+			nm.mfldname(q=True,i=self.tFile,o=outpath+"/tid_pats.csv").run()
+			#shutil.move(self.tFile,outpath+"/tid_pats.csv")

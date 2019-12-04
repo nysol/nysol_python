@@ -167,8 +167,10 @@ class LcmSeq(object):
 		#MCMD::msgLog("the number of contrast patterns enumerated is #{@size}")
 
 	def output(self,outpath):
-		shutil.move(self.pFile,outpath+"/patterns.csv")
+		nm.mfldname(q=True,i=self.pFile,o=outpath+"/patterns.csv").run()
+		#shutil.move(self.pFile,outpath+"/patterns.csv")
 		if self.outtf:
-			shutil.move(self.tFile,outpath+"/tid_pats.csv")
+			nm.mfldname(q=True,i=self.tFile,o=outpath+"/tid_pats.csv").run()
+			#shutil.move(self.tFile,outpath+"/tid_pats.csv")
 
 

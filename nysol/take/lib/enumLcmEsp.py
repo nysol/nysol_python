@@ -115,8 +115,8 @@ class LcmEsp(object):
 			self.minCnt = int(self.minSup * float(self.db.size) + 0.99)
 
 
-		# 最大サポートと最大サポート件数
-		self.maxCnt=None
+		# 最大サポートと最大サポート件数 # いらない　<= 下で再セット
+		self.maxCnt=None 
 		if "maxCnt" in eArgs or "maxSup" in eArgs:
 			if "maxCnt" in eArgs:
 				self.maxCnt = int(eArgs["maxCnt"])
@@ -177,13 +177,18 @@ class LcmEsp(object):
 				params["type"] ="CIA"
 
 			if self.maxCnt: # windowサイズ上限
-				params["U"] = str(self.maxCnt)
+				#params["U"] = str(self.maxCnt)
+				params["U"] = self.calSigma(self.maxCnt,self.minGR,posSize,negSize)
+
 			if "minLen" in eArgs:
 				params["l"] = str(eArgs["minLen"])
+
 			if 'maxLen' in eArgs:
 				params["u"] = str(eArgs["maxLen"])
+
 			if 'gap' in eArgs:
 				params["g"] = str(eArgs["gap"])
+
 			if 'win' in eArgs:
 				params["G"] = str(eArgs["win"])
 
@@ -286,8 +291,10 @@ class LcmEsp(object):
 		#MCMD::msgLog("the number of emerging sequence patterns enumerated is #{@size}")
 
 	def output(self,outpath):
-		shutil.move(self.pFile,outpath+"/patterns.csv")
+		nm.mfldname(q=True,i=self.pFile,o=outpath+"/patterns.csv").run()
+		#shutil.move(self.pFile,outpath+"/patterns.csv")
 		if self.outtf:
-			shutil.move(self.tFile,outpath+"/tid_pats.csv")
+			nm.mfldname(q=True,i=self.tFile,o=outpath+"/tid_pats.csv").run()
+			#shutil.move(self.tFile,outpath+"/tid_pats.csv")
 
 
