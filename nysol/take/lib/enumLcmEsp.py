@@ -41,9 +41,9 @@ class LcmEsp(object):
 	# LCM最小サポートの計算
 	# マニュアルの式(9)
 	def calSigma(self,minPos,minGR,posCnt,negCnt):
-		omegaF=float(LcmEsp.intMax)/float(posCnt)
+		omegaF=self.calOmega(posCnt)
 		beta=minPos
-		w=float(posCnt)/float(negCnt)
+		w=float(negCnt)/float(posCnt)
 		sigma=int(beta*(omegaF-w/minGR))  # 切り捨て
 		if sigma<=0:
 			sigma=1 

@@ -131,7 +131,6 @@ class TraDB(object):
 
 			nm.mcut(f=fpara_c,i=self.iFile).muniq(k=fpara_c,o=self.cFile).run()
 
-
 			# 文字列としてのクラス別件数配列を数値配列に変換する
 			self.clsSize=0
 			self.clsNames = []

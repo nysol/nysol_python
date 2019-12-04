@@ -58,9 +58,9 @@ class LcmEp(object):
 	# LCM最小サポートの計算
 	# マニュアルの式(9)
 	def calSigma(self,minPos,minGR,posCnt,negCnt):
-		omegaF=float(LcmEp.intMax)/float(posCnt)
+		omegaF=self.calOmega(posCnt)
 		beta=minPos
-		w=float(posCnt)/float(negCnt)
+		w=float(negCnt)/float(posCnt)
 
 		#print("omegaF="+str(omegaF))
 		#print("minPos="+str(minPos))
@@ -136,7 +136,7 @@ class LcmEp(object):
 				if isinstance(eArgs["minSup"],dict):
 					self.minPos = int(eArgs["minSup"][cName] * float(posSize) + 0.99)
 				else:
-					self.minPos = int(eArgs["minSup"] * flost(posSize) + 0.99)
+					self.minPos = int(eArgs["minSup"] * float(posSize) + 0.99)
 
 			# 最大サポートと最大サポート件数
 			if "maxCnt" in eArgs:
@@ -173,7 +173,8 @@ class LcmEp(object):
 
 			#if self.maxPos: #rubyだとif @maxCntなってる（どこにも設定されてないので）動いてないはず
 			if self.maxPos:
-				runPara["U"] = self.maxPos
+
+				runPara["U"] = self.calSigma(self.maxPos,self.minGR,posSize,negSize)
 
 			if "minLen" in eArgs:
 				runPara["l"] = str(eArgs["minLen"])
