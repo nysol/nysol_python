@@ -240,7 +240,7 @@ int kg2Tee::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	int sts=1;
 	pthread_cleanup_push(&cleanup_handler, this);	
-
+	std::cerr << "I'm m2tee" << std::endl;
 	try {
 
 		setArgs(inum, i_p, onum,o_p);
