@@ -105,7 +105,7 @@ def exclude_no_need_compile_sources(sources):
 			if src_last_updated_at > obj_last_updated_at:
 				compiling.append(src_path)
 			else:
-				excluded.append(src_path)
+				excluded.append(obj_path)
 		else:
 			compiling.append(src_path)
 
