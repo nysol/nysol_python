@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
+import re
+
 # これは簡易版
 def dicisionPosSub(mlist,iolist,baselist,dsppos,y,counter,basecont):
 
@@ -144,6 +146,84 @@ def filenameEXTRACT(mlist,iolist,linklist):
 		
 	mlist.extend(addmod)
 
+def filenameEXTRACTX(mlist,iolist,linklist):
+
+	addmod =[]
+	addfnod ={}
+	addlnod ={}
+
+	maxCnt = len(mlist)
+	for i, mm in enumerate(mlist):
+
+		if len(mm[2]) != 0: # in
+
+			for k,v in mm[2].items():
+			
+				if isinstance(v, list):
+					vid = id(v)
+					if vid in addlnod:
+						newpos = addlnod[vid]
+					else:
+						addlnod[vid]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['list',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+				else:
+					if v in addfnod:
+						newpos = addfnod[v]
+					else:
+						addfnod[v]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['file',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+						
+				iolist[i][0].append([newpos,k])
+				iolist[newpos][1].append([i,'o'])
+				linklist.append([["o",newpos],[k,i]])
+
+		if len(mm[3]) != 0: # out
+		
+			for k,v in mm[3].items():
+
+				if isinstance(v, list):
+
+					vid = id(v)
+
+					if vid in addlnod:
+
+						newpos = addlnod[vid]
+
+					else:
+						addlnod[vid]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['list',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+
+				else:
+				
+					if v in addfnod:
+						newpos = addfnod[v] 
+					else:
+						addfnod[v]=maxCnt
+						iolist.append([[], []])
+						addmod.append(['file',[v],{},{},''])
+						newpos = maxCnt
+						maxCnt+=1
+				
+
+				iolist[i][1].append([newpos,k])
+				iolist[newpos][0].append([i,"i"])
+				linklist.append([[k,i],["i",newpos]])
+				
+
+		mlist[i][2] ={}
+		
+	mlist.extend(addmod)
+
+
 
 def chageSVG(mlist,iolist,linklist,fname=None):
 	"""
@@ -239,6 +319,137 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 	f.close()
 
+
+
+def chageSCP(mlist,iolist,linklist,fname=None):
+	"""
+	OUTPUT FLOW SCP 
+	"""
+	filenameEXTRACTX(mlist,iolist,linklist)
+	dsppos,ymax,xmax = dicisionPos(mlist,iolist)
+
+	# 順位LIST生成 : file listは先頭
+	rankL = [ []  for _ in range(ymax+1)]
+
+	for i,pinfo in enumerate(dsppos):
+		if mlist[i][0]=="file" or mlist[i][0]=="list":
+			rankL[0].append(i)
+		else:	
+			rankL[pinfo[1]+1].append(i)
+
+	# fallten			
+	rankList = [ i for lls in rankL for i in lls]
+		
+	if fname == None:
+		f=sys.stdout
+	else:
+		f=open(fname, 'w')
+
+	scpStr = []
+
+	#norma1:0
+	#file:1 
+	#cdm:2 
+	runNum=[]
+	for i in rankList:
+		modobj = mlist[i]
+		#for i,modobj in enumerate(mlist):
+
+		if modobj[0] == "file" :
+			flist =[]
+			for full in modobj[1] :
+				flist.append(full.split("/")[-1])
+			titlestr = [ "file" , ",".join(flist) ]
+
+		elif modobj[0] == "cmd":
+			titlestr = [ "cmd", re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1])).replace('"', '\\"')]
+
+		elif modobj[0] == "list":
+			titlestr = [ "list" , str(modobj[1][0]) ]
+
+		else:
+			plist=[]
+			for para in modobj[1]:
+				val = para.split("=",1)
+				if len(val)==1 :
+					if val[0][0] == '-':
+						plist.append(re.sub(r'^-', "", val[0] )+"=True")
+					else:
+						plist.append(val[0])
+				else:
+					plist.append(val[0]+"="+"'" + val[1] + "'")
+
+			titlestr = [ modobj[0] , ",".join(plist).replace('"', '\\"') ]
+
+		if titlestr[0] == "file" :
+
+			scpStr.append("f_%d = '%s'\n"%(i,titlestr[1]))
+
+		elif titlestr[0] == "list":
+
+			scpStr.append("f_%d = %s\n"%(i,titlestr[1]))
+
+		else:
+			# input
+			infn = {}
+			istr=""
+			if len(iolist[i][0])>0:
+				for ilist in iolist[i][0]:
+					if not ( ilist[1] in infn ):
+						infn[ilist[1]] = [] 
+					infn[ilist[1]].append("f_%d"%(ilist[0])) 
+				
+				
+				for  k,v  in infn.items():
+					ival = ""
+					if len(v) == 1 :
+						ival = v[0]
+					elif len(v) > 1 :
+						ival = "[" + ",".join(v) + "]"
+					
+					if titlestr[0] == "readlist":
+						istr += (ival)
+					else:
+						istr += ( k + "=" + ival )
+					
+				
+
+			# output
+			outfn = {}
+			ostr=""
+			if len(iolist[i][1])>0:
+				for olist in iolist[i][1]:
+					if mlist[olist[0]][0] == "file" or mlist[olist[0]][0] == "list" :
+						if not (olist[1] in outfn ):
+							outfn[olist[1]] = []
+						outfn[olist[1]].append("f_%d"%(olist[0])) 
+				
+				for  k,v  in outfn.items():
+					oval = ""
+					if len(v) == 1 :
+						oval = v[0]
+					elif len(v) > 1 :
+						oval = "[" + ",".join(v) + "]"
+
+					ostr += ( k + "=" + oval)
+
+			pplist=[]
+			if istr != "":
+				pplist.append(istr)
+			if ostr != "":
+				pplist.append(ostr)
+				runNum.append("f_%d"%(i))
+			if titlestr[1] != "":
+				pplist.append(titlestr[1])
+				
+			scpStr.append( "f_%d=nm.%s(%s)\n"%(i,titlestr[0],",".join(pplist)) )
+
+	f.write("import nysol.mcmd as nm\n")
+	for scp in scpStr:
+		f.write(scp)
+
+	f.write("nm.runs([%s])\n"%(','.join(runNum)))
+	f.close()
 
 def chageSVG_D3(mlist,iolist,linklist,fname=None):
 	"""

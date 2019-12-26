@@ -1269,6 +1269,15 @@ class NysolMOD_CORE(object):
 		modlist,iolist,linklist,_ = NysolMOD_CORE.makeRunNetworks(mod)
 		return {"modlist":modlist,"iolist":iolist,"linklist":linklist}
 
+	@classmethod
+	def makeScps(self,mod,fname=None):
+
+		modlist,iolist,linklist,endobj = NysolMOD_CORE.makeRunNetworks(mod)
+		ndraw.chageSCP(modlist,iolist,linklist,fname)
+		#ndraw.chageSCP(modlist,iolist,linklist,endobj,fname)
+
+
+
 
 	def run(self,**kw_args):
 
@@ -1293,6 +1302,11 @@ class NysolMOD_CORE(object):
 	def modelInfo(self):
 
 		return NysolMOD_CORE.modelInfos([self])
+
+	def makeScp(self,fname=None):
+
+		return NysolMOD_CORE.makeScps([self],fname)
+
 
 	def getMsgFlg(self):
 		return NysolMOD_CORE.OutMsg
@@ -1323,6 +1337,11 @@ def drawModelsD3(val,fname):
 
 def modelInfos(val):
 	return NysolMOD_CORE.modelInfos(val)
+
+
+def makeScps(val,fname):
+	return NysolMOD_CORE.makeScps(val,fname)
+
 
 def setMsgFlg(val):
 	NysolMOD_CORE.setMsgFlg(val)
