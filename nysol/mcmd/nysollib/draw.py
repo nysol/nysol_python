@@ -321,7 +321,7 @@ def chageSVG(mlist,iolist,linklist,fname=None):
 
 
 
-def chageSCP(mlist,iolist,linklist,fname=None):
+def chageSCP(mlist,iolist,linklist,fname=None,msgF=False):
 	"""
 	OUTPUT FLOW SCP 
 	"""
@@ -397,9 +397,19 @@ def chageSCP(mlist,iolist,linklist,fname=None):
 				for ilist in iolist[i][0]:
 					if not ( ilist[1] in infn ):
 						infn[ilist[1]] = [] 
-					infn[ilist[1]].append("f_%d"%(ilist[0])) 
+						
+					# 接続先確認
+					eFlg=False
+					for toid , dir  in iolist[ilist[0]][1]:
+						if toid == i and dir != "o":
+							infn[ilist[1]].append("f_%d.redirect('%s')"%(ilist[0],dir)) 
+							eFlg =True
+
+					if not eFlg :
+						infn[ilist[1]].append("f_%d"%(ilist[0])) 
 				
 				
+				istrsub = []
 				for  k,v  in infn.items():
 					ival = ""
 					if len(v) == 1 :
@@ -408,23 +418,28 @@ def chageSCP(mlist,iolist,linklist,fname=None):
 						ival = "[" + ",".join(v) + "]"
 					
 					if titlestr[0] == "readlist":
-						istr += (ival)
+						istrsub.append(ival)
 					else:
-						istr += ( k + "=" + ival )
+						istrsub.append( k + "=" + ival)
 					
-				
+				istr = ','.join(istrsub) 
 
 			# output
 			outfn = {}
 			ostr=""
+
+			rokFlg= False
 			if len(iolist[i][1])>0:
 				for olist in iolist[i][1]:
 					if mlist[olist[0]][0] == "file" or mlist[olist[0]][0] == "list" :
 						if not (olist[1] in outfn ):
 							outfn[olist[1]] = []
 						outfn[olist[1]].append("f_%d"%(olist[0])) 
-				
+
 				for  k,v  in outfn.items():
+					if k=="o": # should coompare default 
+						rokFlg = True
+
 					oval = ""
 					if len(v) == 1 :
 						oval = v[0]
@@ -438,7 +453,9 @@ def chageSCP(mlist,iolist,linklist,fname=None):
 				pplist.append(istr)
 			if ostr != "":
 				pplist.append(ostr)
-				runNum.append("f_%d"%(i))
+				if rokFlg :
+					runNum.append("f_%d"%(i))
+
 			if titlestr[1] != "":
 				pplist.append(titlestr[1])
 				
@@ -447,8 +464,11 @@ def chageSCP(mlist,iolist,linklist,fname=None):
 	f.write("import nysol.mcmd as nm\n")
 	for scp in scpStr:
 		f.write(scp)
+	if msgF:
+		f.write("nm.runs([%s],msg='on')\n"%(','.join(runNum)))	
+	else:
+		f.write("nm.runs([%s])\n"%(','.join(runNum)))
 
-	f.write("nm.runs([%s])\n"%(','.join(runNum)))
 	f.close()
 
 def chageSVG_D3(mlist,iolist,linklist,fname=None):

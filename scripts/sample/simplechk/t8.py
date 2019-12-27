@@ -7,9 +7,8 @@ xxx=[]
 n1 = nm.mselstr(i=data1,f="a",v="1")
 n3 = n1.msetstr(a="d1",v="x0",o=xxx)
 n2 = n1.redirect("u").msetstr(a="d2",v="x1").mproduct(m=n3,f="d1")
-
-print(xxx)
-
+n2.drawModelD3("xxx.html")
+n2.run()
 
 
 
