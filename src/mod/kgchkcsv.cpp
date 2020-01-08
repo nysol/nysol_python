@@ -63,20 +63,14 @@ void kgChkcsv::setArgs(void)
 	_iFileName = _args.toString("i=",false);
 	if( _iFileName.empty() ){ _fp=&cin; }
 	else{
-		try{ 
-			_ffp.open( _iFileName.c_str() );
-			if(!_ffp.is_open()){ 
-				ostringstream ss;
-				ss << "file read open error: " << _iFileName;
-				throw kgError(ss.str());
-			}
-			_fp=&_ffp;	
-			_fp->exceptions(ios_base::badbit);
-		} catch(...) {
+		_ffp.open( _iFileName.c_str() );
+		if(!_ffp){ 
 			ostringstream ss;
 			ss << "file read open error: " << _iFileName;
 			throw kgError(ss.str());
 		}
+		_fp=&_ffp;	
+		_fp->exceptions(ios_base::badbit);
 	}
 
 	// -diag チェック内容表示フラグセット
@@ -89,16 +83,14 @@ void kgChkcsv::setArgs(void)
 			_ofp=&cout;
 		}
 		else{
-			try{ 
-				_offp.open(v.c_str());
-				if(!_offp.is_open()){ throw; }
-				_ofp=&_offp;	
-				_ofp->exceptions(ios_base::badbit);
-			} catch(...) {
+			_offp.open(v.c_str());
+			if(!_offp){ 
 				ostringstream ss;
 				ss << "file write open error: " << v;
 				throw kgError(ss.str());
 			}
+			_ofp=&_offp;	
+			_ofp->exceptions(ios_base::badbit);
 		}
 	}
 	else{
@@ -653,8 +645,9 @@ int kgChkcsv::getRec(char* buf, istream *fp, unsigned char* prevc)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgChkcsv::run(void) try 
+int kgChkcsv::run(void) 
 {
+	try{
 	// パラメータセット＆入出力ファイルオープン
 	setArgs();
   vector<FldInfo>  fldInfo;
@@ -813,21 +806,24 @@ int kgChkcsv::run(void) try
 	if(_ffp.is_open()){ _ffp.close();}
 	_oFile.close();
 	successEnd();
-	return 0;
 	
-}catch(kgError& err){
-	errorEnd(err);
-	return 1;
-}catch (const exception& e) {
-	kgError err(e.what());
-	errorEnd(err);
-	return 1;
-}catch(char * er){
-	kgError err(er);
-	errorEnd(err);
-	return 1;
-}catch(...){
-	kgError err("unknown error" );
-	errorEnd(err);
-	return 1;
+	}catch(kgError& err){
+		errorEnd(err);
+		return 1;
+	}catch (const exception& e) {
+		kgError err(e.what());
+		errorEnd(err);
+		return 1;
+	}catch(char * er){
+		kgError err(er);
+		errorEnd(err);
+		return 1;
+	}catch(...){
+		kgError err("unknown error" );
+		errorEnd(err);
+		return 1;
+	}
+	
+	return 0;
+
 }
