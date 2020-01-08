@@ -362,7 +362,10 @@ def chageSCP(mlist,iolist,linklist,fname=None,msgF=False):
 			titlestr = [ "file" , ",".join(flist) ]
 
 		elif modobj[0] == "cmd":
-			titlestr = [ "cmd", re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1])).replace('"', '\\"')]
+			#titlestr = [ "cmd", re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1])).replace('"', '\\"')]
+			comstr = re.sub(r'^cmdstr=(.*)',r'\1'," ".join(modobj[1])).replace('"', '\\"')
+			titlestr = [ "cmd", 'cmdstr="' + comstr +'"']
+
 
 		elif modobj[0] == "list":
 			titlestr = [ "list" , str(modobj[1][0]) ]
