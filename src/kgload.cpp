@@ -255,6 +255,7 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 // -----------------------------------------------------------------------------
 int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg) 
 {
+	PyThreadState *savex = NULL;
 	try {
 		// パラメータチェック
 		_args.paramcheck("o=",kgArgs::COMMON|kgArgs::IODIFF);
@@ -277,6 +278,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 			}
 		}
 
+		//savex  = PyEval_SaveThread();
 		if(PyList_Check(i_p)){
 			Py_ssize_t max = PyList_Size(i_p);
 			Py_ssize_t fldsize = 0;
@@ -336,6 +338,9 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 		}else{
 			throw kgError("not python list");
 		}
+		//PyEval_RestoreThread(savex);
+		//savex=NULL;
+
 		_oFile.close();
 		msg.append(successEndMsg());
 		return 0;

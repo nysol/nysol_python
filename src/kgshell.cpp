@@ -383,12 +383,16 @@ void *kgshell::run_writelist(void *arg){
 }
 
 void *kgshell::run_readlist(void *arg){
+
+	PyGILState_STATE gstate;
 	try{
 
 		string msg;
 		argST *a =(argST*)arg; 
+		gstate = PyGILState_Ensure();
 
 		int sts = a->mobj->run(a->list,a->o_cnt,a->o_p,msg);
+		PyGILState_Release(gstate);
 
 		pthread_mutex_lock(a->stMutex);
 		a->status = sts;
