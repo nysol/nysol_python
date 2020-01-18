@@ -1093,6 +1093,7 @@ int kgshell::runMain(
 		size_t pos = 0;
 		bool endFLG = true;
 		while(pos<_clen){
+			cerr << "xx0" << endl;
 			if(_argst[pos].finflg==false){ endFLG=false;}
 			else if(_argst[pos].outputEND==false){
 
@@ -1130,18 +1131,25 @@ int kgshell::runMain(
 		if (endFLG) break;
 		pthread_cond_wait(&_stsCond,&_stsMutex);
 	}
+	cerr << "xx1" << endl;
 
 	pthread_mutex_unlock(&_stsMutex);
 	for(size_t i=_clen;i>0;i--){
+	cerr << "xx2" << endl;
 		int ret;
 		int status;
 		ret = pthread_join(_th_st_pp[i-1],(void**)&status);
+	cerr << "xx3" << endl;
 	}
+	cerr << "xx4" << endl;
 
 	if (!outpipe){ 
+	cerr << "xx5" << endl;
 		PyEval_RestoreThread(_save);
+	cerr << "xx6" << endl;
 	}
 	
+	cerr << "xx7" << endl;
 
 	if(_modlist){
 		for(size_t i=0 ;i<_clen;i++){
