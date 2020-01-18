@@ -175,7 +175,7 @@ void kgMod::init(void) try
 	// terminate用関数の登録
 	// -------------------------------------
 	if(g_mod_==NULL){
-		set_terminate(kgTerminate);
+		//set_terminate(kgTerminate);
 		mod=this;
 	}
 	// -------------------------------------
