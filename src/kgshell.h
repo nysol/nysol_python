@@ -31,7 +31,9 @@
 #include <set>
 #include <map>
 #include <pthread.h>
-
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/function.hpp>
 
 #ifndef KGMOD_RUN_LIMIT
 	#define KGMOD_RUN_LIMIT 128

@@ -17,16 +17,20 @@
 
  ////////// LICENSE INFO ////////////////////*/
 #pragma once
+/*
 #include <kgcut.h>
+*/
 #include <kgfifo.h>
 #include <kg2tee.h>
 #include <kgexcmd.h>
+/*
 #include <kgsum.h>
 #include <kgcal.h>
 #include <kgcat.h>
 #include <kgjoin.h>
+*/
 #include <kgload.h>
-#include <kg2cross.h>
+/*#include <kg2cross.h>
 #include <kgaccum.h>
 #include <kgavg.h>
 #include <kgbest.h>
@@ -51,7 +55,9 @@
 #include <kgmvstats.h>
 #include <kgnewnumber.h>
 #include <kgnewrand.h>
+*/
 #include <kgnewstr.h>
+/*
 #include <kgnjoin.h>
 #include <kgnormalize.h>
 #include <kgnrcommon.h>
@@ -96,9 +102,11 @@
 #include <kgarff2csv.h>
 #include <kgxml2csv.h>
 #include <kgtab2csv.h>
+*/
 #include <kgpyfunc.h>
+#include <kgsortchk.h>
+/*
 #include <kgunicat.h>
 #include <kg2cat.h>
 #include <kgkmeans.h>
-#include <kgsortchk.h>
-
+*/

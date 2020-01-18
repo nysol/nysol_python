@@ -55,6 +55,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kgSortchk>("msortchk",0);
 	setMap<kgFifo>("mread",0);
 	setMap<kgFifo>("mwrite",0);
+/*
 	setMap<kgCut>("mcut",0);
 	setMap<kgCat>("mcat",0);
 	setMap<kgSum>("msum",0);
@@ -85,7 +86,9 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kgMvstats>("mmvstats",0);
 	setMap<kgNewnumber>("mnewnumber",0);
 	setMap<kgNewrand>("mnewrand",0);
+*/
 	setMap<kgNewstr>("mnewstr",0);
+/*
 	setMap<kgNjoin>("mnjoin",0);
 	setMap<kgNormalize>("mnormalize",0);
 	setMap<kgNrcommon>("mnrcommon",0);
@@ -134,7 +137,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kg2Cat>("m2cat",0);
 	setMap<kgUnicat>("municat",0);
 	setMap<kgKmeans>("mkmeans",0);
-
+*/
 
 	_nfni = false;
 	_iterrtn= NULL;
