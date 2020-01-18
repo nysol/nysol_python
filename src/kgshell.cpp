@@ -1081,6 +1081,7 @@ int kgshell::runMain(
 		PyEval_RestoreThread(_save);
 		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
 		_watchFlg=true;
+		cerr << "ckckp " << endl;
 		return _csvpiped[0];
 	}
 	//_save = PyEval_SaveThread();
@@ -1178,7 +1179,7 @@ int kgshell::runMain(
 		_modlist = NULL;
 		_envlist =NULL;
 	}
-
+	cerr << "ckckc1 " << endl;
 	if(_argst){
 		for(size_t i=0 ;i<_clen;i++){
 			if(_argst[i].i_cnt!=0){
@@ -1191,19 +1192,24 @@ int kgshell::runMain(
 		delete [] _argst; 
 		_argst =NULL;
 	}
+	cerr << "ckckc2 " << endl;
 	if(_th_st_pp){
 		delete[] _th_st_pp;
 		_th_st_pp = NULL;
 	}
+	cerr << "ckckc3 " << endl;
 	if(_th_rtn){
 		delete[] _th_rtn;
 		_th_rtn = NULL;
 	}
+	cerr << "ckckc4 " << endl;
 	if(_runst){
 		delete[] _runst;
 		_runst = NULL;
 	}
+	cerr << "ckckc5 " << endl;
 	if (errflg) { throw kgError("runmain on kgshell"); }
+	cerr << "ckckc6 " << endl;
 	return 0;
 }
 
