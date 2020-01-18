@@ -232,7 +232,9 @@ int kgNewstr::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
+	cerr << "vv" << endl;
   pthread_cleanup_pop(0);
+	cerr << "vv2" << endl;
 	return sts;
 
 }
