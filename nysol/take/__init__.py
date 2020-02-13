@@ -16,6 +16,7 @@ from .mbiclique import mbiclique as mbiclique
 from .mbipolish import mbipolish as mbipolish
 from .mclique import mclique as mclique
 from .mfriends import mfriends as mfriends
+from .mgdiff import mgdiff as mgdiff
 from .mpal import mpal as mpal
 from .mpolishing import mpolishing as mpolishing
 from .mtra2gc import mtra2gc as mtra2gc

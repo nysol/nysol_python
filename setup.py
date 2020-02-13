@@ -122,7 +122,7 @@ mmodLibs.extend(check_for_boost())
 
 sources_core, extra_objects_core = exclude_no_need_compile_sources([
 	'mod/kgsortchk.cpp', 'mod/kg2tee.cpp', 'mod/kgfifo.cpp', 'mod/kgtrafld.cpp',
-    'kgexcmd.cpp', 'nysolshell.cpp', 'mod/kg2cat.cpp',
+	'kgexcmd.cpp', 'nysolshell.cpp', 'mod/kg2cat.cpp',
 	'kgshell.cpp', 'kgsplitblock.cpp', 'kgmsgincpysys.cpp',
 	'kgload.cpp', 'kgpyfunc.cpp',
 	'kgmod/kgArgFld.cpp',
@@ -217,8 +217,8 @@ lcmtransmod = Extension('nysol/take/_lcmtranslib',
 
 sources_mmaketramod, extra_objects_mmaketramod = exclude_no_need_compile_sources([
 	'take/mmaketrarun.cpp',
-    'take/mmaketra/kgmaketra.cpp',
-    'kgmod/kgArgFld.cpp',
+	'take/mmaketra/kgmaketra.cpp',
+	'kgmod/kgArgFld.cpp',
 	'kgmod/kgArgs.cpp', 'kgmod/kgCSV.cpp',
 	'kgmod/kgCSVout.cpp', 'kgmod/kgCSVutils.cpp',
 	'kgmod/kgEnv.cpp', 'kgmod/kgError.cpp',
@@ -295,7 +295,7 @@ medsetmod = Extension('nysol/take/_medsetlib',
 
 sources_utilmod, extra_objects_utilmod = exclude_no_need_compile_sources([
 	'util/mmethods.cpp',
-    'kgmod/kgArgFld.cpp',
+	'kgmod/kgArgFld.cpp',
 	'kgmod/kgArgs.cpp', 'kgmod/kgCSV.cpp',
 	'kgmod/kgCSVout.cpp', 'kgmod/kgCSVutils.cpp',
 	'kgmod/kgEnv.cpp', 'kgmod/kgError.cpp',
@@ -383,7 +383,7 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 	scripts=[
 		'scripts/take/mfriends.py', 'scripts/take/mitemset.py',
 		'scripts/take/mpolishing.py', 'scripts/take/msequence.py',
-		'scripts/take/mtra2gc.py', 'scripts/take/mpal.py',
+		'scripts/take/mtra2gc.py', 'scripts/take/mpal.py','scripts/take/mgdiff.py',
 		'scripts/take/mclique.py', "scripts/take/mbipolish.py", "scripts/take/mbiclique.py"
 	],
 	ext_modules=[
