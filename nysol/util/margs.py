@@ -107,7 +107,7 @@ class Margs(object): #みなおすこと
 						ver_func()
 						exit()
 			else:
-				kv =arg.split("=", 2)
+				kv =arg.split("=", 1)
 				if len(kv) < 1 :
 					raise Exception("invalid argument: '%s'"%(arg))
 
