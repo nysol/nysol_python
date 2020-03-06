@@ -382,7 +382,7 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 	install_requires=["psutil"],
 	scripts=[
 		'scripts/take/mfriends.py', 'scripts/take/mitemset.py',
-		'scripts/take/mpolishing.py', 'scripts/take/msequence.py',
+		'scripts/take/mpolishing.py', 'scripts/take/msequence.py','scripts/take/mccomp.py',
 		'scripts/take/mtra2gc.py', 'scripts/take/mpal.py','scripts/take/mgdiff.py',
 		'scripts/take/mclique.py', "scripts/take/mbipolish.py", "scripts/take/mbiclique.py"
 	],

@@ -15,6 +15,7 @@ from .msequence import msequence as msequence
 from .mbiclique import mbiclique as mbiclique
 from .mbipolish import mbipolish as mbipolish
 from .mclique import mclique as mclique
+from .mccomp import mccomp as mccomp
 from .mfriends import mfriends as mfriends
 from .mgdiff import mgdiff as mgdiff
 from .mpal import mpal as mpal
