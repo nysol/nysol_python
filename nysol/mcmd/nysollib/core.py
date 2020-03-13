@@ -1196,7 +1196,6 @@ class NysolMOD_CORE(object):
 		self.makeLinkList(iolist,linklist)
 		return modlist,iolist,linklist,outfs
 
-
 	@classmethod
 	def runs(self,mods,**kw_args):
 
@@ -1239,6 +1238,7 @@ class NysolMOD_CORE(object):
 
 		# 仮 kgshellへ移行
 		import psutil as ps
+
 		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg,logDir)
 		sts = n_core.runLx(shobj,modlist,linklist)
 		if threxc and sts != 0 :
@@ -1246,7 +1246,58 @@ class NysolMOD_CORE(object):
 
 		return outfs
 
+	@classmethod
+	def runsInnerForkTest(self,mods,**kw_args):
 
+		pid = os.fork()	
+		if pid == 0 : 
+
+			msgF    = NysolMOD_CORE.OutMsg 
+			modlimt = NysolMOD_CORE.RunLimit
+			threxc  = False
+			logDir = ""
+
+			if "msg" in kw_args:
+				if kw_args["msg"] == "on" :
+					msgF = True
+
+			if "dlog" in kw_args:
+				if type(kw_args["dlog"]) is str and kw_args["dlog"] != "":
+					import nysol.util as nu
+					logDir = kw_args["dlog"]
+					nu.mkDir(logDir)
+
+
+			if "runlimit" in kw_args:
+				modlimt = int(kw_args["runlimit"])
+
+			if "throwexc" in kw_args:
+				if kw_args["throwexc"] == True:
+					threxc =True
+
+			modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
+
+			py_msg=False
+			try:
+				if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
+					py_msg = True
+			except:
+				pass
+
+			kgpymsg = os.environ.get('KG_UsingPySysMsg')
+			if kgpymsg != None: 
+				py_msg = bool(int(kgpymsg))
+
+			# 仮 kgshellへ移行
+			import psutil as ps
+			shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg,logDir)
+			sts = n_core.runLx(shobj,modlist,linklist)
+			if threxc and sts != 0 :
+				raise Exception("run error")
+			return outfs
+		else:
+			os.waitpid(pid, 0)
+			sys.exit()
 		
 	@classmethod
 	def drawModels(self,mod,fname=None):
