@@ -203,7 +203,7 @@ b c d,D,3,1
 				if v == True :
 					cmdline += " -" + str(k)
 			else:
-				cmdline += " " + str(k) + "=" + str(k)
+				cmdline += " " + str(k) + "=" + str(v)
 		return cmdline 
 
 	def __init__(self,**kwd):

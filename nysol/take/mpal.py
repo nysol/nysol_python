@@ -264,7 +264,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 				if v == True :
 					cmdline += " -" + str(k)
 			else:
-				cmdline += " " + str(k) + "=" + str(k)
+				cmdline += " " + str(k) + "=" + str(v)
 		return cmdline 
 
 

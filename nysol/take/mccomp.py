@@ -144,7 +144,7 @@ id%0,node,size
 				if v == True :
 					cmdline += " -" + str(k)
 			else:
-				cmdline += " " + str(k) + "=" + str(k)
+				cmdline += " " + str(k) + "=" + str(v)
 		return cmdline 
 
 	def __init__(self,**kwd):

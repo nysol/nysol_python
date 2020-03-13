@@ -142,7 +142,7 @@ d,c,0.30
 				if v == True :
 					cmdline += " -" + str(k)
 			else:
-				cmdline += " " + str(k) + "=" + str(k)
+				cmdline += " " + str(k) + "=" + str(v)
 		return cmdline 
 
 

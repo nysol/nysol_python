@@ -212,7 +212,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 				if v == True :
 					cmdline += " -" + str(k)
 			else:
-				cmdline += " " + str(k) + "=" + str(k)
+				cmdline += " " + str(k) + "=" + str(v)
 		return cmdline 
 
 
