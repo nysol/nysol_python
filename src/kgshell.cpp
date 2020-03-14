@@ -231,6 +231,7 @@ void *kgshell::run_func(void *arg){
 		cerr << "runfun 7" << endl;
 		pthread_mutex_unlock(a->stMutex);
 		cerr << "runfun 8" << endl;
+		pthread_exit(0);
 
 	}
 	catch(kgError& err){
@@ -280,7 +281,6 @@ void *kgshell::run_func(void *arg){
 		a->msg.append(" ABI THROW");
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
-		throw;
 	}
 #endif
 	catch(...){
@@ -294,7 +294,6 @@ void *kgshell::run_func(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-
 	pthread_exit(0);
 
 	return NULL;	
