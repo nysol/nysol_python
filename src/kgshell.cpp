@@ -283,8 +283,6 @@ void *kgshell::run_func(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-	cerr << "runfun end" << endl;
-
 	//pthread_exit(0);
 
 	return NULL;	
@@ -379,7 +377,7 @@ void *kgshell::run_writelist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-	pthread_exit(0);
+	//pthread_exit(0);
 	return NULL;	
 }
 
@@ -469,7 +467,7 @@ void *kgshell::run_readlist(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-	pthread_exit(0);
+	//pthread_exit(0);
 	return NULL;	
 }
 
@@ -556,7 +554,7 @@ void *kgshell::run_pyfunc(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-	pthread_exit(0);
+	//pthread_exit(0);
 
 	return NULL;	
 }
@@ -677,7 +675,7 @@ void *kgshell::run_watch(void *arg){
 	}
 	pthread_mutex_unlock(stsMutex);
 
-	pthread_exit(0);
+	//pthread_exit(0);
 	return NULL;	
 }
 
