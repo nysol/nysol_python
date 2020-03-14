@@ -1063,7 +1063,7 @@ int kgshell::runMain(
 
 		//debugARGST_OUTPUT(i);
 		int typ = _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second ;
-
+		cerr << "cclist" << endl;
 		if(typ==0){
 			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_func ,(void*)&_argst[i]);
 		}
