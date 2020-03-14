@@ -211,18 +211,26 @@ void *kgshell::run_func(void *arg){
 
 		string msg;
 		argST *a =(argST*)arg; 
-
+		cerr << "runfun 0" << endl;
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
+		cerr << "runfun 1" << endl;
 
 		pthread_mutex_lock(a->stMutex);
+		cerr << "runfun 2" << endl;
 
 		a->status =sts;
+		cerr << "runfun 3" << endl;
 		a->finflg=true;
+		cerr << "runfun 4" << endl;
 		a->msg.append(msg);
+		cerr << "runfun 5" << endl;
 		a->endtime=getNowTime(true);
+		cerr << "runfun 6" << endl;
 
 		pthread_cond_signal(a->stCond);
+		cerr << "runfun 7" << endl;
 		pthread_mutex_unlock(a->stMutex);
+		cerr << "runfun 8" << endl;
 
 	}
 	catch(kgError& err){
