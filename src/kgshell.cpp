@@ -231,7 +231,7 @@ void *kgshell::run_func(void *arg){
 		cerr << "runfun 7" << endl;
 		pthread_mutex_unlock(a->stMutex);
 		cerr << "runfun 8" << endl;
-		pthread_exit(0);
+		//pthread_exit(0);
 
 	}
 	catch(kgError& err){
@@ -294,7 +294,8 @@ void *kgshell::run_func(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
-	pthread_exit(0);
+	cerr << "runfun 9" << endl;
+	//pthread_exit(0);
 
 	return NULL;	
 }
