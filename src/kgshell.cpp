@@ -1145,7 +1145,7 @@ int kgshell::runMain(
 	cerr << "xx2" << endl;
 		int ret;
 		int status;
-		ret = pthread_join(_th_st_pp[i-1],(void**)&status);
+		ret = pthread_join(_th_st_pp[i-1],NULL);
 	cerr << "xx3" << endl;
 	}
 	cerr << "xx4" << endl;
