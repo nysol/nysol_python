@@ -1131,7 +1131,8 @@ int kgshell::runMain(
 	for(size_t i=_clen;i>0;i--){
 		int ret;
 		int status;
-		ret = pthread_join(_th_st_pp[i-1],(void**)&status);
+		//ret = pthread_join(_th_st_pp[i-1],(void**)&status);
+		ret = pthread_join(_th_st_pp[i-1],NULL);
 	}
 
 	if (!outpipe){ 
