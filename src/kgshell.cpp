@@ -283,8 +283,9 @@ void *kgshell::run_func(void *arg){
 		pthread_cond_signal(a->stCond);
 		pthread_mutex_unlock(a->stMutex);
 	}
+	cerr << "runfun end" << endl;
 
-	pthread_exit(0);
+	//pthread_exit(0);
 
 	return NULL;	
 }
