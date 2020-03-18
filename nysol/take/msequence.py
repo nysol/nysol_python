@@ -119,8 +119,12 @@ class msequence(object):
 		self.xFile   = kwd["x"]    if "x"    in kwd else None
 		self.idFN    = kwd["tid"]  if "tid"  in kwd else "tid"
 		self.timeFN  = kwd["time"] if "time" in kwd else "time"
+		val2=self.timeFN.split("%")
+		self.timeFN = val2[0]
+
 		self.itemFN  = kwd["item"] if "item" in kwd else "item"
 		self.clsFN   = kwd["cls"]  if "cls"  in kwd else None
+
 
 		self.taxoFN  = kwd["taxo"] if "taxo" in kwd else "taxo"
 		self.outPath = kwd["O"]    if "O"    in kwd else "./take_{}".format(t.strftime("%Y%m%d%H%M%S"))
