@@ -278,7 +278,6 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 			}
 		}
 
-		//savex  = PyEval_SaveThread();
 		if(PyList_Check(i_p)){
 			Py_ssize_t max = PyList_Size(i_p);
 			Py_ssize_t fldsize = 0;
@@ -311,22 +310,41 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 					for(Py_ssize_t i=0 ; i<fldsize;i++){
 						PyObject* fval = PyList_GetItem(ddata,i);
 						if(strCHECK(fval)){
-							_oFile.writeStr(strGET(fval), i==fldsize-1);
+							char *tp = strGET(fval);
+							savex  = PyEval_SaveThread();
+							_oFile.writeStr(tp, i==fldsize-1);
+							PyEval_RestoreThread(savex);
+							savex=NULL;
+							
 						}
 						else if (PyLong_Check(fval)){
-							_oFile.writeDbl(PyLong_AsDouble(fval), i==fldsize-1);
+							double dl = PyLong_AsDouble(fval);
+							savex  = PyEval_SaveThread();
+							_oFile.writeDbl(dl, i==fldsize-1);
+							PyEval_RestoreThread(savex);
+							savex=NULL;
+
 						}
 						else if (PyFloat_Check(fval)){
 							double d=PyFloat_AsDouble(fval);
 							if(isnan(d)||isinf(d)){
+								savex  = PyEval_SaveThread();
 								_oFile.writeStr("", i==fldsize-1);
+							PyEval_RestoreThread(savex);
+							savex=NULL;
 							}
 							else{
-								_oFile.writeDbl(d, i==fldsize-1);
+								savex  = PyEval_SaveThread();
+							_oFile.writeDbl(d, i==fldsize-1);
+							PyEval_RestoreThread(savex);
+							savex=NULL;
 							}
 						}
 						else if (Py_None == fval){
+							savex  = PyEval_SaveThread();
 							_oFile.writeStr("", i==fldsize-1);
+							PyEval_RestoreThread(savex);
+							savex=NULL;
 						}
 						else{
 							throw kgError("unsupport data type");
@@ -338,10 +356,11 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 		}else{
 			throw kgError("not python list");
 		}
-		//PyEval_RestoreThread(savex);
-		//savex=NULL;
-
+		savex  = PyEval_SaveThread();
 		_oFile.close();
+		PyEval_RestoreThread(savex);
+		savex=NULL;
+
 		msg.append(successEndMsg());
 		return 0;
 
