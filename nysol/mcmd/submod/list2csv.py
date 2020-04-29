@@ -4,12 +4,14 @@ from nysol.mcmd.nysollib.core import NysolMOD_CORE
 from nysol.mcmd.nysollib import nysolutil as nutil
 
 class Nysol_List2Csv(NysolMOD_CORE):
-	_kwd ,_inkwd,_outkwd = n_core.getparalist("readlist",3)
+
+	_kwd = [["i","o","header"],[]]
+	_inkwd  = ["i"] 
+	_outkwd = ["o"]
 
 	def __init__(self,*args, **kw_args) :
 
 		if len(args) != 1 :
-
 			print("arge only one")
 			return None
 
@@ -22,28 +24,30 @@ class Nysol_List2Csv(NysolMOD_CORE):
 		if not isinstance(kw_args["i"],list) :
 			print("unsuport type")
 			return None
-		
+
+		# headerがあればmcut 		
 		if "header" in kw_args :
+
 			if isinstance(kw_args["header"],list) :
-				if len(kw_args["i"])==0 or len(kw_args["header"]) == len(kw_args["i"][0]):
-					kw_args["i"].insert(0,kw_args["header"])
-				else :
-					print("unmatch size")
-					return None
+				fld =[]
+				for i,v in enumerate(kw_args["header"]):
+					fld.append("%d:%s"%(i,v))
+				
+				kw_args["f"] = fld
 	
 			elif isinstance(kw_args["header"],str) :
 				hd = re.split(r",", kw_args["header"])
-				if len(kw_args["i"])==0 or len(kw_args["header"]) == len(hd):
-					kw_args["i"].insert(0,hd)
-				else :
-					print("unmatch size")
-					return None
-
+				for i,v in enumerate(hd):
+					fld.append("%d:%s"%(i,v))
 			else :
 				print("unsuport type")
 				return None
 
+			kw_args["nfni"] = True
 			del kw_args["header"]
+			super(Nysol_List2Csv,self).__init__("mcut",kw_args)
 
-		super(Nysol_List2Csv,self).__init__("readlist",nutil.args2dict((),kw_args,Nysol_List2Csv._kwd))
+		else:
+			kw_args["f"] = "*"		
+			super(Nysol_List2Csv,self).__init__("mcut",kw_args)
 
