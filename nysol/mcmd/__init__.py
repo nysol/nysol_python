@@ -1,6 +1,7 @@
 from .nysollib.core import runs,drawModels,drawModelsD3,makeScps,modelInfos,setMsgFlg,setRunLimit
 from .submod.readcsv import Nysol_Readcsv as readcsv
 from .submod.readlist import Nysol_Readlist as readlist
+from .submod.list2csv import Nysol_List2Csv as list2csv
 from .submod.writecsv import Nysol_Writecsv as writecsv
 from .submod.writelist import Nysol_Writelist as writelist
 from .submod.writedict import Nysol_Writedict as writedict

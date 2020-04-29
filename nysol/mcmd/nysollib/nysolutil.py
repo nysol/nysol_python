@@ -165,6 +165,21 @@ def args2dict(args, kw_args,klist,uk=None):
 	return kw_args
 
 
+# あるキーワードが入ってるかチェック
+def iskwd(args, kw_args,kwd):
+	if len(args)>1:
+		print("args only one")
+		return False
+
+	if len(args)==1:
+		if isinstance(args[0],dict):
+			if kwd in args[0]:
+				return True
+	
+	if kwd in kw_args:
+		return True
+
+
 
 def arg2dict(args, kw_args,klist,uk=None):
 
