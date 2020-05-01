@@ -296,6 +296,15 @@ int kgChgstr::runMain(void)
 		_iFile.close();
 		_oFile.close();
 
+	}catch(kgOPipeBreakError& berr){
+		if(buf!=NULL){
+			for(size_t i=0;i<fcnt;i++){
+				delete [] buf[i];
+			}
+			delete [] buf;
+		}
+		throw berr;
+
 	}catch(kgError& err){
 		if(buf!=NULL){
 			for(size_t i=0;i<fcnt;i++){
@@ -338,7 +347,6 @@ int kgChgstr::run(void)
 		return sts;
 
 	}catch(kgOPipeBreakError& err){
-
 		runErrEnd();
 		successEnd();
 		return 0;
@@ -385,24 +393,20 @@ int kgChgstr::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(successEndMsg());
 
 	}catch(kgOPipeBreakError& err){
-
 		runErrEnd();
 		msg.append(successEndMsg());
 		sts = 0;
 
 	}catch(kgError& err){
-
 		runErrEnd();
 		msg.append(errorEndMsg(err));
 
 	}catch (const exception& e) {
-
 		runErrEnd();
 		kgError err(e.what());
 		msg.append(errorEndMsg(err));
 
 	}catch(char * er){
-
 		runErrEnd();
 		kgError err(er);
 		msg.append(errorEndMsg(err));
