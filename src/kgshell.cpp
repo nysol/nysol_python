@@ -27,6 +27,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <csignal>
 #include <cxxabi.h>
 
 using namespace kgmod;
@@ -558,6 +559,21 @@ void *kgshell::run_pyfunc(void *arg){
 
 	return NULL;	
 }
+
+void kgshell::signalHandler( int sigNo, siginfo_t* info, void* ctx ){
+
+	if ( sigNo == SIGSEGV ){
+		ostringstream ss;
+		ss << "kgshell ( - segmentation violation ) ";
+		cerr << ss.str() << endl;
+		//kgError err=kgError(ss.str());
+		//err_OUTPUT(ss.str())
+		_exit( 1 );
+	}
+}
+
+
+
 
 static void watch_raw_OUTPUT(const string& v,kgEnv *env,bool pymsg, string& logd){
 	if(pymsg){
@@ -1282,11 +1298,26 @@ int kgshell::runx(
 {
 	try{
 
+		// 一応siganl対応
+		struct sigaction sa_sigint;
+		struct sigaction oldact;
+
+		memset(&sa_sigint, 0, sizeof(sa_sigint));
+		memset(&oldact, 0, sizeof(oldact));
+		sa_sigint.sa_sigaction=signalHandler;
+		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
+		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
+
 		runInit(cmds,plist);
 
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			runMain(cmds,plist,iblk);
 		}
+
+		// 一応siganl reset対応
+		sigaction( SIGSEGV, &oldact, NULL ); // signal 13
+
+
 		return 0;
 
 	}catch(kgError& err){
@@ -1325,12 +1356,30 @@ kgCSVfld* kgshell::runiter(
 	kgCSVfld* _iterrtn = NULL;
 	try{
 
+		// 一応siganl対応
+		struct sigaction sa_sigint;
+		struct sigaction oldact;
+
+		memset(&sa_sigint, 0, sizeof(sa_sigint));
+		memset(&oldact, 0, sizeof(oldact));
+		sa_sigint.sa_sigaction=signalHandler;
+		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
+		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
+
 		runInit(cmds,plist);
 		int itrfd = -1;
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			itrfd = runMain(cmds,plist,iblk,iblk==_spblk.getBlksize_M()-1);
 		}
-		if(itrfd<0){ return NULL; }
+
+		// 一応siganl reset対応
+		sigaction( SIGSEGV, &oldact, NULL ); // signal 13
+
+		if(itrfd<0){ 
+			return NULL; 
+		}
+
+
 		// データ出力
 		_iterrtn = new kgCSVfld;
 		_iterrtn->popen(itrfd, &_env,_nfni);
@@ -1377,11 +1426,25 @@ kgCSVkey* kgshell::runkeyiter(
 	kgCSVkey *_iterrtnk=NULL;
 	try{
 
+		// 一応siganl対応
+		struct sigaction sa_sigint;
+		struct sigaction oldact;
+
+		memset(&sa_sigint, 0, sizeof(sa_sigint));
+		memset(&oldact, 0, sizeof(oldact));
+		sa_sigint.sa_sigaction=signalHandler;
+		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
+		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
+
 		runInit(cmds,plist);
 		int itrfd=-1;
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			itrfd = runMain(cmds,plist,iblk,iblk==_spblk.getBlksize_M()-1);
 		}
+
+		// 一応siganl reset対応
+		sigaction( SIGSEGV, &oldact, NULL ); // signal 13
+
 		if(itrfd<0){ return NULL; }
 
 		// データ出力

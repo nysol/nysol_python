@@ -41,7 +41,9 @@
 	#define KGMOD_THREAD_STK 1048576
 #endif
 
-#define KGMOD_MEMBASE 47104000
+//#define KGMOD_MEMBASE 47104000 
+// fifo繋ぎ方を考えれば減らすことは可能なはず
+#define KGMOD_MEMBASE 134217728
 
 using namespace kglib;
 using namespace kgmod;
@@ -115,6 +117,8 @@ class kgshell{
 	typedef map<std::string, boost::function<kgMod* ()> > kgmod_map_t;
 	typedef map<std::string, int > kgmod_run_t;
 	typedef map<std::string, const char **> kgmod_ioinfo_t;
+
+	static void signalHandler(int sigNo, siginfo_t* info, void* ctx);
 
 	kgmod_map_t    _kgmod_map; //keyword - 関数対応表
 	kgmod_run_t    _kgmod_run;
