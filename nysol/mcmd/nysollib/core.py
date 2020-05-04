@@ -1239,7 +1239,7 @@ class NysolMOD_CORE(object):
 		# 仮 kgshellへ移行
 		import psutil as ps
 
-		shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg,logDir)
+		shobj = n_core.init(msgF,modlimt,int(ps.virtual_memory().total*0.9),py_msg,logDir)
 		sts = n_core.runLx(shobj,modlist,linklist)
 		if threxc and sts != 0 :
 			raise Exception("run error")
@@ -1290,7 +1290,7 @@ class NysolMOD_CORE(object):
 
 			# 仮 kgshellへ移行
 			import psutil as ps
-			shobj = n_core.init(msgF,modlimt,ps.virtual_memory().total,py_msg,logDir)
+			shobj = n_core.init(msgF,modlimt,int(ps.virtual_memory().total*0.9),py_msg,logDir)
 			sts = n_core.runLx(shobj,modlist,linklist)
 			if threxc and sts != 0 :
 				raise Exception("run error")
