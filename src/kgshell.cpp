@@ -564,7 +564,7 @@ void kgshell::signalHandler( int sigNo, siginfo_t* info, void* ctx ){
 
 	if ( sigNo == SIGSEGV ){
 		ostringstream ss;
-		ss << "kgshell ( - segmentation violation ) ";
+		ss << "#ERROR# kgshell ( - segmentation violation ) ";
 		cerr << ss.str() << endl;
 		//kgError err=kgError(ss.str());
 		//err_OUTPUT(ss.str())
