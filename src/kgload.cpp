@@ -310,7 +310,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 					for(Py_ssize_t i=0 ; i<fldsize;i++){
 						PyObject* fval = PyList_GetItem(ddata,i);
 						if(strCHECK(fval)){
-							char *tp = strGET(fval);
+							const char *tp = strGET(fval);
 							savex  = PyEval_SaveThread();
 							_oFile.writeStr(tp, i==fldsize-1);
 							PyEval_RestoreThread(savex);
