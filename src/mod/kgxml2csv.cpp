@@ -37,8 +37,7 @@ using namespace kgmod;
 // k=のキーに入ったならば1を返す。その他は0。
 // ----------------------------------------------
 bool matchKey(XmlKey& key, string& currentPath){
-  //if(0==key.path.compare(0,key.length,currentPath)) return(true);
-//cerr << "key=" << key.path << ", cp=" << currentPath << " : compare=" << key.path.compare(currentPath) << endl;
+
 	if(0==key.path.compare(currentPath)) return(true);
   return(false);
 }
@@ -47,30 +46,25 @@ bool matchKey(XmlKey& key, string& currentPath){
 // f=の要素にマッチしているかどうかを判定し、項目数文のbool vectorを返す。
 // ----------------------------------------------
 vector<bool> matchFld(XmlFld& fld, XmlKey& key, string& currentPath){
+
 	vector<bool> flag(fld.cnt,false);
-//cerr << "&&&&& start matchFld" << endl;
 
 	for(int i=0; i<fld.cnt; i++){
-//cerr << "&& i=" << i << endl;
-//cerr << "&& currentPath=" << currentPath << ", fld.element=" << fld.element.at(i) << ", key.length=" << key.length << endl;
+
 		if(fld.element.at(i)[0]=='/'){ // ----- 絶対パスの場合 ( f=/a/b )
 			if( 0==fld.element.at(i).compare(currentPath) ){
-//cerr << "&& compare match0\n";
 				flag.at(i)=true;
 			}
 		}else{                         // ----- 相対パスの場合 ( f=a/b )
 			if(currentPath.size()>=key.length){
 				const char* relPos=currentPath.c_str()+key.length;
 				if(*relPos=='/') relPos++;
-//cerr << "&& cat=" << relPos << endl;
 				if( 0==fld.element.at(i).compare(relPos) ){
-//cerr << "&& compare match1 " << flag.size() << ", fld.cnt=" << fld.cnt << endl;
 					flag.at(i)=true;
 				}
 			}
 		}
 	}
-//cerr << "&& end matchFld" << endl;
 	return flag;
 }
 

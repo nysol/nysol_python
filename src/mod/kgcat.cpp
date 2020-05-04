@@ -304,7 +304,7 @@ int kgCat::readFile_set(kgstr_t fname)
 			if( _zskip && err.message(0).find("no data found :")!=string::npos ){
 				return 1;
 			}
-			throw err;
+			throw ;
 		}
 	}
 	return 0;
