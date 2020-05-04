@@ -390,7 +390,7 @@ void kgFifo::setArgs(void){
 	}
 	string queSize = _args.toString("n=",false);
 	if(queSize.empty()){
-		_queSize=32;
+		_queSize=16;
 	}else{
 		_queSize= atoi(queSize.c_str());
 	}
@@ -453,7 +453,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 	
 		string queSize = _args.toString("n=",false);
 		if(queSize.empty()){
-			_queSize = 32;
+			_queSize = 16;
 		}else{
 			_queSize = atoi(queSize.c_str());
 		}
