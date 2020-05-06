@@ -42,6 +42,11 @@ class kgCat : public kgMod
 	kgArgFld _fField;						// f=:kgargfldクラス
 	vector<size_t> _kv;			// f=:項目名
 
+	vector<int> _k1;
+	vector<kgstr_t> _v1;
+	size_t _dicinfoSize;
+	
+
 	vector<kgstr_t> _fldNames;
 	size_t _fldSize;
 	size_t _iCnt; //処理行数
