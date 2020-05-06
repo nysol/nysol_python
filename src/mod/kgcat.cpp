@@ -305,11 +305,8 @@ void kgCat::output(kgCSVfld* csv)
 		fsplit = splitToken2(csvfn, '/','_'); 
 	}
 	else if(_k1.size()!=0){
-		fsplit1 = splitTokenx(csvfn, '/');
+		fsplit1 = splitToken(csvfn, '/');
 	}
-
-
-
 	// 出力実行
 	while( EOF != csv->read() ){
 		_iCnt++;
