@@ -67,7 +67,7 @@ def sizeCHK(data,premax):
 				premax[i] = fsize
 
 
-def chgDSPstr(pre,dmy=False,fldnameLimit=15):
+def chgDSPstr(pre,hsizeL,fsizeL,head,dmy=False,fldnameLimit=15):
 
 	try:
 		if hasattr(os,"get_terminal_size"):
@@ -78,11 +78,14 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 	except:
 		width=80
 
-	sufmax = int(len(pre)/2)
+	sufmax = int(hsizeL)
 
 	# fldcut check
 	fldmax = [ 0 for i in range(len(pre[0]))]
-	sizeCHK(pre,fldmax)
+	if head == None:
+		sizeCHK(pre,fldmax)
+	else:
+		sizeCHK([head]+pre,fldmax)
 
 	for i in range(len(fldmax)):
 		if fldmax[i] > fldnameLimit:
@@ -112,6 +115,35 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 
 	# make output string
 	outstr=[]
+	
+	
+	if head != None:
+		lin = head
+
+		newstr=[]
+
+		for pos in dspfldNo:
+
+			if fldcut and pos == len(fldmax)-1:
+				newstr.append("...")   
+
+			dlen = dsplen(lin[pos])
+
+			if dlen <= fldmax[pos] :
+
+				fmtdlen = (fldmax[pos]-dlen)+len(lin[pos])
+				fmt = "%%%ds"%(fmtdlen)
+				newstr.append(fmt%(lin[pos]))
+			
+			else:
+
+				newdata = dspchg(lin[pos],fldmax[pos])
+				fmtdlen = (fldmax[pos]-dsplen(newdata))+len(newdata)
+				fmt = "%%%ds"%(fmtdlen)
+				newstr.append(fmt%(newdata))
+
+		outstr.append(" ".join(newstr))
+
 	for i,lin in enumerate(pre):
 
 		# dmy行
@@ -159,9 +191,11 @@ def chgDSPstr(pre,dmy=False,fldnameLimit=15):
 
 
 
-def chgDSPhtml(dspdata, yLimit , maxno,head):
+def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 
-		mid = yLimit / 2
+		yLimit = hsize + fsize
+
+		mid = hsize
 		arange_number = 0
 
 		dmy = ( maxno > yLimit )

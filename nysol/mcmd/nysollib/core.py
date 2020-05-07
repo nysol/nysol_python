@@ -149,12 +149,13 @@ class NysolMOD_CORE(object):
 		return count
 
 
-	def _dspselct(self,ylim,xlim=20):
+	# ylim head ylimtail tail
+	def _dspselct(self,ylim,ylimtail,xlim=20) :
 
-		yLimit = ylim
+		yLimit = ylim + ylimtail
 		pre=[]
 		head=None
-		sufmax = int(yLimit/2)
+		sufmax = ylimtail
 		xmid = int(xlim/2)
 
 		suf=[ [] for i in range(sufmax) ]
@@ -162,16 +163,11 @@ class NysolMOD_CORE(object):
 		sufpos=0
 
 		dupobj = copy.deepcopy(self)
-
-		# 不要 mod 除去 
 		itobj = dupobj.redirect(dupobj.nowdir)
-		#for k in dupobj.outlist.keys():
-		#	dupobj.outlist[k].clear()
-
 
 		try:
 			xx = itermod.LineListIter(itobj)
-			if len(xx.fldname)>xlim:
+			if len(xx.fldname)>xlim and xlim != -1 :
 				head = xx.fldname[:xmid]+["..."] + xx.fldname[-xmid:]
 			else:
 				head = xx.fldname 
@@ -181,23 +177,26 @@ class NysolMOD_CORE(object):
 				if val==None:
 					break
 				xval = val
-				if len(val)>xlim:
+				if len(val)>xlim and xlim != -1 :
 					xval = val[:xmid]+["..."] + val[-xmid:]
 
 				if cnt < yLimit :
 					pre.append(xval)
-
+				else:
+					if sufmax == 0 :
+						break 
 				cnt+=1
-				suf[sufpos]=xval
-				sufpos+=1
-				if sufpos==sufmax :
-					sufpos=0
+				if sufmax > 0 :
+					suf[sufpos]=xval
+					sufpos+=1
+					if sufpos==sufmax :
+						sufpos=0
 
 		except StopIteration:
 			pass
 
 		if(cnt > yLimit): 
-			ppos = sufmax
+			ppos = ylim
 			spos = sufpos
 			for _ in range(sufmax):
 
@@ -209,14 +208,39 @@ class NysolMOD_CORE(object):
 
 		return pre,cnt,head
 
-
 	def _dsp1(self):
 
 		yLimit =40
+		
+		hsizeL = getattr(self, "hsize", None)
+		fsizeL = getattr(self, "fsize", None)
+		xsizeL = getattr(self, "xsize", None)
+		hdsp = getattr(self, "headdsp", None)
 
-		dspdata ,cnt ,head = self._dspselct(yLimit)
 
-		outstrList = dspalign.chgDSPstr(dspdata , cnt > yLimit)
+		if hsizeL == None:
+			hsizeL =yLimit
+		else:
+			hsizeL =int(hsizeL)
+		
+		if fsizeL == None:
+			fsizeL =yLimit
+		else:
+			fsizeL =int(fsizeL)
+
+		if xsizeL == None:
+			xsizeL =20
+		else:
+			xsizeL =int(xsizeL)
+
+
+		dspdata ,cnt ,head = self._dspselct(hsizeL,fsizeL,xsizeL)
+
+		if hdsp ==None:
+			head = None
+
+
+		outstrList = dspalign.chgDSPstr(dspdata ,hsizeL,fsizeL,head, cnt > yLimit)
 
 		return "\n".join(outstrList)
 
@@ -225,10 +249,29 @@ class NysolMOD_CORE(object):
 	def _dsp2(self):
 
 		yLimit =40
+		
+		hsizeL = getattr(self, "hsize", None)
+		fsizeL = getattr(self, "fsize", None)
+		xsizeL = getattr(self, "xsize", None)
 
-		dspdata ,cnt ,head = self._dspselct(yLimit)
+		if hsizeL == None:
+			hsizeL =yLimit
+		else:
+			hsizeL =int(hsizeL)
+		
+		if fsizeL == None:
+			fsizeL =yLimit
+		else:
+			fsizeL =int(fsizeL)
 
-		outstrList = dspalign.chgDSPhtml(dspdata , yLimit , cnt, head)
+		if xsizeL == None:
+			xsizeL =20
+		else:
+			xsizeL =int(xsizeL)
+
+		dspdata ,cnt ,head = self._dspselct(hsizeL,fsizeL,xsizeL)
+
+		outstrList = dspalign.chgDSPhtml(dspdata , hsizeL,fsizeL , cnt, head)
 
 		return "\n".join(outstrList)
 
@@ -239,8 +282,9 @@ class NysolMOD_CORE(object):
 
 		dsptp = os.getenv("NYSOL_MOD_DSP_TYPE", "0")
 
+		dsplocal = getattr(self, "pstr", False)
 
-		if dsptp == "1":
+		if dsptp == "1" or dsplocal == True:
 		
 			return self._dsp1()
 
@@ -254,7 +298,12 @@ class NysolMOD_CORE(object):
 		return str(self)
 
 	def _repr_html_(self):
-		return self._dsp2()
+
+		dsplocal = getattr(self, "pstr", False)
+		if dsplocal :
+			return None
+		else :
+			return self._dsp2()
 
 	def __iter__(self):
 
@@ -532,6 +581,34 @@ class NysolMOD_CORE(object):
 
 				self.outlist[key].append(self.kwd[key])
 				del self.kwd[key]
+
+	@classmethod
+	def p(self,val,**kwd):
+
+		from nysol.mcmd.submod.readcsv import Nysol_Readcsv as mreadcsv
+		rtn = mreadcsv(val)
+		rtn.xsize=-1
+
+		if "asis" in kwd:
+			if kwd["asis"]==True:
+				rtn.pstr=True
+				rtn.xsize=20
+
+		if "head" in kwd:
+			rtn.hsize = int(kwd["head"])
+		else:
+			rtn.hsize=6
+
+		if "tail" in kwd:
+			rtn.fsize = int(kwd["tail"])
+		else:
+			rtn.fsize=0
+		
+		rtn.xsize=-1
+		rtn.headdsp=True
+
+		return rtn
+
 
 	@classmethod
 	def setMsgFlg(self,val):
@@ -1197,6 +1274,66 @@ class NysolMOD_CORE(object):
 		return modlist,iolist,linklist,outfs
 
 	@classmethod
+	def loopCheck(self,linklst):
+		
+		nodes4loop =set([])
+		from2to={} # from->to map
+		to2from={} # to->from map
+
+		for lnklst in linklst:
+			plist ={}
+			nodes4loop.add(lnklst[0][1])
+			nodes4loop.add(lnklst[1][1])
+			fr =  lnklst[0][1]
+			to =  lnklst[1][1]
+
+		
+			if not fr in from2to:
+				from2to[fr] = []
+			from2to[fr].append(to)
+			
+			if not to in to2from:
+				to2from[to] = []
+			to2from[to].append(fr)
+
+
+		starts=[]
+
+		for node4loop in nodes4loop:
+			if not node4loop in to2from:
+				starts.append(node4loop)
+		
+		ordered=[]
+		while len(starts)>0:
+			stnode = starts.pop()
+			ordered.append(stnode)
+
+			if not stnode in from2to:
+				nexts = []
+			else:
+				nexts = from2to[stnode]
+				
+			# remove
+			if stnode in from2to:
+				del from2to[stnode]
+			for ntnode in nexts:
+				if ntnode in to2from:
+					if stnode in to2from[ntnode]:
+						to2from[ntnode].remove(stnode)
+					if len(to2from[ntnode])==0:
+						del to2from[ntnode]
+
+			for ntnode in nexts:
+				if not ntnode in to2from:
+					starts.append(ntnode)
+		
+		if len(starts)>0 or len(ordered)!=len(nodes4loop):
+			return True
+			
+		return False
+
+
+	@classmethod
 	def runs(self,mods,**kw_args):
 
 		msgF    = NysolMOD_CORE.OutMsg 
@@ -1224,7 +1361,17 @@ class NysolMOD_CORE(object):
 				threxc =True
 
 		modlist,iolist,linklist,outfs = NysolMOD_CORE.makeRunNetworks(mods)
+		isloop = NysolMOD_CORE.loopCheck(linklist)
+		
+		if isloop :
+			raise Exception("this object looping")
 
+			if threxc :
+				raise Exception("this object looping")
+			
+			return None
+			
+		
 		py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
@@ -1382,6 +1529,9 @@ class NysolMOD_CORE(object):
 		self.graphSetList(dupobj,sumiobj,listStks,0)
 		return dupobj
 
+
+def p(val,**kw_args):
+	return NysolMOD_CORE.p(val,**kw_args)
 
 def runs(val,**kw_args):
 	return NysolMOD_CORE.runs(val,**kw_args)

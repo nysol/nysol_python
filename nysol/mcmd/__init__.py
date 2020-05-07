@@ -1,4 +1,4 @@
-from .nysollib.core import runs,drawModels,drawModelsD3,makeScps,modelInfos,setMsgFlg,setRunLimit
+from .nysollib.core import runs,drawModels,drawModelsD3,makeScps,modelInfos,setMsgFlg,setRunLimit,p
 from .submod.readcsv import Nysol_Readcsv as readcsv
 from .submod.readlist import Nysol_Readlist as readlist
 from .submod.list2csv import Nysol_List2Csv as list2csv
