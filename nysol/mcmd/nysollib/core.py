@@ -1364,10 +1364,7 @@ class NysolMOD_CORE(object):
 		isloop = NysolMOD_CORE.loopCheck(linklist)
 		
 		if isloop :
-			raise Exception("this object looping")
-
-			if threxc :
-				raise Exception("this object looping")
+			raise Exception("I/O flow is looping")
 			
 			return None
 			
