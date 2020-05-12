@@ -352,7 +352,6 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
-
 			return pry;
 		}
 

@@ -184,13 +184,17 @@ class NysolMOD_CORE(object):
 					pre.append(xval)
 				else:
 					if sufmax == 0 :
-						break 
+						raise GeneratorExit()
 				cnt+=1
 				if sufmax > 0 :
 					suf[sufpos]=xval
 					sufpos+=1
 					if sufpos==sufmax :
 						sufpos=0
+
+		except GeneratorExit:
+			n_core.close(xx.csvin)
+			n_core.cancel(xx.shobj)
 
 		except StopIteration:
 			pass
@@ -589,8 +593,8 @@ class NysolMOD_CORE(object):
 		rtn = mreadcsv(val)
 		rtn.xsize=-1
 
-		if "asis" in kwd:
-			if kwd["asis"]==True:
+		if "plain" in kwd:
+			if kwd["plain"]==True:
 				rtn.pstr=True
 				rtn.xsize=20
 
