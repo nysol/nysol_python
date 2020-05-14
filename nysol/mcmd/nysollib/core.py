@@ -257,6 +257,7 @@ class NysolMOD_CORE(object):
 		hsizeL = getattr(self, "hsize", None)
 		fsizeL = getattr(self, "fsize", None)
 		xsizeL = getattr(self, "xsize", None)
+		hdsp = getattr(self, "headdsp", None)
 
 		if hsizeL == None:
 			hsizeL =yLimit
@@ -274,6 +275,9 @@ class NysolMOD_CORE(object):
 			xsizeL =int(xsizeL)
 
 		dspdata ,cnt ,head = self._dspselct(hsizeL,fsizeL,xsizeL)
+		
+		if hdsp == None:
+			head = None
 
 		outstrList = dspalign.chgDSPhtml(dspdata , hsizeL,fsizeL , cnt, head)
 
@@ -609,7 +613,13 @@ class NysolMOD_CORE(object):
 			rtn.fsize=0
 		
 		rtn.xsize=-1
+
 		rtn.headdsp=True
+		if "nfn" in kwd:
+			if kwd["nfn"]==True:
+				rtn.headdsp=None
+			
+
 
 		return rtn
 
