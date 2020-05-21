@@ -201,6 +201,22 @@ def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 		dmy = ( maxno > yLimit )
 
 		outstrList=[]
+		outstrList.append("<style>")
+		outstrList.append("table{")
+		outstrList.append("border: none;")
+		outstrList.append("border-collapse: collapse;")
+		outstrList.append("border-spacing: 0;")
+		outstrList.append("color: black;")
+		outstrList.append("font-size: 12px;")
+		outstrList.append("table-layout: fixed;")
+		outstrList.append("background-color: transparent;")
+		outstrList.append("}")
+		outstrList.append("thead {")
+		outstrList.append("border-bottom: 1px solid black;")
+		outstrList.append("vertical-align: bottom;")
+		outstrList.append("}")
+		outstrList.append("</style>")
+		
 		outstrList.append("<div>")
 		outstrList.append("<table border=\"1\">")
 		outstrList.append("<thead>")
