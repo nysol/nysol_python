@@ -201,24 +201,37 @@ def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 		dmy = ( maxno > yLimit )
 
 		outstrList=[]
-		outstrList.append("<style>")
-		outstrList.append("table{")
+		outstrList.append("<style scoped>")
+		outstrList.append(".nysolnmp {")
 		outstrList.append("border: none;")
 		outstrList.append("border-collapse: collapse;")
 		outstrList.append("border-spacing: 0;")
 		outstrList.append("color: black;")
-		outstrList.append("font-size: 12px;")
 		outstrList.append("table-layout: fixed;")
-		outstrList.append("background-color: transparent;")
 		outstrList.append("}")
-		outstrList.append("thead {")
+		outstrList.append(".nysolnmp thead th{")
 		outstrList.append("border-bottom: 1px solid black;")
+		outstrList.append("text-align: right;")
 		outstrList.append("vertical-align: bottom;")
+		outstrList.append("padding: 0.5em;")
+		outstrList.append("white-space: normal;")
 		outstrList.append("}")
+
+
+		outstrList.append(".nysolnmp td,th{")
+		outstrList.append("text-align: right;")
+		outstrList.append("padding: 0.5em;")
+		outstrList.append("white-space: normal;")
+		outstrList.append("}")
+
+		outstrList.append(".nysolnmp tbody tr:nth-child(2n+1){")
+		outstrList.append("background: #f7f7f7;")
+		outstrList.append("}")
+
 		outstrList.append("</style>")
 		
 		outstrList.append("<div>")
-		outstrList.append("<table border=\"1\">")
+		outstrList.append("<table class='nysolnmp'>")
 		outstrList.append("<thead>")
 		if head != None:
 			outstrList.append("<tr>")
