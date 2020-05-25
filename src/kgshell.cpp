@@ -1494,7 +1494,6 @@ kgCSVkey* kgshell::runkeyiter(
 int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 
 	kgMod *mod =NULL;
-
 	try{
 		if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
 			err_OUTPUT("Not unspport mod " + cmdname);

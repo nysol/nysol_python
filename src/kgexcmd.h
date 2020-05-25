@@ -46,6 +46,8 @@ class kgExcmd : public kgMod
 	kgstr_t _cmdstr;
 	vector<kgstr_t> _cmdstrv;
 	char const ** _cmdars;
+	kgstr_t _iName;
+	kgstr_t _oName;
 
 public:
 	static const char * _ipara[];

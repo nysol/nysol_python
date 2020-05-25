@@ -52,7 +52,7 @@ kgExcmd::kgExcmd(void)
 void kgExcmd::setArgs(void)
 {
 	// パラメータチェック
-	_args.paramcheck("cmdstr=");
+	_args.paramcheck(_paralist);
 
 	// 入出力ファイルオープン
 	_cmdstr = _args.toString("cmdstr=",true);
@@ -100,9 +100,9 @@ int kgExcmd::run(void)
 // -----------------------------------------------------------------------------
 int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 {
-
 	try{
 		setArgs();
+
 		if(inum>1 || onum>1){
 			throw kgError("no match IO");
 		}
@@ -111,7 +111,30 @@ int kgExcmd::run(int inum,int *i_p,int onum, int* o_p ,string& msg)
 		int o_p_t=-1;
 		// 入出力ファイルオープン
 		if(inum==1 && *i_p > 0){ i_p_t = *i_p; }
+		else{
+			_iName = _args.toString("i=",false);
+			// 入力ファイルオープン
+			if(!_iName.empty()){
+				i_p_t = ::open(_iName.c_str(), KG_IOPEN_FLG);
+				if(i_p_t == -1 ){
+					ostringstream ss;
+					ss << "file read open error: " << _iName;
+					throw kgError(ss.str());
+				}
+			}
+		}
 		if(onum==1 && *o_p > 0){ o_p_t = *o_p; }
+		else{
+			_oName = _args.toString("o=",false);
+			if(!_oName.empty()){
+				o_p_t = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
+				if(o_p_t == -1 ){
+					ostringstream ss;
+					ss << "file write open error: " << _oName;
+					throw kgError(ss.str());
+				}
+			}
+		}
 
 		pid_t pid;
 		if ((pid = fork()) == 0) {	
