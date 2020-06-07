@@ -226,13 +226,13 @@ void kgBucket::setArgs(void){
 	_args.paramcheck(_paralist,_paraflg);
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false), _env,_nfn_i);
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o,_rp);
 
 	kgstr_t rFile = _args.toString("O=",false);
 	if(rFile.empty()){ _rangefile=false; }
 	else {
 		_rangefile=true;
-		_rFile.open(rFile,_env,_nfn_o);
+		_rFile.open(rFile,_env,_nfn_o,_rp);
   	_rFile.setPrecision(_precision);
 	}	
 	setArgsMain();
@@ -250,15 +250,15 @@ void kgBucket::setArgs(int inum,int *i_p,int onum ,int *o_p)
 		else     { _iFile.open(_args.toString("i=",true), _env,_nfn_i); }
 		iopencnt++;
 
-		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o);  }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum>0 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o,_rp);  }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o,_rp);}
 		oopencnt++;
 
 		kgstr_t rFile = _args.toString("O=",false);
 
 		if(onum>1 && *(o_p+1)>0){ 
 			_rangefile=true;
-			_rFile.popen(*(o_p+1), _env,_nfn_o); 
+			_rFile.popen(*(o_p+1), _env,_nfn_o,_rp); 
 			_rFile.setPrecision(_precision);
 			oopencnt++;
 		}
@@ -267,7 +267,7 @@ void kgBucket::setArgs(int inum,int *i_p,int onum ,int *o_p)
 		}
 		else{
 			_rangefile=true;
-			_rFile.open(rFile,_env,_nfn_o);
+			_rFile.open(rFile,_env,_nfn_o,_rp);
 			_rFile.setPrecision(_precision);
 		}
 		setArgsMain();

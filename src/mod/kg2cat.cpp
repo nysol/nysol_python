@@ -124,11 +124,11 @@ void kg2Cat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 
 		//out
 		if(onum==1 && *o_p > 0){ 
-			_oFile.popen(*o_p, _env,_nfn_o); 
+			_oFile.popen(*o_p, _env,_nfn_o,_rp); 
 			oopencnt++;
 		}
 		else{
-			_oFile.open(_args.toString("o=",true), _env,_nfn_o);
+			_oFile.open(_args.toString("o=",true), _env,_nfn_o,_rp);
 		}
 		
 

@@ -79,6 +79,7 @@ class kgMod
 	int 		_status;		// exitステータス
 	bool    _localhelp;  // 項目の番号指定フラグ
 
+	bool    _rp;  // remove percent
 	// ASSERT
 	bool _assertDIff; // in-out-check
 	bool _assertNullIN;

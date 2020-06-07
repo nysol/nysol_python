@@ -197,14 +197,14 @@ void kgSelstr::setArgs(void)
 
 	// 入出力ファイルオープン
 	_iFile.open(_args.toString("i=",false),_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o,_rp);
 	kgstr_t ufile = _args.toString("u=",false);
 	if(ufile.empty()){
 		_elsefile=false;
 	}
 	else {
 		_elsefile=true;
-		_uFile.open(ufile,_env,_nfn_o);
+		_uFile.open(ufile,_env,_nfn_o,_rp);
 	}		
 	setArgsMain();
 }
@@ -247,14 +247,14 @@ void kgSelstr::setArgs(int inum,int *i_p,int onum, int* o_p)
 			}
 		}
 
-		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o); }
-		else      { _oFile.open(_args.toString(okwd,true), _env,_nfn_o);}
+		if(o_no>0){ _oFile.popen(o_no, _env,_nfn_o,_rp); }
+		else      { _oFile.open(_args.toString(okwd,true), _env,_nfn_o,_rp);}
 		oopencnt++;
 
 		kgstr_t ufile = _args.toString(ukwd,false);
 
 		if(u_no>0){ 
-			_uFile.popen(u_no, _env,_nfn_o); 
+			_uFile.popen(u_no, _env,_nfn_o,_rp); 
 			_elsefile=true;
 			oopencnt++;
 		}
@@ -262,7 +262,7 @@ void kgSelstr::setArgs(int inum,int *i_p,int onum, int* o_p)
 			_elsefile=false;
 		}
 		else{
-			_uFile.open(ufile,_env,_nfn_o);
+			_uFile.open(ufile,_env,_nfn_o,_rp);
 			_elsefile=true;
 		}
 		setArgsMain();

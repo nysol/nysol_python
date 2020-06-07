@@ -77,6 +77,7 @@ kgMod::kgMod(void) :  _status( 0 ){
 	_existNullIN  = false;
 	_existNullOUT = false;
 	_existNullKEY = false;
+	_rp = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -239,6 +240,9 @@ void kgMod::init(void) try
 	// 項目番号指定フラグ
 	bool x = _args.toBool("-x");
 	if(x){ _fldByNum = true; }
+
+	bool rp = _args.toBool("-rp");
+	if(rp){ _rp = true; }
 
 	// in-out-数チェック
 	_assertDIff    = _args.toBool("-assert_diffSize");

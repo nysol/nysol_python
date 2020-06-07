@@ -171,7 +171,7 @@ void kgNrjoin::setArgs(void)
 	}
 	_iFile.open(ifile,_env,_nfn_i);
 	_mFile.open(mfile,_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o,_rp);
 
 	setArgsMain();
 
@@ -216,8 +216,8 @@ void kgNrjoin::setArgs(int inum,int *i_p,int onum ,int *o_p)
 		else       { _mFile.open(mfile, _env,_nfn_i);}
 		iopencnt++;
 
-		if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o);}
-		else{ _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum == 1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o,_rp);}
+		else{ _oFile.open(_args.toString("o=",true), _env,_nfn_o,_rp);}
 		oopencnt++;
 
 		setArgsMain();

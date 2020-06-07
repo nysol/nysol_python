@@ -108,7 +108,7 @@ void kgCat::setArgs(void)
 	if(_iFilename.empty()){ throw kgError("all files on i= are not found");	}
 
 	// o= 出力ファイルオープン
-	_oFile.open(_args.toString("o=",false), _env, _nfn_o);
+	_oFile.open(_args.toString("o=",false), _env, _nfn_o,_rp);
 
 	vector<kgstr_t> vskv = _args.toStringVector("kv=",false);
 	if (vskv.size()!=0) {
@@ -203,8 +203,8 @@ void kgCat::setArgs(int inum,int *i_p,int onum ,int *o_p)
 			if(_iFilename.empty()){ throw kgError("all files on i= are not found");	}
 		}
 
-		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum==1 && *o_p > 0){ _oFile.popen(*o_p, _env,_nfn_o,_rp); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o,_rp);}
 		oopencnt++;
 
 		vector<kgstr_t> vskv = _args.toStringVector("kv=",false);

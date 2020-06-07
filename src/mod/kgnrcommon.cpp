@@ -149,12 +149,12 @@ void kgNrcommon::setArgs(void)
 	}
 	_iFile.open(ifile,_env,_nfn_i);
 	_mFile.open(mfile,_env,_nfn_i);
-	_oFile.open(_args.toString("o=",false),_env,_nfn_o);
+	_oFile.open(_args.toString("o=",false),_env,_nfn_o,_rp);
 	kgstr_t ufile = _args.toString("u=",false);
 	if(ufile.empty()){ _elsefile=false; }
 	else {
 		_elsefile=true;
-		_uFile.open(ufile,_env,_nfn_o);
+		_uFile.open(ufile,_env,_nfn_o,_rp);
 	}
 	setArgsMain();
 }
@@ -217,23 +217,23 @@ void kgNrcommon::setArgs(int inum,int *i_p,int onum, int* o_p)
 			}
 		}
 
-		if(o_p_t>0){ _oFile.popen(o_p_t, _env,_nfn_o);}
+		if(o_p_t>0){ _oFile.popen(o_p_t, _env,_nfn_o,_rp);}
 		else if( ofile.empty()){ 
 			throw kgError("o= is necessary");
 		}
-		else       { _oFile.open(ofile, _env,_nfn_o);}
+		else       { _oFile.open(ofile, _env,_nfn_o,_rp);}
 		oopencnt++;
 
 		if(u_p_t>0){ 
 			_elsefile=true;
-			_uFile.popen(u_p_t, _env,_nfn_o);
+			_uFile.popen(u_p_t, _env,_nfn_o,_rp);
 		}
 		else if(ufile.empty()){
 			_elsefile=false; 
 		}
 		else{
 			_elsefile=true;
-			_uFile.open(ufile,_env,_nfn_o);
+			_uFile.open(ufile,_env,_nfn_o,_rp);
 		}		
 		oopencnt++;
 

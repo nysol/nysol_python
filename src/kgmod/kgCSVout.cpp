@@ -77,10 +77,11 @@ kgCSVout::kgCSVout(kgstr_t fn, kgEnv *env, bool noFldName)
 {
 	open(fn, env, noFldName);
 }
-void kgCSVout::initialset(kgEnv *env, bool noFldName, size_t cnt) 
+void kgCSVout::initialset(kgEnv *env, bool noFldName, size_t cnt,bool rp) 
 {
 	env_ = env;
 	_noFldName = noFldName;
+	_rp = rp;
 	_recNo	= 0;
 	if(env_==NULL){
 		_maxRecLen = KG_MaxRecLen;
@@ -116,24 +117,24 @@ void kgCSVout::initialset(kgEnv *env, bool noFldName, size_t cnt)
 // 書き込みファイルをオープンする。
 // ファイル名がないの場合は標準出力としてオープンする。
 // -----------------------------------------------------------------------------
-void kgCSVout::popen(int fd, kgEnv *env, bool noFldName, size_t cnt) 
+void kgCSVout::popen(int fd, kgEnv *env, bool noFldName,bool rp, size_t cnt) 
 {
 
-	initialset(env,noFldName,cnt);
+	initialset(env,noFldName,cnt,rp);
 	// オープン処理
 	opened_= true;
 	fname_ = "STDOUT";
 	fd_=fd;
-
+	
 }
 // -----------------------------------------------------------------------------
 // 書き込みファイルをオープンする。
 // ファイル名がないの場合は標準出力としてオープンする。
 // -----------------------------------------------------------------------------
-void kgCSVout::open(kgstr_t fileName, kgEnv *env, bool noFldName, size_t cnt) 
+void kgCSVout::open(kgstr_t fileName, kgEnv *env, bool noFldName,bool rp, size_t cnt) 
 {
 
-	initialset(env,noFldName,cnt);
+	initialset(env,noFldName,cnt,rp);
 
 	// オープン処理
 	try {
@@ -826,6 +827,8 @@ void kgCSVout::writeFldNameCHK(vector<kgstr_t>& outfld )
 	for(lim=0 ;lim<fsize ;lim++){
 		if(scheck[lim]==false){ break; }
 	}
+	if(_rp){ lim=0;}
+
 	//出力項目再セット
 	vector<kgstr_t> newfld(fsize);
 	for(int i=0; i<fsize; i++){

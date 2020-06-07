@@ -361,7 +361,7 @@ void kgXml2csv::setArgs(void)
 	_args.paramcheck("f=,i=,o=,k=");
 
 	// 入出力ファイルオープン
-  _oFile.open(_args.toString("o=",false), _env,_nfn_o);
+  _oFile.open(_args.toString("o=",false), _env,_nfn_o,_rp);
 
 	// xml入力ファイル名の設定
 	_fname=_args.toString("i=",false);
@@ -420,8 +420,8 @@ void kgXml2csv::setArgs(int inum,int *i_p,int onum ,int *o_p,string tpfname)
 		}
 		iopencnt++;
 
-		if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o); }
-		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o);}
+		if(onum==1 && *o_p>0){ _oFile.popen(*o_p, _env,_nfn_o,_rp); }
+		else     { _oFile.open(_args.toString("o=",true), _env,_nfn_o,_rp);}
 
 		oopencnt++;
 
