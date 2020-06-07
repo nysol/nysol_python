@@ -1489,8 +1489,6 @@ kgCSVkey* kgshell::runkeyiter(
 	return NULL;
 
 }
-
-
 int kgshell::getparams( kgstr_t cmdname, PyObject* list){
 
 	kgMod *mod =NULL;

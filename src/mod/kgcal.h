@@ -118,6 +118,8 @@ class kgCal:public kgMod {
 	kgAutoPtr1 <boost::gregorian::date> _prv_d_ap;
 //	char  _prv_s_p[KG_MAX_STR_LEN];
 
+	kgstr_t _seed;
+
 	vector<kgstr_t> _exprs;   // c=
 	vector<kgstr_t> _newFlds;   // c=
 	//vector<kgVal>   _prvRsls;// 前行の結果:初期値はNULL
