@@ -3,10 +3,10 @@ import re
 import os
 import subprocess
 
-args = ['xml2-config','--cflags']
-xmlcflg= subprocess.check_output(args).decode().rstrip().split()
-args = ['xml2-config','--libs']
-xmllibs= subprocess.check_output(args).decode().rstrip().split()
+#args = ['xml2-config','--cflags']
+#xmlcflg= subprocess.check_output(args).decode().rstrip().split()
+#args = ['xml2-config','--libs']
+#xmllibs= subprocess.check_output(args).decode().rstrip().split()
 
 hedears = ['src','src/kgmod','src/mod']
 
@@ -112,11 +112,14 @@ def exclude_no_need_compile_sources(sources):
 	return compiling, excluded
 
 
-nmodLibs = ['pthread']
+#nmodLibs = ['pthread']
+nmodLibs = []
 nmodLibs.extend(check_for_boost())
-umodLibs = ['pthread']
+#umodLibs = ['pthread']
+umodLibs = []
 umodLibs.extend(check_for_boost())
-mmodLibs = ['pthread']
+#mmodLibs = ['pthread']
+mmodLibs = []
 mmodLibs.extend(check_for_boost())
 
 
@@ -159,8 +162,11 @@ sources_core, extra_objects_core = exclude_no_need_compile_sources([
 	'mod/kgvdelim.cpp', 'mod/kgvdelnull.cpp', 'mod/kgvjoin.cpp',
 	'mod/kgvnullto.cpp', 'mod/kgvreplace.cpp', 'mod/kgvsort.cpp',
 	'mod/kgvuniq.cpp', 'mod/kgwindow.cpp', 'mod/kgsep.cpp', 'mod/kgkmeans.cpp',
-	'mod/kgarff2csv.cpp', 'mod/kgtab2csv.cpp', 'mod/kgxml2csv.cpp'
+	'mod/kgarff2csv.cpp', 'mod/kgtab2csv.cpp'
 ])
+# , 'mod/kgxml2csv.cpp'
+
+'''
 module1 = Extension('nysol/_nysolshell_core',
                     sources=sources_core,
 					extra_objects=extra_objects_core,
@@ -169,7 +175,13 @@ module1 = Extension('nysol/_nysolshell_core',
 					extra_compile_args=xmlcflg,
 					extra_link_args=xmllibs
 					)
-
+'''
+module1 = Extension('nysol/_nysolshell_core',
+                    sources=sources_core,
+					extra_objects=extra_objects_core,
+					include_dirs=hedears,
+					libraries=nmodLibs
+					)
 
 sources_lcmmod, extra_objects_lcmmod = exclude_no_need_compile_sources(
 	['take/lcmrap.c']
@@ -237,7 +249,7 @@ mmaketramod = Extension('nysol/take/_mmaketralib',
 						libraries=mmodLibs
 						)
 
-
+'''
 sources_sspcmod, extra_objects_sspcmod = exclude_no_need_compile_sources(
 	['take/sspcrap.c']
 )
@@ -293,6 +305,7 @@ medsetmod = Extension('nysol/take/_medsetlib',
 					)
 
 
+'''
 sources_utilmod, extra_objects_utilmod = exclude_no_need_compile_sources([
 	'util/mmethods.cpp',
 	'kgmod/kgArgFld.cpp',
@@ -313,6 +326,7 @@ utilmod = Extension('nysol/util/_utillib',
 					include_dirs=['src', 'src/kgmod', 'src/mod'],
 					libraries=umodLibs
 					)
+'''
 
 
 sources_vsopmod, extra_objects_vsopmod = exclude_no_need_compile_sources([
@@ -337,7 +351,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
 						'src/vsop/SAPPOROBDD/app/VSOP'
 					]
 					)
-
+'''
 setup(
 	name='nysol',
 	packages=[
@@ -380,16 +394,22 @@ NYSOL runs in UNIX environment (Linux and Mac OS X, not Windows).
 		'Topic :: Scientific/Engineering :: Mathematics',
 	],
 	install_requires=["psutil"],
-	scripts=[
-		'scripts/take/mfriends.py', 'scripts/take/mitemset.py',
-		'scripts/take/mpolishing.py', 'scripts/take/msequence.py','scripts/take/mccomp.py',
-		'scripts/take/mtra2gc.py', 'scripts/take/mpal.py','scripts/take/mgdiff.py',
-		'scripts/take/mclique.py', "scripts/take/mbipolish.py", "scripts/take/mbiclique.py"
-	],
+#	scripts=[
+#		'scripts/take/mfriends.py', 'scripts/take/mitemset.py',
+#		'scripts/take/mpolishing.py', 'scripts/take/msequence.py','scripts/take/mccomp.py',
+#		'scripts/take/mtra2gc.py', 'scripts/take/mpal.py','scripts/take/mgdiff.py',
+#		'scripts/take/mclique.py', "scripts/take/mbipolish.py", "scripts/take/mbiclique.py"
+#	],
+#	ext_modules=[
+#		module1, lcmmod, sspcmod, grhfilmod, macemod, seqmod,
+#		seqmodzero, lcmtransmod, macemod, simsetmod, medsetmod, vsopmod,
+#		utilmod, mmaketramod
+#	]
+	scripts=[	],
 	ext_modules=[
-		module1, lcmmod, sspcmod, grhfilmod, macemod, seqmod,
-		seqmodzero, lcmtransmod, macemod, simsetmod, medsetmod, vsopmod,
-		utilmod, mmaketramod
+		module1,utilmod, mmaketramod
 	]
+
+
 )
        

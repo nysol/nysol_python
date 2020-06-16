@@ -30,7 +30,8 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <pthread.h>
+//#include <pthread.h>
+#include <boost/thread.hpp>
 
 
 #ifndef KGMOD_RUN_LIMIT
@@ -65,21 +66,23 @@ struct argST{
 	kgstr_t tag;
 	kgstr_t endtime;
 	vector<int> fdlist;
-	pthread_mutex_t *mutex;
-	pthread_mutex_t *stMutex;
-	pthread_mutex_t *iniMutex;
-	pthread_cond_t *stCond;
-	pthread_cond_t *forkCond;
-	pthread_cond_t *iniCond;
+	boost::mutex *mutex;
+	boost::mutex *stMutex;
+	boost::mutex *iniMutex;
+
+
+	boost::condition_variable *stCond;
+	boost::condition_variable *forkCond;
+	boost::condition_variable *iniCond;
 	PyThreadState * newth;
 	int *runst;
 };
 struct watchST{
-	pthread_mutex_t *stMutex;
-	pthread_cond_t *stCond;
+	boost::mutex *stMutex;
+	boost::condition_variable *stCond;
 	argST *argst;
 	kgEnv *env;
-	pthread_t* th_st_pp;
+	boost::thread ** th_st_pp;
 	int clen;
 	bool pymsg;
 	kgstr_t logdir;
@@ -104,13 +107,24 @@ struct cmdCapselST{
 
 class kgshell{
 
-	pthread_mutex_t _mutex;
-	pthread_mutex_t _stsMutex;
-	pthread_mutex_t _iniMutex;
+	//pthread_mutex_t _mutex;
+	//pthread_mutex_t _stsMutex;
+	//pthread_mutex_t _iniMutex;
+	
+	boost::mutex _mutex;
+	boost::mutex _stsMutex;
+	boost::mutex _iniMutex;
+	
 
-	pthread_cond_t 	_stsCond;
-	pthread_cond_t 	_forkCond;
-	pthread_cond_t _iniCond;
+
+	//pthread_cond_t 	_stsCond;
+	//pthread_cond_t 	_forkCond;
+	//pthread_cond_t _iniCond;
+
+	boost::condition_variable _stsCond;
+	boost::condition_variable _forkCond;
+	boost::condition_variable _iniCond;
+
 
 	template <class kgmodTP> void setMap(std::string,int runTP);
 
@@ -134,7 +148,11 @@ class kgshell{
 
  	kgCSVfld* _iterrtn;
  	kgCSVkey* _iterrtnk;
-	pthread_t* _th_st_pp;
+
+	//pthread_t* _th_st_pp;
+	boost::thread **_th_st_pp;
+
+
 	int *_runst;
 	int *_th_rtn;
 	size_t _clen;
@@ -148,7 +166,10 @@ class kgshell{
 	watchST _watchST;
 
 	bool _watchFlg;
-	pthread_t _th_st_watch;
+
+	//pthread_t _th_st_watch;
+	boost::thread *_th_st_watch;
+
 
 	// pipe LIST
 	//map<int,int> _ipipe_map;
@@ -236,17 +257,23 @@ class kgshell{
 	void runClean(void){
 		if(_watchFlg){
 			PyThreadState *savex = PyEval_SaveThread();
-			pthread_join(_th_st_watch,NULL);
+			//pthread_join(_th_st_watch,NULL);
+			_th_st_watch->join();
+			
 			PyEval_RestoreThread(savex);
 			_watchFlg=false;
 		}
 		if(_th_st_pp){
 			//エラー発生時はthread cancel
 			for(size_t j=0;j<_clen;j++){
-				pthread_cancel(_th_st_pp[j]);	
+				//pthread_cancel(_th_st_pp[j]);	
+				_th_st_pp[j]->interrupt();
+
 			}
 			for(size_t i=_clen;i>0;i--){
-				pthread_join(_th_st_pp[i-1],NULL);
+				//pthread_join(_th_st_pp[i-1],NULL);
+				_th_st_pp[i-1]->join();
+				
 			}
 			if(_modlist){
 				for(size_t i=0 ;i<_clen;i++){
@@ -294,7 +321,10 @@ class kgshell{
 	int setArgStIO(kgmod_ioinfo_t& iomap,string& cmdname,map<string,vector<int> > & iopipeMap,int **io_p);
 	void runInit(vector<cmdCapselST> &cmds,vector<linkST> & plist);
 	void makePipeList(vector<linkST>& plist,int iblk,bool outpipe);
-	int threadStkINIT(pthread_attr_t *pattr);
+	//int threadStkINIT(pthread_attr_t *pattr);
+	int threadStkINIT(boost::thread::attributes *pattr);
+
+
 	int runMain(vector<cmdCapselST> &cmds,vector<linkST> & plisti,int iblk,bool outpipe=false);
 
 public:
@@ -303,7 +333,8 @@ public:
 	~kgshell(void){
 		if(_watchFlg){
 			PyThreadState *savex = PyEval_SaveThread();
-			pthread_join(_th_st_watch,NULL);
+			//pthread_join(_th_st_watch,NULL);
+			_th_st_watch->join();
 			PyEval_RestoreThread(savex);
 
 			_watchFlg=false;
@@ -311,7 +342,8 @@ public:
 		if(_th_st_pp){
 			vector<int> chk(_clen);
 			for(size_t i=0 ;i<_clen;i++){ 
-				chk[i] = pthread_cancel(_th_st_pp[i]);
+				//chk[i] = pthread_cancel(_th_st_pp[i]);
+				_th_st_pp[i]->interrupt();
 				if (chk[i]!=0&&chk[i]!=3){
 					kgMsg msg(kgMsg::MSG, &_env);
 					msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
@@ -319,7 +351,9 @@ public:
 			}
 			for(size_t i=0 ;i<_clen;i++){ 
 				if(chk[i]==0||chk[i]==3){
-					int rtn = pthread_join(_th_st_pp[i],NULL);
+					//int rtn = pthread_join(_th_st_pp[i],NULL);
+					int rtn = 0;
+					_th_st_pp[i]->join();
 					if(rtn!=0) {
 						kgMsg msg(kgMsg::MSG, &_env);
 						msg.output("waring destruct fail thread join :( " + toString(rtn) + ")");

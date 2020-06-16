@@ -62,7 +62,10 @@ public:
 	int run(void);
 	//実行メソッド
 	int run(int inum,int *i_p,int onum, int* o_p,string &msg);
-	int run(int inum,int *i,PyObject* o_p,pthread_mutex_t *mtx,string &msg);
+//	int run(int inum,int *i,PyObject* o_p,pthread_mutex_t *mtx,string &msg);
+
+	int run(int inum,int *i,PyObject* o_p,string &msg);
+
 	int run(PyObject* i_p,int onum, int* o_p,string &msg);
 
 };

@@ -238,7 +238,7 @@ class ClustersBASE{
 	int movCenter();
 
 	void wrkReset(){
-		for(int i=0; i<_cluster.size();i++){
+		for(size_t i=0; i<_cluster.size();i++){
 	    _cluster[i].resetCnt();
   	  _cluster[i].resetCalnum();
 		}
@@ -287,12 +287,10 @@ class ClustersBASE{
     return ttl;
   }
 	void show(){
-		int i,j;
-
 		printf("----------------- showCluster\n");
-		for(i=0; i<_cluster.size(); i++){
-			printf("c[%d] cnt=%d : ",i,_cluster[i].getCnt());
-			for(j=0; j<_fCnt; j++){
+		for(size_t i=0; i<_cluster.size(); i++){
+			printf("c[%lu] cnt=%d : ",i,_cluster[i].getCnt());
+			for(size_t j=0; j<_fCnt; j++){
 				printf("%g",_cluster[i].gGet(j));
 				printf("(");
 				printf("%g",_cluster[i].Accm(j));

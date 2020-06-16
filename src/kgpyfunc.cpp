@@ -96,8 +96,8 @@ int kgPyfunc::run(void) //ダミー
 int kgPyfunc::run(
 	PyObject* f_p,PyObject* a_p,PyObject* k_p,
 	int inum,int *i_p,int onum, int* o_p,string & msg,
-	pthread_mutex_t *mtx,pthread_cond_t *forkCond,volatile int *runst,vector<int> fdlist)
-{
+	boost::mutex *mtx,boost::condition_variable *forkCond,volatile int *runst,vector<int> fdlist)
+{ 
 	try{
 		setArgs();
 		if(inum>1 || onum>1){
@@ -293,12 +293,21 @@ int kgPyfunc::run(
 			}
 			close(initchek[0]);
 
-			pthread_mutex_lock(mtx);
-			int rtnx = pthread_cond_signal(forkCond);
-			pthread_mutex_unlock(mtx);
+			//pthread_mutex_lock(mtx);
+			{
+				boost::mutex::scoped_lock look(*mtx);
+				//int rtnx = pthread_cond_signal(forkCond);
+				forkCond->notify_one();
+			}
+			//	delete look;
+
+			//pthread_mutex_unlock(mtx);
+
+			/*
 			if(rtnx!=0){
 				throw kgError("pthread_cond_signal error");
 			}
+			*/
 			while(1){
 				if(*runst){
 					write(finchek[1],"OK", strlen("OK"));

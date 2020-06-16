@@ -395,7 +395,8 @@ static makeVal(format,...){
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
+//int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
+int kgLoad::run(int inum,int *i_p,PyObject* o_p,string &msg) 
 {
 
 	PyThreadState *savex = NULL;

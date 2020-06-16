@@ -24,7 +24,7 @@
 #include <kgmsgincpysys.h>
 #include <kgshell.h>
 #include <kgTempfile.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <csignal>
@@ -127,7 +127,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 	setMap<kgVuniq>("mvuniq",0);
 	setMap<kgWindow>("mwindow",0);
 	setMap<kgArff2csv>("marff2csv",0);
-	setMap<kgXml2csv>("mxml2csv",0);
+//	setMap<kgXml2csv>("mxml2csv",0);
 	setMap<kgSortf>("msortf",0);
 	setMap<kgTab2csv>("mtab2csv",0);
 	setMap<kgSep>("msep",0);
@@ -166,6 +166,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 		_pymsg = false;
 	}
 
+	/*
 	if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 		ostringstream ss;
 		ss << "init mutex error";
@@ -181,7 +182,8 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 		ss << "init mutex error";
 		throw kgError(ss.str());
 	}
-
+	*/
+/*
 	if (pthread_cond_init(&_stsCond, NULL) == -1) { 
 		ostringstream ss;
 		ss << "init cond mutex error";
@@ -198,7 +200,7 @@ kgshell::kgshell(int mflg,int rumlim,size_t memttl,int pymsg,char * logdir){
 		ss << "init cond mutex error";
 		throw kgError(ss.str());
 	}
-
+*/
 	_tempFile.init(&_env);
 
 }
@@ -212,77 +214,91 @@ void *kgshell::run_func(void *arg){
 
 		int sts = a->mobj->run(a->i_cnt,a->i_p,a->o_cnt,a->o_p,msg);
 
-		pthread_mutex_lock(a->stMutex);
-
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status =sts;
 		a->finflg=true;
 		a->msg.append(msg);
 		a->endtime=getNowTime(true);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
 
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}
 	catch(kgError& err){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
+
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch (const exception& e) {
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(char * er){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+
+		//pthread_mutex_unlock(a->stMutex);
 	}
 #if !defined(__clang__) && defined(__GNUC__)
 	catch(abi::__forced_unwind&){  
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 2;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ABI THROW");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 		throw;
 	}
 #endif
 	catch(...){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" unKnown ERROR ");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 	}
 	//pthread_exit(0);
 
@@ -299,84 +315,98 @@ void *kgshell::run_writelist(void *arg){
 		a = (argST*)arg; 
 		gstate = PyGILState_Ensure();
 
-		int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
+		//int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,a->mutex,msg);
+		int sts = a->mobj->run(a->i_cnt,a->i_p,a->list,msg);
 		PyGILState_Release(gstate);
 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = sts;
 		a->finflg=true;
 		a->msg.append(msg);
 		a->endtime=getNowTime(true);
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+
+		//pthread_mutex_unlock(a->stMutex);
 
 	}
 	catch(kgError& err){
 		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch (const exception& e) {
 		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(char * er){
 		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}
 #if !defined(__clang__) && defined(__GNUC__)
 	catch(abi::__forced_unwind&){  
 		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		mutex::scoped_lock look(*a->stMutex);
 		a->status = 2;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ABI THROW");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 		throw;
 	}
 #endif	
 	catch(...){
 		PyGILState_Release(gstate);
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" unKnown ERROR");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 	}
 	//pthread_exit(0);
 	return NULL;	
@@ -394,18 +424,21 @@ void *kgshell::run_readlist(void *arg){
 		int sts = a->mobj->run(a->list,a->o_cnt,a->o_p,msg);
 		PyGILState_Release(gstate);
 
-		pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock  look(*a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
 		a->status = sts;
 		a->finflg=true;
 		a->msg.append(msg);
 		a->endtime=getNowTime(true);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
 
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(kgError& err){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
@@ -413,12 +446,15 @@ void *kgshell::run_readlist(void *arg){
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch (const exception& e) {
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
@@ -426,12 +462,14 @@ void *kgshell::run_readlist(void *arg){
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(char * er){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
@@ -439,34 +477,39 @@ void *kgshell::run_readlist(void *arg){
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 
 	}
 #if !defined(__clang__) && defined(__GNUC__)
 	catch(abi::__forced_unwind&){  
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 2;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ABI THROW");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 		throw;
 	}
 #endif	
 	catch(...){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(" unKnown ERROR");
 		a->msg.append(a->mobj->name());
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		a->stCond->notify_one();
+		//pthread_mutex_unlock(a->stMutex);
 	}
 	//pthread_exit(0);
 	return NULL;	
@@ -484,76 +527,88 @@ void *kgshell::run_pyfunc(void *arg){
 		);
 
 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = sts;
 		a->finflg=true;
 		a->msg.append(msg);
 		a->endtime=getNowTime(true);
+		a->stCond->notify_one();
 
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(kgError& err){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(err.message(0));
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		a->stCond->notify_one();
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch (const exception& e) {
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(e.what());
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		a->stCond->notify_one();
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}catch(char * er){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ");
 		a->msg.append(er);
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		a->stCond->notify_one();
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 
 	}
 #if !defined(__clang__) && defined(__GNUC__)
 	catch(abi::__forced_unwind&){  
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 2;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" ABI THROW");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		a->stCond->notify_one();
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 		throw;
 	}
 #endif	
 	catch(...){
 		argST *a =(argST*)arg; 
-		pthread_mutex_lock(a->stMutex);
+		//pthread_mutex_lock(a->stMutex);
+		boost::mutex::scoped_lock look(*a->stMutex);
 		a->status = 1;
 		a->finflg=true;
 		a->endtime=getNowTime(true);
 		a->msg.append(a->mobj->name());
 		a->msg.append(" unKnown ERROR");
-		pthread_cond_signal(a->stCond);
-		pthread_mutex_unlock(a->stMutex);
+		a->stCond->notify_one();
+		//pthread_cond_signal(a->stCond);
+		//pthread_mutex_unlock(a->stMutex);
 	}
 	//pthread_exit(0);
 
@@ -645,15 +700,24 @@ void *kgshell::run_watch(void *arg){
 	watchST *wst =(watchST*)arg;
 	argST *a =wst->argst; 
 	int clen = wst->clen ;
-	pthread_mutex_t *stsMutex = wst->stMutex ;
-	pthread_cond_t *stCond  =	wst->stCond;
-	pthread_t * th_st_pp = wst->th_st_pp;
+
+	boost::mutex *stsMutex = wst->stMutex;
+
+
+	// pthread_mutex_t *stsMutex = wst->stMutex ;
+	boost::condition_variable *stCond  =	wst->stCond;
+	boost::thread ** th_st_pp = wst->th_st_pp;
 	kgEnv * env = wst->env;
 	bool pymsg = wst->pymsg;
 	kgstr_t logdir = wst->logdir;
+
+
 	// status check
 	bool endFLG = true;	
-	pthread_mutex_lock(stsMutex);
+
+	//pthread_mutex_lock(stsMutex);
+	boost::mutex::scoped_lock look(*stsMutex);
+
 	while(1){
 		int pos = 0;
 		endFLG = true;
@@ -677,7 +741,9 @@ void *kgshell::run_watch(void *arg){
  				//エラー発生時はthread cancel
 				for(int j=0;j<clen;j++){
 					if(!a[j].finflg){
-						pthread_cancel(th_st_pp[j]);	
+						//pthread_cancel(th_st_pp[j]);	
+						th_st_pp[j]->interrupt();
+
 					}
 				}
 				endFLG=true;
@@ -687,9 +753,11 @@ void *kgshell::run_watch(void *arg){
 			pos++;
 		}
 		if (endFLG) break;
-		pthread_cond_wait(stCond,stsMutex);
+		stCond->wait(look);
+		//pthread_cond_wait(stCond,stsMutex);
 	}
-	pthread_mutex_unlock(stsMutex);
+
+	//pthread_mutex_unlock(stsMutex);
 
 	//pthread_exit(0);
 	return NULL;	
@@ -846,7 +914,7 @@ void kgshell::makePipeList(vector<linkST> & plist,int iblk,bool outpipe)
 
 }
 
-int kgshell::threadStkINIT(pthread_attr_t *pattr){
+int kgshell::threadStkINIT(boost::thread::attributes *pattr){
 
 	size_t stacksize;
 	char * envStr=getenv("KG_THREAD_STK");
@@ -857,17 +925,25 @@ int kgshell::threadStkINIT(pthread_attr_t *pattr){
 	}
 
 	size_t base ;
+	/*
 	int ret = pthread_attr_init(pattr);
 	if(ret!=0){
 		err_OUTPUT("pythead init error"  );
 		return 1;
 	}
-	pthread_attr_getstacksize(pattr,&base);
+	// 独自実装する？
+	getstacksize
+	*/
+	base = pattr->get_stack_size();
+//	pthread_attr_getstacksize(pattr,&base);
 	if( stacksize > base ){
+		pattr->set_stack_size(stacksize);
+		/*
 		if( pthread_attr_setstacksize(pattr,stacksize)	){
 			err_OUTPUT("stack size change error ");
 			return 1;
 		}
+		*/
 	}
 	return 0;
 }
@@ -951,8 +1027,9 @@ int kgshell::runMain(
 	_save = PyEval_SaveThread();
 
 	// thread attr init
-	pthread_attr_t pattr;
-	if ( threadStkINIT(&pattr) ){ return 1; } 
+	boost::thread::attributes _attr;
+
+	if ( threadStkINIT(&_attr) ){ return 1; } 
 	
 	makePipeList(plist,iblk,outpipe);
 
@@ -1041,17 +1118,25 @@ int kgshell::runMain(
 		}
 	}
 
-	_th_st_pp = new pthread_t[_clen];
+	//_th_st_pp = new pthread_t[_clen];
+	_th_st_pp = new boost::thread*[_clen];
 	_th_rtn   = new int[_clen];
 
 
 	for(int i=cmdlist.size()-1;i>=0;i--){
 
 		if(3 == _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second){
-			pthread_mutex_lock(&_mutex);
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_pyfunc ,(void*)&_argst[i]);
-			pthread_cond_wait(&_forkCond,&_mutex);
-			pthread_mutex_unlock(&_mutex);
+
+			// pthread_mutex_lock(&_mutex);
+			boost::mutex::scoped_lock look(_mutex);
+			//_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_pyfunc ,(void*)&_argst[i]);
+			//_th_st_pp[i] = 	new boost::thread(_attr ,boost::ref(kgshell::run_pyfunc),(void*)&_argst[i] );
+			_th_st_pp[i] = 	new boost::thread(_attr , boost::bind(kgshell::run_pyfunc,(void*)&_argst[i]) );
+
+			//pthread_cond_wait(&_forkCond,&_mutex);
+			_forkCond.wait(look);
+
+			//pthread_mutex_unlock(&_mutex);
 		}
 	}
 
@@ -1069,13 +1154,24 @@ int kgshell::runMain(
 		int typ = _kgmod_run.find(cmds[cmdlist[i]].cmdname)->second ;
 
 		if(typ==0){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_func ,(void*)&_argst[i]);
+			//_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_func ,(void*)&_argst[i]);
+			//_th_st_pp[i] = 	new boost::thread(_attr ,boost::ref(kgshell::run_func),(void*)&_argst[i] );
+			_th_st_pp[i] = 	new boost::thread(_attr , boost::bind(kgshell::run_func,(void*)&_argst[i]) );
+
+
 		}
 		else if(typ==1){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_writelist ,(void*)&_argst[i]);
+
+			//_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_writelist ,(void*)&_argst[i]);
+			//_th_st_pp[i] = 	new boost::thread(_attr ,boost::ref(kgshell::run_writelist),(void*)&_argst[i] );
+			_th_st_pp[i] = 	new boost::thread(_attr ,boost::bind(kgshell::run_writelist,(void*)&_argst[i]) );
+
 		}
 		else if(typ==2){
-			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_readlist ,(void*)&_argst[i]);
+			//_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_readlist ,(void*)&_argst[i]);
+			//_th_st_pp[i] = 	new boost::thread(_attr ,boost::ref(kgshell::run_readlist),(void*)&_argst[i] );
+			_th_st_pp[i] = 	new boost::thread(_attr ,boost::bind(kgshell::run_readlist,(void*)&_argst[i] ) );
+
 		}
 	}
 	if(outpipe){
@@ -1091,14 +1187,18 @@ int kgshell::runMain(
 		_watchST.pymsg = _pymsg;
 		_watchST.logdir = _logdir;
 		PyEval_RestoreThread(_save);
-		pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
+		//_th_st_watch = new boost::thread(_attr ,boost::ref( kgshell::run_watch));
+		//pthread_create(&_th_st_watch, &pattr, kgshell::run_watch ,(void*)&_watchST);
+		_th_st_watch = new boost::thread(_attr ,boost::bind( kgshell::run_watch,(void*)&_watchST));
+
 		_watchFlg=true;
 		return _csvpiped[0];
 	}
 	//_save = PyEval_SaveThread();
 	// status check
 
-	pthread_mutex_lock(&_stsMutex);
+	//pthread_mutex_lock(&_stsMutex);
+	boost::mutex::scoped_lock look(_stsMutex);
 
 	while(1){
 		size_t pos = 0;
@@ -1139,15 +1239,17 @@ int kgshell::runMain(
 			pos++;
 		}
 		if (endFLG) break;
-		pthread_cond_wait(&_stsCond,&_stsMutex);
+		_stsCond.wait(look);
+		//pthread_cond_wait(&_stsCond,&_stsMutex);
 	}
-
-	pthread_mutex_unlock(&_stsMutex);
+	//delete look;
+	//pthread_mutex_unlock(&_stsMutex);
 	for(size_t i=_clen;i>0;i--){
-		int ret;
-		int status;
+		//int ret;
+		//int status;
 		//ret = pthread_join(_th_st_pp[i-1],(void**)&status);
-		ret = pthread_join(_th_st_pp[i-1],NULL);
+		//ret = pthread_join(_th_st_pp[i-1],NULL);
+		_th_st_pp[i-1]->join();
 	}
 
 	if (!outpipe){ 
