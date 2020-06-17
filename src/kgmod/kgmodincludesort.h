@@ -23,7 +23,7 @@
 #include <kgmod.h>
 #include <kgMessage.h>
 #include <kgsortf.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <fcntl.h>
 
 using namespace kglib;

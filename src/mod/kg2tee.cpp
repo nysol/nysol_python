@@ -29,7 +29,7 @@
 #include <kgArgs.h>
 #include <kgConfig.h>
 #include <kgTempfile.h>
-#include <pthread.h>
+//#include <pthread.h>
 
 using namespace std;
 using namespace kglib;

@@ -28,7 +28,7 @@
 #include <kgCSV.h>
 #include <kgCSVout.h>
 #include <kgTempfile.h>
-#include <pthread.h>
+//#include <pthread.h>
 
 using namespace kglib;
 
