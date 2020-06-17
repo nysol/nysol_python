@@ -34,10 +34,10 @@
 #include <csignal>
 #include <cstring>
 //#include <pthread.h>
-#include <cxxabi.h>
 #include <boost/thread.hpp>
 
 #if !defined(__clang__) && defined(__GNUC__)
+#include <cxxabi.h>
 #define KG_ABI_CATCH catch(abi::__forced_unwind&){ runErrEnd(); throw; }
 #else
 #define KG_ABI_CATCH  
