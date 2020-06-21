@@ -21,6 +21,7 @@
 // =============================================================================
 #pragma once
 #include "Python.h"
+#define _snprintf snprintf
 #undef tolower
 #undef toupper
 #undef isalpha
