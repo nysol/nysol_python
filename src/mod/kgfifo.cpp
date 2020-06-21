@@ -25,11 +25,10 @@ using namespace kgmod;
 
 class Queue {
 private:
-	pthread_mutex_t _mutex;
-	pthread_cond_t 	_threadState;
-	//condition rThreadState_;
-	//condition wThreadState_;
-
+	//pthread_mutex_t _mutex;
+	//pthread_cond_t 	_threadState;
+	boost::mutex _mutex;
+	boost::condition_variable _threadState;
 	int _iFD;
 	int _oFD;
 
@@ -66,7 +65,7 @@ private:
 	void extend_fileout(){
 		//全データを吐き出す
 		string tname=_tempFile.create(false, "merge");    	
-		int fd=::open(tname.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+		int fd=::open(tname.c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, _S_IREAD|_S_IWRITE);
 		size_t deq_tmp = _deq;
 		while(1){
 			deq_tmp =nextQue(deq_tmp);
@@ -93,6 +92,7 @@ public:
 	Queue(int iFD,int oFD, size_t queSize, size_t blkSize,kgEnv* env){
 		_iFD = iFD;
 		_oFD = oFD;
+		/*
 	  if (pthread_mutex_init(&_mutex, NULL) == -1) { 
 			ostringstream ss;
 			ss << "init mutex error";
@@ -103,6 +103,7 @@ public:
 			ss << "init cond mutex error";
 			throw kgError(ss.str());
 	  }
+	  */
 
 		_queSize = queSize;
 		_blkSize = blkSize;
@@ -128,16 +129,17 @@ public:
 	
 		try{
 			// mutexインスタンスにロックをかける
-			pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
-			pthread_mutex_lock(&_mutex);
+			//pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
+			//pthread_mutex_lock(&_mutex);
 			{
+				boost::mutex::scoped_lock look(_mutex);
 				// enqがdeqに追いついたら拡張
 				size_t next=nextQue(_enq);
 				if(next==_deq){ extend_fileout(); }
 				else{ _enq=next; }// enqを一つ進める	
 			}
-			pthread_mutex_unlock(&_mutex);
-			pthread_cleanup_pop(0);
+			//pthread_mutex_unlock(&_mutex);
+			//pthread_cleanup_pop(0);
 
 			// readしてenq位置に格納
 			size_t maxSize = _blkSize;
@@ -148,7 +150,8 @@ public:
  		   	int rsize = ::read(_iFD, buf + accSize, resSize<_blkSize ? resSize : _blkSize);
    		 	if( rsize < 0 ){
     			//boost wThreadState_.notify_one();
-					pthread_cond_signal(&_threadState);
+    			_threadState.notify_one();
+					//pthread_cond_signal(&_threadState);
      		 	throw kgError();
     		}
     		if( rsize == 0 ) break;
@@ -158,19 +161,22 @@ public:
 			_readSize.at(_enq)=accSize;		
 			// read eof
   	  if( accSize == 0 ){
-				pthread_mutex_lock(&_mutex);
+				//pthread_mutex_lock(&_mutex);
 				{
+					boost::mutex::scoped_lock look(_mutex);
 					_readEnd=true;
 				}
-				pthread_mutex_unlock(&_mutex);
+				//__pthread_mutex_unlock(&_mutex);
  
  		   	//boost wThreadState_.notify_one();
-				pthread_cond_signal(&_threadState);
+    		_threadState.notify_one();
+				//pthread_cond_signal(&_threadState);
 				return 0;
 			}
 			// write側が待ち状態にあれば起こす
 			//boost wThreadState_.notify_one();
-			pthread_cond_signal(&_threadState);
+			_threadState.notify_one();
+			//pthread_cond_signal(&_threadState);
 			return 1;
 		}catch(...){
 			return 0;
@@ -187,9 +193,10 @@ public:
 			size_t deq_tmp=0;
 			
 			bool rtnflg=false;
-			pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
-			pthread_mutex_lock(&_mutex);
+			//pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
+			//pthread_mutex_lock(&_mutex);
 			{
+				boost::mutex::scoped_lock look(_mutex);
 				if(_tmpname.size() ){
 					fout = true	;
 					deq_tmp = _rest_no.front();
@@ -198,19 +205,19 @@ public:
 				if(_tmpname.size()==0 && _deq==_enq){
 					if(_readEnd){
 						//boost rThreadState_.notify_one();
-						pthread_cond_signal(&_threadState);
+						//pthread_cond_signal(&_threadState);
+						_threadState.notify_one();
 						rtnflg = true;
 					}else{
 						//boost wThreadState_.wait(mutex_);
-						pthread_cond_wait(&_threadState, &_mutex);
+						//pthread_cond_wait(&_threadState, &_mutex);
+						_threadState.wait(mutex_);
 					}
 				}
 			}
-			pthread_mutex_unlock(&_mutex);
-			pthread_cleanup_pop(0);
-			if(rtnflg){
-				return 0;
-			}
+			//pthread_mutex_unlock(&_mutex);
+			//pthread_cleanup_pop(0);
+			if(rtnflg){ return 0; }
 			
 			//ファイル出力が存在すればそっちから先に処理する
 			if(fout && deq_tmp != _deq){
@@ -218,13 +225,14 @@ public:
 				buf_tmp_ap.set( new char[_blkSize] );
 				char* buf = buf_tmp_ap.get();
 				int tFD;
-				pthread_mutex_lock(&_mutex);
+				// pthread_mutex_lock(&_mutex);
 				{
+					boost::mutex::scoped_lock look(_mutex);
 					tFD = ::open(_tmpname.front().c_str(), O_RDONLY);
 					_tmpname.pop();
 					_rest_no.pop();
 				}
-				pthread_mutex_unlock(&_mutex);
+				//pthread_mutex_unlock(&_mutex);
 				while(1){
 	  	  	int rsize = ::read(tFD, buf, _blkSize);
 	   			if(rsize < 0){
@@ -241,8 +249,8 @@ public:
   	  			int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
   	  			if( wsize<0 ){
 							// boost rThreadState_.notify_one();
-							pthread_cond_signal(&_threadState);
-
+							//pthread_cond_signal(&_threadState);
+							_threadState.notify_one();
 							if(32==errno){ // pipe broken
 								_oEnd = true;
 								return 0;
@@ -272,7 +280,8 @@ public:
 					int wsize = ::write(_oFD, buf + accSize, resSize<maxSize ? resSize : maxSize);
 					if( wsize<0 ){
 						//boost rThreadState_.notify_one();
-						pthread_cond_signal(&_threadState);
+						//pthread_cond_signal(&_threadState);
+						_threadState.notify_one();
 						if(32==errno){ // pipe broken
 							return 0;
 						}else{
@@ -286,26 +295,29 @@ public:
 					resSize-=static_cast<size_t>(wsize);
 				}
 				bool rtnflgf=false;
-				pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
-				pthread_mutex_lock(&_mutex);
+				//pthread_cleanup_push((void (*) (void *))pthread_mutex_unlock , (void *)&_mutex);
+				//pthread_mutex_lock(&_mutex);
 				{
+					boost::mutex::scoped_lock look(_mutex);
 					// deqを一つ進める
 					if(_deq==_enq){
 						if(_readEnd){
 							rtnflgf = true;
 						}else{
 							//boostwThreadState_.wait(mutex_);
-							pthread_cond_wait(&_threadState, &_mutex);
+							//pthread_cond_wait(&_threadState, &_mutex);
+							_threadState.wait(_mutex)
 						}
 					}
 					_deq=nextQue(_deq);
 				}
-				pthread_mutex_unlock(&_mutex);
-				pthread_cleanup_pop(0);
+				//pthread_mutex_unlock(&_mutex);
+				//pthread_cleanup_pop(0);
 				if(rtnflgf){ return 0; }
 			}
 			// read側が待ち状態にあれば起こす
-			pthread_cond_signal(&_threadState);
+			_threadState.notify_one();
+			//pthread_cond_signal(&_threadState);
 			return 1;
 		}catch(...){
 			cerr << "writeTHREAD EXCPTIOIN ERROR 0" << endl;
@@ -519,12 +531,17 @@ int kgFifo::runMain(void) {
 	Queue que(_iFD,_oFD,_queSize,KG_iSize,_env);
 
 	//int rth_rtn = 
-	pthread_create( &_thr_read, NULL, &rThread ,(void*)&que);		
-	//int wth_rtn = 
-	pthread_create( &_thr_write, NULL, &wThread ,(void*)&que);		
+	boost::thread _thr_read ( boost::bind(rThread,(void*)&que ) )
+	boost::thread _thr_write( boost::bind(wThread,(void*)&que ) )
+	_thr_read.join()
+	_thr_write.join()
 
-	pthread_join(_thr_read, NULL);
-  pthread_join(_thr_write, NULL);
+	//pthread_create( &_thr_read, NULL, &rThread ,(void*)&que);		
+	//int wth_rtn = 
+	//pthread_create( &_thr_write, NULL, &wThread ,(void*)&que);		
+
+	//pthread_join(_thr_read, NULL);
+  //pthread_join(_thr_write, NULL);
 
 	iClose();
 	oClose();
@@ -565,7 +582,7 @@ int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	int sts=1;
 	// thread cleanup 登録
-	pthread_cleanup_push(&cleanup_handler, this);	
+	//pthread_cleanup_push(&cleanup_handler, this);	
 
 	try {
 
@@ -585,7 +602,7 @@ int kgFifo::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 	}
 
 	// thread cleanup 解除
-  pthread_cleanup_pop(0);
+  //pthread_cleanup_pop(0);
 	return sts;
 }
 

@@ -91,7 +91,7 @@ class kgMod
 	bool _existNullOUT;
 	bool _existNullKEY;
 
-	static void signalHandler(int sigNo, siginfo_t* info, void* ctx);
+	//static void signalHandler(int sigNo, siginfo_t* info, void* ctx);
 
 	void AssertWarnig(void);
 
@@ -185,7 +185,7 @@ class kgMod
 
 	virtual int run(PyObject* i_p,int onum, int* o_p,string &msg){return 0;}
 	//virtual int run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i,int onum, int* o,string & msg,pthread_mutex_t *mtx,vector<int> fdlist){return 0;}
-	virtual int run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i,int onum, int* o,string & msg,pthread_mutex_t *mtx,pthread_cond_t *fCond,volatile int *runst){return 0;}
+	virtual int run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i,int onum, int* o,string & msg,boost::mutex *mtx,boost::condition_variable *fCond,volatile int *runst){return 0;}
 
 	//virtual int run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i,int onum, int* o,string & msg,pthread_mutex_t *mtx,pthread_cond_t *fCond,volatile int *runst,vector<int> fdlist){return 0;}
 	virtual int run(PyObject* f_p,PyObject* a_p,PyObject* k_p,int inum,int *i,int onum, int* o,string & msg,boost::mutex *mtx,boost::condition_variable *forkCond, volatile int *runst,vector<int>fdlist){return 0;};

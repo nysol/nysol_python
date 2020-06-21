@@ -9,6 +9,7 @@
 #include <kgArgs.h>
 #include <signal.h>
 #include <kgTempfile.h>
+#include <boost/thread.hpp>
 using namespace kglib;
 
 namespace kgmod { ////////////////////////////////////////////// start namespace

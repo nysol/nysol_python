@@ -58,7 +58,7 @@ public:
 	void set(vector<kgstr_t>& vs, kgCSV* csv,bool fldno);
 	void set(kgstr_t& s, kgCSV* csv,bool fldno);
 
-	void setR(vector<kgstr_t>& vs, kgCSV* csv,bool fldno, std::set<int>& exfld) throw(kgError);
+	void setR(vector<kgstr_t>& vs, kgCSV* csv,bool fldno, std::set<int>& exfld);
 
 	// 登録されている項目名数
 	size_t size(void)			const { return _name.size();}

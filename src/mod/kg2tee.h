@@ -18,6 +18,10 @@
  ////////// LICENSE INFO ////////////////////*/
 #pragma once
 
+#ifdef WIN
+	#include <io.h>
+#endif
+
 #include <string>
 #include <vector>
 #include <fstream>

@@ -8,7 +8,7 @@ import subprocess
 #args = ['xml2-config','--libs']
 #xmllibs= subprocess.check_output(args).decode().rstrip().split()
 
-hedears = ['src','src/kgmod','src/mod']
+hedears = ['src','src/kgmod','src/mod','c:/work/boost/boost_1_72_0']
 
 def checkLibRun(cc,fname,paras):
 	for para in paras:
@@ -36,6 +36,8 @@ def check_for_boost():
 	os.chdir(tmpdir)
 
 	compiler = os.environ.get('CC', sysconfig.get_config_var('CC'))
+	if compiler == None:
+		compiler = "cl"
 
 	# make sure to use just the compiler name without flags
 	compiler = compiler.split()
@@ -180,7 +182,8 @@ module1 = Extension('nysol/_nysolshell_core',
                     sources=sources_core,
 					extra_objects=extra_objects_core,
 					include_dirs=hedears,
-					libraries=nmodLibs
+					libraries=nmodLibs,
+					extra_compile/args=['/source-charset:utf-8','/wd4996']
 					)
 
 sources_lcmmod, extra_objects_lcmmod = exclude_no_need_compile_sources(

@@ -40,14 +40,14 @@ protected:
 	//kgTempfile _sortingFile;
   //kgEnv    _env_sort;
 	kgSortf *_inner_sort;
-	pthread_t *_th_st_p;
+	boost::thread **_th_st_p;
 	kgTempfile *_sortingFile;
   kgEnv    *_env_sort;
 
 
 	size_t _sortModSize;
 	kgAutoPtr2<kgSortf> _aps;
-	kgAutoPtr2<pthread_t> _aps_pth;
+	kgAutoPtr2<boost::thread*> _aps_pth;
 	kgAutoPtr2<kgEnv> _ap_env;
 	kgAutoPtr2<kgTempfile> _ap_tp;
 

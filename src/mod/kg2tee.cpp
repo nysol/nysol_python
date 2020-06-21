@@ -30,6 +30,7 @@
 #include <kgConfig.h>
 #include <kgTempfile.h>
 //#include <pthread.h>
+#include <boost/thread.hpp>
 
 using namespace std;
 using namespace kglib;
@@ -77,7 +78,7 @@ void kg2Tee::setArgs(void){
 		}
 	}
 	for(size_t i=0;i<_oName.size();i++){
-		int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+		int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, _S_IREAD|_S_IWRITE );
 		if( ofd == -1 ){
 			ostringstream ss;
 			ss << "file write open error: " << _oName[i];
@@ -136,7 +137,7 @@ void kg2Tee::setArgs(int inum,int *i_p,int onum, int* o_p){
 			throw kgError(ss.str());
 		}
 		for(size_t i=0;i<_oName.size();i++){
-			int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND, S_IRWXU);
+			int ofd = ::open(_oName[i].c_str(), O_WRONLY | O_TRUNC | O_CREAT | O_APPEND,_S_IREAD|_S_IWRITE);
 			if( ofd == -1 ){
 				ostringstream ss;
 				ss << "file write open error: " << _oName[i];
@@ -239,7 +240,7 @@ static void cleanup_handler(void *arg)
 int kg2Tee::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	int sts=1;
-	pthread_cleanup_push(&cleanup_handler, this);	
+	//pthread_cleanup_push(&cleanup_handler, this);	
 	
 	try {
 
@@ -269,7 +270,7 @@ int kg2Tee::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-  pthread_cleanup_pop(0);
+  //pthread_cleanup_pop(0);
 	return sts;
 
 }
