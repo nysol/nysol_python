@@ -760,7 +760,7 @@ static void cleanup_handler(void *arg)
 int kgSummary::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	int sts=1;
-	pthread_cleanup_push(&cleanup_handler, this);	
+	//pthread_cleanup_push(&cleanup_handler, this);	
 
 	try {
 
@@ -801,7 +801,7 @@ int kgSummary::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 
 	}
 
-	pthread_cleanup_pop(0);
+	//pthread_cleanup_pop(0);
 	return sts;
 
 }

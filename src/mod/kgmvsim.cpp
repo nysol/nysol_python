@@ -1076,7 +1076,7 @@ static void cleanup_handler(void *arg)
 int kgMvsim::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 {
 	int sts=1;
-	pthread_cleanup_push(&cleanup_handler, this);	
+	//pthread_cleanup_push(&cleanup_handler, this);	
 
 	try {
 		setArgs(inum, i_p, onum,o_p);
@@ -1115,7 +1115,7 @@ int kgMvsim::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 		msg.append(errorEndMsg(err));
 
 	}
-  pthread_cleanup_pop(0);
+  //pthread_cleanup_pop(0);
 	return sts;
 
 }

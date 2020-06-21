@@ -306,7 +306,7 @@ public:
 						}else{
 							//boostwThreadState_.wait(mutex_);
 							//pthread_cond_wait(&_threadState, &_mutex);
-							_threadState.wait(_mutex)
+							_threadState.wait(look)
 						}
 					}
 					_deq=nextQue(_deq);
@@ -393,7 +393,7 @@ void kgFifo::setArgs(void){
 	if(_oName.empty()){
 		_oFD=1;
 	}else{
-		_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
+		_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, _S_IREAD|_S_IWRITE);
 		if(_oFD == -1 ){
 			ostringstream ss;
 			ss << "file write open error: " << _oName;
@@ -454,7 +454,7 @@ void kgFifo::setArgs(int inum,int *i_p,int onum, int* o_p){
 			if(_oName.empty()){
 					throw kgError("o= is necessary");
 			}else{
-				_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, S_IRWXU);
+				_oFD = ::open(_oName.c_str(), KG_OOPEN_FLG, _S_IREAD|_S_IWRITE);
 				if(_oFD == -1 ){
 					ostringstream ss;
 					ss << "file write open error: " << _oName;
@@ -506,7 +506,7 @@ void kgFifo::iClose(void) {
 	}
 }
 void kgFifo::rw_cancel(void){
-
+/*
 	if(_oFD != -1) {
 		pthread_cancel(_thr_write);
 	}
@@ -519,6 +519,7 @@ void kgFifo::rw_cancel(void){
 	if(_iFD != -1) {
 		pthread_join(_thr_read, NULL);
 	}
+*/
 	oClose();
 	iClose();
 }
@@ -531,10 +532,10 @@ int kgFifo::runMain(void) {
 	Queue que(_iFD,_oFD,_queSize,KG_iSize,_env);
 
 	//int rth_rtn = 
-	boost::thread _thr_read ( boost::bind(rThread,(void*)&que ) )
-	boost::thread _thr_write( boost::bind(wThread,(void*)&que ) )
-	_thr_read.join()
-	_thr_write.join()
+	boost::thread _thr_read ( boost::bind(rThread,(void*)&que ) );
+	boost::thread _thr_write( boost::bind(wThread,(void*)&que ) );
+	_thr_read.join();
+	_thr_write.join();
 
 	//pthread_create( &_thr_read, NULL, &rThread ,(void*)&que);		
 	//int wth_rtn = 

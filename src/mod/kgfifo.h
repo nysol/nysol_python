@@ -21,8 +21,8 @@ class kgFifo : public kgMod {
 	string _oName;   // i=
 	size_t _queSize; // n=
 
-	pthread_t _thr_read;
-	pthread_t _thr_write;
+	//pthread_t _thr_read;
+	//pthread_t _thr_write;
 	
 	int _iFD;					//i=ファイルディスクリプタ
 	int _oFD; //o=ファイルディスクリプタ

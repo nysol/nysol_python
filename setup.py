@@ -8,7 +8,7 @@ import subprocess
 #args = ['xml2-config','--libs']
 #xmllibs= subprocess.check_output(args).decode().rstrip().split()
 
-hedears = ['src','src/kgmod','src/mod','c:/work/boost/boost_1_72_0']
+hedears = ['src','src/kgmod','src/mod','c:/work/boost_1_72_0']
 
 def checkLibRun(cc,fname,paras):
 	for para in paras:
@@ -183,7 +183,7 @@ module1 = Extension('nysol/_nysolshell_core',
 					extra_objects=extra_objects_core,
 					include_dirs=hedears,
 					libraries=nmodLibs,
-					extra_compile/args=['/source-charset:utf-8','/wd4996']
+					extra_compile_args=['/source-charset:utf-8','/wd4996']
 					)
 
 sources_lcmmod, extra_objects_lcmmod = exclude_no_need_compile_sources(
