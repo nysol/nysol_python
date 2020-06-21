@@ -338,7 +338,8 @@ int kgSel::runMain(void)
 	}
 
 	// 関数,演算子,定数,項目値のクラスを実体化して各ノードにセットする
-	setFuncType(info.trees.begin());
+	char ii = setFuncType(info.trees.begin());
+	_prvRsl.type(ii);
 
 	// 各関数,演算子のとる引数をそれぞれの子ノードの_resultに紐づける
 	setFuncArg(info.trees.begin());

@@ -219,6 +219,7 @@ class kgFunction_pfield : public kgFunction
 	public:
 	kgFunction_pfield(void){_name="pfield";_minArgc=0;_maxArgc=0;}
 	virtual void initialize(kgstr_t& str);
+	virtual void preprocess(void);
 };
 // -------------------------------------------------------------------------
 // 文字列
