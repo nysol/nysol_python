@@ -27,15 +27,15 @@ class LineListIter(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -50,7 +50,7 @@ class LineListIter(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -71,7 +71,7 @@ class LineListIter(object):
 			self.header = False
 			return self.fldname
 		
-		line = n_core.getLineList(self.csvin,self.dptn)
+		line = n_core.getLineList(self.csvin,self.dptn,self.py_msg)
 		if line: 
 			return line
 
@@ -114,16 +114,16 @@ class LineDictIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -136,7 +136,7 @@ class LineDictIter(object):
 		except:
 			pass
 
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -152,7 +152,7 @@ class LineDictIter(object):
 
 	def __nextCore(self):
 	
-		line = n_core.getLineDict(self.csvin,self.dptn)
+		line = n_core.getLineDict(self.csvin,self.dptn,self.py_msg)
 		if line: 
 			return line
 
@@ -205,16 +205,16 @@ class BlkListIter(object):
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
 		# kgshell stock
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -227,7 +227,7 @@ class BlkListIter(object):
 		except:
 			pass
 
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -248,7 +248,7 @@ class BlkListIter(object):
 			self.header = False
 			return [self.fldname]
 
-		line = n_core.getBlkList(self.csvin,self.dptn)
+		line = n_core.getBlkList(self.csvin,self.dptn,self.py_msg)
 		if line: 
 			return line
 
@@ -301,16 +301,16 @@ class BlkDictIter(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -323,7 +323,7 @@ class BlkDictIter(object):
 		except:
 			pass
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -339,7 +339,7 @@ class BlkDictIter(object):
 
 	def __nextCore(self):
 
-		line = n_core.getBlkDict(self.csvin,self.dptn)
+		line = n_core.getBlkDict(self.csvin,self.dptn,self.py_msg)
 		if line: 
 			return line
 
@@ -396,16 +396,16 @@ class LineListIterWithInfo(object):
 				
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -419,7 +419,7 @@ class LineListIterWithInfo(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -442,7 +442,7 @@ class LineListIterWithInfo(object):
 			self.header = False
 			return self.fldname,None,None
 		
-		data = n_core.getLineListWithInfo(self.csvin,self.dptn)
+		data = n_core.getLineListWithInfo(self.csvin,self.dptn,self.py_msg)
 		if data: 
 			breakTop = self.breakPre
 			self.breakPre = data[1]
@@ -500,16 +500,16 @@ class LineDictIterWithInfo(object):
 
 		modlist,iolist,linklist,_ = runobj.makeRunNetwork(True)
 
-		py_msg=False
+		self.py_msg=False
 		try:
 			if get_ipython().__class__.__name__ == 'ZMQInteractiveShell':
-				py_msg = True
+				self.py_msg = True
 		except:
 			pass
 
 		kgpymsg = os.environ.get('KG_UsingPySysMsg')
 		if kgpymsg != None: 
-			py_msg = bool(int(kgpymsg))
+			self.py_msg = bool(int(kgpymsg))
 
 		kglogdir = os.environ.get('KG_UsingLogD')
 		kglogD = ""
@@ -523,7 +523,7 @@ class LineDictIterWithInfo(object):
 			pass
 
 		# kgshell stock
-		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,py_msg,kglogD)
+		self.shobj = n_core.init(runobj.getMsgFlg(),runobj.runlimit,memsize,self.py_msg,kglogD)
 		if self.shobj == None:
 			raise Exception("can not init shell")
 			return None			
@@ -542,7 +542,7 @@ class LineDictIterWithInfo(object):
 
 	def __nextCore(self):
 
-		data = n_core.getLineDictWithInfo(self.csvin,self.dptn)
+		data = n_core.getLineDictWithInfo(self.csvin,self.dptn,self.py_msg)
 
 		if data: 
 			breakTop = self.breakPre

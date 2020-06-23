@@ -429,10 +429,12 @@ PyObject* getLineList(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn = NULL;
+	int pymsg;
 
+	try {
 	//PyObject *list;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "O|O", &csvin,&ptn)){
+	if (!PyArg_ParseTuple(args, "OOi", &csvin,&ptn,&pymsg)){
 
 		PyErr_SetString(PyExc_RuntimeError,"parameter ERROR");
 		PyErr_Print();
@@ -456,8 +458,35 @@ PyObject* getLineList(PyObject* self, PyObject* args)
 		PyList_SET_ITEM(rlist,j,setRtnData(k,kcfld->getVal(j)));
 	}
 
-
 	return rlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+	return Py_BuildValue("");
+
+
 }
 
 
@@ -467,8 +496,10 @@ PyObject* getLineDict(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn;
+	int pymsg;
+	try{
 	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+	if (!PyArg_ParseTuple(args, "OOi", &csvin, &ptn,&pymsg)){
     return Py_BuildValue("");
   }
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -486,6 +517,33 @@ PyObject* getLineDict(PyObject* self, PyObject* args)
 		Py_DECREF(vv);
 	}
 	return rlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+	return Py_BuildValue("");
+
 }
 
 
@@ -495,9 +553,11 @@ PyObject* getBlkList(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn;
+	int pymsg;
 	//PyObject *list;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+	try{
+	if (!PyArg_ParseTuple(args, "OOi", &csvin, &ptn,&pymsg)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -526,6 +586,34 @@ PyObject* getBlkList(PyObject* self, PyObject* args)
 		}
 	}
 	return rlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+
+	return Py_BuildValue("");
+
 }
 
 PyObject* getBlkDict(PyObject* self, PyObject* args)
@@ -533,8 +621,9 @@ PyObject* getBlkDict(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn;
-
-	if (!PyArg_ParseTuple(args, "OO", &csvin,&ptn)){
+	int pymsg;
+	try{
+	if (!PyArg_ParseTuple(args, "OOi", &csvin,&ptn,&pymsg)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -576,6 +665,33 @@ PyObject* getBlkDict(PyObject* self, PyObject* args)
 	}
 	
 	return rlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+	return Py_BuildValue("");
+
 }
 
 
@@ -584,8 +700,10 @@ PyObject* getLineDictWithInfo(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn;
+	int pymsg;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+	try{
+	if (!PyArg_ParseTuple(args, "OOi", &csvin, &ptn,&pymsg)){
     return Py_BuildValue("");
   }
 	kgCSVkey *kcfld	= (kgCSVkey *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
@@ -632,6 +750,33 @@ PyObject* getLineDictWithInfo(PyObject* self, PyObject* args)
 		Py_INCREF(Py_False);
 	}
 	return finlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+	return Py_BuildValue("");
+
 }
 
 PyObject* fldname(PyObject* self, PyObject* args)
@@ -659,8 +804,10 @@ PyObject* getLineListWithInfo(PyObject* self, PyObject* args)
 
 	PyObject *csvin;
 	PyObject *ptn;
+	int pymsg;
 	//int tp;
-	if (!PyArg_ParseTuple(args, "OO", &csvin, &ptn)){
+	try{
+	if (!PyArg_ParseTuple(args, "OOi", &csvin, &ptn,&pymsg)){
 
     return Py_BuildValue("");
   }
@@ -704,6 +851,34 @@ PyObject* getLineListWithInfo(PyObject* self, PyObject* args)
 		Py_INCREF(Py_False);
 	}
 	return finlist;
+	}
+	catch(kgError& err){
+		ostringstream ss;
+		ss <<  "run Error [ " << err.message(0) << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch (const exception& e) {
+		ostringstream ss;
+		ss <<  "run Error [ " << e.what() << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(char * er){
+		ostringstream ss;
+		ss <<  "run Error [ " << er << " ]";
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+
+	}catch(...){
+		ostringstream ss;
+		ss << "run Error [ unKnown ERROR ]" ;
+		if(pymsg){ PySys_WriteStderr("%s\n",ss.str().c_str());}
+		else{ cerr << ss.str() << endl; }
+	}
+
+	return Py_BuildValue("");
+
 }
 
 
