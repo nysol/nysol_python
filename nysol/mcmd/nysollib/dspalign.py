@@ -202,6 +202,7 @@ def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 
 		outstrList=[]
 		outstrList.append("<style scoped>")
+		'''
 		outstrList.append(".nysolnmp {")
 		outstrList.append("border: none;")
 		outstrList.append("border-collapse: collapse;")
@@ -216,8 +217,7 @@ def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 		outstrList.append("padding: 0.5em;")
 		outstrList.append("white-space: normal;")
 		outstrList.append("}")
-
-
+		
 		outstrList.append(".nysolnmp td,th{")
 		outstrList.append("text-align: right;")
 		outstrList.append("padding: 0.5em;")
@@ -228,10 +228,23 @@ def chgDSPhtml(dspdata, hsize ,fsize , maxno,head):
 		outstrList.append("background: #f7f7f7;")
 		outstrList.append("}")
 
+		'''
+		outstrList.append(".dataframe tbody tr th:only-of-type {")
+		outstrList.append("vertical-align: middle;")
+		outstrList.append("}")
+		outstrList.append(".dataframe tbody tr th {")
+		outstrList.append("vertical-align: top;")
+		outstrList.append("}")
+
+		outstrList.append(".dataframe thead th {")
+		outstrList.append("text-align: right;")
+		outstrList.append("}")
+
+
 		outstrList.append("</style>")
-		
+
 		outstrList.append("<div>")
-		outstrList.append("<table class='nysolnmp'>")
+		outstrList.append("<table class='dataframe'>")
 		outstrList.append("<thead>")
 		if head != None:
 			outstrList.append("<tr>")
