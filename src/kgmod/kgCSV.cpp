@@ -309,7 +309,15 @@ void kgCSV::set_fields(size_t dupSize)
 		kgAutoPtr2<char*> nameChr_ap;
 		nameChr_ap.set( new char*[fldSize_] );
 		char** nameChr = nameChr_ap.get();
-		char*  endStr=sepFldToken(nameChr, fldSize_, curPnt_, maxRecLen_);
+		char*  endStr;
+		try {
+			endStr=sepFldToken(nameChr, fldSize_, curPnt_, maxRecLen_);
+		}catch(kgError& err){
+			err.addMessage("[ " + fname_ + " ]");
+			throw err;
+		}
+
+
   	for(size_t i=0; i<fldSize_; i++){
 			string s=*(nameChr+i);
 			fldNameOrg_.push_back( s );
@@ -596,7 +604,13 @@ int kgCSVfld::read_limit(void)
 	if(isEndOfBuf()) return -9;
 
 	// 項目分割	&データセット
-	curPnt_ = sepFldToken(_fld, fldSize_, curPnt_, maxRecLen_) + 1;
+	try{
+		curPnt_ = sepFldToken(_fld, fldSize_, curPnt_, maxRecLen_) + 1;
+	}catch(kgError& err){
+		err.addMessage("[ " + fname_ + " ]");
+		throw err;
+	}
+
 	recNo_++;
 
 	// statusセット
