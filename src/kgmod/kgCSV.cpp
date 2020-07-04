@@ -92,7 +92,7 @@ void kgCSV::readCSVfile()
 	while(accSize<maxSize){
 		int rsize = ::read(fd_, buf_ + dupSize_ + accSize, resSize<ioSize_ ? resSize : ioSize_);
 		if( rsize < 0 ){ 
-			cerr << "errno " << errno << endl; 
+
 			if(errno==70||errno==11){ continue;}
 			if(errno==9&&retryCNT<10){
 				retryCNT++;
@@ -362,7 +362,7 @@ kgstr_t kgCSV::fldName(const size_t num,bool org) const
 		else	 { return fldName_.at(num);}
 	}else{
 		ostringstream ss;
-		ss << "field number " << num+1 <<  " is out of range";
+		ss << "field number " << num+1 <<  " is out of range"<< fname_;
 		throw kgError(ss.str());
 	}
 }
@@ -572,7 +572,12 @@ int kgCSVfld::read(void)
 	if(isEndOfBuf()) readCSVfile();
 
 	// 項目分割	&データセット
-	curPnt_ = sepFldToken(_fld, fldSize_, curPnt_, maxRecLen_) + 1;
+	try {
+		curPnt_ = sepFldToken(_fld, fldSize_, curPnt_, maxRecLen_) + 1;
+	}catch(kgError& err){
+		err.addMessage("[ " + fname_ + " ]");
+		throw err;
+	}
 	recNo_++;
 
 	// statusセット
@@ -659,7 +664,13 @@ int kgCSVkeyX::read()
 	}
 
 	// 項目分割	
-	curPnt_ = sepFldToken(_newFld, fldSize_, curPnt_, maxRecLen_) + 1;
+	try{
+		curPnt_ = sepFldToken(_newFld, fldSize_, curPnt_, maxRecLen_) + 1;
+	}catch(kgError& err){
+		err.addMessage("[ " + fname_ + " ]");
+		throw err;
+	}
+
 	recNo_++;
 
 	// statusセット
@@ -739,7 +750,13 @@ int kgCSVkey::read()
 	}
 
 	// 項目分割	
+	try{
 	curPnt_ = sepFldToken(_newFld, fldSize_, curPnt_, maxRecLen_) + 1;
+	}catch(kgError& err){
+		err.addMessage("[ " + fname_ + " ]");
+		throw err;
+	}
+
 	recNo_++;
 
 	// statusセット
@@ -843,7 +860,13 @@ int kgCSVblk::blkset()
 		}
 
 		// 項目分割	
-		curPnt_ = sepFldToken(_newFld, fldSize_, curPnt_, maxRecLen_) + 1;
+		try{
+			curPnt_ = sepFldToken(_newFld, fldSize_, curPnt_, maxRecLen_) + 1;
+		}catch(kgError& err){
+			err.addMessage("[ " + fname_ + " ]");
+			throw err;
+		}
+
 		recNo_++;
 
 	// statusセット
