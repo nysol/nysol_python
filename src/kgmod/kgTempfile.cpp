@@ -49,6 +49,8 @@ string kgTempfile::create(bool pipe, string prefix)
 	int tryCnt=0;
  	sprintf(pidstr,"%d",getpid());
 
+	ostringstream errss; 
+	errss << " @ ";
 	if(pipe){
 		for(; tryCnt<10; tryCnt++){ // あり得ないが、ファイル名が重複する場合を考慮し10回tryする。
  			ostringstream ss;
@@ -63,11 +65,17 @@ string kgTempfile::create(bool pipe, string prefix)
  			ostringstream ss;
 			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << env_->randStr(14);
 			int fd = open(ss.str().c_str(),O_CREAT | O_EXCL, S_IRWXU);
-			if(fd==-1){ continue;}
+			if(fd==-1){ 
+				errss << "trycnt :" << tryCnt <<":" <<  errno << " / ";
+				continue;
+			}
 			else			{	close(fd); ret=ss.str(); break;}
 		}
 	}
-	if(tryCnt>=10){ throw kgError("internal error: cannot create temp file"); }
+	if(tryCnt>=10){ 
+		string msg = "internal error: cannot create temp file (" +  errss.str() + ")";
+		throw kgError(msg); 
+	}
 	// ファイル名を配列に登録しておく(削除のため)
 	names_.push_back(ret);
 
