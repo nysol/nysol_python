@@ -46,15 +46,16 @@ string kgTempfile::create(bool pipe, string prefix)
 
 	string ret;
  	char pidstr[64];
+ 	char oidstr[64];
 	int tryCnt=0;
  	sprintf(pidstr,"%d",getpid());
-
+ 	sprintf(oidstr,"%p",this);
 	ostringstream errss; 
 	errss << " @ ";
 	if(pipe){
 		for(; tryCnt<10; tryCnt++){ // あり得ないが、ファイル名が重複する場合を考慮し10回tryする。
  			ostringstream ss;
-			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << env_->randStr(14);
+			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << oidstr << "_" << env_->randStr(14);
 			int fd = mkfifo(ss.str().c_str(),0600);
       if(fd==-1 && errno!=EINVAL)	{ continue;}
       else												{ ret=ss.str(); break;}
@@ -63,10 +64,10 @@ string kgTempfile::create(bool pipe, string prefix)
 		// 0バイトファイルを一時的に作成する(排他制御のため)
 		for(; tryCnt<10; tryCnt++){
  			ostringstream ss;
-			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << env_->randStr(14);
+			ss << env_->getTmpPath() << "/__KGTMP_" << pidstr << "_" << prefix << "_" << oidstr << "_" << env_->randStr(14+tryCnt);
 			int fd = open(ss.str().c_str(),O_CREAT | O_EXCL, S_IRWXU);
 			if(fd==-1){ 
-				errss << "trycnt :" << tryCnt <<":" <<  errno << " / ";
+				errss << "trycnt :" << tryCnt << " name: "<< ss.str() << " errno: " <<  errno << " / ";
 				continue;
 			}
 			else			{	close(fd); ret=ss.str(); break;}
