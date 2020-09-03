@@ -20,6 +20,7 @@
 // kgLoad.cpp 行の複製
 // =============================================================================
 #include <cstdio>
+#include <sstream>
 #include <unistd.h>
 #include <fcntl.h>
 #include <kgexcmd.h>
