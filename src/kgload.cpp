@@ -73,6 +73,9 @@ kgLoad::kgLoad(void)
 
 	_titleL = _title = "";
 	_dict = false;
+	_outtp = 0;
+	_dcnt_i = 0;
+	_dcnt_o = 0;
 }
 // -----------------------------------------------------------------------------
 // パラメータセット＆入出力ファイルオープン
@@ -255,6 +258,8 @@ int kgLoad::run(int inum,int *i_p,int onum, int* o_p,string &msg)
 // -----------------------------------------------------------------------------
 int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg) 
 {
+	_outtp=1;
+
 	PyThreadState *savex = NULL;
 	try {
 		// パラメータチェック
@@ -350,6 +355,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 							throw kgError("unsupport data type");
 						}
 					}
+					_dcnt_i++;
 					nowlin++;
 				}
 			}
@@ -397,6 +403,7 @@ static makeVal(format,...){
 // -----------------------------------------------------------------------------
 int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg) 
 {
+	_outtp=2;
 
 	PyThreadState *savex = NULL;
 	try {
@@ -490,10 +497,10 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 			savex = PyEval_SaveThread();
 
 			while( EOF != rls.read() ){
+				_dcnt_i++;
 
 				PyEval_RestoreThread(savex);
-				savex=NULL;
-				
+				savex=NULL;				
 				if(_dict){
 
 				  PyObject* dictv = PyDict_New();
@@ -607,7 +614,7 @@ int kgLoad::run(int inum,int *i_p,PyObject* o_p,pthread_mutex_t *mtx,string &msg
 			
 			PyEval_RestoreThread(savex);
 			savex=NULL;
-
+			_dcnt_o++;
 		}
 		else{
 			throw kgError("not python list");

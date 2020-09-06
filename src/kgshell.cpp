@@ -975,6 +975,7 @@ int kgshell::runMain(
 		if ( _kgmod_map.find(cmdname) == _kgmod_map.end()){
 			err_OUTPUT("not 1 kgmod "+ cmdname);
 			return 1;
+
 		}
 		_envlist[i] = new kgEnv(&_env);
 		_modlist[i] = _kgmod_map.find(cmdname)->second() ;

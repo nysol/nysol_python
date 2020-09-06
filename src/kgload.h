@@ -45,6 +45,9 @@ class kgLoad : public kgMod
 	// 引数セット
 	void setArgs(void);
 	void setArgs(int inum,int *i,int onum, int* o);
+	int _outtp ; // 0: _iFile,_oFile  1:i=pyobj,_oFile 2:i=rlsfile,o=pyobj 
+	size_t _dcnt_i;
+	size_t _dcnt_o;
 
 public:
 	static const char * _ipara[];
@@ -55,8 +58,22 @@ public:
 	~kgLoad(void){}
 
 	// 処理行数取得メソッド
-	size_t iRecNo(void) const { return _iFile.recNo(); }
-	size_t oRecNo(void) const { return _oFile.recNo(); }
+	size_t iRecNo(void) const {
+		if(_outtp==0){
+			return _iFile.recNo(); 
+		}
+		else{
+			return _dcnt_i;
+		}
+	}
+	size_t oRecNo(void) const { 
+		if(_outtp==2){
+			return _dcnt_o;
+		}
+		else{
+			return _oFile.recNo(); 
+		}
+	}
 
 	//実行メソッド
 	int run(void);
