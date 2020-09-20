@@ -21,6 +21,7 @@
 
 import os
 import glob
+import time
 
 #= 一時ファイル名を扱うクラス (内容確認すること)
 #
@@ -144,7 +145,8 @@ class Mtemp(object):
 		self.delAllFiles(self.path,self.pid,self.oid)		
 
 	def mkname(self):
-		return "%s/__MTEMP_%s_%s_%s"%(self.path,self.pid,self.oid,self.seq)
+		ut = time.time()
+		return "%s/__MTEMP_%s_%s_%s_%s"%(self.path,self.pid,self.oid,self.seq,str(ut))
 
 	#== 一時ファイル名の取得
 	# 返値: 一時ファイル名(String)
