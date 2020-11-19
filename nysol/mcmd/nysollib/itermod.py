@@ -9,13 +9,15 @@ class LineListIter(object):
 
 	def __init__(self,obj,dtype=None,skeys=None,q=False,header=False):
 
-		if len(obj.outlist["o"])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist["o"])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
 			return None
+
+
 
 		dupobj = obj.modelcopy()
 
@@ -94,9 +96,9 @@ class LineDictIter(object):
 	def __init__(self,obj,dtype=None,skeys=None,q=False):
 		
 
-		if len(obj.outlist["o"])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist["o"])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
@@ -173,9 +175,9 @@ class BlkListIter(object):
 
 	def __init__(self,obj,keys,skeys=None,dtype=None,q=False,header=False):
 
-		if len(obj.outlist[obj.nowdir])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist[obj.nowdir])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
@@ -270,9 +272,9 @@ class BlkDictIter(object):
 
 	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
-		if len(obj.outlist["o"])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist["o"])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
@@ -362,9 +364,9 @@ class LineListIterWithInfo(object):
 
 	def __init__(self,obj,keys,skeys=None,dtype=None,q=False,header=False):
 
-		if len(obj.outlist["o"])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist["o"])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
@@ -467,9 +469,9 @@ class LineDictIterWithInfo(object):
 
 	def __init__(self,obj,keys,skeys=None,dtype=None,q=False):
 
-		if len(obj.outlist["o"])!=0:
-			raise Exception("Do not specify last output ")
-			return None
+		#if len(obj.outlist["o"])!=0:
+		#	raise Exception("Do not specify last output ")
+		#	return None
 
 		if obj.name=="writelist":
 			raise Exception("Do not suport writelist ")
