@@ -303,7 +303,7 @@ b c d,D,3,1
 			f_e3 = None
 			f_e3 <<= nm.mjoin(k="pid",m=f_e2,f="size1",i=f_e1)
 			f_e3 <<= nm.mnjoin(k="pid",m=f_e0,f="pattern,size2")
-			f_e3 <<= nm.mcut(f="pid:id,node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile,rp=self.rp)
+			f_e3 <<= nm.mcut(f="pid:id,node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile,rp=self.rpf)
 			f_e3.run()
 
 		else:
@@ -317,7 +317,7 @@ b c d,D,3,1
 			f_e4 <<= nm.mselnum(f="size1",c="[{},{}]".format(self.minSize1,self.maxSize1))
 			f_e4 <<= nm.mvsort(vf="node1,pattern")
 			f_e4 <<= nm.msortf(f="node1,pattern")
-			f_e4 <<= nm.mcut(f="node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile,rp=self.rp)
+			f_e4 <<= nm.mcut(f="node1:{},pattern:{},size1,size2".format(self.ef1,self.ef2),o=self.oFile,rp=self.rpf)
 			f_e4.run()
 
 		nu.mmsg.endLog(self.__cmdline())
