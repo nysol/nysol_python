@@ -86,6 +86,7 @@ class mitemset(object):
 		"l":"int",
 		"u":"int",
 		"top":"int",
+		"rp":"bool",
 		"mcmdenv" : "bool",
 		"T": "str"
 	}
@@ -150,6 +151,7 @@ class mitemset(object):
 
 
 		self.replaceTaxo = kwd["replaceTaxo"] if "replaceTaxo" in kwd else False
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 
 	def __cmdline(self):
@@ -197,6 +199,8 @@ class mitemset(object):
 		# 出力
 		if not os.path.isdir(self.outPath) :
 			os.makedirs(self.outPath)
+
+		# rpいる？
 		lcm.output(self.outPath)
 
 		nu.mmsg.endLog(self.__cmdline())

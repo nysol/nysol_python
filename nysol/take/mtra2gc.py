@@ -157,6 +157,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		"th":"float",
 		"node_support":"bool",
 		"T=":"str",
+		"rp":"bool",
 		"num":"bool"
 	}
 
@@ -188,7 +189,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		self.logFile = kwd["log"]       if "log" in kwd else None
 		self.sim     = kwd["sim"]       if "sim" in kwd else None
 		self.th      = float(kwd["th"]) if "th"  in kwd else None # 類似度measure
-
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 		self.node_support = kwd["node_support"] if "node_support" in kwd else False
 		self.num = kwd["num"] if "num" in kwd else False
@@ -360,7 +361,9 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 		f <<= nm.mcal(c='(${frequency}*${total})/((${frequency1}*${frequency2}))',a="lift")
 		f <<= nm.mcal(c='(ln(${frequency})+ln(${total})-ln(${frequency1})-ln(${frequency2}))/(ln(${total})-ln(${frequency}))',a="PMI")
 		f <<= nm.mcut(f="node1,node2,frequency,frequency1,frequency2,total,support,confidence,lift,jaccard,PMI")
-		f <<= nm.msortf(f="node1,node2",o=self.oeFile)
+		f <<= nm.msortf(f="node1,node2",rp=self.rpf ,o=self.oeFile)
+		
+		
 		f.run()
 
 		if self.onFile:
@@ -372,7 +375,7 @@ f,d,3,4,4,5,0.6,0.75,0.9375,0.6,-0.1263415893
 
 			f4 <<= nm.msetstr(v=total,a="total")
 			f4 <<= nm.mcal(c='${frequency}/${total}',a="support")
-			f4 <<= nm.mcut(f="node,support,frequency,total",o=self.onFile)
+			f4 <<= nm.mcut(f="node,support,frequency,total",rp=self.rpf ,o=self.onFile)
 			f4.run()
 
 		procTime=datetime.now()-t

@@ -103,6 +103,7 @@ id%0,node,size
 		"ni":"str",
 		"nf":"str",
 		"o":"str",
+		"rp":"bool",
 		"verbose":"bool"
 	}
 	paramcond = {	
@@ -134,6 +135,7 @@ id%0,node,size
 		self.ni = kwd["ni"] if "ni" in kwd else None
 		self.nf = kwd["nf"] if "nf" in kwd else None
 		self.verbose  = kwd["verbose"]  if "verbose" in kwd else False
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 
 
@@ -273,7 +275,7 @@ write.table(max(c$membership),file="{cidFile}",col.names = FALSE,row.names = FAL
 		if self.nf:
 			cln <<= nm.mfldname(f="node:"+self.nf) 
 
-		nm.msortf(f="id",i=[isc,cln],o=self.oFile).run()
+		nm.msortf(f="id",i=[isc,cln],o=self.oFile,rp=self.rpf).run()
 
 		nu.mmsg.endLog(self.__cmdline())
 

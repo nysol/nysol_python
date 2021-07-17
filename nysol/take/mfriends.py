@@ -84,6 +84,7 @@ d,c,0.30
 		"sim": "fld",
 		"rank":"int",
 		"dir":"str",
+		"rp":"bool",
 		"directed": "bool",
 		"udout": "bool",
 		"mcmdenv" : "bool",
@@ -125,6 +126,7 @@ d,c,0.30
 		self.dir  = kwd["dir"] if "dir" in kwd else "b"  # 方向
 		self.directed = kwd["directed"] if "directed" in kwd else False # directed graph
 		self.udout    = kwd["udout"] if "udout" in kwd else False # 無向グラフ出力
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 
 		if(self.dir!="b" and self.dir!="m" and self.dir!="x"):
@@ -215,14 +217,15 @@ d,c,0.30
 		if self.udout :
 			runpal <<= nm.mfsort(f=kpara,i=xpal1)
 			runpal <<= nm.mavg(k=kpara,f=self.sim)
-			runpal <<= nm.msortf(f=kpara,o=self.eo)
+			runpal <<= nm.msortf(f=kpara,o=self.eo,rp=self.rpf)
 		else:
-			runpal <<= nm.msortf(f=kpara,i=xpal1,o=self.eo)
+			runpal <<= nm.msortf(f=kpara,i=xpal1,o=self.eo,rp=self.rpf)
 
 		runpal.run()
 
 		if self.ni and self.no :
-			shutil.copyfile(self.ni,self.no)
+			#shutil.copyfile(self.ni,self.no)
+			nm.mcat(i=self.ni,o=self.no,rp=self.rpf).run()
 
 		nu.mmsg.endLog(self.__cmdline())
 

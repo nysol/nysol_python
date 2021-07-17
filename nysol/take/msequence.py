@@ -91,6 +91,7 @@ class msequence(object):
 		"gap":"int",
 		"win":"int",
 		"top":"int",
+		"rp":"bool",
 		"padding" : "bool",
 		"mcmdenv" : "bool",
 		"T": "str"
@@ -134,6 +135,8 @@ class msequence(object):
 		self.eArgs["minProb"] = float(kwd["p"]) if "p" in kwd else 0.5   # 0.5-1
 		self.eArgs["uniform"] = kwd["uniform"] if "uniform" in kwd else False
 		self.eArgs["padding"] = kwd["padding"] if "padding" in kwd else False
+
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 		if "S" in kwd :
 			self.eArgs["minCnt"] = int(kwd["S"])
@@ -217,7 +220,7 @@ class msequence(object):
 		if not os.path.isdir(self.outPath) :
 			os.makedirs(self.outPath)
 
-
+		# rpいる？
 		lcm.output(self.outPath)
 
 

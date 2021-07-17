@@ -5,6 +5,6 @@ import nysol.util.margs as margs
 import nysol.take as nt
 
 
-args=margs.Margs(sys.argv,"ei=,ef=,ni=,nf=,o=,-verbose","ei=,ef=")
+args=margs.Margs(sys.argv,"ei=,ef=,ni=,nf=,o=,-verbose,-rp","ei=,ef=")
 nt.mccomp(**(args.kvmap())).run(msg="on")
 

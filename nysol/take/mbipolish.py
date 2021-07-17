@@ -100,6 +100,7 @@ D,e
 		"kn2":"int",
 		"sup":"int",
 		"iter":"int",
+		"rp":"bool",
 		"T":"str"
 	}
 
@@ -121,10 +122,10 @@ D,e
 
 		self.msgoff = True
 
-		self.oFile   = kwd["o"]   if "o"   in kwd else None
 		self.eo      = kwd["eo"]  if "eo"  in kwd else None
 		self.logDir  = kwd["log"]  if "log"  in kwd else None
 		self.outDir  = kwd["O"]    if "O"    in kwd else None # 過程出力
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 		# ---- edge field names (two nodes) on ei=
 		self.ei = kwd["ei"] # edgeファイル名
@@ -268,7 +269,7 @@ D,e
 		f <<= nm.mcal(c='${num11}+1',a="num1")
 		f <<= nm.mjoin(k="num1",m=map1,f=self.ef1)
 		f <<= nm.mtra(k="num0",s="order%n,num1%n",f=self.ef1)
-		f <<= nm.mcut(f=self.ef1,o="{}/{}".format(logDir,ofile))
+		f <<= nm.mcut(f=self.ef1,o="{}/{}".format(logDir,ofile),ro=self.rpf)
 		f.run()
 
 	# execute

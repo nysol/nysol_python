@@ -6,7 +6,7 @@ import nysol.util.margs as margs
 import nysol.take.graph as ntg
 import nysol.take as nt
 
-args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=","ei=,ef=,th=")
+args=margs.Margs(sys.argv,"ni=,nf=,ei=,ef=,-indirect,eo=,no=,th=,sim=,sup=,iter=,log=,O=,-rp","ei=,ef=,th=")
 
 ei = args.str("ei=")
 ni = args.str("ni=",None)

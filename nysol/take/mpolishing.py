@@ -133,7 +133,7 @@ c,d
 	def ver():
 		print(mpolishing.versionInfo)
 
-	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,sup=0,iter=30,O=None,log=None):
+	def __init__(self,gi=None,go=None,sim="R",th=None,indirect=False,sup=0,iter=30,rp=None,O=None,log=None):
 
 		self.gi				= None			# (graph object) input graph set
 		self.go				= None			# (graph object) output graph set

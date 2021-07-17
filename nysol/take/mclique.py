@@ -128,6 +128,7 @@ id,node,size
 		"u":"int",
 		"o":"filename",		
 		"log":"filename",
+		"rp":"bool",
 		"all":"bool",
 		"T":"str"
 	}
@@ -167,6 +168,7 @@ id,node,size
 		self.maxSize = kwd["u"]   if "u"   in kwd else None   # クリークサイズ上限
 		self.oFile   = kwd["o"]   if "o"   in kwd else None
 		self.logFile = kwd["log"] if "log" in kwd else None
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 		self.all = kwd["all"] if "all" in kwd else False
 
@@ -280,7 +282,7 @@ id,node,size
 
 		xxpair <<= nm.mjoin(m=xxmap,k="num",f="node")
 		xxpair <<= nm.mcut(f="id,node,size")
-		xxpair <<= nm.msortf(f="id,node",o=self.oFile)
+		xxpair <<= nm.msortf(f="id,node",o=self.oFile,rp=self.rpf)
 		xxpair.run()
 
 		procTime = datetime.now()-t

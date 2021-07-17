@@ -142,6 +142,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		"dir" :"str",
 		"rank":"fld",
 		"prune" : "bool",
+		"rp":"bool",
 		"num": "bool",
 		"verbose":"bool",
 		"T": "str"
@@ -175,6 +176,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		self.sp1    = kwd["s"] if "s" in kwd else None
 		self.sp2    = kwd["S"] if "S" in kwd else None
 
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 
 		self.numtp = kwd["num"]   if "num"   in kwd else False
 		self.prune = kwd["prune"] if "prune" in kwd else False 
@@ -350,7 +352,6 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			paramf["directed"] = True
 
 			nt.mfriends(**paramf).run(**kw_args)
-			
 			frec2 = nm.mfsort(f="node1,node2",i=xxfriendE)
 			frec2 <<= nm.msummary(k="node1,node2",f=self.sim[i],c="count,mean")
 			frec2 <<= nm.mselstr(f="count",v=2)
@@ -381,7 +382,7 @@ confidence,1,f,c,0.3333333333,F,8888FF
 		# rule fileの出力
 		if self.orFile:
 			mmm=nm.mcat(i=xxfriends+"/e_*").muniq(k="node1,node2")
-			nm.mcommon(k="node1,node2",i=xxsimgE , m=mmm, o=self.orFile).run()
+			nm.mcommon(k="node1,node2",i=xxsimgE , m=mmm, o=self.orFile,rp=self.rpf).run()
 
 		# マルチ枝の単一化(W優先,パラメータ位置優先)
 		if self.prune:
@@ -400,16 +401,16 @@ confidence,1,f,c,0.3333333333,F,8888FF
 			fu <<= nm.mcommon(k="node1,node2",K="node1,node2",r=True,m=fo)
 			fu <<= nm.mcommon(k="node1,node2",K="node2,node1",r=True,m=fo)
 			#f  =   nm.m2cat()
-			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile)
+			f  = nm.mbest(i=[fo,fu],k="node1,node2",s="dir%r,simPriority%n",o=self.oeFile,rp=self.rpf)
 
 			f.run()
 
 
 
 		else:
-			nm.mcat(i=xxfriends+"/e_*",o=self.oeFile).run()
+			nm.mcat(i=xxfriends+"/e_*",o=self.oeFile,rp=self.rpf).run()
 
-		nm.mcat(i=xxfriends+"/n_0",o=self.onFile).run()
+		nm.mcat(i=xxfriends+"/n_0",o=self.onFile,rp=self.rpf).run()
 
 		nu.mmsg.endLog(self.__cmdline())
 

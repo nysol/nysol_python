@@ -115,6 +115,7 @@ d,e,,data/g2.csv,-1
 		"nF":"fld",
 		"eo":"filename",		
 		"no":"filename",
+		"rp":"bool",
 		"dir":"bool",
 		"T":"str"
 	}
@@ -157,6 +158,7 @@ d,e,,data/g2.csv,-1
 			raise("must specify both of ni= and nI=")
 
 
+		self.rpf  = kwd["rp"] if "rp" in kwd else False 
 		# edge出力ファイル名
 		if not "eo" in kwd :
 			raise Exception("eo= is necessary")
@@ -238,7 +240,7 @@ d,e,,data/g2.csv,-1
 		
 		# クリーニング(ei=)
 		feI = None
-		feI <<= nm.mcut(f="%s:%s,%s:%s"%(self.eF1,self.ef1,self.eF2,self.ef2), i=self.ei)
+		feI <<= nm.mcut(f="%s:%s,%s:%s"%(self.eF1,self.ef1,self.eF2,self.ef2), i=self.eI)
 		if not self.dir :
 			feI <<= nm.mfsort(f=[self.ef1,self.ef2])
 		feI <<= nm.muniq(k=[self.ef1,self.ef2])
@@ -247,7 +249,7 @@ d,e,,data/g2.csv,-1
 		fe = None
 		fe <<= nm.mjoin(k=[self.ef1,self.ef2], m=feI,i=fei,f="eI",n=True,N=True)
 		fe <<= nm.mcal(c='if(isnull($s{ei}),-1,if(isnull($s{eI}),1,0))',a="diff")
-		fe <<= nm.mcut(f=[self.ef1,self.ef2,"ei","eI","diff"],o=self.eo)
+		fe <<= nm.mcut(f=[self.ef1,self.ef2,"ei","eI","diff"],o=self.eo,rp=self.rpf)
 
 		fe.run()
 
@@ -264,7 +266,7 @@ d,e,,data/g2.csv,-1
 			fn = None
 			fn <<= nm.mjoin(k=self.nf,m=fnI,i=fni,f="nI",n=True,N=True)
 			fn <<= nm.mcal(c='if(isnull($s{ni}),-1,if(isnull($s{nI}),1,0))',a="diff")
-			fn <<= nm.mcut(f=[self.nf,"ni","nI","diff"],o=self.no)
+			fn <<= nm.mcut(f=[self.nf,"ni","nI","diff"],o=self.no,rp=self.rpf)
 
 			fn.run()
 

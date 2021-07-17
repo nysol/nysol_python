@@ -5,6 +5,6 @@ import nysol.util.margs as margs
 import nysol.take as nt
 
 
-args=margs.Margs(sys.argv,"ei=,ef=,eI=,eF=,ni=,nf=,nI=,nF=,-dir,eo=,no=,T=","ei=,eI=,eo=")
+args=margs.Margs(sys.argv,"ei=,ef=,eI=,eF=,ni=,nf=,nI=,nF=,-dir,eo=,no=,T=,-rp","ei=,eI=,eo=")
 nt.mgdiff(**args.kvmap()).run(msg="on")
 
