@@ -161,12 +161,13 @@ sources_core, extra_objects_core = exclude_no_need_compile_sources([
 	'mod/kgvuniq.cpp', 'mod/kgwindow.cpp', 'mod/kgsep.cpp', 'mod/kgkmeans.cpp',
 	'mod/kgarff2csv.cpp', 'mod/kgtab2csv.cpp', 'mod/kgxml2csv.cpp'
 ])
+
 module1 = Extension('nysol/_nysolshell_core',
                     sources=sources_core,
 					extra_objects=extra_objects_core,
 					include_dirs=hedears,
 					libraries=nmodLibs,
-					extra_compile_args=xmlcflg,
+					extra_compile_args=xmlcflg+['-std=c++11'],
 					extra_link_args=xmllibs
 					)
 
@@ -311,6 +312,7 @@ utilmod = Extension('nysol/util/_utillib',
                     sources=sources_utilmod,
 					extra_objects=extra_objects_utilmod,
 					include_dirs=['src', 'src/kgmod', 'src/mod'],
+					extra_compile_args=['-std=c++11'],
 					libraries=umodLibs
 					)
 
