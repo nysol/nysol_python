@@ -33,13 +33,11 @@ using namespace boost::spirit::classic;
 using namespace boost;
 using namespace kglib;
 using namespace kgmod;
-
 // -----------------------------------------------------------------------------
 // コンストラクタ(モジュール名，バージョン登録,パラメータ)
 // -----------------------------------------------------------------------------
 const char * kgCal::_ipara[] = {"i",""};
 const char * kgCal::_opara[] = {"o",""};
-
 kgCal::kgCal(void)
 {
 	_name    = "kgcal";

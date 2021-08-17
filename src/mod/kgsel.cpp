@@ -47,7 +47,6 @@ using namespace kgmod;
 // -----------------------------------------------------------------------------
 const char * kgSel::_ipara[] = {"i",""};
 const char * kgSel::_opara[] = {"o","u",""};
-
 kgSel::kgSel(void)
 {
 	_name    = "kgsel";

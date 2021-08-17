@@ -93,7 +93,7 @@ public:
 
 		//関数・演算子用
 		rule<ScannerT, parser_context<>, parser_tag<exprID> >
-			term1,term2,term3,term4,term5,term6,term7,term8,expr,
+			term0,term1,term2,term3,term4,term5,term6,term7,term8,expr,
 			function1,function2,fctr;
 			
 		// 文法定義(コンストラクタ)
@@ -289,7 +289,7 @@ public:
 			                 discard_node_d[*space_p]
 			               ];
 
-			term1= fctr  % root_node_d[
+			term1= term0  % root_node_d[
 			                 discard_node_d[*space_p] >>
 			                 str_p("*")               >>
 			                 discard_node_d[*space_p] |
@@ -298,11 +298,15 @@ public:
 			                 discard_node_d[*space_p] |
 			                 discard_node_d[*space_p] >>
 			                 str_p("%")               >>
-			                 discard_node_d[*space_p] |
+			                 discard_node_d[*space_p] 
+			               ];
+
+			term0= fctr  % root_node_d[
 			                 discard_node_d[*space_p] >>
  			                 str_p("^")               >>
 			                 discard_node_d[*space_p]
 			               ];
+
 
 			fctr = function2  | function1  | const_date | const_utime | const_time  |
  			       const_bool | const_real | const_str  | const_str2  | 
