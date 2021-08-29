@@ -224,24 +224,26 @@ b c d,D,3,1
 		f1 <<= nm.mdelnull(f="node1")
 		f1 <<= nm.muniq(k="node1")
 		f1 <<= nm.mnumber(s="node1", a="num1",o=mapFile1)
+		f1.run()
 
 		f2 = None
 		f2 <<= nm.mcut(f="{}:node2".format(self.ef2),i=self.ei)
 		f2 <<= nm.mdelnull(f="node2")
 		f2 <<= nm.muniq(k="node2")
 		f2 <<= nm.mnumber(s="node2",a="num2",o=mapFile2)
+		f2.run()
 
 		f3 = None
 		f3 <<= nm.mcut(f="{}:node1,{}:node2".format(self.ef1,self.ef2),i=self.ei)
-		f3 <<= nm.mjoin(k="node1",m=f1,f="num1")
-		f3 <<= nm.mjoin(k="node2",m=f2,f="num2")
+		f3 <<= nm.mjoin(k="node1",m=mapFile1,f="num1")
+		f3 <<= nm.mjoin(k="node2",m=mapFile2,f="num2")
 		f3 <<= nm.mcut(f="num1,num2")
 		f3 <<= nm.msortf(f="num1,num2%n")
 		f3 <<= nm.mtra(k="num1",s="num2%n",f="num2")
 		f3 <<= nm.msortf(f="num1%n")
 		f3 <<= nm.mcut(f="num2",nfno=True,o=traFile)
 		f3.run()
-		os.system("cat "+traFile)
+		#os.system("cat "+traFile)
 
 	# ============
 	# entry point
@@ -267,7 +269,7 @@ b c d,D,3,1
 		self.pair2tra(self.ei,self.ef1,self.ef2,xxtra,xxmap1,xxmap2)
 
 		runPara={}
-		runPara["type"] = "CIf"
+		runPara["type"] = "CIf_"
 		runPara["sup"] = 1
 		runPara["o"] = lcmout
 		runPara["i"] = xxtra
@@ -277,9 +279,11 @@ b c d,D,3,1
 		if self.maxSize2:
 			runPara["u"] = self.maxSize2
 
-
+		print("aaa1")	
 		extTake.lcm(runPara)
+		print("aaa2")	
 		extTake.lcmtrans(lcmout,"p",xxt0)
+		print("aaa3")	
 
 		f = None
 		f <<= nm.mdelnull(f="pattern",i=xxt0)
