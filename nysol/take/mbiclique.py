@@ -279,11 +279,8 @@ b c d,D,3,1
 		if self.maxSize2:
 			runPara["u"] = self.maxSize2
 
-		print("aaa1")	
 		extTake.lcm(runPara)
-		print("aaa2")	
 		extTake.lcmtrans(lcmout,"p",xxt0)
-		print("aaa3")	
 
 		f = None
 		f <<= nm.mdelnull(f="pattern",i=xxt0)
