@@ -201,18 +201,18 @@ int kgRand::runMain(void)
 	//実数版
 	if(!_int_rand){
 		uniform_real<> dst_r(_min,_max);
-		variate_generator< mt19937,uniform_real<> > *rand_r=NULL;
+		variate_generator< boost::mt19937,uniform_real<> > *rand_r=NULL;
 		double val=0;
 		while(_iFile.read()!=EOF){
 			if((_iFile.status() & kgCSV::End )) break;
 			//keybreakあるいは最初は乱数生成エンジン生成
 			if( _iFile.begin() ){
-				rand_r = new variate_generator< mt19937,uniform_real<> > (mt19937(_seed),dst_r);
+				rand_r = new variate_generator< boost::mt19937,uniform_real<> > (boost::mt19937(_seed),dst_r);
 			}
 			if( _iFile.keybreak() ){
 				if(!_B_flg){
 					if(rand_r){ delete rand_r;}
-					rand_r = new variate_generator< mt19937,uniform_real<> > (mt19937(_seed),dst_r);
+					rand_r = new variate_generator< boost::mt19937,uniform_real<> > (boost::mt19937(_seed),dst_r);
 				}
 			}
 			if( _iFile.begin() ||  _iFile.keybreak() || !_B_flg ){
@@ -224,18 +224,18 @@ int kgRand::runMain(void)
 	}
 	else{//整数版
 		uniform_int<> dst_i(_min,_max);
-		variate_generator< mt19937,uniform_int<> > *rand_i=NULL;
+		variate_generator< boost::mt19937,uniform_int<> > *rand_i=NULL;
 		int val=0;
 		while(_iFile.read()!=EOF){
 			//keybreakあるいは最初は乱数生成エンジン生成
 			if((_iFile.status() & kgCSV::End )) break;
 			if( _iFile.begin() ){
-				rand_i = new variate_generator< mt19937,uniform_int<> > (mt19937(_seed),dst_i);
+				rand_i = new variate_generator< boost::mt19937,uniform_int<> > (boost::mt19937(_seed),dst_i);
 			}
 			if( _iFile.keybreak() ){
 				if(!_B_flg){
 					if(rand_i){ delete rand_i;}
-					rand_i = new variate_generator< mt19937,uniform_int<> > (mt19937(_seed),dst_i);
+					rand_i = new variate_generator< boost::mt19937,uniform_int<> > (boost::mt19937(_seed),dst_i);
 				}
 			}
 			if( _iFile.begin() ||  _iFile.keybreak() || !_B_flg ){

@@ -332,7 +332,7 @@ int kgLoad::run(PyObject* i_p,int onum,int *o_p,string &msg)
 						}
 						else if (PyFloat_Check(fval)){
 							double d=PyFloat_AsDouble(fval);
-							if(isnan(d)||isinf(d)){
+							if(std::isnan(d)||std::isinf(d)){
 								savex  = PyEval_SaveThread();
 								_oFile.writeStr("", i==fldsize-1);
 							PyEval_RestoreThread(savex);

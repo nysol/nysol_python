@@ -3047,8 +3047,8 @@ void kgFunction_rand::preprocess(void)
 	}
 	uniform_int<> dst(start,end);
 	try {
-		_api.set( new variate_generator< mt19937,uniform_int<> >
-					(mt19937(seed),dst) );
+		_api.set( new variate_generator< boost::mt19937,uniform_int<> >
+					(boost::mt19937(seed),dst) );
 		_result.null(false);
 	}catch(bad_alloc){
 		_result.null(true);
@@ -3086,8 +3086,8 @@ void kgFunction_rand_real::preprocess(void)
 	}
 	uniform_real<> dst(0,1);
 	try {
-		_apr.set( new variate_generator< mt19937,uniform_real<> >
-				(mt19937(seed),dst) );
+		_apr.set( new variate_generator< boost::mt19937,uniform_real<> >
+				(boost::mt19937(seed),dst) );
 		_result.null(false);
 	}catch(bad_alloc){
 		_result.null(true);
@@ -3127,10 +3127,10 @@ void kgFunction_nrand::preprocess(void)
 	}else{
 		seed = static_cast<unsigned long>(_args.at(2)->r());
 	}
-	normal_distribution<> dst(avg,std);
+	boost::normal_distribution<> dst(avg,std);
 	try {
-		_ap.set( new variate_generator< mt19937,normal_distribution<> >
-			(mt19937(seed),dst) );
+		_ap.set( new variate_generator< boost::mt19937,boost::normal_distribution<> >
+			(boost::mt19937(seed),dst) );
 		_result.null(false);
 	}catch(bad_alloc){
 		_result.null(true);
@@ -3176,10 +3176,10 @@ void kgFunction_berrand::preprocess(void)
 	}else{
 		seed = static_cast<unsigned long>(_args.at(1)->r());
 	}
-	bernoulli_distribution<> dst(p);
+	boost::bernoulli_distribution<> dst(p);
 	try {
-		_ap.set( new variate_generator< mt19937,bernoulli_distribution<> >
-						(mt19937(seed),dst) );
+		_ap.set( new variate_generator< boost::mt19937,bernoulli_distribution<> >
+						(boost::mt19937(seed),dst) );
 		_result.null(false);
 	}catch(bad_alloc){
 		_result.null(true);

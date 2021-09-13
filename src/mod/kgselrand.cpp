@@ -218,7 +218,7 @@ int kgSelrand::runMain(void)
 
 	//乱数生成エンジン
 	uniform_int<> dst(0,INT_MAX);
-	variate_generator< mt19937,uniform_int<> > rand_m(mt19937(_seed),dst); 
+	variate_generator< boost::mt19937,uniform_int<> > rand_m(boost::mt19937(_seed),dst); 
 
 	//ファイルオープン
 	kgCSVout otmpFile;

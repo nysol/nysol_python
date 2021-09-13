@@ -49,7 +49,7 @@ kgEnv::kgEnv(kgEnv *src_env){
 	// 乱数初期化
   unsigned long seed= static_cast<unsigned long>(boost::posix_time::microsec_clock::local_time().time_of_day().fractional_seconds());
 	try {
-		randStrAP_.set( new variate_generator< mt19937,uniform_int<> >(mt19937(seed),uniform_int<>(48,109) ) );
+		randStrAP_.set( new variate_generator< boost::mt19937,uniform_int<> >(boost::mt19937(seed),uniform_int<>(48,109) ) );
 	}catch(bad_alloc){
 		throw kgError("memory allocation error in kgEnv");
 	}
@@ -182,7 +182,7 @@ kgEnv::kgEnv(void)
 	// 乱数初期化
   unsigned long seed= static_cast<unsigned long>(boost::posix_time::microsec_clock::local_time().time_of_day().fractional_seconds());
 	try {
-		randStrAP_.set( new variate_generator< mt19937,uniform_int<> >(mt19937(seed),uniform_int<>(48,109) ) );
+		randStrAP_.set( new variate_generator< boost::mt19937,uniform_int<> >(boost::mt19937(seed),uniform_int<>(48,109) ) );
 	}catch(bad_alloc){
 		throw kgError("memory allocation error in kgEnv");
 	}

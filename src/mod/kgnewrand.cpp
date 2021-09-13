@@ -169,7 +169,7 @@ int kgNewrand::runMain(void)
 	//実数版
 	if(!_int_rand){
 		uniform_real<> dst_r(_min,_max);
-		variate_generator< mt19937,uniform_real<> > rand_r(mt19937(_seed),dst_r);
+		variate_generator<  boost::mt19937,uniform_real<> > rand_r(boost::mt19937(_seed),dst_r);
 		// データ出力
 		for(size_t i=0;i<_line;i++){	
 			_oFile.writeDbl(rand_r(),true);
@@ -178,7 +178,7 @@ int kgNewrand::runMain(void)
 	else{
 		//乱数生成エンジン
 		uniform_int<> dst(_min,_max);
-		variate_generator< mt19937,uniform_int<> > rand_m(mt19937(_seed),dst); 
+		variate_generator< boost::mt19937,uniform_int<> > rand_m(boost::mt19937(_seed),dst); 
 
 		// データ出力
 		for(size_t i=0;i<_line;i++){	
