@@ -3178,7 +3178,7 @@ void kgFunction_berrand::preprocess(void)
 	}
 	boost::bernoulli_distribution<> dst(p);
 	try {
-		_ap.set( new variate_generator< boost::mt19937,bernoulli_distribution<> >
+		_ap.set( new variate_generator< boost::mt19937,boost::bernoulli_distribution<> >
 						(boost::mt19937(seed),dst) );
 		_result.null(false);
 	}catch(bad_alloc){
