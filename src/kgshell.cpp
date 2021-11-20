@@ -1383,8 +1383,24 @@ kgCSVfld* kgshell::runiter(
 
 		// データ出力
 		_iterrtn = new kgCSVfld;
-		_iterrtn->popen(itrfd, &_env,_nfni);
-		_iterrtn->read_header();	
+								//savex  = PyEval_SaveThread();
+		PyThreadState *savex;
+		try{
+			savex = PyEval_SaveThread();
+			_iterrtn->popen(itrfd, &_env,_nfni);
+			_iterrtn->read_header();	
+			PyEval_RestoreThread(savex);
+		}
+		catch(kgError& err){
+			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
+			throw err;
+
+		}catch(...){	
+			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
+			throw;
+		}
+
+
 		return _iterrtn;
 
 	}catch(kgError& err){
@@ -1451,12 +1467,25 @@ kgCSVkey* kgshell::runkeyiter(
 		// データ出力
 		_iterrtnk = new kgCSVkey;
  
-		_iterrtnk->popen(itrfd, &_env,_nfni);
-		_iterrtnk->read_header();	
-		kgArgFld fField;
-		fField.set(klist, _iterrtnk, false);
-		// 入力ファイルにkey項目番号をセットする．
-		_iterrtnk->setKey(fField.getNum());
+		PyThreadState *savex;
+		try{
+			savex = PyEval_SaveThread();
+			_iterrtnk->popen(itrfd, &_env,_nfni);
+			_iterrtnk->read_header();	
+			kgArgFld fField;
+			fField.set(klist, _iterrtnk, false);
+			// 入力ファイルにkey項目番号をセットする．
+			_iterrtnk->setKey(fField.getNum());
+			PyEval_RestoreThread(savex);
+		}
+		catch(kgError& err){
+			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
+			throw err;
+
+		}catch(...){	
+			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
+			throw;
+		}
 
 		return _iterrtnk;
 
