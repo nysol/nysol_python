@@ -233,7 +233,7 @@ sources_mmaketramod, extra_objects_mmaketramod = exclude_no_need_compile_sources
 mmaketramod = Extension('nysol/take/_mmaketralib',
 						sources=sources_mmaketramod,
 						extra_objects=extra_objects_mmaketramod,
-						extra_compile_args=['-Wno-format-security', '-Wno-error'],
+						extra_compile_args=['-Wno-format-security', '-Wno-error','-std=c++11'],
 						include_dirs=['src', 'src/kgmod', 'src/mod', 'src/take/mmaketra'],
 						libraries=mmodLibs
 						)
