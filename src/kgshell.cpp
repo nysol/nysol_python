@@ -1317,7 +1317,7 @@ int kgshell::runx(
 		}
 
 		// 一応siganl reset対応
-		sigaction( SIGSEGV, &oldact, NULL ); // signal 13
+		//sigaction( SIGSEGV, &oldact, NULL ); // signal 13
 
 
 		return 0;
