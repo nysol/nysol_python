@@ -1300,6 +1300,7 @@ int kgshell::runx(
 	try{
 
 		// 一応siganl対応
+		/*
 		struct sigaction sa_sigint;
 		struct sigaction oldact;
 
@@ -1308,7 +1309,7 @@ int kgshell::runx(
 		sa_sigint.sa_sigaction=signalHandler;
 		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
 		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
-
+		*/
 		runInit(cmds,plist);
 
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
