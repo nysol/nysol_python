@@ -35,7 +35,7 @@ void *kgModIncludeSort::run_noargs_pth(void *arg){
 
 void kgModIncludeSort::th_cancel(void){
 	vector<int> chk(_sortModSize);
-	cerr << "x1" << endl;
+	cerr << "x1 " << _name << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 	cerr << "x2" << endl;
 		chk[i] = pthread_cancel(_th_st_p[i]);
@@ -50,7 +50,7 @@ void kgModIncludeSort::th_cancel(void){
 	cerr << "x5" << endl;
 		if(chk[i]==0){
 	cerr << "x6 " << endl;
-	cerr << "x6x " << _th_st_p[i] << " " << chk[i]<< endl;
+	cerr << "x6x " << _name << " "  << _th_st_p[i] << " " << chk[i]<< endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
 	cerr << "x7_1" << endl;
 			if(rtn!=0) { 
