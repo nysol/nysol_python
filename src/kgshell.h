@@ -241,6 +241,26 @@ class kgshell{
 			_watchFlg=false;
 		}
 		if(_th_st_pp){
+
+			vector<int> chk(_clen);
+			for(size_t i=0 ;i<_clen;i++){ 
+				chk[i] = pthread_cancel(_th_st_pp[i]);
+				if (chk[i]!=0&&chk[i]!=3){
+					kgMsg msg(kgMsg::MSG, &_env);
+					msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
+				}
+			}
+			for(size_t i=_clen;i>0;i--){
+				if(chk[i-1]==0||chk[i-1]==3){
+					int rtn = pthread_join(_th_st_pp[i-1],NULL);
+					if(rtn!=0) {
+						kgMsg msg(kgMsg::MSG, &_env);
+						msg.output("waring destruct fail thread join :( " + toString(rtn) + ")");
+					}
+				}
+			}
+			//delete[] _th_st_pp ;
+			/*
 			//エラー発生時はthread cancel
 			for(size_t j=0;j<_clen;j++){
 				pthread_cancel(_th_st_pp[j]);	
@@ -248,6 +268,7 @@ class kgshell{
 			for(size_t i=_clen;i>0;i--){
 				pthread_join(_th_st_pp[i-1],NULL);
 			}
+			*/
 			if(_modlist){
 				for(size_t i=0 ;i<_clen;i++){
 					if(_argst[i].outputEND == false){
