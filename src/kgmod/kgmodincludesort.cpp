@@ -48,7 +48,7 @@ void kgModIncludeSort::th_cancel(void){
 	cerr << "x4" << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 	cerr << "x5" << endl;
-		if(chk[i]==0||chk[i]==3){
+		if(chk[i]==0){
 	cerr << "x6 " << endl;
 	cerr << "x6x " << _th_st_p[i] << " " << chk[i]<< endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
