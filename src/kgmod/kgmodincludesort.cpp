@@ -50,7 +50,7 @@ void kgModIncludeSort::th_cancel(void){
 	cerr << "x5" << endl;
 		if(chk[i]==0||chk[i]==3){
 	cerr << "x6 " << endl;
-	cerr << "x6x " << _th_st_p[i]<< endl;
+	cerr << "x6x " << _th_st_p[i] << " " << chk[i]<< endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
 	cerr << "x7_1" << endl;
 			if(rtn!=0) { 
