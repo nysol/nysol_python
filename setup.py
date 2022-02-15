@@ -353,7 +353,7 @@ setup(
 		'nysol/take/lib',
 		'nysol/take/lib/base'
 	],
-	version='0.3.14',
+	version='0.3.15',
 	description='This is nysol tools',
 	long_description="""\
 NYSOL (read as nee-sol) is a generic name of software tools and project activities designed for supporting big data analysis. The tools are developed from various large-scale data analysis and university research projects. NYSOL consists of two packages so far, namely MCMD and TAKE.
