@@ -52,9 +52,13 @@ void kgModIncludeSort::th_cancel(void){
 	cerr << "x6 " << endl;
 	cerr << "x6x " << _th_st_p[i]<< endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
+	cerr << "x7_1" << endl;
 			if(rtn!=0) { 
+	cerr << "x7_2" << endl;
 				kgMsg msg(kgMsg::MSG, _env);
+	cerr << "x7_3" << endl;
 				msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
+	cerr << "x7_4" << endl;
 			}
 	cerr << "x7" << endl;
 		}
