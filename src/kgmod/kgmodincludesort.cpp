@@ -35,39 +35,22 @@ void *kgModIncludeSort::run_noargs_pth(void *arg){
 
 void kgModIncludeSort::th_cancel(void){
 	vector<int> chk(_sortModSize);
-	cerr << "x1 " << _name << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
-	cerr << "x2" << endl;
-
-
 		chk[i] = pthread_cancel(_th_st_p[i]);
 		if (chk[i]!=0&&chk[i]!=3){ 
 			kgMsg msg(kgMsg::MSG, _env);
 			msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
 		}
-	cerr << "x3" << endl;
 	}
-	cerr << "x4" << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
-	cerr << "x5" << endl;
 		if(chk[i]==0){
-	cerr << "x6 " << endl;
-	cerr << "x6x " << _name << " "  << _th_st_p[i] << " " << chk[i]<< endl;
-		//状態確認
-		int rtn0 = pthread_kill(_th_st_p[i], 0);
-	cerr << "x7_1 " <<  _name << " " << rtn0 << endl;
-		
 			int rtn = pthread_join(_th_st_p[i],NULL);
-	cerr << "x7_1" << endl;
 			if(rtn!=0) { 
 				kgMsg msg(kgMsg::MSG, _env);
 				msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
 			}
-	cerr << "x7" << endl;
 		}
-	cerr << "x8" << endl;
 	}
-	cerr << "x9" << endl;
 }
 
 
@@ -128,8 +111,6 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 			kgModIncludeSort::run_noargs_pth ,(void *)&_inner_sort[num]);
 	if(rtn){ throw kgError("cant't create thread onxx kgModIncludeSort");}
 	
-	cerr << "xxa " << _name << " " << num << " " << _th_st_p[num] << endl;
-
 	kgMsg(kgMsg::DEB, _env).output("O sorting 1 " );
 }
 

@@ -1078,7 +1078,6 @@ int kgshell::runMain(
 		else if(typ==2){
 			_th_rtn[i] = pthread_create( &_th_st_pp[i], &pattr, kgshell::run_readlist ,(void*)&_argst[i]);
 		}
-		cerr << "bb " << cmds[cmdlist[i]].cmdname << " " << _th_st_pp[i] << endl;
 	}
 	if(outpipe){
 		// 呼び出しもとでキャンセルさせる
