@@ -297,17 +297,14 @@ int kgBest::runMain(void)
 	//         u=の指定が有る場合範囲外を別に出力
 	size_t cnt=0;
 	while(_iFile.read()!=EOF){
-		cerr << "v1" << endl;
 		if( _iFile.keybreak() ){
 			if((_iFile.status() & kgCSV::End )) break;
 			cnt=0;
 		}
-		cerr << "v2" << endl;
 		// keyの指定が無く、max行を超えて、通常出力、不一致出力がなければ終了
 		if(_kField.size()==0 ){
 			if(cnt>=_range_max&& _output==true&&_elsefile==false){break;}
 		}	
-		cerr << "v3" << endl;
 		// 通常行処理 
 		if( IsInRange(cnt) == _output){
 			_oFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
@@ -315,26 +312,19 @@ int kgBest::runMain(void)
 		else if(_elsefile==true){
 			_uFile.writeFld(_iFile.fldSize(),_iFile.getNewFld());
 		}
-		cerr << "v4" << endl;
 		cnt++;
 	}
 	//ソートスレッドを終了させて、終了確認=DEBUG
   //for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
   //for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
 	//ASSERT keynull_CHECK
-		cerr << "v5" << endl;
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 	// 終了処理
-		cerr << "v6" << endl;
 	
 	th_cancel();
-		cerr << "v7" << endl;
 	_iFile.close();
-		cerr << "v8" << endl;
 	_oFile.close();
-		cerr << "v9" << endl;
 	if(_elsefile){ _uFile.close();}
-		cerr << "v10" << endl;
 
 	return 0;
 
