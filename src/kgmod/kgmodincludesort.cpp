@@ -36,7 +36,7 @@ void *kgModIncludeSort::run_noargs_pth(void *arg){
 void kgModIncludeSort::th_cancel(void){
 	vector<int> chk(_sortModSize);
 	for(size_t i=0 ;i<_sortModSize;i++){ 
-		cerr << "can0 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
+		cerr << "can0 " << _name << " " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 
 		chk[i] = pthread_cancel(_th_st_p[i]);
 		if (chk[i]!=0&&chk[i]!=3){ 
@@ -44,7 +44,7 @@ void kgModIncludeSort::th_cancel(void){
 			msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
 		}
 	}
-		cerr << "can0i " << &_th_st_p  << endl;
+		cerr << "can0i " << _name << " " << &_th_st_p  << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 		cerr << "can1 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 		if(chk[i]==0){
@@ -55,7 +55,7 @@ void kgModIncludeSort::th_cancel(void){
 			}
 		}
 	}
-		cerr << "can2 " << &_th_st_p << " " << endl;
+		cerr << "can2 " << _name << " " << &_th_st_p << " " << endl;
 }
 
 
