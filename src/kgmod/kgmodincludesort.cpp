@@ -118,8 +118,11 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 	csv->clear();
 	csv->popen(piped[0], _env,_nfn_i);
 	kgMsg(kgMsg::DEB, _env).output("O sorting 0 " );
-	int rtn = pthread_create( &_th_st_p[num], NULL, 
+	pthread_t lpt;
+	int rtn = pthread_create( &lpt, NULL, 
 			kgModIncludeSort::run_noargs_pth ,(void *)&_inner_sort[num]);
+	_th_st_p[num]=lpt;
+	cerr << "at " << _name << " " <<  lpt << endl;
 	if(rtn){ throw kgError("cant't create thread onxx kgModIncludeSort");}
 	
 	kgMsg(kgMsg::DEB, _env).output("O sorting 1 " );
