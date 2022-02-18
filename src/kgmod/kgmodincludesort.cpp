@@ -43,14 +43,14 @@ void kgModIncludeSort::th_cancel(void){
 			kgMsg msg(kgMsg::MSG, _env);
 			msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
 		}
+		cerr << "can0i " << _name << " " << &_th_st_p << " " << chk[i] << endl;
 	}
-		cerr << "can0i " << _name << " " << &_th_st_p  << endl;
 	for(size_t i=0 ;i<_sortModSize;i++){ 
 		cerr << "can1 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 		if(chk[i]==0){
 		cerr << "can1-1 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
-		cerr << "can1-2 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
+		cerr << "can1-2 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << " " << rtn << endl;
 			if(rtn!=0) { 
 		cerr << "can1-3 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 				kgMsg msg(kgMsg::MSG, _env);
