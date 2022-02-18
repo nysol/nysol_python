@@ -928,16 +928,18 @@ int kgSortf::run(int inum,int *i_p,int onum, int* o_p ,string & msg)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-void kgSortf::prerun_noargs(int fd) try 
+void kgSortf::prerun_noargs(int fd) 
 {
-	_oFile.popen(fd, _env, _nfn_o);
-}catch(kgError& err){
-	tempFile_.remove_all();
-	errorEnd(err);
-}
-catch(...){
-	tempFile_.remove_all();
-	throw;
+	try {
+		_oFile.popen(fd, _env, _nfn_o);
+	}catch(kgError& err){
+		tempFile_.remove_all();
+		errorEnd(err);
+	}
+	catch(...){
+		tempFile_.remove_all();
+		throw;
+	}
 }
 
 ///* thraad cancel action
@@ -990,6 +992,7 @@ void kgSortf::run_noargs()
 			iCnt=mergeOneLevel(level, iCnt);
 		}
 	}
+	cerr << "c0" << endl;
 	// 終了処理
 	_iFile.close();
 	_oFile.close();
@@ -997,6 +1000,7 @@ void kgSortf::run_noargs()
 	// thread cleanup 解除
 	cerr << "c1" << endl;
   pthread_cleanup_pop(0);
+	cerr << "c1e" << endl;
   
 	}catch(kgOPipeBreakError& err){
 	cerr << "c2" << endl;
