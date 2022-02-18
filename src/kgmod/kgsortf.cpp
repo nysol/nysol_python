@@ -995,9 +995,11 @@ void kgSortf::run_noargs()
 	_oFile.close();
 	successEnd();
 	// thread cleanup 解除
+	cerr << "c1" << endl;
   pthread_cleanup_pop(0);
   
 	}catch(kgOPipeBreakError& err){
+	cerr << "c2" << endl;
 		// 終了処理
 		tempFile_.remove_all();
 
@@ -1009,6 +1011,7 @@ void kgSortf::run_noargs()
 	}catch(char * er){
 		tempFile_.remove_all();
 	}catch(...){
+	cerr << "c3" << endl;
 		tempFile_.remove_all();
 		//pthread_cancelが起こったときthrowしないとabortする
 		throw;
