@@ -27,7 +27,9 @@
 
 using namespace kglib;
 using namespace kgmod;
-
+#ifndef KGMOD_THREAD_STK
+	#define KGMOD_THREAD_STK 1048576
+#endif
 void *kgModIncludeSort::run_noargs_pth(void *arg){
 	((kgSortf*)arg)->run_noargs();
 	return NULL;
@@ -118,8 +120,30 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 	csv->clear();
 	csv->popen(piped[0], _env,_nfn_i);
 	kgMsg(kgMsg::DEB, _env).output("O sorting 0 " );
+
+	size_t stacksize;
+	char * envStr=getenv("KG_THREAD_STK");
+	if(envStr!=NULL){
+		stacksize = aToSizeT(envStr);
+	}else{
+		stacksize = KGMOD_THREAD_STK;
+	}
+
+	size_t base ;
+	pthread_attr_t pattr;
+	int ret = pthread_attr_init(&pattr);
+	if(ret!=0){
+		throw kgError("pythead init error"  );
+	}
+	pthread_attr_getstacksize(&pattr,&base);
+	if( stacksize > base ){
+		if( pthread_attr_setstacksize(&pattr,stacksize)	){
+			throw kgError("stack size change error ");
+		}
+	}
+
 	pthread_t lpt;
-	int rtn = pthread_create( &lpt, NULL, 
+	int rtn = pthread_create( &lpt, &pattr, 
 			kgModIncludeSort::run_noargs_pth ,(void *)&_inner_sort[num]);
 	_th_st_p[num]=lpt;
 	cerr << "at " << _name << " " <<  lpt << endl;
