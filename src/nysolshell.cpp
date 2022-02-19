@@ -450,20 +450,24 @@ PyObject* getLineList(PyObject* self, PyObject* args)
   }
 
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-
+	cerr << "LL1" << endl;
 	if( kcfld->read() == EOF){
 		return Py_BuildValue("");
 	}
+	cerr << "LL2" << endl;
 
 	size_t fcnt = kcfld->fldSize();
+	cerr << "LL3" << endl;
 
 	PyObject* rlist = PyList_New(fcnt);
+	cerr << "LL4" << endl;
 
 	for(size_t j=0 ;j<fcnt;j++){
 		long k = 0;
 		if(ptn!=NULL){ k = PyLong_AsLong ( PyList_GetItem(ptn,j) ); }
 		PyList_SET_ITEM(rlist,j,setRtnData(k,kcfld->getVal(j)));
 	}
+	cerr << "LL5" << endl;
 
 	return rlist;
 	}
