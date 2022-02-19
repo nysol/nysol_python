@@ -1366,12 +1366,13 @@ kgCSVfld* kgshell::runiter(
 		sa_sigint.sa_sigaction=signalHandler;
 		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
 		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
-
-		runInit(cmds,plist);
+		cerr << "it1" << endl;
+ 		runInit(cmds,plist);
 		int itrfd = -1;
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			itrfd = runMain(cmds,plist,iblk,iblk==_spblk.getBlksize_M()-1);
 		}
+		cerr << "it2" << endl;
 
 		// 一応siganl reset対応
 		sigaction( SIGSEGV, &oldact, NULL ); // signal 13
@@ -1380,9 +1381,11 @@ kgCSVfld* kgshell::runiter(
 			return NULL; 
 		}
 
+		cerr << "it3" << endl;
 
 		// データ出力
 		_iterrtn = new kgCSVfld;
+		cerr << "it4" << endl;
 								//savex  = PyEval_SaveThread();
 		PyThreadState *savex;
 		try{
@@ -1399,6 +1402,7 @@ kgCSVfld* kgshell::runiter(
 			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 			throw;
 		}
+		cerr << "it5" << endl;
 
 
 		return _iterrtn;

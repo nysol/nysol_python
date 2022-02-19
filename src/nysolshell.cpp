@@ -333,25 +333,32 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			for(Py_ssize_t i=0 ; i<ksize;i++){
 				k_list.push_back(strGET(PyList_GetItem(keys ,i)));
 			}
+			cerr << "itx1" << endl;
 			kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
+			cerr << "itx2" << endl;
 			
 			if(rtn==NULL){ return Py_BuildValue("");}
+			cerr << "itx3" << endl;
 
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
+			cerr << "itx3" << endl;
 			return pry;
 		}
 		else{
 
+			cerr << "itf1" << endl;
 			//PyGILState_STATE _save = PyGILState_Ensure();
 			kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);	
+			cerr << "itf2" << endl;
 			if(rtn==NULL){ return Py_BuildValue("");}
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
+			cerr << "itf3" << endl;
 			return pry;
 		}
 
