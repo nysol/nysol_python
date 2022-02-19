@@ -957,7 +957,7 @@ void kgSortf::run_noargs()
 	try {
 	// thread cleanup 登録
 	pthread_cleanup_push(&cleanup_handler, this);	
-	 
+	 cerr << "tid " << pthread_self() << endl;; 
 	_blocks=10;
 	_pways=32;
 	_maxlines=500000;
