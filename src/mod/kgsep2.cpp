@@ -147,10 +147,10 @@ int kgSep2::run(void) try
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 
 	// 終了処理
-	th_cancel();
 	sepFile.close();
 	_oFile.close();
 	_iFile.close();
+	th_cancel();
 	successEnd();
 	return 0;
 

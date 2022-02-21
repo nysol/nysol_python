@@ -183,10 +183,10 @@ int kgAvg::runMain(void)
 
 	//ASSERT keynull_CHECK
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
-	th_cancel();
 	// 終了処理
 	_iFile.close();
 	_oFile.close();
+	th_cancel();
 	return 0;
 
 }

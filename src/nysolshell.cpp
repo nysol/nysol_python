@@ -333,32 +333,25 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			for(Py_ssize_t i=0 ; i<ksize;i++){
 				k_list.push_back(strGET(PyList_GetItem(keys ,i)));
 			}
-			cerr << "itx1" << endl;
 			kgCSVkey* rtn = ksh->runkeyiter(cmdCapsel,p_list,k_list);
-			cerr << "itx2" << endl;
 			
 			if(rtn==NULL){ return Py_BuildValue("");}
-			cerr << "itx3" << endl;
 
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
-			cerr << "itx3" << endl;
 			return pry;
 		}
 		else{
 
-			cerr << "itf1" << endl;
 			//PyGILState_STATE _save = PyGILState_Ensure();
 			kgCSVfld* rtn = ksh->runiter(cmdCapsel,p_list);	
-			cerr << "itf2" << endl;
 			if(rtn==NULL){ return Py_BuildValue("");}
 			PyGILState_STATE gstate;
 			gstate = PyGILState_Ensure();
 			PyObject *pry = PyCapsule_New(rtn,"kgCSVfldP",py_kgcsv_free);
 			PyGILState_Release(gstate);
-			cerr << "itf3" << endl;
 			return pry;
 		}
 
@@ -450,24 +443,19 @@ PyObject* getLineList(PyObject* self, PyObject* args)
   }
 
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-	cerr << "LL1" << endl;
 	if( kcfld->read() == EOF){
 		return Py_BuildValue("");
 	}
-	cerr << "LL2" << endl;
 
 	size_t fcnt = kcfld->fldSize();
-	cerr << "LL3" << endl;
 
 	PyObject* rlist = PyList_New(fcnt);
-	cerr << "LL4" << endl;
 
 	for(size_t j=0 ;j<fcnt;j++){
 		long k = 0;
 		if(ptn!=NULL){ k = PyLong_AsLong ( PyList_GetItem(ptn,j) ); }
 		PyList_SET_ITEM(rlist,j,setRtnData(k,kcfld->getVal(j)));
 	}
-	cerr << "LL5" << endl;
 
 	return rlist;
 	}

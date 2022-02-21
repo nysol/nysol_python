@@ -152,9 +152,9 @@ public:
 	size_t oRecNo(void) const { return _oFile.recNo(); }
 
 	void runErrEnd(void){
-		th_cancel();
 		_iFile.close();
 		_oFile.forceclose();
+		th_cancel();
 	}
 
 

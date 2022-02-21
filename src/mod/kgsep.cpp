@@ -218,9 +218,9 @@ int kgSep::runMain(void)
 			}
 	}
 	// 終了処理
-	th_cancel();
 	_oFile.close();
 	_iFile.close();
+	th_cancel();
 	return 0;
 
 }

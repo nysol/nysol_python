@@ -334,7 +334,6 @@ int kg2Cross::runMain()
 		}
 		//ASSERT keynull_CHECK
 		if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
-		th_cancel();
 	// 終了処理
 		tiFile.close();
 	}
@@ -379,10 +378,10 @@ int kg2Cross::runMain()
 				}
 			}
 		}
-		th_cancel();
 		_iFile.close();
 	}
 	_oFile.close();
+		th_cancel();
 
 	return 0;
 

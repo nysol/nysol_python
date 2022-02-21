@@ -436,10 +436,10 @@ int kgNrjoin::runMain(void)
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull()||_mFile.keynull(); }
 
 	// 終了処理(メッセージ出力,thread pipe終了通知)
-	th_cancel();
 	_iFile.close();
 	_mFile.close();
 	_oFile.close();
+	th_cancel();
 
 	return 0;
 

@@ -47,23 +47,15 @@ void kgModIncludeSort::th_cancel(void){
 		cerr << "can0i " << _name << " " << &_th_st_p << " " << chk[i] << endl;
 	}*/
 	for(size_t i=0 ;i<_sortModSize;i++){ 
-		cerr << "can1 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 //		if(chk[i]==0){
 		if(1){
-		cerr << "can1-1 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 			int rtn = pthread_join(_th_st_p[i],NULL);
-		cerr << "can1-2 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << " " << rtn << endl;
 			if(rtn!=0) { 
-		cerr << "can1-3 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 				kgMsg msg(kgMsg::MSG, _env);
-		cerr << "can1-4 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 				msg.output("waring destruct fail thread cancel :( "+ toString(chk[i]) + ")");
-		cerr << "can1-5 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 			}
-		cerr << "can1-6 " << &_th_st_p << " "<< i <<" " << _th_st_p[i] << endl;
 		}
 	}
-		cerr << "can2 " << _name << " " << &_th_st_p << " " << endl;
 }
 
 
@@ -124,7 +116,6 @@ void kgModIncludeSort::sortingRunMain(kgCSVfld* csv ,kgstr_t fldname ,size_t num
 	int rtn = pthread_create( &lpt, NULL, 
 			kgModIncludeSort::run_noargs_pth ,(void *)&_inner_sort[num]);
 	_th_st_p[num]=lpt;
-	cerr << "at " << _name << " " <<  lpt << endl;
 	if(rtn){ throw kgError("cant't create thread onxx kgModIncludeSort");}
 	
 	kgMsg(kgMsg::DEB, _env).output("O sorting 1 " );

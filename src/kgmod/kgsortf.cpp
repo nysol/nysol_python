@@ -957,7 +957,6 @@ void kgSortf::run_noargs()
 	try {
 	// thread cleanup 登録
 	pthread_cleanup_push(&cleanup_handler, this);	
-	 cerr << "tid " << pthread_self() << endl;; 
 	_blocks=10;
 	_pways=32;
 	_maxlines=500000;
@@ -992,18 +991,14 @@ void kgSortf::run_noargs()
 			iCnt=mergeOneLevel(level, iCnt);
 		}
 	}
-	cerr << "c0" << endl;
 	// 終了処理
 	_iFile.close();
 	_oFile.close();
 	successEnd();
 	// thread cleanup 解除
-	cerr << "c1" << endl;
   pthread_cleanup_pop(0);
-	cerr << "c1e" << endl;
   
 	}catch(kgOPipeBreakError& err){
-	cerr << "c2" << endl;
 		// 終了処理
 		tempFile_.remove_all();
 
@@ -1015,7 +1010,6 @@ void kgSortf::run_noargs()
 	}catch(char * er){
 		tempFile_.remove_all();
 	}catch(...){
-	cerr << "c3" << endl;
 		tempFile_.remove_all();
 		//pthread_cancelが起こったときthrowしないとabortする
 		throw;

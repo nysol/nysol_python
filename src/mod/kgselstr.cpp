@@ -416,10 +416,10 @@ int kgSelstr::runMain(void)
 	//ASSERT keynull_CHECK
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 
-	th_cancel();
 	_iFile.close();
 	_oFile.close();
 	if(_elsefile){ _uFile.close();}
+	th_cancel();
 
 	return 0;
 

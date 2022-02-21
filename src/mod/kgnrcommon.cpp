@@ -372,11 +372,11 @@ int kgNrcommon::runMain(void)
 
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull()||_mFile.keynull(); }
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	_mFile.close();
 	_oFile.close();
 	if(_elsefile){ _uFile.close(); }
+	th_cancel();
 
 	return 0;
 

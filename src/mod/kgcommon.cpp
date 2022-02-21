@@ -275,11 +275,11 @@ int kgCommon::runMain(void)
 	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_cancel(_th_st[i]->native_handle());	}
 	//for(size_t i=0 ;i<_th_st.size();i++){ pthread_join(_th_st[i]->native_handle(),NULL);}
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	_mFile.close();
 	_oFile.close();
 	if(_elsefile){ _uFile.close(); }
+	th_cancel();
 
 	return 0;
 

@@ -306,10 +306,10 @@ int kgSelrand::runMain(void)
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	if(_outfile){_oFile.close();}
 	if(_elsefile){ _uFile.close();}
+	th_cancel();
 
 	return 0;
 
