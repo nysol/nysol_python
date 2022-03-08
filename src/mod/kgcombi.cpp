@@ -245,9 +245,9 @@ int kgCombi::runMain(void)
 		fld_stock.push_back(fldtmp);
 	}
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	_oFile.close();
+	th_cancel();
 
 	return 0;
 

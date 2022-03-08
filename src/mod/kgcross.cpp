@@ -299,9 +299,9 @@ int kgCross::runMain(void)
 	//ASSERT keynull_CHECK
 	if(_assertNullKEY) { _existNullKEY = tiFile.keynull(); }
 	// 終了処理
-	th_cancel();
 	tiFile.close();
 	_oFile.close();
+	th_cancel();
 
 	return 0;
 

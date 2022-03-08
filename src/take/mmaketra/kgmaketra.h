@@ -57,9 +57,9 @@ public:
 	int run(void);
 
 	void runErrEnd(void){
-		th_cancel();
 		_iFile.close();
 		_oFile.forceclose();	
+		th_cancel();
 	}
 
 };

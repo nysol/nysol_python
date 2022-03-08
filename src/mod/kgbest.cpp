@@ -321,9 +321,10 @@ int kgBest::runMain(void)
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 	// 終了処理
 	
-	th_cancel();
+	//th_cancel();
 	_iFile.close();
 	_oFile.close();
+	th_cancel();
 	if(_elsefile){ _uFile.close();}
 
 	return 0;

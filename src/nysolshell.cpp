@@ -443,7 +443,6 @@ PyObject* getLineList(PyObject* self, PyObject* args)
   }
 
 	kgCSVfld *kcfld	= (kgCSVfld *)PyCapsule_GetPointer(csvin,"kgCSVfldP");
-
 	if( kcfld->read() == EOF){
 		return Py_BuildValue("");
 	}

@@ -233,9 +233,9 @@ int kgCsv2json::run(void) try
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	_oFile.close();
+	th_cancel();
 	successEnd();
 	return 0;
 

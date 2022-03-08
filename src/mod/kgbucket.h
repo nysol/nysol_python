@@ -71,11 +71,11 @@ public:
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 
 	void runErrEnd(void){
-		th_cancel();
 		// 終了処理
 		_iFile.close();
 		_oFile.forceclose();	
 		if(_rangefile){ _rFile.forceclose();}
+		th_cancel();
 	}
 
 };

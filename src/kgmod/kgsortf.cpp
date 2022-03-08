@@ -928,16 +928,18 @@ int kgSortf::run(int inum,int *i_p,int onum, int* o_p ,string & msg)
 // -----------------------------------------------------------------------------
 // 実行
 // -----------------------------------------------------------------------------
-void kgSortf::prerun_noargs(int fd) try 
+void kgSortf::prerun_noargs(int fd) 
 {
-	_oFile.popen(fd, _env, _nfn_o);
-}catch(kgError& err){
-	tempFile_.remove_all();
-	errorEnd(err);
-}
-catch(...){
-	tempFile_.remove_all();
-	throw;
+	try {
+		_oFile.popen(fd, _env, _nfn_o);
+	}catch(kgError& err){
+		tempFile_.remove_all();
+		errorEnd(err);
+	}
+	catch(...){
+		tempFile_.remove_all();
+		throw;
+	}
 }
 
 ///* thraad cancel action
@@ -955,7 +957,6 @@ void kgSortf::run_noargs()
 	try {
 	// thread cleanup 登録
 	pthread_cleanup_push(&cleanup_handler, this);	
-	 
 	_blocks=10;
 	_pways=32;
 	_maxlines=500000;

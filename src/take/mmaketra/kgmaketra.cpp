@@ -118,10 +118,10 @@ int kgMaketra::run(void)
 			}
 		}
 		//ASSERT keynull_CHECK
-		th_cancel();
 
 		_iFile.close();
 		_oFile.close();
+		th_cancel();
 		successEnd();
 		return 0;
 

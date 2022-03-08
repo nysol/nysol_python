@@ -252,10 +252,10 @@ int kgCsvconv::run(void) try
 	if(_assertNullKEY) { _existNullKEY = _iFile.keynull(); }
 
 	// 終了処理
-	th_cancel();
 	_iFile.close();
 	if(_wfp) fclose(_wfp);
 //	_oFile.close();
+	th_cancel();
 	successEnd();
 	return 0;
 

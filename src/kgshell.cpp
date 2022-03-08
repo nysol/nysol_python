@@ -1367,7 +1367,7 @@ kgCSVfld* kgshell::runiter(
 		sa_sigint.sa_flags=SA_RESETHAND | SA_SIGINFO;
 		sigaction( SIGSEGV, &sa_sigint, &oldact ); // signal 13
 
-		runInit(cmds,plist);
+ 		runInit(cmds,plist);
 		int itrfd = -1;
 		for(int iblk=0;iblk<_spblk.getBlksize_M();iblk++){
 			itrfd = runMain(cmds,plist,iblk,iblk==_spblk.getBlksize_M()-1);
@@ -1379,7 +1379,6 @@ kgCSVfld* kgshell::runiter(
 		if(itrfd<0){ 
 			return NULL; 
 		}
-
 
 		// データ出力
 		_iterrtn = new kgCSVfld;
@@ -1399,8 +1398,6 @@ kgCSVfld* kgshell::runiter(
 			if(savex!=NULL){ PyEval_RestoreThread(savex);	}
 			throw;
 		}
-
-
 		return _iterrtn;
 
 	}catch(kgError& err){

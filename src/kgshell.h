@@ -251,7 +251,7 @@ class kgshell{
 				}
 			}
 			for(size_t i=_clen;i>0;i--){
-				if(chk[i-1]==0||chk[i-1]==3){
+				if(chk[i-1]==0){
 					int rtn = pthread_join(_th_st_pp[i-1],NULL);
 					if(rtn!=0) {
 						kgMsg msg(kgMsg::MSG, &_env);

@@ -109,8 +109,11 @@ public:
 	void prerun_noargs(int fd);
 	void run_noargs(void);
 	void forcedClose(void){
+		cerr << "fc1" << endl;
 		_iFile.close();     // i=
+		cerr << "fc2" << endl;
 		_oFile.forceclose();     // o=
+		cerr << "fc3" << endl;
 		
 	}
 };

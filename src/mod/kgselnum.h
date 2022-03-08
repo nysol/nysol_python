@@ -148,10 +148,10 @@ public:
 	int run(void);
 	int run(int inum,int *i_p,int onum, int* o_p ,string & str);
 	void runErrEnd(void){
-		th_cancel();
 		_iFile.close();
 		_oFile.forceclose();
 		if(_elsefile){ _uFile.forceclose();}
+		th_cancel();
 	}
 
 };
