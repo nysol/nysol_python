@@ -597,6 +597,11 @@ class NysolMOD_CORE(object):
 		rtn = mreadcsv(val)
 		rtn.xsize=-1
 
+		keychk ={"plain","head","tail","nfn","header"}
+		for k in kwd:
+			if not k in keychk:
+				raise Exception("unknown parameter")
+
 		if "plain" in kwd:
 			if kwd["plain"]==True:
 				rtn.pstr=True
@@ -618,8 +623,14 @@ class NysolMOD_CORE(object):
 		if "nfn" in kwd:
 			if kwd["nfn"]==True:
 				rtn.headdsp=None
-			
+			elif kwd["nfn"]==False:
+				rtn.headdsp=True
 
+		if "header" in kwd:
+			if kwd["header"]==False:
+				rtn.headdsp=None
+			elif kwd["header"]==True:
+				rtn.headdsp=True
 
 		return rtn
 
