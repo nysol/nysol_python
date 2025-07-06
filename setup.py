@@ -167,7 +167,7 @@ module1 = Extension('nysol/_nysolshell_core',
 					extra_objects=extra_objects_core,
 					include_dirs=hedears,
 					libraries=nmodLibs,
-					extra_compile_args=xmlcflg+['-std=c++11'],
+					extra_compile_args=xmlcflg+['-std=c++14',"-Wno-enum-constexpr-conversion"],
 					extra_link_args=xmllibs
 					)
 
@@ -233,7 +233,7 @@ sources_mmaketramod, extra_objects_mmaketramod = exclude_no_need_compile_sources
 mmaketramod = Extension('nysol/take/_mmaketralib',
 						sources=sources_mmaketramod,
 						extra_objects=extra_objects_mmaketramod,
-						extra_compile_args=['-Wno-format-security', '-Wno-error','-std=c++11'],
+						extra_compile_args=['-Wno-format-security', '-Wno-error','-std=c++14'],
 						include_dirs=['src', 'src/kgmod', 'src/mod', 'src/take/mmaketra'],
 						libraries=mmodLibs
 						)
@@ -312,7 +312,7 @@ utilmod = Extension('nysol/util/_utillib',
                     sources=sources_utilmod,
 					extra_objects=extra_objects_utilmod,
 					include_dirs=['src', 'src/kgmod', 'src/mod'],
-					extra_compile_args=['-std=c++11'],
+					extra_compile_args=['-std=c++14',"-Wno-enum-constexpr-conversion"],
 					libraries=umodLibs
 					)
 
