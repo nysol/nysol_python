@@ -252,9 +252,12 @@ PyObject* run(PyObject* self, PyObject* args)
 			Py_Initialize();
 		}
 
+#if PY_VERSION_HEX < 0x03090000
 		if (!PyEval_ThreadsInitialized())	{ 
 			PyEval_InitThreads();
 		}
+#endif
+
 
 		PyObject *sh;
 		PyObject *mlist;
@@ -301,9 +304,13 @@ PyObject* runITER(PyObject* self, PyObject* args)
 			Py_Initialize();
 		}
 
+#if PY_VERSION_HEX < 0x03090000
 		if (!PyEval_ThreadsInitialized())	{ 
 			PyEval_InitThreads();
 		}
+#endif
+
+
 
 		PyObject *sh;
 		PyObject *mlist;
