@@ -201,7 +201,9 @@ int kgSep::runMain(void)
 			fstr = fstr+_dField_str[i];
 			if(_mkdir_flg){
 				filesystem::path filename=filesystem::path(fstr);
-				filesystem::path dirname =filename.branch_path();
+				//filesystem::path dirname =filename.branch_path();
+				filesystem::path dirname =filename.parent_path();
+
 				create_directories(dirname);
 			}
 			// ファイルオープン

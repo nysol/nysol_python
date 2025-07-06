@@ -110,7 +110,8 @@ void kgShuffle::setArgsMain(void)
  	   sprintf(buf,"_%zu",i);
 	    kgstr_t fstr = dname+buf;
 			boost::filesystem::path filename=boost::filesystem::path(fstr);
-			boost::filesystem::path dirname =filename.branch_path();
+			//boost::filesystem::path dirname =filename.branch_path();
+			boost::filesystem::path dirname =filename.parent_path();
 			if (! dirname.empty()){
 				create_directories(dirname);
 			}
