@@ -332,7 +332,7 @@ vsopmod = Extension('nysol/vsop/_vsoplib',
                     sources=sources_vsopmod,
 					extra_objects=extra_objects_vsopmod,
 					define_macros=[('B_64', None), ('_NO_MAIN_', None)],
-					extra_compile_args=['-Wno-format-security', '-Wno-error', '-Wno-narrowing','-Wno-implicit-function-declaration'],
+					extra_compile_args=['-Wno-format-security', '-Wno-error', '-Wno-narrowing','-Wno-implicit-function-declaration',"-Wno-reserved-user-defined-literal"],
 					include_dirs=[
 						'src/vsop/SAPPOROBDD/include',
 						'src/vsop/SAPPOROBDD/src/BDDLCM/',
