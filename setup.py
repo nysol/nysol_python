@@ -51,11 +51,10 @@ def check_for_boost():
 
 	boostFLG =[]
 	boostLibLists=[
-		['boost_thread-mt','boost_thread'],
-		['boost_filesystem-mt','boost_filesystem'],
-		['boost_regex-mt','boost_regex'],
-		['boost_system-mt','boost_system'],
-		['boost_date_time-mt','boost_date_time']
+		['boost_thread'],
+		['boost_filesystem'],
+		['boost_regex'],
+		['boost_date_time']
 	]
 	for boostlist in boostLibLists:
 
